@@ -21,7 +21,7 @@ import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function ProfilePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const { user, loading } = useAuth()
+  const { user, profile, loading } = useAuth()
 
   // 認証ガード
   if (loading) {
@@ -44,7 +44,7 @@ export default function ProfilePage() {
               {user.email?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">プロフィール</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{profile?.name || 'ユーザー'}のプロフィール</h1>
               <p className="text-gray-600">{user.email}</p>
             </div>
           </div>
@@ -58,8 +58,13 @@ export default function ProfilePage() {
               <Trophy className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1</div>
-              <p className="text-xs text-muted-foreground">初心者レベル</p>
+              <div className="text-2xl font-bold">{profile?.current_level || 1}</div>
+              <p className="text-xs text-muted-foreground">
+                {profile?.skill_level === 'beginner' && '初心者レベル'}
+                {profile?.skill_level === 'intermediate' && '中級レベル'}
+                {profile?.skill_level === 'advanced' && '上級レベル'}
+                {!profile?.skill_level && '初心者レベル'}
+              </p>
             </CardContent>
           </Card>
 
@@ -69,7 +74,7 @@ export default function ProfilePage() {
               <Flame className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
+              <div className="text-2xl font-bold">{profile?.streak || 0}</div>
               <p className="text-xs text-muted-foreground">日連続</p>
             </CardContent>
           </Card>
@@ -102,7 +107,7 @@ export default function ProfilePage() {
               <Crown className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
+              <div className="text-2xl font-bold">{profile?.total_xp || 0}</div>
               <p className="text-xs text-muted-foreground">XP</p>
             </CardContent>
           </Card>
