@@ -28,11 +28,8 @@ export default function Home() {
       return
     }
     
-    // ユーザーが存在するが、オンボーディングが未完了の場合
-    if (user && !user.auth.isOnboarded) {
-      router.push('/onboarding')
-      return
-    }
+    // Supabaseユーザーは認証済みなので、オンボーディングはスキップ
+    // TODO: 後でSupabaseにユーザープロファイル情報を追加
     
     // それ以外の場合はこのページを表示（正常なログイン済みユーザー）
   }, [user, loading, router])
