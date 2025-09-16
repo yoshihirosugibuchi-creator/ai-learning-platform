@@ -77,7 +77,7 @@ export default function Header({
         </div>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
-          {user && !isLoading ? (
+          {user && !loading ? (
             <>
               {/* Learning Streak */}
               <div className="hidden md:flex items-center space-x-1 text-sm">
