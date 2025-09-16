@@ -79,10 +79,10 @@ export default function Header({
         <div className="flex flex-1 items-center justify-end space-x-2">
           {user && !loading ? (
             <>
-              {/* Learning Streak */}
+              {/* Learning Streak - TODO: Implement user progress tracking */}
               <div className="hidden md:flex items-center space-x-1 text-sm">
                 <Flame className="h-4 w-4 text-orange-500" />
-                <span className="font-medium">{user.progress.streak}</span>
+                <span className="font-medium">0</span>
                 <span className="text-muted-foreground">日連続</span>
               </div>
 
@@ -140,12 +140,12 @@ export default function Header({
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center space-x-2 h-auto p-2">
                       <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
-                        {user.name.charAt(0)}
+                        {user.email?.charAt(0).toUpperCase() || 'U'}
                       </div>
                       <div className="flex flex-col text-left">
-                        <span className="text-sm font-medium">{user.name}</span>
+                        <span className="text-sm font-medium">{user.email}</span>
                         <span className="text-xs text-muted-foreground">
-                          レベル {user.progress.currentLevel}
+                          レベル 1
                         </span>
                       </div>
                     </Button>
