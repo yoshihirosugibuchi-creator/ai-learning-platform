@@ -19,6 +19,7 @@ import type { User } from '@supabase/supabase-js'
 import { getRandomWisdomCard, WisdomCard as WisdomCardType } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
 import { getCategoryDisplayName } from '@/lib/category-mapping'
+import { addCardToCollection } from '@/lib/storage'
 
 interface QuizSessionProps {
   questions: Question[]
@@ -39,6 +40,27 @@ interface QuizResults {
   rewardedCard?: WisdomCardType
   isNewCard?: boolean
   cardCount?: number
+}
+
+interface QuestionAnswer {
+  questionId: string
+  questionText: string
+  selectedAnswer: string
+  correctAnswer: string
+  isCorrect: boolean
+  responseTime: number
+  category: string
+  difficulty: string
+  confidenceLevel?: number
+}
+
+interface QuizSession {
+  sessionId: string
+  startTime: string
+  endTime: string
+  sessionDuration: number
+  totalQuestions: number
+  category?: string
 }
 
 export default function QuizSession({
@@ -213,7 +235,7 @@ export default function QuizSession({
             user_id: user.id,
             category_id: category || 'general',
             subcategory_id: null,
-            questions: currentQuestions,
+            questions: sessionQuestions,
             answers: questionAnswers,
             score: finalResults.score,
             total_questions: finalResults.totalQuestions,
@@ -401,8 +423,6 @@ export default function QuizSession({
 
           <div className="flex space-x-4">
             <Button onClick={() => { 
-              refreshUser()
-              setTimeout(() => refreshUser(), 100)
               router.push('/') 
             }} variant="outline" className="flex-1">
               ホームに戻る
