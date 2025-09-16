@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useUserContext } from '@/contexts/UserContext'
+import { useAuth } from '@/components/auth/AuthProvider'
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void
@@ -26,18 +26,18 @@ export default function Header({
   showBackButton = false
 }: HeaderProps) {
   const router = useRouter()
-  const { user, isLoading, logout, updateTrigger } = useUserContext()
+  const { user, loading, signOut } = useAuth()
   const [displaySKP, setDisplaySKP] = useState(0)
 
-  // SKPバランスの変更を監視
-  useEffect(() => {
-    if (user) {
-      setDisplaySKP(user.skpBalance)
-    }
-  }, [user, user?.skpBalance, updateTrigger])
+  // TODO: SKPバランス機能は後で実装
+  // useEffect(() => {
+  //   if (user) {
+  //     setDisplaySKP(user.skpBalance)
+  //   }
+  // }, [user])
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await signOut()
     router.push('/login')
   }
   return (
