@@ -1,4 +1,15 @@
+# AI Learning Platform
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Features
+
+- 🧠 Interactive quiz system with multiple categories
+- 📊 Learning analytics and progress tracking
+- 👤 Personalized learning experience
+- 🎯 Skill-based question difficulty
+- 🏆 Achievement system with badges
+- 📚 Comprehensive question management
 
 ## Getting Started
 
