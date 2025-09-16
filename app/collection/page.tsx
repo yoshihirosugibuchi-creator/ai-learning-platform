@@ -24,7 +24,7 @@ import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import WisdomCard from '@/components/cards/WisdomCard'
 import KnowledgeCard from '@/components/cards/KnowledgeCard'
-import { useUserContext } from '@/contexts/UserContext'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { wisdomCards, getCategoryDisplayName } from '@/lib/cards'
 import { getUserCardCollection, getCollectionStats, hasCard, getCardCount } from '@/lib/storage'
 import { 
@@ -40,7 +40,16 @@ export default function CollectionPage() {
   const [selectedWisdomCategory, setSelectedWisdomCategory] = useState<string>('all')
   const [selectedKnowledgeCategory, setSelectedKnowledgeCategory] = useState<string>('all')
   const [activeTab, setActiveTab] = useState('wisdom')
-  const { user } = useUserContext()
+  const { user, loading } = useAuth()
+
+  // 認証ガード
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (!user) {
+    return <div>ログインが必要です</div>
+  }
 
   // 格言カード（従来のカード）データ
   const wisdomCollectionData = useMemo(() => {

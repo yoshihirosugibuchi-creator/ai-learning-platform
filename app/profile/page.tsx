@@ -25,20 +25,22 @@ import {
 } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
-import { useUserContext } from '@/contexts/UserContext'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { getQuizResults, getUserQuizResults } from '@/lib/storage'
 import { getCategoryDisplayName } from '@/lib/category-mapping'
 
 export default function ProfilePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const { user, updateTrigger } = useUserContext()
+  const { user, loading } = useAuth()
 
-  // userオブジェクトの変更を監視して強制的に再レンダリング
-  const [renderKey, setRenderKey] = useState(0)
-  
-  useEffect(() => {
-    setRenderKey(prev => prev + 1)
-  }, [user, updateTrigger])
+  // 認証ガード
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (!user) {
+    return <div>ログインが必要です</div>
+  }
 
   if (!user) {
     return (
