@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,10 +18,28 @@ import {
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { getUserStats } from '@/lib/supabase-quiz'
 
 export default function ProfilePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user, profile, loading } = useAuth()
+  const [quizStats, setQuizStats] = useState({
+    totalQuestions: 0,
+    correctAnswers: 0,
+    accuracy: 0,
+    totalQuizzes: 0,
+    averageScore: 0,
+    totalTimeSpent: 0
+  })
+
+  // クイズ統計を取得
+  useEffect(() => {
+    if (user && profile) {
+      getUserStats(user.id).then(stats => {
+        setQuizStats(stats)
+      })
+    }
+  }, [user, profile])
 
   // 認証ガード
   if (loading) {
@@ -85,7 +103,7 @@ export default function ProfilePage() {
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
+              <div className="text-2xl font-bold">{quizStats.totalQuestions}</div>
               <p className="text-xs text-muted-foreground">問題</p>
             </CardContent>
           </Card>
@@ -96,8 +114,12 @@ export default function ProfilePage() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">-%</div>
-              <p className="text-xs text-muted-foreground">まだデータなし</p>
+              <div className="text-2xl font-bold">
+                {quizStats.totalQuestions > 0 ? `${quizStats.accuracy}%` : '-%'}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {quizStats.totalQuestions > 0 ? `${quizStats.correctAnswers}問正解` : 'まだデータなし'}
+              </p>
             </CardContent>
           </Card>
 
@@ -131,12 +153,15 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between text-sm">
-              <span>レベル 1</span>
-              <span>0/100 XP</span>
+              <span>レベル {profile?.current_level || 1}</span>
+              <span>{profile?.total_xp || 0}/100 XP</span>
             </div>
-            <Progress value={0} />
+            <Progress value={((profile?.total_xp || 0) % 100)} />
             <p className="text-xs text-muted-foreground">
-              クイズに挑戦してXPを獲得しましょう！
+              {quizStats.totalQuestions > 0 
+                ? `${quizStats.totalQuizzes}回のクイズに挑戦しました！` 
+                : 'クイズに挑戦してXPを獲得しましょう！'
+              }
             </p>
           </CardContent>
         </Card>
