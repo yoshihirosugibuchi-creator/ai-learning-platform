@@ -9,18 +9,18 @@ import { Play, BookOpen, Trophy } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
-import { useUserContext } from '@/contexts/UserContext'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { getAppStats } from '@/lib/stats'
 
 export default function Home() {
   const router = useRouter()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const { user, isLoading } = useUserContext()
+  const { user, loading } = useAuth()
   const [stats, setStats] = useState({ totalQuestions: 115, totalCategories: 12, totalSubcategories: 50, questionsFromData: 0 })
 
   useEffect(() => {
     // ローディング中は何もしない
-    if (isLoading) return
+    if (loading) return
     
     // ユーザーが存在しない場合はログインページにリダイレクト
     if (!user) {
@@ -35,7 +35,7 @@ export default function Home() {
     }
     
     // それ以外の場合はこのページを表示（正常なログイン済みユーザー）
-  }, [user, isLoading, router])
+  }, [user, loading, router])
 
   // 統計データを取得
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function Home() {
 
   return (
     <>
-      {isLoading && <LoadingScreen />}
+      {loading && <LoadingScreen />}
       
       <div className="min-h-screen bg-background">
         <Header 
