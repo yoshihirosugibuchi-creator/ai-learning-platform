@@ -19,7 +19,8 @@ import type { User } from '@supabase/supabase-js'
 import { getRandomWisdomCard, WisdomCard as WisdomCardType } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
 import { getCategoryDisplayName } from '@/lib/category-mapping'
-import { addCardToCollection } from '@/lib/storage'
+import { addWisdomCardToCollection } from '@/lib/supabase-cards'
+import { saveSKPTransaction, saveDetailedQuizData, updateCategoryProgress } from '@/lib/supabase-learning'
 
 interface QuizSessionProps {
   questions: Question[]
@@ -231,7 +232,7 @@ export default function QuizSession({
       // Save quiz result to Supabase
       if (user?.id) {
         try {
-          await saveQuizResultSupabase({
+          const quizResult = await saveQuizResultSupabase({
             user_id: user.id,
             category_id: category || 'general',
             subcategory_id: null,
@@ -243,7 +244,26 @@ export default function QuizSession({
             completed_at: new Date().toISOString()
           })
           
-          // Update user progress
+          // Save detailed quiz data for analytics
+          if (quizResult && questionAnswers.length > 0) {
+            const detailData = questionAnswers.map(answer => ({
+              user_id: user.id,
+              quiz_result_id: quizResult.id!,
+              question_id: answer.questionId,
+              question_text: answer.questionText,
+              selected_answer: answer.selectedAnswer,
+              correct_answer: answer.correctAnswer,
+              is_correct: answer.isCorrect,
+              response_time: answer.responseTime,
+              confidence_level: answer.confidenceLevel,
+              category: answer.category,
+              difficulty: answer.difficulty
+            }))
+            
+            await saveDetailedQuizData(detailData)
+          }
+          
+          // Update user progress in Supabase
           await updateUserProgress(
             user.id,
             category || 'general',
@@ -252,7 +272,28 @@ export default function QuizSession({
             finalResults.totalQuestions
           )
           
-          console.log(`💾 Quiz results saved to Supabase for user: ${user.id}`)
+          // Update category progress
+          await updateCategoryProgress(
+            user.id,
+            category || 'general',
+            finalResults.correctAnswers,
+            finalResults.totalQuestions
+          )
+          
+          // Save SKP transaction
+          const skpGained = finalResults.correctAnswers * 10
+          if (skpGained > 0) {
+            await saveSKPTransaction({
+              user_id: user.id,
+              type: 'earned',
+              amount: skpGained,
+              source: 'quiz_completion',
+              description: `クイズ完了 (${finalResults.correctAnswers}/${finalResults.totalQuestions}問正解)`,
+              timestamp: new Date().toISOString()
+            })
+          }
+          
+          console.log(`💾 Quiz results and analytics saved to Supabase for user: ${user.id}`)
         } catch (error) {
           console.error('❌ Error saving quiz results:', error)
         }
@@ -266,17 +307,23 @@ export default function QuizSession({
       
       if (accuracyRate >= 70) { // Only award card if 70% or better accuracy
         const randomCard = getRandomWisdomCard(accuracyRate)
-        const cardResult = addCardToCollection(randomCard.id, user?.id)
         
-        // Update results with card reward info
-        updatedResults = {
-          ...finalResults,
-          rewardedCard: randomCard,
-          isNewCard: cardResult.isNew,
-          cardCount: cardResult.count
+        try {
+          const cardResult = await addWisdomCardToCollection(user.id, randomCard.id)
+          
+          // Update results with card reward info
+          updatedResults = {
+            ...finalResults,
+            rewardedCard: randomCard,
+            isNewCard: cardResult.isNew,
+            cardCount: cardResult.count
+          }
+          
+          console.log(`🂺 Card added to collection for user ${user?.id}:`, { cardId: randomCard.id, isNew: cardResult.isNew })
+        } catch (error) {
+          console.error('Error adding wisdom card:', error)
+          // Continue without card reward if error occurs
         }
-        
-        console.log(`🂺 Card added to collection for user ${user?.id}:`, { cardId: randomCard.id, isNew: cardResult.isNew })
       }
       
       // Set the updated results for display
