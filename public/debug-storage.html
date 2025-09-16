@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LocalStorage Debug</title>
+</head>
+<body>
+    <h1>LocalStorage Debug</h1>
+    <button onclick="showKnowledgeCards()">Show Knowledge Cards</button>
+    <button onclick="clearKnowledgeCards()">Clear Knowledge Cards</button>
+    <button onclick="addTestCard()">Add Test Card</button>
+    
+    <pre id="output"></pre>
+
+    <script>
+        function showKnowledgeCards() {
+            const collection = JSON.parse(localStorage.getItem('ale_knowledge_card_collection') || '[]');
+            document.getElementById('output').textContent = JSON.stringify(collection, null, 2);
+        }
+
+        function clearKnowledgeCards() {
+            localStorage.removeItem('ale_knowledge_card_collection');
+            document.getElementById('output').textContent = 'Knowledge cards cleared';
+        }
+
+        function addTestCard() {
+            const collection = JSON.parse(localStorage.getItem('ale_knowledge_card_collection') || '[]');
+            collection.push({
+                cardId: 'so_what_card',
+                obtainedAt: new Date().toISOString(),
+                reviewCount: 0
+            });
+            localStorage.setItem('ale_knowledge_card_collection', JSON.stringify(collection));
+            document.getElementById('output').textContent = 'Test card added: ' + JSON.stringify(collection, null, 2);
+        }
+
+        // Auto-load on page load
+        showKnowledgeCards();
+    </script>
+</body>
+</html>

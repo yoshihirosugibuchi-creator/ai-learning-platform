@@ -1,0 +1,102 @@
+category_type,category_id_en,category_name_jp,subcategory_id_en,subcategory_name_jp,display_order,status,icon,color
+main,communication_presentation,コミュニケーション・プレゼンテーション,conclusion_first_structured_thinking,結論ファースト・構造化思考,1,active,💬,#3B82F6
+main,communication_presentation,コミュニケーション・プレゼンテーション,document_visualization_tech,資料作成・可視化技術,2,active,💬,#3B82F6
+main,communication_presentation,コミュニケーション・プレゼンテーション,meeting_facilitation,会議運営・ファシリテーション,3,active,💬,#3B82F6
+main,communication_presentation,コミュニケーション・プレゼンテーション,negotiation_persuasion,交渉・説得技術,4,active,💬,#3B82F6
+main,logical_thinking_problem_solving,論理的思考・問題解決,structured_thinking_mece,構造化思考（MECE・ロジックツリー）,1,active,🧠,#8B5CF6
+main,logical_thinking_problem_solving,論理的思考・問題解決,hypothesis_verification,仮説検証・本質追求,2,active,🧠,#8B5CF6
+main,logical_thinking_problem_solving,論理的思考・問題解決,quantitative_analysis_statistics,定量分析・統計解析,3,active,🧠,#8B5CF6
+main,logical_thinking_problem_solving,論理的思考・問題解決,behavioral_economics,行動経済学・意思決定理論,4,active,🧠,#8B5CF6
+main,logical_thinking_problem_solving,論理的思考・問題解決,benchmarking_competitive_analysis,ベンチマーキング・競合分析,5,active,🧠,#8B5CF6
+main,strategy_management,戦略・経営,business_strategy,経営戦略・事業戦略,1,active,🎯,#10B981
+main,strategy_management,戦略・経営,competitive_strategy_frameworks,競争戦略・フレームワーク,2,active,🎯,#10B981
+main,strategy_management,戦略・経営,new_business_innovation,新事業開発・イノベーション,3,active,🎯,#10B981
+main,strategy_management,戦略・経営,esg_sustainability,ESG・サステナビリティ経営,4,active,🎯,#10B981
+main,finance,財務・ファイナンス,financial_analysis_valuation,財務分析・企業価値評価,1,active,💰,#F59E0B
+main,finance,財務・ファイナンス,investment_risk_management,投資判断・リスク管理,2,active,💰,#F59E0B
+main,finance,財務・ファイナンス,business_planning_funding,事業計画・資金調達,3,active,💰,#F59E0B
+main,finance,財務・ファイナンス,management_accounting_kpi,管理会計・KPI設計,4,active,💰,#F59E0B
+main,marketing_sales,マーケティング・営業,customer_analysis_segmentation,顧客分析・セグメンテーション,1,active,📈,#EF4444
+main,marketing_sales,マーケティング・営業,branding_positioning,ブランディング・ポジショニング,2,active,📈,#EF4444
+main,marketing_sales,マーケティング・営業,digital_marketing,デジタルマーケティング,3,active,📈,#EF4444
+main,marketing_sales,マーケティング・営業,sales_strategy_crm,営業戦略・CRM,4,active,📈,#EF4444
+main,leadership_hr,リーダーシップ・人事,team_management_motivation,チームマネジメント・モチベーション,1,active,👥,#06B6D4
+main,leadership_hr,リーダーシップ・人事,talent_management_development,タレントマネジメント・育成,2,active,👥,#06B6D4
+main,leadership_hr,リーダーシップ・人事,organizational_development_leadership,組織開発・変革リーダーシップ,3,active,👥,#06B6D4
+main,leadership_hr,リーダーシップ・人事,hr_strategy_workstyle,人事戦略・働き方改革,4,active,👥,#06B6D4
+main,ai_digital_utilization,AI・デジタル活用,ai_ml_utilization,AI・機械学習活用,1,active,🤖,#8B5CF6
+main,ai_digital_utilization,AI・デジタル活用,prompt_engineering,プロンプトエンジニアリング,2,active,🤖,#8B5CF6
+main,ai_digital_utilization,AI・デジタル活用,dx_strategy_transformation,DX戦略・デジタル変革,3,active,🤖,#8B5CF6
+main,ai_digital_utilization,AI・デジタル活用,data_driven_management,データドリブン経営,4,active,🤖,#8B5CF6
+main,ai_digital_utilization,AI・デジタル活用,iot_automation,IoT・自動化技術,5,active,🤖,#8B5CF6
+main,project_operations,プロジェクト・業務管理,project_design_wbs,プロジェクト設計・WBS,1,active,📋,#84CC16
+main,project_operations,プロジェクト・業務管理,schedule_resource_management,スケジュール・リソース管理,2,active,📋,#84CC16
+main,project_operations,プロジェクト・業務管理,stakeholder_management,ステークホルダー管理,3,active,📋,#84CC16
+main,project_operations,プロジェクト・業務管理,business_efficiency_time,業務効率化・時間管理,4,active,📋,#84CC16
+main,business_process_analysis,ビジネスプロセス・業務分析,business_analysis_requirements,業務分析・要件定義,1,active,🔄,#F97316
+main,business_process_analysis,ビジネスプロセス・業務分析,process_design_optimization,プロセス設計・最適化,2,active,🔄,#F97316
+main,business_process_analysis,ビジネスプロセス・業務分析,supply_chain_management,サプライチェーン管理,3,active,🔄,#F97316
+main,business_process_analysis,ビジネスプロセス・業務分析,business_system_design,業務システム設計,4,active,🔄,#F97316
+main,business_process_analysis,ビジネスプロセス・業務分析,bpr_business_reform,BPR・業務改革,5,active,🔄,#F97316
+main,risk_crisis_management,リスク・危機管理,corporate_risk_management,企業リスク管理,1,active,🛡️,#DC2626
+main,risk_crisis_management,リスク・危機管理,crisis_management_bcp,危機管理・BCP,2,active,🛡️,#DC2626
+main,risk_crisis_management,リスク・危機管理,compliance_internal_control,コンプライアンス・内部統制,3,active,🛡️,#DC2626
+main,risk_crisis_management,リスク・危機管理,information_security,情報セキュリティ,4,active,🛡️,#DC2626
+main,risk_crisis_management,リスク・危機管理,sustainability_risk,サステナビリティリスク,5,active,🛡️,#DC2626
+legacy,analytical_problem_solving,分析的問題解決,logical_thinking_analysis,論理的思考・分析,1,legacy,🧠,#8B5CF6
+legacy,analytical_problem_solving,分析的問題解決,financial_accounting_analysis,財務・会計分析,2,legacy,💰,#F59E0B
+legacy,leadership_management,リーダーシップ・マネジメント,team_management_development,チーム運営・人材育成,1,legacy,👥,#06B6D4
+legacy,leadership_management,リーダーシップ・マネジメント,project_management,プロジェクトマネジメント,2,legacy,📋,#84CC16
+legacy,leadership_management,リーダーシップ・マネジメント,organizational_development_transformation,組織開発・変革,3,legacy,🔄,#F97316
+legacy,business_strategy,ビジネス戦略,business_strategy_planning,事業戦略・企画,1,legacy,🎯,#10B981
+legacy,business_strategy,ビジネス戦略,negotiation_coordination,交渉・調整,2,legacy,🤝,#3B82F6
+legacy,innovation_creativity,イノベーション・創造性,innovation_methods,イノベーション手法,1,legacy,💡,#10B981
+legacy,innovation_creativity,イノベーション・創造性,new_business_development,新規事業開発,2,legacy,🚀,#10B981
+legacy,digital_technology,デジタル技術,dx_it_strategy,DX・IT戦略,1,legacy,💻,#8B5CF6
+legacy,crisis_risk_management,危機・リスク管理,enterprise_risk_management,企業リスク管理,1,legacy,🛡️,#DC2626
+industry,consulting_industry,コンサルティング業界,case_interview_structured,ケース面接・構造化思考,1,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,hypothesis_thinking_issue,仮説思考・イシューツリー,2,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,storyline_construction,ストーリーライン構築,3,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,stakeholder_analysis,ステークホルダー分析,4,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,multi_stakeholder_coordination,複数ステークホルダー調整,5,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,project_recovery,プロジェクト炎上対応・リカバリー,6,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,transformation_leadership,変革リーダーシップ,7,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,digital_transformation_support,デジタル変革支援,8,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,ma_pmi_support,M&A・PMI支援,9,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,operation_reform,オペレーション改革,10,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,regulated_industry,規制業界対応（金融・製薬等）,11,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,industry_best_practices,業界ベストプラクティス活用,12,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,industry_trend_analysis,業界動向・競合分析,13,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,rfp_proposal,RFP対応・提案書作成,14,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,executive_presentation,経営層プレゼン,15,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,business_issue_hearing,経営課題ヒアリング・課題設定,16,active,🎩,#6366F1
+industry,consulting_industry,コンサルティング業界,continuous_sales_strategy,継続案件獲得・拡販戦略,17,active,🎩,#6366F1
+industry,si_industry,SI（システムインテグレーション）業界,requirements_business_analysis,要件定義・業務分析,1,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,it_strategy_planning,IT戦略立案,2,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,rfp_vendor_management,RFP作成・ベンダー管理,3,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,si_project_management,SIプロジェクト管理,4,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,multi_tier_vendor,多階層ベンダー管理,5,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,risk_quality_management,リスク管理・品質管理,6,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,system_migration,システム導入・移行管理,7,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,dx_promotion_support,DX推進支援,8,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,technical_feasibility,技術的実現性評価,9,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,legacy_integration,レガシーシステム連携,10,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,technical_sales,技術営業・提案活動,11,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,customer_requirement,顧客要求分析,12,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,long_term_partnership,長期パートナーシップ構築,13,active,🖥️,#0EA5E9
+industry,si_industry,SI（システムインテグレーション）業界,contract_pricing,契約形態・価格設定戦略,14,active,🖥️,#0EA5E9
+industry,trading_company_industry,商社業界,commodity_market_analysis,商品知識・市場分析,1,active,🌐,#059669
+industry,trading_company_industry,商社業界,commodity_derivatives,商品先物・デリバティブ活用,2,active,🌐,#059669
+industry,trading_company_industry,商社業界,price_negotiation_hedge,価格交渉・リスクヘッジ,3,active,🌐,#059669
+industry,trading_company_industry,商社業界,quality_inspection_insurance,品質管理・検査・保険,4,active,🌐,#059669
+industry,trading_company_industry,商社業界,new_business_development,新規事業開拓,5,active,🌐,#059669
+industry,trading_company_industry,商社業界,investment_participation,出資先企業経営参画,6,active,🌐,#059669
+industry,trading_company_industry,商社業界,portfolio_management,事業ポートフォリオ管理,7,active,🌐,#059669
+industry,trading_company_industry,商社業界,overseas_market_development,海外市場開拓,8,active,🌐,#059669
+industry,trading_company_industry,商社業界,multilateral_trade,多国間三国間取引,9,active,🌐,#059669
+industry,trading_company_industry,商社業界,cross_cultural_communication,異文化コミュニケーション,10,active,🌐,#059669
+industry,trading_company_industry,商社業界,local_subsidiary_management,現地法人運営,11,active,🌐,#059669
+industry,trading_company_industry,商社業界,trade_finance,貿易ファイナンス,12,active,🌐,#059669
+industry,trading_company_industry,商社業界,trade_finance_structuring,トレードファイナンス組成,13,active,🌐,#059669
+industry,trading_company_industry,商社業界,fx_interest_rate_risk,為替・金利リスク管理,14,active,🌐,#059669
+industry,trading_company_industry,商社業界,country_risk_analysis,カントリーリスク分析,15,active,🌐,#059669

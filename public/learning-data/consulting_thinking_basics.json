@@ -1,0 +1,636 @@
+{
+  "id": "consulting_thinking_basics",
+  "title": "コンサル思考法基礎コース",
+  "description": "論理的思考とフレームワーク活用で問題解決力を身につける",
+  "estimatedDays": 14,
+  "difficulty": "beginner",
+  "icon": "🧠",
+  "color": "#6366F1",
+  "displayOrder": 1,
+  "genres": [
+    {
+      "id": "thinking_foundation",
+      "title": "思考の基盤",
+      "description": "論理的思考の基本原則とコンサル特有の思考法",
+      "categoryId": "logical_thinking_problem_solving",
+      "subcategoryId": "構造化思考（MECE・ロジックツリー）",
+      "estimatedDays": 6,
+      "displayOrder": 1,
+      "badge": {
+        "id": "thinking_foundation_badge",
+        "title": "論理思考マスター",
+        "description": "構造化思考と論理的思考の基礎を習得",
+        "icon": "🧩",
+        "color": "#8B5CF6"
+      },
+      "themes": [
+        {
+          "id": "conclusion_first",
+          "title": "結論ファースト",
+          "description": "結論から話す思考法とコミュニケーション技術",
+          "estimatedMinutes": 9,
+          "displayOrder": 1,
+          "rewardCard": {
+            "id": "conclusion_first_card",
+            "title": "結論ファースト",
+            "summary": "まず結論、その後に根拠という情報構造でコミュニケーションの効率を上げる手法",
+            "keyPoints": [
+              "PREP法（Point・Reason・Example・Point）の活用",
+              "聞き手の理解負荷を軽減",
+              "説得力のあるプレゼンテーション"
+            ],
+            "icon": "🎯",
+            "color": "#3B82F6"
+          },
+          "sessions": [
+            {
+              "id": "conclusion_first_basics",
+              "title": "結論ファーストの基本",
+              "estimatedMinutes": 3,
+              "type": "knowledge",
+              "displayOrder": 1,
+              "content": [
+                {
+                  "id": "cf_concept",
+                  "type": "text",
+                  "title": "結論ファーストとは",
+                  "content": "結論ファーストとは、話の冒頭で結論や要点を明確に示し、その後に詳細な説明や根拠を提示するコミュニケーション手法です。ビジネスの現場では限られた時間で効率的に情報を伝える必要があり、この手法により聞き手の理解を促進できます。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "cf_structure",
+                  "type": "key_points",
+                  "title": "PREP法の構造",
+                  "content": "Point（結論）→ Reason（理由）→ Example（具体例）→ Point（結論の再確認）",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "cf_example",
+                  "type": "example",
+                  "title": "実例：業務報告での活用",
+                  "content": "【悪い例】「今月の売上についてですが、様々な要因があって...（長い説明）...結果として目標を10%上回りました」\n【良い例】「今月の売上は目標を10%上回りました。主な要因は新商品の好調な売れ行きと既存顧客のリピート率向上です。具体的には...」",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "cf_quiz_1",
+                  "question": "PREP法における「P」が最初と最後に来る理由として最も適切なものは？",
+                  "options": [
+                    "強調効果を高めるため",
+                    "聞き手の注意を引き、理解を確実にするため",
+                    "覚えやすくするため",
+                    "時間を稼ぐため"
+                  ],
+                  "correct": 1,
+                  "explanation": "最初のPで聞き手の注意を引いて要点を明確にし、最後のPで理解を確実にして印象に残すことが目的です。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "conclusion_first_practice",
+              "title": "結論ファースト実践ワーク",
+              "estimatedMinutes": 3,
+              "type": "practice",
+              "displayOrder": 2,
+              "content": [
+                {
+                  "id": "cf_practice_scenario",
+                  "type": "text",
+                  "title": "実践シナリオ",
+                  "content": "あなたは営業部のメンバーで、上司に今四半期の営業活動報告をする場面です。以下の情報を結論ファーストで整理してください：\n・新規顧客5社と契約締結\n・既存顧客からの追加注文が20%増加\n・競合他社の価格攻勢により一部案件が失注\n・全体として売上目標の108%を達成",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "cf_practice_structure",
+                  "type": "key_points",
+                  "title": "整理のポイント",
+                  "content": "1. 最重要の結論を特定\n2. 根拠を重要度順に整理\n3. 具体例で説得力を強化\n4. 最後に結論を再確認",
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "cf_practice_quiz",
+                  "question": "上記のシナリオで最初に述べるべき結論として最も適切なものは？",
+                  "options": [
+                    "新規顧客を5社獲得しました",
+                    "今四半期の売上目標を108%達成しました",
+                    "競合の価格攻勢に苦戦しています",
+                    "既存顧客からの注文が増えています"
+                  ],
+                  "correct": 1,
+                  "explanation": "最も重要で聞き手が知りたい全体結果から始めることで、その後の詳細説明の文脈が明確になります。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "conclusion_first_application",
+              "title": "応用事例とコツ",
+              "estimatedMinutes": 3,
+              "type": "case_study",
+              "displayOrder": 3,
+              "content": [
+                {
+                  "id": "cf_case_mckinsey",
+                  "type": "example",
+                  "title": "コンサルティング現場での事例",
+                  "content": "マッキンゼーの新人コンサルタントが学ぶ「エレベーターテスト」：エレベーターで偶然会った役員に30秒で重要な提案を伝えられるか？この訓練により結論ファーストが徹底される。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "cf_tips",
+                  "type": "key_points",
+                  "title": "実践のコツ",
+                  "content": "• 「結論から申し上げますと」「要点は3つあります」など導入フレーズを活用\n• 複数のポイントがある場合は番号を振る\n• 聞き手の反応を見て詳細レベルを調整\n• 質問時間を確保するため簡潔に",
+                  "duration": 2,
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "cf_application_quiz",
+                  "question": "結論ファーストが特に効果的な場面として最も適切でないものは？",
+                  "options": [
+                    "忙しい上司への報告",
+                    "顧客へのプレゼンテーション",
+                    "友人との雑談",
+                    "会議での提案"
+                  ],
+                  "correct": 2,
+                  "explanation": "友人との雑談では効率性より親密さや楽しさが重視されるため、必ずしも結論ファーストが適切とは限りません。",
+                  "type": "single_choice"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "mece_thinking",
+          "title": "MECE思考",
+          "description": "漏れなく重複なく整理する思考技術",
+          "estimatedMinutes": 9,
+          "displayOrder": 2,
+          "rewardCard": {
+            "id": "mece_thinking_card",
+            "title": "MECE思考",
+            "summary": "複雑な問題を「漏れなく重複なく」整理して全体像を把握する思考技術",
+            "keyPoints": [
+              "Mutually Exclusive（重複なく）",
+              "Collectively Exhaustive（漏れなく）",
+              "問題の全体像把握と優先順位付け"
+            ],
+            "icon": "📊",
+            "color": "#10B981"
+          },
+          "sessions": [
+            {
+              "id": "mece_basics",
+              "title": "MECE思考の基本",
+              "estimatedMinutes": 3,
+              "type": "knowledge",
+              "displayOrder": 1,
+              "content": [
+                {
+                  "id": "mece_concept",
+                  "type": "text",
+                  "title": "MECEとは",
+                  "content": "MECE（ミーシー）とは、Mutually Exclusive and Collectively Exhaustiveの略で、「相互に排他的で、全体として漏れがない」という意味です。問題や情報を整理する際の基本原則で、複雑な事象を体系的に理解するために不可欠な思考技術です。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "mece_benefits",
+                  "type": "key_points",
+                  "title": "MECE思考の効果",
+                  "content": "• 問題の全体像を漏れなく把握\n• 重複した作業や分析を回避\n• 優先順位の明確化\n• チーム内での認識統一",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "mece_example",
+                  "type": "example",
+                  "title": "日常での活用例",
+                  "content": "【売上低下の原因分析】\n❌悪い例: 「価格が高い、営業が弱い、商品力不足、宣伝不足、価格競争」（価格の重複）\n✅良い例: 「商品力（機能・デザイン）」「価格競争力」「販売力（営業・チャネル）」「マーケティング（認知・ブランド）」",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "mece_quiz_1",
+                  "question": "MECEの「CE」が意味するものは？",
+                  "options": [
+                    "完全排他的",
+                    "包括的網羅性",
+                    "効率的実行",
+                    "継続的改善"
+                  ],
+                  "correct": 1,
+                  "explanation": "CE = Collectively Exhaustive（包括的網羅性）で、全体を漏れなく覆っているという意味です。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "mece_practice",
+              "title": "MECE実践ワーク",
+              "estimatedMinutes": 3,
+              "type": "practice",
+              "displayOrder": 2,
+              "content": [
+                {
+                  "id": "mece_practice_scenario",
+                  "type": "text",
+                  "title": "実践課題：新規事業検討",
+                  "content": "あなたの会社が新規事業を検討する際の分析項目をMECEで整理してください。以下の要素を重複なく漏れなく分類しましょう：市場規模、競合状況、技術的実現性、収益性、リスク、投資額、人材確保、法規制、タイミング、自社の強み活用",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "mece_framework_hint",
+                  "type": "key_points",
+                  "title": "整理のフレームワーク例",
+                  "content": "• 市場環境（外部要因）vs 社内要因（内部要因）\n• 定量的要因 vs 定性的要因\n• 現在の状況 vs 将来の予測",
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "mece_practice_quiz",
+                  "question": "「市場規模」「競合状況」「法規制」はどのMECE分類が最も適切？",
+                  "options": [
+                    "社内要因",
+                    "市場環境（外部要因）",
+                    "定量的要因",
+                    "将来予測"
+                  ],
+                  "correct": 1,
+                  "explanation": "これらは全て自社の外部環境に関する要因であり、市場環境（外部要因）として分類するのが適切です。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "mece_advanced",
+              "title": "MECE応用とピラミッド構造",
+              "estimatedMinutes": 3,
+              "type": "case_study",
+              "displayOrder": 3,
+              "content": [
+                {
+                  "id": "pyramid_structure",
+                  "type": "text",
+                  "title": "ピラミッドストラクチャー",
+                  "content": "MECEは単独で使うだけでなく、階層的に適用することで「ピラミッドストラクチャー」を構築できます。最上位の結論から、MECEに分解された複数の論点、さらにその下位にMECEな根拠を配置することで、論理的で説得力のある構造を作れます。",
+                  "duration": 2,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "mece_pitfalls",
+                  "type": "key_points",
+                  "title": "よくある間違い",
+                  "content": "• 完璧を求めすぎて分析が進まない\n• 形式的なMECEにこだわり本質を見失う\n• 分類の粒度が揃っていない\n• 相手に伝わらない専門的な分類",
+                  "duration": 1,
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "mece_advanced_quiz",
+                  "question": "MECEな分類を作る際に最も重要なことは？",
+                  "options": [
+                    "完璧な分類体系を作ること",
+                    "目的に応じた実用的な分類をすること",
+                    "学術的に正確な分類をすること",
+                    "できるだけ細かく分類すること"
+                  ],
+                  "correct": 1,
+                  "explanation": "MECEは問題解決のツールであり、目的達成に役立つ実用的な分類が最も重要です。",
+                  "type": "single_choice"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "so_what_why_so",
+          "title": "So What?/Why So?",
+          "description": "深掘りと本質追求の思考技術",
+          "estimatedMinutes": 9,
+          "displayOrder": 3,
+          "rewardCard": {
+            "id": "so_what_card",
+            "title": "So What?/Why So?",
+            "summary": "情報の本質を見抜き、deeper insightを得るための質問技術",
+            "keyPoints": [
+              "So What? - それで何が言えるのか？",
+              "Why So? - なぜそうなるのか？",
+              "表面的な情報から本質的な洞察への変換"
+            ],
+            "icon": "🔍",
+            "color": "#EF4444"
+          },
+          "sessions": [
+            {
+              "id": "so_what_basics",
+              "title": "So What?/Why So?の基本",
+              "estimatedMinutes": 3,
+              "type": "knowledge",
+              "displayOrder": 1,
+              "content": [
+                {
+                  "id": "so_what_concept",
+                  "type": "text",
+                  "title": "深掘り思考の重要性",
+                  "content": "So What?（それで何が言えるのか？）とWhy So?（なぜそうなるのか？）は、表面的な情報から本質的な洞察を得るための質問技術です。データや事実をただ並べるだけでなく、その意味や背景を深く掘り下げることで、価値ある洞察や提案につなげることができます。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "so_what_usage",
+                  "type": "key_points",
+                  "title": "2つの質問の使い分け",
+                  "content": "• So What? - 事実から洞察へ（上位概念・示唆の抽出）\n• Why So? - 現象から原因へ（下位要因・根本原因の探求）\n• 交互に使うことで多角的な分析が可能",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "so_what_example",
+                  "type": "example",
+                  "title": "実例：売上データの分析",
+                  "content": "【事実】「A商品の売上が前年比20%減少」\n【So What?】→「主力商品の競争力低下により事業基盤が揺らいでいる」\n【Why So?】→「競合の新商品投入」「顧客ニーズの変化」「価格競争力の低下」\n【So What?】→「抜本的な商品戦略見直しが急務」",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "so_what_quiz_1",
+                  "question": "「今四半期の営業利益率が5%改善した」という事実に対する適切な\"So What?\"は？",
+                  "options": [
+                    "売上が増加した",
+                    "効率性向上により競争力が強化された",
+                    "コストが削減された",
+                    "前年より良い結果だった"
+                  ],
+                  "correct": 1,
+                  "explanation": "So What?では事実から得られる洞察や意味を抽出します。効率性向上による競争力強化は本質的な示唆です。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "so_what_practice",
+              "title": "深掘り思考実践ワーク",
+              "estimatedMinutes": 3,
+              "type": "practice",
+              "displayOrder": 2,
+              "content": [
+                {
+                  "id": "deep_thinking_exercise",
+                  "type": "text",
+                  "title": "実践課題：顧客満足度調査結果",
+                  "content": "以下の調査結果について、So What?とWhy So?を繰り返して深掘りしてください：\n「顧客満足度が85%で業界平均（80%）を上回ったが、リピート率は65%と業界平均（70%）を下回っている」",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "thinking_process",
+                  "type": "key_points",
+                  "title": "分析プロセス",
+                  "content": "1. 事実の整理と確認\n2. So What?で示唆を抽出\n3. Why So?で原因を探求\n4. さらにSo What?で対策の方向性を導出",
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "so_what_practice_quiz",
+                  "question": "上記の状況で最初に問うべき\"Why So?\"として最も適切なのは？",
+                  "options": [
+                    "なぜ顧客満足度が高いのか？",
+                    "なぜ満足度は高いのにリピート率が低いのか？",
+                    "なぜ業界平均と差があるのか？",
+                    "なぜ調査を実施したのか？"
+                  ],
+                  "correct": 1,
+                  "explanation": "矛盾する2つの指標（高い満足度vs低いリピート率）の関係性を探ることが最も重要な論点です。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "so_what_mastery",
+              "title": "洞察力向上のコツ",
+              "estimatedMinutes": 3,
+              "type": "case_study",
+              "displayOrder": 3,
+              "content": [
+                {
+                  "id": "insight_techniques",
+                  "type": "text",
+                  "title": "洞察力を高める技法",
+                  "content": "優れた洞察を得るためには、多角的な視点が重要です。時間軸（過去・現在・未来）、立場の違い（顧客・競合・自社）、レベル感（戦略・戦術・オペレーション）などの切り口から So What?/Why So? を繰り返すことで、表面的でない深い理解が得られます。",
+                  "duration": 2,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "common_mistakes",
+                  "type": "key_points",
+                  "title": "よくある間違いと対策",
+                  "content": "• 事実の言い換えで終わる → 「だから何？」を5回繰り返す\n• 推測と事実を混同 → データで検証できることを明確化\n• 浅い分析で満足 → 「本当にそれだけ？」と自問\n• 一面的な見方 → 複数のステークホルダー視点で検討",
+                  "duration": 1,
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "so_what_mastery_quiz",
+                  "question": "深い洞察を得るために最も重要なことは？",
+                  "options": [
+                    "データを詳細に分析すること",
+                    "多角的視点で繰り返し問い直すこと",
+                    "業界知識を豊富に持つこと",
+                    "複雑な分析手法を使うこと"
+                  ],
+                  "correct": 1,
+                  "explanation": "様々な角度から So What?/Why So? を繰り返すことで、表面的でない本質的な洞察が得られます。",
+                  "type": "single_choice"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "framework_application",
+      "title": "フレームワーク活用",
+      "description": "戦略分析に必要な主要フレームワークの理解と応用",
+      "categoryId": "strategy_management",
+      "subcategoryId": "競争戦略・フレームワーク",
+      "estimatedDays": 8,
+      "displayOrder": 2,
+      "badge": {
+        "id": "framework_master_badge",
+        "title": "フレームワークマスター",
+        "description": "主要な戦略フレームワークを習得し実践応用できる",
+        "icon": "🎯",
+        "color": "#10B981"
+      },
+      "themes": [
+        {
+          "id": "3c_analysis",
+          "title": "3C分析",
+          "description": "Customer・Competitor・Companyの3視点による環境分析",
+          "estimatedMinutes": 9,
+          "displayOrder": 1,
+          "rewardCard": {
+            "id": "3c_analysis_card",
+            "title": "3C分析",
+            "summary": "Customer（顧客）・Competitor（競合）・Company（自社）の3つの視点から事業環境を分析",
+            "keyPoints": [
+              "顧客ニーズと市場動向の把握",
+              "競合他社の戦略と強み弱みの分析",
+              "自社の能力と資源の客観的評価"
+            ],
+            "icon": "🎪",
+            "color": "#3B82F6"
+          },
+          "sessions": [
+            {
+              "id": "3c_basics",
+              "title": "3C分析の基本",
+              "estimatedMinutes": 3,
+              "type": "knowledge",
+              "displayOrder": 1,
+              "content": [
+                {
+                  "id": "3c_concept",
+                  "type": "text",
+                  "title": "3C分析とは",
+                  "content": "3C分析は、Customer（顧客・市場）、Competitor（競合）、Company（自社）の3つの視点から事業環境を分析するフレームワークです。マッキンゼーの大前研一氏によって提唱され、戦略立案の基本として広く活用されています。3つのCを包括的に分析することで、成功要因（KSF：Key Success Factor）を特定できます。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "3c_components",
+                  "type": "key_points",
+                  "title": "3Cの構成要素",
+                  "content": "• Customer: 市場規模、顧客ニーズ、購買行動、市場成長性\n• Competitor: 競合他社の戦略、強み・弱み、市場シェア\n• Company: 自社の経営資源、コアコンピタンス、バリューチェーン",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "3c_purpose",
+                  "type": "example",
+                  "title": "分析の目的と効果",
+                  "content": "【目的】戦略オプションの明確化と優先順位付け\n【効果】\n✓ 市場機会の特定（Customer分析）\n✓ 競合脅威の把握（Competitor分析）\n✓ 自社の競争優位源泉の発見（Company分析）\n✓ 3C統合による戦略方向性の決定",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "3c_quiz_1",
+                  "question": "3C分析のCompetitor分析で最も重要な観点は？",
+                  "options": [
+                    "競合他社の売上規模",
+                    "競合他社の戦略と差別化要因",
+                    "競合他社の社員数",
+                    "競合他社の本社所在地"
+                  ],
+                  "correct": 1,
+                  "explanation": "競合分析では、競合の戦略方向性と差別化要因を理解することで、自社の戦略を差別化する方向性を見出せます。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "3c_practice",
+              "title": "3C分析実践ワーク",
+              "estimatedMinutes": 3,
+              "type": "practice",
+              "displayOrder": 2,
+              "content": [
+                {
+                  "id": "3c_exercise",
+                  "type": "text",
+                  "title": "実践課題：カフェチェーンの戦略検討",
+                  "content": "あなたは新興カフェチェーンの戦略企画担当者です。スターバックス、タリーズなどが競合の市場で差別化戦略を検討するため、3C分析を実施してください。各Cについて最重要な分析ポイントを3つずつ挙げてみましょう。",
+                  "duration": 2,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "3c_analysis_tips",
+                  "type": "key_points",
+                  "title": "効果的な分析のコツ",
+                  "content": "• Customer: デモグラフィックだけでなく行動・心理も分析\n• Competitor: 直接競合だけでなく代替手段も考慮\n• Company: 強みだけでなく弱み・制約も正直に評価\n• 3Cの関係性と相互作用を重視",
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "3c_practice_quiz",
+                  "question": "カフェ業界のCustomer分析で最も重要な観点は？",
+                  "options": [
+                    "年齢と性別の分布",
+                    "利用シーンと求める価値",
+                    "居住地域の分布",
+                    "年収レベル"
+                  ],
+                  "correct": 1,
+                  "explanation": "利用シーン（勉強、商談、憩い等）と求める価値（味、空間、利便性等）を理解することで、適切なポジショニングが可能になります。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "3c_strategic_insights",
+              "title": "3C統合と戦略洞察",
+              "estimatedMinutes": 3,
+              "type": "case_study",
+              "displayOrder": 3,
+              "content": [
+                {
+                  "id": "3c_integration",
+                  "type": "text",
+                  "title": "3C統合分析の重要性",
+                  "content": "3C分析の真価は、各Cを個別に分析するだけでなく、3つのCの交差点で戦略機会を発見することです。「顧客ニーズは高いが競合が対応できておらず、自社なら対応可能」な領域こそが、最大の戦略機会となります。このSweet Spotを見つけることが3C分析の最終目標です。",
+                  "duration": 2,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "3c_success_stories",
+                  "type": "example",
+                  "title": "成功事例：ニトリの戦略",
+                  "content": "【Customer】価格志向の家具ニーズ拡大\n【Competitor】高級路線中心で低価格帯が手薄\n【Company】製造小売業の強みと海外生産体制\n→「お、ねだん以上。ニトリ」で低価格・高品質を実現し、家具業界のリーダーに",
+                  "duration": 1,
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "3c_integration_quiz",
+                  "question": "3C分析で最も価値の高い戦略機会とは？",
+                  "options": [
+                    "自社の最も強い領域",
+                    "市場が最も大きい領域",
+                    "競合が最も弱い領域",
+                    "顧客ニーズがあり競合が弱く自社が強い領域"
+                  ],
+                  "correct": 3,
+                  "explanation": "3Cが交差する「Sweet Spot」で戦略機会を見つけることが、持続可能な競争優位につながります。",
+                  "type": "single_choice"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

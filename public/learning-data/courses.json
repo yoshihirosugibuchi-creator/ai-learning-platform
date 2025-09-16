@@ -1,0 +1,82 @@
+{
+  "courses": [
+    {
+      "id": "consulting_thinking_basics",
+      "title": "コンサル思考法基礎コース",
+      "description": "論理的思考とフレームワーク活用で問題解決力を身につける",
+      "estimatedDays": 14,
+      "difficulty": "beginner",
+      "icon": "🧠",
+      "color": "#6366F1",
+      "displayOrder": 1,
+      "genreCount": 2,
+      "themeCount": 4,
+      "status": "available"
+    },
+    {
+      "id": "business_numbers_mastery",
+      "title": "ビジネス数字力強化コース",
+      "description": "財務分析と数字に基づく意思決定力を身につける",
+      "estimatedDays": 12,
+      "difficulty": "intermediate",
+      "icon": "📊",
+      "color": "#F59E0B",
+      "displayOrder": 3,
+      "genreCount": 2,
+      "themeCount": 6,
+      "status": "coming_soon"
+    },
+    {
+      "id": "marketing_practice",
+      "title": "マーケティング実践コース",
+      "description": "顧客理解から戦略立案、施策実行まで体系的に学ぶ",
+      "estimatedDays": 18,
+      "difficulty": "intermediate",
+      "icon": "📈",
+      "color": "#EF4444",
+      "displayOrder": 2,
+      "genreCount": 2,
+      "themeCount": 5,
+      "status": "available"
+    },
+    {
+      "id": "team_leader_basics",
+      "title": "チームリーダー基礎コース",
+      "description": "チーム運営と人材育成の基本スキルを習得",
+      "estimatedDays": 8,
+      "difficulty": "beginner",
+      "icon": "👥",
+      "color": "#06B6D4",
+      "displayOrder": 4,
+      "genreCount": 2,
+      "themeCount": 6,
+      "status": "coming_soon"
+    },
+    {
+      "id": "dx_introduction",
+      "title": "DX推進入門コース",
+      "description": "デジタル変革の基礎知識とデータ活用スキル",
+      "estimatedDays": 8,
+      "difficulty": "beginner",
+      "icon": "🚀",
+      "color": "#8B5CF6",
+      "displayOrder": 5,
+      "genreCount": 2,
+      "themeCount": 6,
+      "status": "coming_soon"
+    },
+    {
+      "id": "ai_literacy_fundamentals",
+      "title": "AI活用リテラシー基礎コース",
+      "description": "ビジネスでのAI活用、プロンプト入門から実践まで体系的に学習",
+      "estimatedDays": 28,
+      "difficulty": "beginner",
+      "icon": "🤖",
+      "color": "#7C3AED",
+      "displayOrder": 6,
+      "genreCount": 4,
+      "themeCount": 4,
+      "status": "available"
+    }
+  ]
+}

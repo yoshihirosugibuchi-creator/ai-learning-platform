@@ -1,0 +1,2651 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "category": "analytical_problem_solving",
+      "subcategory": "財務・会計分析",
+      "question": "ROE（自己資本利益率）が15%の企業について、最も適切な解釈は？",
+      "options": [
+        "売上高が業界平均より高い",
+        "従業員数が適正規模である",
+        "設立年数が長く安定している",
+        "自己資本を効率的に活用して利益を創出している"
+      ],
+      "correct": 3,
+      "explanation": "ROE = 当期純利益 ÷ 自己資本 × 100で計算されます。15%は一般的に良好な数値で、投下した自己資本に対して効率的に利益を生み出していることを示しています。",
+      "difficulty": "中級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "ROA",
+        "財務レバレッジ",
+        "収益性分析"
+      ],
+      "source": "日本公認会計士協会 財務分析ガイドライン",
+      "deleted": false
+    },
+    {
+      "id": 2,
+      "category": "analytical_problem_solving",
+      "subcategory": "論理的思考・分析",
+      "question": "3C分析のフレームワークを構成する3つの要素として正しい組み合わせは？",
+      "options": [
+        "Customer（顧客）、Competitor（競合）、Company（自社）",
+        "Cost（コスト）、Channel（チャネル）、Campaign（キャンペーン）",
+        "Culture（文化）、Climate（環境）、Capacity（能力）",
+        "Capital（資本）、Communication（伝達）、Control（統制）"
+      ],
+      "correct": 0,
+      "explanation": "3C分析は、Customer（顧客）、Competitor（競合）、Company（自社）の3つの視点から事業環境を分析する代表的な戦略フレームワークです。顧客ニーズ、競合状況、自社の強みを包括的に分析することで効果的な戦略立案が可能になります。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "SWOT分析",
+        "5Forces",
+        "戦略立案"
+      ],
+      "source": "マッキンゼー戦略フレームワーク集",
+      "deleted": false
+    },
+    {
+      "id": 3,
+      "category": "communication_presentation",
+      "subcategory": "セールス・マーケティング",
+      "question": "顧客生涯価値（LTV）を向上させる最も効果的な施策の組み合わせは？",
+      "options": [
+        "新規顧客獲得のみに注力",
+        "広告費の大幅削減",
+        "客単価向上と継続率向上の両方",
+        "商品価格の値下げ"
+      ],
+      "correct": 2,
+      "explanation": "LTV = 客単価 × 購買頻度 × 継続期間で算出されます。客単価と継続率の向上により、既存顧客からの収益を最大化できます。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "CAC",
+        "チャーンレート",
+        "リテンション戦略"
+      ],
+      "source": "デジタルマーケティング実践ガイド",
+      "deleted": false
+    },
+    {
+      "id": 4,
+      "category": "leadership_management",
+      "subcategory": "プロジェクトマネジメント",
+      "question": "プロジェクトで発生した予期しない技術的課題への最適な対応は？",
+      "options": [
+        "スケジュール調整と代替案検討",
+        "課題を無視して進行",
+        "プロジェクト即座中止",
+        "担当者のみで解決"
+      ],
+      "correct": 0,
+      "explanation": "技術的課題が発生した場合、まず影響度を評価し、スケジュール調整や代替案を検討することが重要です。ステークホルダーとの早期共有も必要です。",
+      "difficulty": "中級",
+      "timeLimit": 50,
+      "relatedTopics": [
+        "リスクアセスメント",
+        "ステークホルダー管理",
+        "変更管理"
+      ],
+      "source": "PMI プロジェクト管理標準",
+      "deleted": false
+    },
+    {
+      "id": 5,
+      "category": "analytical_problem_solving",
+      "subcategory": "論理的思考・分析",
+      "question": "相関係数0.8が示す関係性について正しいのは？",
+      "options": [
+        "強い正の相関",
+        "弱い正の相関",
+        "因果関係が確定",
+        "データに誤りがある"
+      ],
+      "correct": 0,
+      "explanation": "相関係数0.8は強い正の相関を示します（一般的に0.7以上が強い相関）。相関関係とは2種類のデータの関係性を示すもので、因果関係は異なることに注意が必要です。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "回帰分析",
+        "統計的有意性",
+        "データ解釈"
+      ],
+      "source": "統計学実践ハンドブック",
+      "deleted": false
+    },
+    {
+      "id": 6,
+      "category": "leadership_management",
+      "subcategory": "チーム運営・人材育成",
+      "question": "チームのモチベーション向上に最も効果的なアプローチは？",
+      "options": [
+        "報酬額の大幅増額のみ",
+        "目標設定と成長機会の提供",
+        "監視体制の強化",
+        "競争環境の徹底"
+      ],
+      "correct": 1,
+      "explanation": "内発的動機を高める目標設定と成長機会の提供が、持続的なモチベーション向上に最も効果的です。単純な金銭的報酬だけでは長期的な効果は限定的です。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "動機理論",
+        "目標設定理論",
+        "チームビルディング"
+      ],
+      "source": "ハーバードビジネスレビュー リーダーシップ論集",
+      "deleted": false
+    },
+    {
+      "id": 7,
+      "category": "innovation_creativity",
+      "subcategory": "イノベーション手法",
+      "question": "デザイン思考のプロセスで最初に行うべきステップは？",
+      "options": [
+        "プロトタイプの作成",
+        "ユーザーニーズの共感的理解",
+        "アイデアの発散思考",
+        "市場分析とベンチマーク"
+      ],
+      "correct": 1,
+      "explanation": "デザイン思考では「共感（Empathize）」が最初のステップです。ユーザーの視点に立ち、真のニーズや課題を深く理解することから始まります。",
+      "difficulty": "基礎",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "人間中心設計",
+        "ユーザーリサーチ",
+        "ペルソナ設計"
+      ],
+      "source": "スタンフォード大学 d.school デザイン思考ガイド",
+      "deleted": false
+    },
+    {
+      "id": 8,
+      "category": "digital_technology",
+      "subcategory": "DX・IT戦略",
+      "question": "企業のデジタル変革（DX）を成功させるための最重要要素は？",
+      "options": [
+        "最新技術の全面導入",
+        "IT予算の大幅増額",
+        "外部コンサルタントへの委託",
+        "組織文化とマインドセットの変革"
+      ],
+      "correct": 3,
+      "explanation": "DXの成功には技術導入以上に、組織全体のマインドセット変革と変化を受け入れる文化の醸成が不可欠です。人的要素が最も重要な成功要因となります。",
+      "difficulty": "中級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "変更管理",
+        "組織開発",
+        "デジタルリテラシー"
+      ],
+      "source": "経済産業省 DXレポート2.0",
+      "deleted": false
+    },
+    {
+      "id": 9,
+      "category": "business_strategy",
+      "subcategory": "事業戦略・企画",
+      "question": "ESG経営において「E（環境）」「S（社会）」「G（ガバナンス）」のバランスを取る際の基本的な考え方は？",
+      "options": [
+        "環境要素を最優先に考慮する",
+        "短期的利益を重視してバランスを調整",
+        "法的要求事項のみに対応する",
+        "ステークホルダーの期待に応じて統合的に推進"
+      ],
+      "correct": 3,
+      "explanation": "ESG経営では、投資家、従業員、顧客、地域社会などの多様なステークホルダーの期待を理解し、E・S・Gの各要素を統合的に推進することが重要です。",
+      "difficulty": "上級",
+      "timeLimit": 50,
+      "relatedTopics": [
+        "ステークホルダー資本主義",
+        "SDGs",
+        "統合報告書"
+      ],
+      "source": "日本取引所グループ ESG情報開示実践ハンドブック",
+      "deleted": false
+    },
+    {
+      "id": 10,
+      "category": "leadership_management",
+      "subcategory": "組織開発・変革",
+      "question": "アジャイル組織の特徴として最も適切でないものは？",
+      "options": [
+        "階層的な意思決定構造の維持",
+        "迅速な意思決定と実行力",
+        "顧客価値創造への集中",
+        "学習と適応の文化"
+      ],
+      "correct": 0,
+      "explanation": "アジャイル組織では階層的な意思決定構造ではなく、権限委譲と分散型の意思決定が重視されます。迅速性と柔軟性を確保するため、フラットな組織構造が基本となります。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "権限委譲",
+        "自律型チーム",
+        "スクラム経営"
+      ],
+      "source": "ハーバードビジネスレビュー アジャイル組織論",
+      "deleted": false
+    },
+    {
+      "id": 11,
+      "category": "digital_technology",
+      "subcategory": "DX・IT戦略",
+      "question": "DXを成功させるために最も重要な要素は？",
+      "options": [
+        "最新のITシステムの導入",
+        "AIツールの大量投入",
+        "組織文化の変革と人材育成",
+        "コストの大幅削減"
+      ],
+      "correct": 2,
+      "explanation": "DXの成功には技術導入以上に、組織全体のマインドセット変革と従業員のデジタルスキル向上が不可欠です。文化的変革なしに技術だけを導入しても期待する効果は得られません。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "組織変革",
+        "デジタルリテラシー",
+        "変革管理"
+      ],
+      "source": "経済産業省 DX推進ガイドライン",
+      "deleted": true
+    },
+    {
+      "id": 12,
+      "category": "analytical_problem_solving",
+      "subcategory": "論理的思考・分析",
+      "question": "プロスペクト理論における『損失回避性』とは？",
+      "options": [
+        "利益を得る喜びより損失を被る痛みの方が大きく感じられる",
+        "確実な利益を好み、リスクを避ける傾向",
+        "過去の成功体験に固執する傾向",
+        "群衆の意見に従って行動する傾向"
+      ],
+      "correct": 0,
+      "explanation": "損失回避性とは、同じ金額であっても利益を得る喜びより損失を被る痛みの方が約2倍大きく感じられる心理的傾向です。この特性を理解することで、より効果的な意思決定や交渉が可能になります。",
+      "difficulty": "上級",
+      "timeLimit": 50,
+      "relatedTopics": [
+        "認知バイアス",
+        "リスク知覚",
+        "意思決定理論"
+      ],
+      "source": "ダニエル・カーネマン『ファスト&スロー』",
+      "deleted": true
+    },
+    {
+      "id": 13,
+      "category": "business_strategy",
+      "subcategory": "事業戦略・企画",
+      "question": "サプライチェーンレジリエンス向上のために最も効果的な施策は？",
+      "options": [
+        "単一サプライヤーとの長期契約",
+        "マルチソーシング戦略の実施",
+        "在庫の完全ゼロ化",
+        "コスト削減の最優先"
+      ],
+      "correct": 1,
+      "explanation": "マルチソーシング戦略により、複数のサプライヤーから調達することで、特定のサプライヤーで問題が発生した際のリスクを分散できます。コロナ禍で重要性が再認識された戦略です。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "リスク分散",
+        "BCP",
+        "調達管理"
+      ],
+      "source": "日本ロジスティクスシステム協会",
+      "deleted": false
+    },
+    {
+      "id": 14,
+      "category": "innovation_creativity",
+      "subcategory": "新規事業開発",
+      "question": "リーンスタートアップ手法の核となる概念は？",
+      "options": [
+        "完璧な製品を作ってから市場投入",
+        "大規模な市場調査の実施",
+        "競合他社の完全な模倣",
+        "仮説構築→実験→学習のサイクル"
+      ],
+      "correct": 3,
+      "explanation": "リーンスタートアップでは『構築→計測→学習』のサイクルを高速で回し、顧客からのフィードバックを基に製品やサービスを改善していきます。無駄を排除し、市場のニーズに合った製品開発を目指します。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "MVP",
+        "仮説検証",
+        "アジャイル開発"
+      ],
+      "source": "エリック・リース『リーン・スタートアップ』",
+      "deleted": false
+    },
+    {
+      "id": 15,
+      "category": "leadership_management",
+      "subcategory": "チーム運営・人材育成",
+      "question": "エンゲージメント向上に最も効果的な施策は？",
+      "options": [
+        "給与の大幅アップのみ",
+        "労働時間の延長",
+        "成長機会の提供と目的意識の共有",
+        "厳格な業績評価制度"
+      ],
+      "correct": 2,
+      "explanation": "従業員エンゲージメント向上には、金銭的報酬以上に成長機会の提供、仕事の意味や目的の明確化、自律性の確保が重要です。内発的動機を高める環境作りが持続的な成果につながります。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "モチベーション理論",
+        "キャリア開発",
+        "組織心理学"
+      ],
+      "source": "ギャラップ社 エンゲージメント調査",
+      "deleted": false
+    },
+    {
+      "id": 16,
+      "category": "analytical_problem_solving",
+      "subcategory": "財務・会計分析",
+      "question": "DCF法による企業価値評価で最も重要な要素は？",
+      "options": [
+        "現在の売上高",
+        "将来フリーキャッシュフローの予測精度",
+        "過去の利益実績",
+        "業界平均PER"
+      ],
+      "correct": 1,
+      "explanation": "DCF法では将来のフリーキャッシュフローを現在価値に割り戻して企業価値を算出するため、将来キャッシュフローの予測精度が評価結果に最も大きく影響します。割引率の設定も重要な要素です。",
+      "difficulty": "上級",
+      "timeLimit": 50,
+      "relatedTopics": [
+        "WACC",
+        "フリーキャッシュフロー",
+        "現在価値計算"
+      ],
+      "source": "マッキンゼー バリュエーション教本",
+      "deleted": false
+    },
+    {
+      "id": 17,
+      "category": "business_strategy",
+      "subcategory": "事業戦略・企画",
+      "question": "ESG投資において'G'（ガバナンス）で重視される要素は？",
+      "options": [
+        "環境負荷の削減",
+        "社会貢献活動",
+        "取締役会の独立性と透明性",
+        "従業員の多様性"
+      ],
+      "correct": 2,
+      "explanation": "ESGの'G'（ガバナンス）では、取締役会の独立性、透明性、説明責任、株主権利の保護などコーポレートガバナンスの質が評価されます。適切なガバナンスは長期的な企業価値向上の基盤となります。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "コーポレートガバナンス",
+        "取締役会",
+        "株主還元"
+      ],
+      "source": "PRI（責任投資原則）ガイドライン",
+      "deleted": false
+    },
+    {
+      "id": 18,
+      "category": "communication_presentation",
+      "subcategory": "交渉・調整",
+      "question": "Win-Winの交渉を実現するために最も重要なことは？",
+      "options": [
+        "相手の弱点を徹底的に攻撃する",
+        "最初に高い条件を提示する",
+        "互いの真の利益・関心事を理解する",
+        "感情的な議論を優先する"
+      ],
+      "correct": 2,
+      "explanation": "Win-Win交渉では、表面的な要求ではなく、その背景にある真の利益や関心事（真の利害）を理解することが重要です。互いのニーズを満たす創造的な解決策を見つけることで、双方が満足できる結果を生み出せます。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "利害関係分析",
+        "BATNA",
+        "価値創造"
+      ],
+      "source": "ロジャー・フィッシャー『ハーバード流交渉術』",
+      "deleted": false
+    },
+    {
+      "id": 19,
+      "category": "leadership_management",
+      "subcategory": "チーム運営・人材育成",
+      "question": "多様性のあるチームで最高のパフォーマンスを引き出すには？",
+      "options": [
+        "全員を同じ方法で管理する",
+        "競争を煽って緊張感を作る",
+        "個々の強みを活かし役割を明確化する",
+        "トップダウンで指示を出す"
+      ],
+      "correct": 2,
+      "explanation": "多様性のあるチームでは、メンバーそれぞれの異なる強み、価値観、働き方を理解し、適材適所で役割を分担することが重要です。多様性を活かすことで、イノベーションと創造性が生まれやすくなります。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "ダイバーシティ&インクルージョン",
+        "強み発見",
+        "チームビルディング"
+      ],
+      "source": "マーカス・バッキンガム『最高のチーム』",
+      "deleted": false
+    },
+    {
+      "id": 20,
+      "category": "crisis_risk_management",
+      "subcategory": "危機管理・BCP",
+      "question": "ブラックスワンイベント（想定外の危機）への対応で最も重要なのは？",
+      "options": [
+        "完璧な予測システムの構築",
+        "リスクの完全な排除",
+        "過去のデータに基づく対策",
+        "組織の適応力と復元力の強化"
+      ],
+      "correct": 3,
+      "explanation": "ブラックスワンイベントは定義上予測困難なため、完璧な予測より組織の適応力（レジリエンス）と復元力を高めることが重要です。危機発生時に迅速に学習・適応・回復できる組織能力の構築が鍵となります。",
+      "difficulty": "上級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "レジリエンス",
+        "危機対応",
+        "組織学習"
+      ],
+      "source": "ナシーム・ニコラス・タレブ『ブラック・スワン』",
+      "deleted": false
+    },
+    {
+      "id": 21,
+      "category": "communication_presentation",
+      "subcategory": "結論ファースト・構造化思考",
+      "question": "ピラミッドストラクチャーの基本原則として最も重要なのは？",
+      "options": [
+        "結論を最初に示し、根拠を論理的に整理する",
+        "細かい情報から積み上げて結論を導く",
+        "時系列順に情報を並べる",
+        "感情に訴える表現を重視する"
+      ],
+      "correct": 0,
+      "explanation": "ピラミッドストラクチャーでは結論を最初に示し、その根拠をMECE（漏れなく重複なく）で整理することで、相手に分かりやすく効果的に伝えることができます。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "MECE",
+        "ロジックツリー",
+        "結論ファースト"
+      ],
+      "source": "バーバラ・ミント『考える技術・書く技術』",
+      "deleted": false
+    },
+    {
+      "id": 22,
+      "category": "communication_presentation",
+      "subcategory": "結論ファースト・構造化思考",
+      "question": "MECE（ミーシー）の原則に従った分類として適切なのは？",
+      "options": [
+        "売上：国内・海外・アジア・欧州",
+        "年齢：10代・20代・30代・40代以上",
+        "売上：商品A・商品B・その他商品",
+        "顧客：新規・既存・VIP・一般"
+      ],
+      "correct": 1,
+      "explanation": "MECEは『漏れなく重複なく』の原則です。年齢の分類は重複がなく、全ての年齢層をカバーしています。他の選択肢は重複や漏れがあります。",
+      "difficulty": "基礎",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "ロジックツリー",
+        "分類技法",
+        "構造化思考"
+      ],
+      "source": "マッキンゼー式ロジカルシンキング",
+      "deleted": false
+    },
+    {
+      "id": 23,
+      "category": "communication_presentation",
+      "subcategory": "結論ファースト・構造化思考",
+      "question": "So What?（だから何？）思考で最も重要なことは？",
+      "options": [
+        "データを詳細に分析すること",
+        "事実から示唆・意味合いを導き出すこと",
+        "できるだけ多くの情報を収集すること",
+        "専門用語を使って説明すること"
+      ],
+      "correct": 1,
+      "explanation": "So What?思考では、収集した事実やデータから『だから何が言えるのか』という示唆や意味合いを導き出すことが重要です。単なる情報の羅列ではなく、インサイトを抽出することで価値のある提言になります。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "インサイト抽出",
+        "示唆導出",
+        "仮説思考"
+      ],
+      "source": "コンサルティング思考法",
+      "deleted": false
+    },
+    {
+      "id": 24,
+      "category": "communication_presentation",
+      "subcategory": "結論ファースト・構造化思考",
+      "question": "論理的な文章構成における『帰納法』の特徴は？",
+      "options": [
+        "一般的な原則から具体的な結論を導く",
+        "複数の具体例から一般的な結論を導く",
+        "対立する意見を比較検討する",
+        "時系列順に事象を整理する"
+      ],
+      "correct": 1,
+      "explanation": "帰納法は複数の具体的な事例や観察から、一般的な法則や結論を導き出す論理的推論方法です。演繹法とは逆のアプローチで、パターンを見つけて仮説を立てる際によく使われます。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "演繹法",
+        "論理的推論",
+        "仮説構築"
+      ],
+      "source": "論理学基礎テキスト",
+      "deleted": false
+    },
+    {
+      "id": 25,
+      "category": "communication_presentation",
+      "subcategory": "結論ファースト・構造化思考",
+      "question": "複雑な問題を構造化する際の『イシューツリー』の作成で最も重要なのは？",
+      "options": [
+        "できるだけ多くの要素を洗い出す",
+        "過去の成功事例を参考にする",
+        "問題の本質的な原因を特定して分解する",
+        "関係者全員の意見を網羅する"
+      ],
+      "correct": 2,
+      "explanation": "イシューツリーでは、解決すべき問題の本質を特定し、それを論理的に分解していくことが重要です。量より質を重視し、真の課題解決につながる要素に焦点を当てる必要があります。",
+      "difficulty": "上級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "イシュー分析",
+        "問題分解",
+        "仮説思考"
+      ],
+      "source": "イシューからはじめよ",
+      "deleted": false
+    },
+    {
+      "id": 26,
+      "category": "communication_presentation",
+      "subcategory": "資料作成・可視化技術",
+      "question": "効果的なプレゼンテーション資料作成で最も重要な原則は？",
+      "options": [
+        "1スライド1メッセージの原則を守る",
+        "できるだけ多くの情報を一つのスライドに盛り込む",
+        "文字サイズは統一して8pt以下にする",
+        "すべてのスライドに会社ロゴを大きく表示する"
+      ],
+      "correct": 0,
+      "explanation": "効果的な資料作成では「1スライド1メッセージ」の原則が重要です。聞き手が理解しやすく、重要なポイントが明確になり、記憶に残りやすくなります。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "スライド設計",
+        "視覚的表現",
+        "情報整理"
+      ],
+      "source": "プレゼンテーション・ゼン",
+      "deleted": false
+    },
+    {
+      "id": 27,
+      "category": "communication_presentation",
+      "subcategory": "資料作成・可視化技術",
+      "question": "データの可視化において最も避けるべき表現は？",
+      "options": [
+        "棒グラフでの比較表示",
+        "円グラフでの構成比表示",
+        "折れ線グラフでの推移表示",
+        "3Dグラフによる装飾的表現"
+      ],
+      "correct": 3,
+      "explanation": "3Dグラフは見た目は美しいですが、データの正確な読み取りを困難にし、誤解を招く可能性があります。シンプルで正確な2Dグラフの方が効果的です。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "データ視覚化",
+        "グラフ設計",
+        "認知バイアス"
+      ],
+      "source": "エドワード・タフテ『視覚的表示の理論と実践』",
+      "deleted": false
+    },
+    {
+      "id": 28,
+      "category": "communication_presentation",
+      "subcategory": "資料作成・可視化技術",
+      "question": "複雑なデータを分かりやすく伝える際の『階層構造』の活用法は？",
+      "options": [
+        "すべての詳細を同じレベルで表示する",
+        "文字サイズをすべて統一する",
+        "重要度に応じて情報を段階的に整理する",
+        "色は白黒のみを使用する"
+      ],
+      "correct": 2,
+      "explanation": "階層構造では、情報の重要度に応じてレベル分けし、視覚的にも文字サイズ、色、配置で差をつけることで、聞き手が情報の優先順位を理解しやすくなります。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "情報設計",
+        "視覚的階層",
+        "認知負荷"
+      ],
+      "source": "情報デザインの基礎",
+      "deleted": false
+    },
+    {
+      "id": 29,
+      "category": "communication_presentation",
+      "subcategory": "資料作成・可視化技術",
+      "question": "インフォグラフィックスで最も効果的な要素の組み合わせは？",
+      "options": [
+        "文字情報のみで構成する",
+        "写真だけを多用する",
+        "抽象的なデザインを重視する",
+        "図表・アイコン・データを統合する"
+      ],
+      "correct": 3,
+      "explanation": "インフォグラフィックスでは、図表、アイコン、データを適切に組み合わせることで、複雑な情報を直感的に理解しやすい形で表現できます。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "インフォグラフィックス",
+        "視覚的コミュニケーション",
+        "デザイン思考"
+      ],
+      "source": "インフォグラフィックス・デザイン",
+      "deleted": false
+    },
+    {
+      "id": 30,
+      "category": "communication_presentation",
+      "subcategory": "資料作成・可視化技術",
+      "question": "ストーリーテリングを活用した資料構成で重要な要素は？",
+      "options": [
+        "専門用語を多用した説明",
+        "できるだけ多くのデータを提示",
+        "時系列を無視した構成",
+        "起承転結の論理的な流れ"
+      ],
+      "correct": 3,
+      "explanation": "ストーリーテリングでは起承転結の論理的な流れが重要です。聞き手を引き込み、理解を促進し、記憶に残る資料を作ることができます。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "ストーリーテリング",
+        "論理構成",
+        "聴衆エンゲージメント"
+      ],
+      "source": "データストーリー",
+      "deleted": false
+    },
+    {
+      "id": 31,
+      "category": "communication_presentation",
+      "subcategory": "会議運営・ファシリテーション",
+      "question": "効果的な会議運営で最も重要なことは？",
+      "options": [
+        "できるだけ多くの参加者を集める",
+        "時間を長く取ってじっくり議論する",
+        "会議の目的とゴールを明確にする",
+        "リーダーが一方的に説明する"
+      ],
+      "correct": 2,
+      "explanation": "効果的な会議では、会議の目的と期待する成果を事前に明確にし、参加者全員が共通理解を持つことが重要です。これにより集中した議論が可能になります。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "会議設計",
+        "目的設定",
+        "コミュニケーション"
+      ],
+      "source": "効果的会議の進め方",
+      "deleted": false
+    },
+    {
+      "id": 32,
+      "category": "communication_presentation",
+      "subcategory": "会議運営・ファシリテーション",
+      "question": "ファシリテーターの最も重要な役割は？",
+      "options": [
+        "自分の意見を積極的に主張する",
+        "結論を事前に決めておく",
+        "参加者が対話しやすい環境を作る",
+        "反対意見を抑える"
+      ],
+      "correct": 2,
+      "explanation": "ファシリテーターの主な役割は、参加者が安心して発言でき、建設的な対話が生まれる環境を作ることです。中立的な立場でプロセスを管理します。",
+      "difficulty": "基礎",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "ファシリテーションスキル",
+        "心理的安全性",
+        "対話促進"
+      ],
+      "source": "ファシリテーション・グラフィック",
+      "deleted": false
+    },
+    {
+      "id": 33,
+      "category": "communication_presentation",
+      "subcategory": "会議運営・ファシリテーション",
+      "question": "会議で発言が偏る参加者がいる場合の効果的な対応は？",
+      "options": [
+        "発言しない人を名指しで意見を求める",
+        "発言しすぎる人を注意する",
+        "ラウンドロビン形式で全員から意見を聞く",
+        "発言しない人は無視する"
+      ],
+      "correct": 2,
+      "explanation": "ラウンドロビン形式（順番に発言）で全員から意見を聞くことで、発言の偏りを防ぎ、全員が参加できる会議になります。心理的プレッシャーを与えずに全員の声を聞けます。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "ラウンドロビン",
+        "インクルージョン",
+        "参加促進"
+      ],
+      "source": "ファシリテーションの技術",
+      "deleted": false
+    },
+    {
+      "id": 34,
+      "category": "communication_presentation",
+      "subcategory": "会議運営・ファシリテーション",
+      "question": "ブレインストーミングで最も重要なルールは？",
+      "options": [
+        "アイデアの質を重視して選別する",
+        "リーダーが主導してアイデアを出す",
+        "アイデアを批判せずに量を出す",
+        "実現可能なアイデアのみを出す"
+      ],
+      "correct": 2,
+      "explanation": "ブレインストーミングでは「批判しない」ことが最重要ルールです。アイデアの質より量を優先し、自由な発想を促進することで、創造的なアイデアが生まれやすくなります。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "ブレインストーミング",
+        "創造的思考",
+        "アイデア発想"
+      ],
+      "source": "アイデアのつくり方",
+      "deleted": false
+    },
+    {
+      "id": 35,
+      "category": "communication_presentation",
+      "subcategory": "会議運営・ファシリテーション",
+      "question": "オンライン会議で参加者のエンゲージメントを高める方法は？",
+      "options": [
+        "カメラをオフにしてリラックスさせる",
+        "チャット機能やブレイクアウトルームを活用する",
+        "一方的に説明して時間を短縮する",
+        "参加者はミュートにしておく"
+      ],
+      "correct": 1,
+      "explanation": "オンライン会議では、チャット機能やブレイクアウトルームを活用して、参加者が能動的に参加できる環境を作ることが重要です。オンライン特有の機能を活かしましょう。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "オンラインファシリテーション",
+        "デジタルツール",
+        "リモートコラボレーション"
+      ],
+      "source": "リモートワーク時代の会議術",
+      "deleted": false
+    },
+    {
+      "id": 36,
+      "category": "communication_presentation",
+      "subcategory": "交渉・説得技術",
+      "question": "効果的な交渉の基本スタンスとして最も重要なのは？",
+      "options": [
+        "互いの真の利益・関心事を理解する",
+        "相手の弱点を徹底的に攻撃する",
+        "最初に高い条件を提示する",
+        "感情的な議論を優先する"
+      ],
+      "correct": 0,
+      "explanation": "Win-Win交渉では、表面的な要求ではなく、その背景にある真の利益や関心事（真の利害）を理解することが重要です。互いのニーズを満たす創造的な解決策を見つけることで、双方が満足できる結果を生み出せます。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "利害関係分析",
+        "BATNA",
+        "価値創造"
+      ],
+      "source": "ロジャー・フィッシャー『ハーバード流交渉術』",
+      "deleted": false
+    },
+    {
+      "id": 37,
+      "category": "communication_presentation",
+      "subcategory": "交渉・説得技術",
+      "question": "BATNA（バトナ）の活用で最も重要なポイントは？",
+      "options": [
+        "交渉相手にBATNAを明かす",
+        "BATNAは使わないで交渉する",
+        "交渉前に自分のBATNAを準備しておく",
+        "相手のBATNAを破壊する"
+      ],
+      "correct": 2,
+      "explanation": "BATNA（Best Alternative to a Negotiated Agreement）は交渉が成立しなかった場合の最適な代替案です。事前に自分のBATNAを準備しておくことで、交渉力が向上し、冷静な判断ができます。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "代替案検討",
+        "交渉力",
+        "意思決定"
+      ],
+      "source": "ハーバード流交渉術",
+      "deleted": false
+    },
+    {
+      "id": 38,
+      "category": "communication_presentation",
+      "subcategory": "交渉・説得技術",
+      "question": "説得コミュニケーションで最も効果的なアプローチは？",
+      "options": [
+        "ロジック（論理）のみで説得する",
+        "エモーション（感情）のみで説得する",
+        "ロジックとエモーションをバランスよく組み合わせる",
+        "権威を使って強制する"
+      ],
+      "correct": 2,
+      "explanation": "効果的な説得では、ロジック（論理的な根拠）とエモーション（感情への訴求）を適切に組み合わせることが重要です。相手の状況や性格に合わせてバランスを調整します。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "ロジックとエモーション",
+        "説得の心理学",
+        "アリストテレスの修辞学"
+      ],
+      "source": "アリストテレス『修辞学』",
+      "deleted": false
+    },
+    {
+      "id": 39,
+      "category": "communication_presentation",
+      "subcategory": "交渉・説得技術",
+      "question": "困難な交渉相手との対話で最も効果的な技法は？",
+      "options": [
+        "アクティブリスニングで相手の話を最後まで聞く",
+        "相手の意見を完全に無視する",
+        "感情的に反駁して対立する",
+        "すぐに交渉を打ち切る"
+      ],
+      "correct": 0,
+      "explanation": "困難な相手であっても、アクティブリスニングで相手の話を最後まで聞き、相手の立場や関心事を理解する努力をすることで、信頼関係を築き、解決策を見つける可能性が高まります。",
+      "difficulty": "上級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "アクティブリスニング",
+        "共感コミュニケーション",
+        "信頼関係構築"
+      ],
+      "source": "難しい交渉を成功させる方法",
+      "deleted": false
+    },
+    {
+      "id": 40,
+      "category": "communication_presentation",
+      "subcategory": "交渉・説得技術",
+      "question": "ステークホルダーとの調整で最も重要なことは？",
+      "options": [
+        "各ステークホルダーの影響力と関心事を分析する",
+        "最も声の大きいステークホルダーのみに集中する",
+        "全ステークホルダーを同じ扱いで対応する",
+        "ステークホルダーの意見は無視する"
+      ],
+      "correct": 0,
+      "explanation": "効果的なステークホルダー調整では、各ステークホルダーの影響力（権限、リソース）と関心事（ニーズ、期待）を正確に分析し、個別に適切なアプローチを取ることが重要です。",
+      "difficulty": "上級",
+      "timeLimit": 50,
+      "relatedTopics": [
+        "ステークホルダー分析",
+        "影響力マップ",
+        "関係者管理"
+      ],
+      "source": "ステークホルダーエンゲージメント",
+      "deleted": false
+    },
+    {
+      "id": 41,
+      "category": "logical_thinking_problem_solving",
+      "subcategory": "構造化思考（MECE・ロジックツリー）",
+      "question": "ロジックツリー作成で最も重要な原則は？",
+      "options": [
+        "各レベルでMECE（漏れなく重複なく）を維持する",
+        "できるだけ多くの要素を洗い出す",
+        "最初から詳細な分析を行う",
+        "結論を先に決めておく"
+      ],
+      "correct": 0,
+      "explanation": "ロジックツリーでは、各レベルでMECE（Mutually Exclusive and Collectively Exhaustive）を維持することが最重要です。これにより、漏れや重複のない網羅的な分析が可能になります。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "MECE",
+        "分解思考",
+        "問題構造化"
+      ],
+      "source": "ロジカルシンキングの技術",
+      "deleted": false
+    },
+    {
+      "id": 42,
+      "category": "logical_thinking_problem_solving",
+      "subcategory": "構造化思考（MECE・ロジックツリー）",
+      "question": "グループ化する際の『切り口』選択で最も重要なのは？",
+      "options": [
+        "問題解決の目的に合った切り口を選ぶ",
+        "传統的な分類方法を使う",
+        "数が均等になるよう分ける",
+        "直感的に分かりやすい方法を選ぶ"
+      ],
+      "correct": 0,
+      "explanation": "グループ化の切り口は、問題解決の目的や文脈に合わせて選択することが重要です。同じデータでも、分析目的によって最適な切り口が異なります。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "分類技法",
+        "グルーピング",
+        "目的志向思考"
+      ],
+      "source": "問題解決プロフェッショナル",
+      "deleted": false
+    },
+    {
+      "id": 43,
+      "category": "logical_thinking_problem_solving",
+      "subcategory": "仮説検証・本質追求",
+      "question": "仮説思考で最も重要なステップは？",
+      "options": [
+        "仮説を反駁する証拠を積極的に探す",
+        "仮説を証明するデータを集める",
+        "仮説を修正せずに維持する",
+        "複数の仮説を同時に立てる"
+      ],
+      "correct": 0,
+      "explanation": "仮説思考では、仮説を支持する証拠だけでなく、積極的に反駁する証拠を探すことが重要です。これにより仮説の妃当性を厳密に検証でき、より確実な結論に達します。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "反駁可能性",
+        "検証プロセス",
+        "科学的手法"
+      ],
+      "source": "仮説思考入門",
+      "deleted": false
+    },
+    {
+      "id": 44,
+      "category": "logical_thinking_problem_solving",
+      "subcategory": "定量分析・統計解析",
+      "question": "統計的有意性と実路的有意性の違いとして正しいのは？",
+      "options": [
+        "統計的有意性があれば実路的有意性もある",
+        "両者は同じ意味である",
+        "統計的有意性は数学的、実路的有意性はビジネス的判断",
+        "実路的有意性の方が常に正しい"
+      ],
+      "correct": 2,
+      "explanation": "統計的有意性は数学的な確率的判断（p値など）であり、実路的有意性はビジネスや実務における意味のある差や影響を示します。統計的に有意でも実路的に意味がない場合もあります。",
+      "difficulty": "上級",
+      "timeLimit": 50,
+      "relatedTopics": [
+        "統計的検定",
+        "効果サイズ",
+        "ビジネス判断"
+      ],
+      "source": "ビジネス統計学",
+      "deleted": false
+    },
+    {
+      "id": 45,
+      "category": "logical_thinking_problem_solving",
+      "subcategory": "行動経済学・意思決定理論",
+      "question": "確証バイアスの影響を最小限にするための方法は？",
+      "options": [
+        "反対意見や否定的証拠を積極的に探す",
+        "直感を信じて素早く判断する",
+        "事前に仮説を立ててからデータを収集する",
+        "過去の成功例を基準に判断する"
+      ],
+      "correct": 0,
+      "explanation": "確証バイアスを避けるためには、意識的に反対意見や自分の仮説を否定する証拠を探すことが重要です。これにより、より客観的でバランスの取れた判断が可能になります。",
+      "difficulty": "上級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "認知バイアス",
+        "批判的思考",
+        "客観的判断"
+      ],
+      "source": "ファスト＆スロー",
+      "deleted": false
+    },
+    {
+      "id": 46,
+      "category": "strategy_management",
+      "subcategory": "経営戦略・事業戦略",
+      "question": "ポーターの五力分析で検討すべき5つの競争要因に含まれないのは？",
+      "options": [
+        "既存企業間の競争",
+        "政府の規制強化",
+        "新参入の脅威",
+        "代替品の脅威"
+      ],
+      "correct": 1,
+      "explanation": "ポーターの五力分析の5つの要因は、①既存企業間の競争、②新参入の脅威、③代替品の脅威、④買い手の交渉力、⑤売り手の交渉力です。政府の規制は別のフレームワークで分析します。",
+      "difficulty": "基礎",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "競争環境分析",
+        "業界構造分析",
+        "戦略フレームワーク"
+      ],
+      "source": "マイケル・ポーター『競争の戦略』",
+      "deleted": true
+    },
+    {
+      "id": 47,
+      "category": "strategy_management",
+      "subcategory": "経営戦略・事業戦略",
+      "question": "ブルーオーシャン戦略の核心となる考え方は？",
+      "options": [
+        "競合他社を徐々に排除していく",
+        "既存市場でのシェア拡大を目指す",
+        "価格競争で勝利する",
+        "競争のない新しい市場空間を創造する"
+      ],
+      "correct": 3,
+      "explanation": "ブルーオーシャン戦略は、競争の激しい「レッドオーシャン」を避け、競争のない新しい市場空間「ブルーオーシャン」を創造する戦略です。価値革新とコスト革新を同時に実現します。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "価値革新",
+        "市場創造",
+        "差別化戦略"
+      ],
+      "source": "W・チャン・キム『ブルーオーシャン戦略』",
+      "deleted": false
+    },
+    {
+      "id": 48,
+      "category": "strategy_management",
+      "subcategory": "競争戦略・フレームワーク",
+      "question": "VRIO分析で『持続的競争優位』を判定するために必要な4つの条件とは？",
+      "options": [
+        "Value, Rare, Inimitable, Organized",
+        "Vision, Resource, Innovation, Operation",
+        "Valuable, Risk, Integration, Opportunity",
+        "Volume, Revenue, Investment, Outcome"
+      ],
+      "correct": 0,
+      "explanation": "VRIO分析は、Value(価値)、Rare(希少性)、Inimitable(模倣困難性)、Organized(組織)の4つの観点から経営資源を分析し、持続的競争優位の源泉を特定するフレームワークです。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "経営資源",
+        "競争優位",
+        "核心能力"
+      ],
+      "source": "リソースベースドビュー",
+      "deleted": false
+    },
+    {
+      "id": 49,
+      "category": "strategy_management",
+      "subcategory": "新事業開発・イノベーション",
+      "question": "イノベーションのジレンマで『既存事業を破壊するイノベーション』を何と呼ぶか？",
+      "options": [
+        "破壊的イノベーション",
+        "持続的イノベーション",
+        "漸進的イノベーション",
+        "革新的イノベーション"
+      ],
+      "correct": 0,
+      "explanation": "破壊的イノベーションは、既存の市場や企業を根本的に変えてしまうイノベーションです。最初は性能が低くても、やがて主流技術を上回り、市場を置き換えることがあります。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "イノベーションのジレンマ",
+        "技術革新",
+        "市場破壊"
+      ],
+      "source": "クレイトン・クリステンセン『イノベーションのジレンマ』",
+      "deleted": false
+    },
+    {
+      "id": 50,
+      "category": "strategy_management",
+      "subcategory": "ESG・サステナビリティ経営",
+      "question": "ESG経営において『S（社会）』の要素として重要視されるのは？",
+      "options": [
+        "ダイバーシティ＆インクルージョン",
+        "CO2排出量の削減",
+        "取締役会の独立性",
+        "コーポレートガバナンス"
+      ],
+      "correct": 0,
+      "explanation": "ESGのS（社会）では、ダイバーシティ＆インクルージョン、人権尊重、労働環境改善、地域社会への貢献などが重要視されます。CO2はE（環境）、ガバナンスはGの領域です。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "サステナビリティ",
+        "SDGs",
+        "ステークホルダー資本主義"
+      ],
+      "source": "ESG投資ガイドライン",
+      "deleted": false
+    },
+    {
+      "id": 51,
+      "category": "finance",
+      "subcategory": "財務分析・企業価値評価",
+      "question": "ROA（総資産利益率）が低い原因として最も可能性が高いのは？",
+      "options": [
+        "売上高の伸びが遅い",
+        "資産の効率的活用ができていない",
+        "従業員数が不足している",
+        "市場シェアが低い"
+      ],
+      "correct": 1,
+      "explanation": "ROA = 当期純利益 ÷ 総資産で計算されます。ROAが低い場合、保有している資産に対して十分な利益を上げられていない、つまり資産の効率的活用ができていないことを意味します。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "資産効率",
+        "収益性分析",
+        "資産ターンオーバー"
+      ],
+      "source": "財務分析ハンドブック",
+      "deleted": false
+    },
+    {
+      "id": 52,
+      "category": "finance",
+      "subcategory": "財務分析・企業価値評価",
+      "question": "流動比率が1.5である企業の状況として最も適切なのは？",
+      "options": [
+        "短期的な支払い能力に不安がある",
+        "短期的な支払い能力は適正レベル",
+        "流動資産を過度に保有している",
+        "借入金が過大である"
+      ],
+      "correct": 1,
+      "explanation": "流動比率 = 流動資産 ÷ 流動負債で1.5は一般的に適正レベルとされます（1.2-2.0が目安）。短期的な支払い能力に問題はなく、正常な経営状況を示しています。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "流動性分析",
+        "安全性分析",
+        "短期支払能力"
+      ],
+      "source": "企業財務分析",
+      "deleted": false
+    },
+    {
+      "id": 53,
+      "category": "finance",
+      "subcategory": "投資判断・リスク管理",
+      "question": "NPV（正味現在価値）法で投資案を評価する際の判断基準は？",
+      "options": [
+        "NPVがプラスなら投資する",
+        "NPVがプラスなら投資しない",
+        "NPVがゼロなら投資する",
+        "NPVの値に関係なく投資する"
+      ],
+      "correct": 0,
+      "explanation": "NPVがプラスの場合、その投資は企業価値を向上させることを意味します。ゼロの場合は企業価値に影響なし、マイナスの場合は企業価値を毀損するため投資すべきではありません。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "資本予算",
+        "割引現在価値",
+        "投資決定"
+      ],
+      "source": "コーポレートファイナンス",
+      "deleted": false
+    },
+    {
+      "id": 54,
+      "category": "finance",
+      "subcategory": "事業計画・資金調達",
+      "question": "スタートアップの資金調達で『シリーズA』の特徴として正しいのは？",
+      "options": [
+        "上場前の最終段階の資金調達",
+        "事業拡大期の大規模資金調達",
+        "初期段階の小規模な資金調達",
+        "プロダクト立上げ後の資金調達"
+      ],
+      "correct": 2,
+      "explanation": "シリーズAはスタートアップの初期段階で行われる資金調達で、プロダクト開発や初期のマーケティングのための比較的小規模な資金を調達します。通常、エンジェル投資家やVCから調達します。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "ベンチャーキャピタル",
+        "エンジェル投資",
+        "資金調達ステージ"
+      ],
+      "source": "スタートアップファイナンス",
+      "deleted": false
+    },
+    {
+      "id": 55,
+      "category": "finance",
+      "subcategory": "管理会計・KPI設計",
+      "question": "ABC原価計算の最大のメリットは？",
+      "options": [
+        "計算が簡単でコストがかからない",
+        "間接費をより正確に製品・サービスに配賦できる",
+        "伝統的な原価計算と同じ結果が得られる",
+        "直接費のみを考慮する"
+      ],
+      "correct": 1,
+      "explanation": "ABC（Activity Based Costing）原価計算は、活動（アクティビティ）を基準に間接費を配賦するため、伝統的な方法よりも正確なコスト情報を提供し、適切な価格設定や收益性分析が可能になります。",
+      "difficulty": "上級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "アクティビティベースドコスティング",
+        "間接費配賦",
+        "原価管理"
+      ],
+      "source": "管理会計ハンドブック",
+      "deleted": false
+    },
+    {
+      "id": 56,
+      "category": "marketing_sales",
+      "subcategory": "顧客分析・セグメンテーション",
+      "question": "RFM分析で使用される3つの要素は？",
+      "options": [
+        "Revenue, Frequency, Margin",
+        "Reach, Frequency, Message",
+        "Recency, Frequency, Monetary",
+        "Risk, Factor, Market"
+      ],
+      "correct": 2,
+      "explanation": "RFM分析は、Recency（最終購入日）、Frequency（購入頻度）、Monetary（購入金額）の3つの観点で顧客をセグメント化し、適切なマーケティング施策を検討する手法です。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "顧客セグメンテーション",
+        "CRM",
+        "データマーケティング"
+      ],
+      "source": "データドリブンマーケティング",
+      "deleted": false
+    },
+    {
+      "id": 57,
+      "category": "marketing_sales",
+      "subcategory": "顧客分析・セグメンテーション",
+      "question": "ペルソナ設計で最も重要な要素は？",
+      "options": [
+        "デモグラフィック情報のみ",
+        "年収と職業のみ",
+        "趣味とライフスタイルのみ",
+        "ニーズ、ゴール、ペインポイント"
+      ],
+      "correct": 3,
+      "explanation": "効果的なペルソナ設計では、デモグラフィック情報だけでなく、顧客のニーズ（要求）、ゴール（目標）、ペインポイント（困っていること）を理解することが重要です。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "ユーザー中心設計",
+        "カスタマージャーニー",
+        "ターゲティング"
+      ],
+      "source": "UXデザインの教科書",
+      "deleted": false
+    },
+    {
+      "id": 58,
+      "category": "marketing_sales",
+      "subcategory": "ブランディング・ポジショニング",
+      "question": "ブランドポジショニングで最も重要なことは？",
+      "options": [
+        "価格を可能な限り低く設定する",
+        "すべての顧客セグメントにアピールする",
+        "最新のテクノロジーを強調する",
+        "競合他社と明確に差別化された独自の価値を伝える"
+      ],
+      "correct": 3,
+      "explanation": "効果的なブランドポジショニングでは、競合他社と明確に差別化された独自の価値提案を行い、ターゲット顧客の心に明確なポジションを確立することが重要です。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "差別化戦略",
+        "価値提案",
+        "ブランド戦略"
+      ],
+      "source": "ブランディングの科学",
+      "deleted": false
+    },
+    {
+      "id": 59,
+      "category": "marketing_sales",
+      "subcategory": "デジタルマーケティング",
+      "question": "ROAS（広告費回収率）が低い場合の改善策として最も効果的なのは？",
+      "options": [
+        "広告費を増やして露出を拡大する",
+        "すべての広告を停止する",
+        "新しい媒体を追加する",
+        "ターゲティングを精緻化してコンバージョン率を改善する"
+      ],
+      "correct": 3,
+      "explanation": "ROAS = 広告経由の売上 ÷ 広告費ROASが低い場合、広告費を増やすよりも、ターゲティングを精緻化してより興味関心の高い顧客にリーチし、コンバージョン率を改善することが効果的です。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "コンバージョン最適化",
+        "ターゲティング最適化",
+        "広告効果測定"
+      ],
+      "source": "デジタルマーケティングの教科書",
+      "deleted": false
+    },
+    {
+      "id": 60,
+      "category": "marketing_sales",
+      "subcategory": "営業戦略・CRM",
+      "question": "営業ファネル管理で最も重要なことは？",
+      "options": [
+        "リードの数をできるだけ多く集める",
+        "営業担当者を増やす",
+        "各ステージのコンバージョン率を測定・改善する",
+        "価格を下げて成約率を上げる"
+      ],
+      "correct": 2,
+      "explanation": "営業ファネル管理では、各ステージ（リード獲得→商談→提案→成約）のコンバージョン率を測定し、ボトルネックを特定して改善することが重要です。これにより効率的な営業プロセスを構築できます。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "セールスファネル",
+        "リードジェネレーション",
+        "営業プロセス最適化"
+      ],
+      "source": "ザ・モデル・フォー・セールス",
+      "deleted": false
+    },
+    {
+      "id": 61,
+      "category": "leadership_hr",
+      "subcategory": "チームマネジメント・モチベーション",
+      "question": "ハーズバーグの二要因理論で『動機づけ要因』に属するのは？",
+      "options": [
+        "仕事のやりがいや成長機会",
+        "給与や福利厚生",
+        "会社の政策や管理手法",
+        "職場の人間関係"
+      ],
+      "correct": 0,
+      "explanation": "ハーズバーグの二要因理論では、動機づけ要因（仕事のやりがい、成長機会、承認など）が満たされると満足感やモチベーションが向上し、衛生要因（給与、環境など）は不満を防ぐだけで動機づけにはつながらないとされます。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "モチベーション理論",
+        "内発的動機",
+        "人事管理"
+      ],
+      "source": "フレデリック・ハーズバーグ『仕事と人間性』",
+      "deleted": false
+    },
+    {
+      "id": 62,
+      "category": "leadership_hr",
+      "subcategory": "チームマネジメント・モチベーション",
+      "question": "チームの心理的安全性を高めるために最も重要なことは？",
+      "options": [
+        "メンバーのスキルレベルを統一する",
+        "失敗やミスを罰する体制を作る",
+        "競争を助長して緊張感を保つ",
+        "メンバーが安心して発言できる環境を作る"
+      ],
+      "correct": 3,
+      "explanation": "心理的安全性の高いチームでは、メンバーが失敗や疑問、アイデアを恐れずに発言できます。これによりイノベーション、学習、パフォーマンスが向上します。グーグルのプロジェクトアリストテレスでも重要性が実証されています。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "心理的安全性",
+        "チームビルディング",
+        "グーグル研究"
+      ],
+      "source": "グーグルプロジェクトアリストテレス",
+      "deleted": false
+    },
+    {
+      "id": 63,
+      "category": "leadership_hr",
+      "subcategory": "タレントマネジメント・育成",
+      "question": "1on1ミーティングの最も重要な目的は？",
+      "options": [
+        "業務の進捗状況を管理する",
+        "部下の成長とキャリア開発を支援する",
+        "会社の方針を伝達する",
+        "部下の業務を評価する"
+      ],
+      "correct": 1,
+      "explanation": "1on1ミーティングの主な目的は、部下の成長とキャリア開発を支援することです。部下が直面している課題や成長の機会、キャリアの希望について対話し、コーチングやメンタリングを通じて支援します。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "コーチング",
+        "メンタリング",
+        "キャリア開発"
+      ],
+      "source": "1on1マネジメント",
+      "deleted": false
+    },
+    {
+      "id": 64,
+      "category": "leadership_hr",
+      "subcategory": "組織開発・変革リーダーシップ",
+      "question": "コッターの変革プロセスの8ステップで、最初に行うべきことは？",
+      "options": [
+        "小さな成果をあげて勝利を積み重ねる",
+        "危機意識を醇成し、変革の必要性を共有する",
+        "変革ビジョンを伝え、道筋を示す",
+        "変革を制度化して定着させる"
+      ],
+      "correct": 1,
+      "explanation": "コッターの変革プロセスの第1ステップは『危機意識の醆成』です。組織メンバーが現状維持のリスクや変革の必要性を理解し、変革への意欲を高めることが、成功する変革の土台となります。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "変革マネジメント",
+        "チェンジマネジメント",
+        "組織変革"
+      ],
+      "source": "ジョン・コッター『企業変革力』",
+      "deleted": false
+    },
+    {
+      "id": 65,
+      "category": "leadership_hr",
+      "subcategory": "人事戦略・働き方改革",
+      "question": "エンゲージメント向上に最も効果的な施策は？",
+      "options": [
+        "給与の大幅アップのみ",
+        "ワークライフバランスと成長機会の提供",
+        "労働時間の延長",
+        "厳格な成果主義評価制度"
+      ],
+      "correct": 1,
+      "explanation": "現代のエンゲージメント向上では、単なる金銭的報酬よりも、ワークライフバランスの実現、成長機会の提供、仕事の意味や目的の明確化などが重要です。これらは内発的動機を高め、持続的なエンゲージメントにつながります。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "従業員エンゲージメント",
+        "ワークライフバランス",
+        "人才管理"
+      ],
+      "source": "エンゲージメント経営",
+      "deleted": false
+    },
+    {
+      "id": 66,
+      "category": "ai_digital_utilization",
+      "subcategory": "AI基礎・業務活用",
+      "question": "機械学習の『教師あり学習』と『教師なし学習』の違いは？",
+      "options": [
+        "教師ありは人間が教え、教師なしはAIが教える",
+        "教師ありは精度が高く、教師なしは精度が低い",
+        "教師ありは数値予測、教師なしは画像認識",
+        "教師ありは正解ラベルがあり、教師なしは正解ラベルがない"
+      ],
+      "correct": 3,
+      "explanation": "教師あり学習（Supervised Learning）は正解ラベル付きのデータでモデルを訓練し、教師なし学習（Unsupervised Learning）はラベルなしデータからパターンや構造を見つける手法です。",
+      "difficulty": "基礎",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "機械学習の種類",
+        "データサイエンス",
+        "AI基礎"
+      ],
+      "source": "機械学習入門",
+      "deleted": false
+    },
+    {
+      "id": 67,
+      "category": "ai_digital_utilization",
+      "subcategory": "DX戦略・デジタル変革",
+      "question": "DXの成功に最も重要な要素は？",
+      "options": [
+        "最新のITシステムの導入",
+        "IT人材の大量採用",
+        "コスト削減の徹底",
+        "経営トップのリーダーシップと組織全体の意識変革"
+      ],
+      "correct": 3,
+      "explanation": "DXの成功には、単なる技術導入ではなく、経営トップがビジョンを示し、組織全体がデジタルファーストのマインドセットに変わることが最も重要です。技術は手段であり、意識変革が本質です。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "デジタルトランスフォーメーション",
+        "組織変革",
+        "リーダーシップ"
+      ],
+      "source": "経済産業省DXレポート",
+      "deleted": true
+    },
+    {
+      "id": 68,
+      "category": "ai_digital_utilization",
+      "subcategory": "データドリブン経営",
+      "question": "データドリブン経営で最も重要なプロセスは？",
+      "options": [
+        "データから仮説を立て、検証し、意思決定に活かす",
+        "できるだけ多くのデータを収集する",
+        "高価な分析ツールを導入する",
+        "専門家にすべて任せる"
+      ],
+      "correct": 0,
+      "explanation": "データドリブン経営では、単にデータを収集するだけではなく、データから仮説を立て、実験や分析で検証し、その結果を実際のビジネス意思決定に活かすPDCAサイクルが重要です。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "データ分析",
+        "仮説検証",
+        "PDCAサイクル"
+      ],
+      "source": "データドリブン経営入門",
+      "deleted": false
+    },
+    {
+      "id": 69,
+      "category": "ai_digital_utilization",
+      "subcategory": "IoT・自動化技術",
+      "question": "IoTシステム導入の最大のメリットは？",
+      "options": [
+        "初期コストが安い",
+        "システムが簡単で誰でも操作できる",
+        "機器の状態をリアルタイムで監視し、予知保全が可能",
+        "インターネット接続が不要"
+      ],
+      "correct": 2,
+      "explanation": "IoTシステムの最大のメリットは、機器や設備の状態をリアルタイムで監視し、データ分析により障害や故障を事前に予測して予知保全が実現できることです。これによりダウンタイムを減らし、メンテナンスコストを削減できます。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "予知保全",
+        "リアルタイム監視",
+        "スマートファクトリー"
+      ],
+      "source": "IoT活用ガイドライン",
+      "deleted": false
+    },
+    {
+      "id": 70,
+      "category": "project_operations",
+      "subcategory": "プロジェクト設計・WBS",
+      "question": "WBS（Work Breakdown Structure）作成の最重要原則は？",
+      "options": [
+        "できるだけ細かくタスクを分割する",
+        "時間順に作業を並べる",
+        "担当者別にタスクを組み立てる",
+        "成果物ベースで階層的に分解し、MECEを維持する"
+      ],
+      "correct": 3,
+      "explanation": "WBSはプロジェクトの成果物（デリバラブル）をベースに、漏れなく重複なく（MECE）階層的に分解することが重要です。これによりプロジェクトの全体像と必要な作業を明確にできます。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "プロジェクト計画",
+        "スコープ管理",
+        "MECE"
+      ],
+      "source": "PMBOKガイド",
+      "deleted": false
+    },
+    {
+      "id": 71,
+      "category": "project_operations",
+      "subcategory": "スケジュール・リソース管理",
+      "question": "クリティカルパス法で最も重要な概念は？",
+      "options": [
+        "最も早く始められるタスクを特定する",
+        "最もコストのかかるタスクを見つける",
+        "リソースの平均化を図る",
+        "プロジェクト全体の最短期間を決める最長経路を特定する"
+      ],
+      "correct": 3,
+      "explanation": "クリティカルパスは、プロジェクト全体の最短期間を決定する、遅延の許されないタスクの連続した経路です。この経路上のタスクが遅れると、プロジェクト全体が遅れるため、特に注意深く管理する必要があります。",
+      "difficulty": "中級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "スケジュール管理",
+        "プロジェクト計画",
+        "タイムマネジメント"
+      ],
+      "source": "プロジェクトマネジメント教本",
+      "deleted": false
+    },
+    {
+      "id": 72,
+      "category": "project_operations",
+      "subcategory": "ステークホルダー管理",
+      "question": "プロジェクトのステークホルダー管理で最も効果的なアプローチは？",
+      "options": [
+        "全ステークホルダーに同じ情報を同じタイミングで提供",
+        "最高経営陣のみとコミュニケーション",
+        "ステークホルダーの意見は聞かずに進める",
+        "影響力と関心度でセグメント化し、個別にアプローチ"
+      ],
+      "correct": 3,
+      "explanation": "効果的なステークホルダー管理では、各ステークホルダーのプロジェクトへの影響力（権限、リソース）と関心度（関与、影響受けやすさ）でセグメント化し、それぞれに適したコミュニケーション戦略を取ることが重要です。",
+      "difficulty": "上級",
+      "timeLimit": 50,
+      "relatedTopics": [
+        "ステークホルダー分析",
+        "コミュニケーション管理",
+        "影響力マップ"
+      ],
+      "source": "ステークホルダーエンゲージメント",
+      "deleted": false
+    },
+    {
+      "id": 73,
+      "category": "project_operations",
+      "subcategory": "業務効率化・時間管理",
+      "question": "パレートの法則（80:20の法則）を業務効率化に適用すると？",
+      "options": [
+        "全てのタスクに同じ時間をかける",
+        "簡単なタスクから順番に片付ける",
+        "すべてのタスクを同時並行で進める",
+        "重要な20%のタスクに80%の時間を集中する"
+      ],
+      "correct": 3,
+      "explanation": "パレートの法則では、成果の80%は重要な20%の要因から生まれるという原則です。業務効率化では、最も重要な20%のタスクや活動を特定し、そこに80%の時間やリソースを集中投入することで最大の効果を得られます。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "優先順位付け",
+        "時間管理",
+        "生産性向上"
+      ],
+      "source": "パレートの法則と時間管理",
+      "deleted": false
+    },
+    {
+      "id": 74,
+      "category": "business_process_analysis",
+      "subcategory": "業務分析・要件定義",
+      "question": "業務分析で最初に行うべきことは？",
+      "options": [
+        "システムの機能を詳細に設計する",
+        "現状の業務フローを理解し、課題を特定する",
+        "最新のテクノロジーを調査する",
+        "他社のベストプラクティスを模倣する"
+      ],
+      "correct": 1,
+      "explanation": "業務分析では、まず現状の業務フローやプロセスを正確に理解し、どこに課題や非効率があるかを特定することが重要です。この現状把握が、改善や新システム導入の土台となります。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "業務フロー分析",
+        "現状把握",
+        "As-Is分析"
+      ],
+      "source": "業務分析の実踵",
+      "deleted": false
+    },
+    {
+      "id": 75,
+      "category": "business_process_analysis",
+      "subcategory": "プロセス設計・最適化",
+      "question": "BPR（Business Process Reengineering）の核心的な考え方は？",
+      "options": [
+        "現在のプロセスを少しずつ改善する",
+        "既存プロセスを根本的に見直し、拜新的に再設計する",
+        "システムを新しくするだけ",
+        "人員を増やして処理能力を上げる"
+      ],
+      "correct": 1,
+      "explanation": "BPRは『既存のビジネスプロセスを根本的に見直し、抱新的に再設計する』アプローチです。単なる漸進的改善ではなく、技術革新や組織変革を活用して毎新的な効率化や価値創造を目指します。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "ビジネスプロセス再設計",
+        "プロセス革新",
+        "業務改革"
+      ],
+      "source": "BPRの理論と実踵",
+      "deleted": false
+    },
+    {
+      "id": 76,
+      "category": "business_process_analysis",
+      "subcategory": "サプライチェーン管理",
+      "question": "サプライチェーンマネジメントで『ブルウィップ効果』とは？",
+      "options": [
+        "在庫を減らすことでコストが下がる",
+        "需要の小さな変動が上流にいくほど大きな変動となる",
+        "サプライヤーを増やすことでリスクを分散する",
+        "造しすぎた商品が市場に溢れる"
+      ],
+      "correct": 1,
+      "explanation": "ブルウィップ効果は、需要の小さな変動がサプライチェーンを上流に遺るにつれて大きな変動となって伝播される現象です。情報の歪みやリードタイムの遅れが原因で、在庫増大や非効率を引き起こします。",
+      "difficulty": "上級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "需要予測",
+        "在庫管理",
+        "情報共有"
+      ],
+      "source": "サプライチェーンマネジメント",
+      "deleted": false
+    },
+    {
+      "id": 77,
+      "category": "business_process_analysis",
+      "subcategory": "業務システム設計",
+      "question": "業務システム設計で最も重要な原則は？",
+      "options": [
+        "最新技術をふんだんに活用する",
+        "ユーザーの業務とシステムの機能を一致させる",
+        "できるだけ多くの機能を盛り込む",
+        "コストを最小限に抑える"
+      ],
+      "correct": 1,
+      "explanation": "業務システム設計では、ユーザーの実際の業務フローやニーズとシステムの機能を精密に一致させることが最も重要です。これにより使いやすく、効率的で、業務に真に貢献するシステムを構築できます。",
+      "difficulty": "基礎",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "ユーザーインターフェース設計",
+        "要件定義",
+        "システム分析"
+      ],
+      "source": "業務システム設計の基礎",
+      "deleted": false
+    },
+    {
+      "id": 78,
+      "category": "business_process_analysis",
+      "subcategory": "BPR・業務改革",
+      "question": "業務改革で最も大きな障壁となりやすいのは？",
+      "options": [
+        "技術的な制約",
+        "予算の不足",
+        "競合他社の存在",
+        "人々の変化への抵抗と組織文化"
+      ],
+      "correct": 3,
+      "explanation": "業務改革で最も大きな障壁は、技術的な問題よりも、人々の変化への抵抗と既存の組織文化です。『今までのやり方』への着定や変化への不安を克服し、組織全体の意識を変えることが改革成功の鍵です。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "変革管理",
+        "組織文化変革",
+        "チェンジマネジメント"
+      ],
+      "source": "業務改革の実務",
+      "deleted": false
+    },
+    {
+      "id": 79,
+      "category": "risk_crisis_management",
+      "subcategory": "企業リスク管理",
+      "question": "リスク管理の基本プロセスの正しい順序は？",
+      "options": [
+        "リスク対応→リスク評価→リスク特定→モニタリング",
+        "リスク特定→リスク評価→リスク対応→モニタリング",
+        "リスク評価→リスク特定→モニタリング→リスク対応",
+        "モニタリング→リスク特定→リスク評価→リスク対応"
+      ],
+      "correct": 1,
+      "explanation": "リスク管理の基本プロセスは、①リスク特定（潜在リスクの洗い出し）→②リスク評価（影響度と確率の評価）→③リスク対応（対策の実施）→④モニタリング（継続的な監視）の順序で進めます。",
+      "difficulty": "基礎",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "リスクアセスメント",
+        "リスクマトリックス",
+        "リスクレジスター"
+      ],
+      "source": "企業リスク管理ガイドライン",
+      "deleted": false
+    },
+    {
+      "id": 80,
+      "category": "risk_crisis_management",
+      "subcategory": "危機管理・BCP",
+      "question": "BCP（事業継続計画）で最も重要な要素は？",
+      "options": [
+        "中核事業の特定と優先順位の明確化",
+        "完璧な予測システムの構築",
+        "最新設備への全面的な更新",
+        "競合他社との提携強化"
+      ],
+      "correct": 0,
+      "explanation": "BCPの核心は、総ての事業を同時に維持することではなく、中核事業（コアビジネス）を特定し、限られたリソースで優先順位を付けて事業を継続することです。これにより危機時にも企業の存続を確保できます。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "コアビジネス",
+        "事業影響度分析",
+        "復旧時間目標"
+      ],
+      "source": "BCP策定ガイドライン",
+      "deleted": false
+    },
+    {
+      "id": 81,
+      "category": "risk_crisis_management",
+      "subcategory": "コンプライアンス・内部統制",
+      "question": "SOX法（サーベンス・オクスリー法）の主な目的は？",
+      "options": [
+        "従業員の給与水準を規制する",
+        "環境保護の義務を強化する",
+        "企業の財務報告の信頼性と透明性を確保する",
+        "情報セキュリティを強化する"
+      ],
+      "correct": 2,
+      "explanation": "SOX法はエンロン等の会計不正事件を受けて制定された法律で、企業の財務報告の信頼性と透明性を確保することが主目的です。内部統制の構築やガバナンスの強化を通じて、投資家を保護します。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "内部統制報告書",
+        "財務報告の信頼性",
+        "COSOフレームワーク"
+      ],
+      "source": "SOX法対応ガイド",
+      "deleted": false
+    },
+    {
+      "id": 82,
+      "category": "risk_crisis_management",
+      "subcategory": "情報セキュリティ",
+      "question": "情報セキュリティの三大要素（CIA）とは？",
+      "options": [
+        "Cost, Intelligence, Access",
+        "Control, Integration, Authentication",
+        "Coverage, Information, Analysis",
+        "Confidentiality, Integrity, Availability"
+      ],
+      "correct": 3,
+      "explanation": "情報セキュリティの三大要素（CIAトライアド）は、Confidentiality（機密性）、Integrity（完全性）、Availability（可用性）です。機密性は情報の漏洩防止、完全性は情報の改ざん防止、可用性は必要時の情報アクセスの保証を意味します。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "情報セキュリティポリシー",
+        "サイバーセキュリティ",
+        "リスクアセスメント"
+      ],
+      "source": "情報セキュリティ管理基準",
+      "deleted": false
+    },
+    {
+      "id": 83,
+      "category": "risk_crisis_management",
+      "subcategory": "サステナビリティリスク",
+      "question": "ESGリスク管理で最も重要な視点は？",
+      "options": [
+        "短期利益の最大化のみを追求する",
+        "環境問題のみに焦点を当てる",
+        "法的最低限の対応のみを行う",
+        "ステークホルダーの長期的な価値創造とリスクを統合管理する"
+      ],
+      "correct": 3,
+      "explanation": "ESGリスク管理では、環境（E）、社会（S）、ガバナンス（G）の要素を統合的に管理し、投資家、顧客、地域社会など多様なステークホルダーの長期的な価値創造とリスクをバランスよく考慮することが重要です。",
+      "difficulty": "上級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "サステナビリティ経営",
+        "SDGs",
+        "ステークホルダー資本主義"
+      ],
+      "source": "ESGリスク管理ガイドライン",
+      "deleted": false
+    },
+    {
+      "id": 84,
+      "category": "ai_digital_utilization",
+      "subcategory": "AI基礎・業務活用",
+      "question": "ChatGPTやBardなどの大規模言語モデル（LLM）を業務で活用する際の最も重要な注意点は？",
+      "options": [
+        "出力内容を鵜呑みにせず、必ず事実確認を行う",
+        "高速な処理のため人間による確認は不要",
+        "すべての業務を完全に自動化する",
+        "複雑な計算処理に活用する"
+      ],
+      "correct": 0,
+      "explanation": "LLMは「幻覚（ハルシネーション）」と呼ばれる現象で事実と異なる情報を生成することがあるため、出力内容の事実確認が必須です。補完ツールとして活用し、最終的な判断は人間が行うことが重要です。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "生成AI活用",
+        "LLMの制約",
+        "人間とAIの協働"
+      ],
+      "source": "総務省 AI利活用ガイドライン",
+      "deleted": false
+    },
+    {
+      "id": 85,
+      "category": "logical_thinking_problem_solving",
+      "subcategory": "定量分析・統計解析",
+      "question": "A/Bテストで統計的有意差を判定する際、p値が0.05より小さい場合の解釈として正しいのは？",
+      "options": [
+        "効果サイズが大きいことを意味する",
+        "帰無仮説を棄却し、統計的有意差があると判断する",
+        "実用的に意味のある差があることを証明する",
+        "サンプルサイズが十分であることを示す"
+      ],
+      "correct": 1,
+      "explanation": "p値<0.05は統計的有意差の存在を示しますが、効果サイズの大きさや実用的意味については別途検討が必要です。統計的有意性と実用的意味は異なる概念です。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "仮説検定",
+        "p値",
+        "効果サイズ"
+      ],
+      "source": "統計的推測の基礎",
+      "deleted": false
+    },
+    {
+      "id": 86,
+      "category": "logical_thinking_problem_solving",
+      "subcategory": "行動経済学・意思決定理論",
+      "question": "プロスペクト理論において、人間の意思決定の特徴として正しいのは？",
+      "options": [
+        "利得と損失を同等に評価する",
+        "常に期待値で判断する",
+        "リスクを正確に計算して判断する",
+        "損失回避傾向があり、損失の方を大きく感じる"
+      ],
+      "correct": 3,
+      "explanation": "プロスペクト理論では、人間は同じ絶対値でも利得よりも損失を約2倍強く感じる「損失回避傾向」があることが示されています。これは多くのビジネス判断に影響を与えます。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "認知バイアス",
+        "損失回避",
+        "カーネマン"
+      ],
+      "source": "ダニエル・カーネマン『ファスト&スロー』",
+      "deleted": false
+    },
+    {
+      "id": 87,
+      "category": "logical_thinking_problem_solving",
+      "subcategory": "ベンチマーキング・競合分析",
+      "question": "競合分析において「ベストプラクティス」を特定する際の最も適切なアプローチは？",
+      "options": [
+        "業界最大手企業の手法をすべて模倣する",
+        "定量・定性の両面から優れた成果を上げている要因を分析する",
+        "最新のテクノロジーを使用している企業を参考にする",
+        "自社と同規模の企業のみを分析対象とする"
+      ],
+      "correct": 1,
+      "explanation": "ベストプラクティスの特定には、KPIなどの定量データと、プロセスや組織文化などの定性要因の両面から分析し、優れた成果の根本原因を理解することが重要です。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "競合分析",
+        "成功要因分析",
+        "業界研究"
+      ],
+      "source": "競合インテリジェンスの実践",
+      "deleted": false
+    },
+    {
+      "id": 88,
+      "category": "finance",
+      "subcategory": "投資判断・リスク管理",
+      "question": "ポートフォリオ理論において「効率的フロンティア」が示すものは？",
+      "options": [
+        "最も高いリターンを得られる投資の組み合わせ",
+        "リスクゼロで投資できる資産の組み合わせ",
+        "短期間で最大利益を得られる投資戦略",
+        "同じリスクレベルで最大リターン、または同じリターンで最小リスクの組み合わせ"
+      ],
+      "correct": 3,
+      "explanation": "効率的フロンティアは、各リスクレベルで最大のリターンを得られる、または各リターンレベルで最小のリスクとなる最適な資産配分の組み合わせを示す曲線です。",
+      "difficulty": "上級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "現代ポートフォリオ理論",
+        "リスク・リターン",
+        "資産配分"
+      ],
+      "source": "ハリー・マーコウィッツ ポートフォリオ理論",
+      "deleted": false
+    },
+    {
+      "id": 89,
+      "category": "marketing_sales",
+      "subcategory": "デジタルマーケティング",
+      "question": "Google Analyticsで「直帰率」が高い場合の改善策として最も効果的なのは？",
+      "options": [
+        "広告予算を増額して流入数を増やす",
+        "ページの読み込み速度を改善し、コンテンツの質を向上させる",
+        "すべてのページにポップアップを追加する",
+        "SEOキーワードを大幅に変更する"
+      ],
+      "correct": 1,
+      "explanation": "直帰率の改善には、ページの読み込み速度向上、ユーザーの検索意図に合ったコンテンツ提供、明確なCTAの設置などが効果的です。ユーザー体験の向上が根本的な解決策です。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "ユーザー体験",
+        "ウェブ解析",
+        "コンバージョン最適化"
+      ],
+      "source": "Googleアナリティクス活用ガイド",
+      "deleted": false
+    },
+    {
+      "id": 90,
+      "category": "leadership_hr",
+      "subcategory": "人事戦略・働き方改革",
+      "question": "「ジョブ型雇用」の特徴として正しいのは？",
+      "options": [
+        "終身雇用を前提とした長期的な人材育成",
+        "職務内容を明確に定義し、専門性に基づく評価・報酬",
+        "年功序列による昇進・昇格システム",
+        "部署をローテーションしながらスキルを身につける"
+      ],
+      "correct": 1,
+      "explanation": "ジョブ型雇用は職務（ジョブ）を明確に定義し、その職務に必要な専門性やスキルに基づいて採用・評価・報酬を決定する雇用形態です。成果と専門性が重視されます。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "人事制度",
+        "雇用形態",
+        "人材マネジメント"
+      ],
+      "source": "厚生労働省 働き方改革実行計画",
+      "deleted": false
+    },
+    {
+      "id": 91,
+      "category": "project_operations",
+      "subcategory": "業務効率化・時間管理",
+      "question": "GTD（Getting Things Done）手法において、最初に行うべきステップは？",
+      "options": [
+        "すべてのタスクに優先順位をつける",
+        "頭の中にあるすべての気になることを外部に収集する",
+        "重要なタスクから順番に実行する",
+        "時間を細かく区切ってスケジュールを立てる"
+      ],
+      "correct": 1,
+      "explanation": "GTDの最初のステップは「収集（Capture）」で、頭の中の気になることをすべて外部（ノート、デジタルツールなど）に書き出すことです。これにより頭をクリアにして集中力を高めます。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "タスク管理",
+        "生産性向上",
+        "ストレス管理"
+      ],
+      "source": "デビッド・アレン『Getting Things Done』",
+      "deleted": false
+    },
+    {
+      "id": 92,
+      "category": "business_process_analysis",
+      "subcategory": "業務システム設計",
+      "question": "業務システム設計において「ユーザビリティ」を向上させるための原則として最も重要なのは？",
+      "options": [
+        "最新技術を積極的に導入する",
+        "機能を可能な限り多く搭載する",
+        "ユーザーの実際の業務フローを理解し、直感的な操作性を重視する",
+        "見た目のデザインを美しくする"
+      ],
+      "correct": 2,
+      "explanation": "ユーザビリティ向上には、実際のユーザーの業務プロセスを深く理解し、直感的で使いやすいインターフェースを設計することが最も重要です。技術やデザインは手段であり、使いやすさが目的です。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "UXデザイン",
+        "ヒューマンインターフェース",
+        "要件定義"
+      ],
+      "source": "ヤコブ・ニールセン『ユーザビリティエンジニアリング』",
+      "deleted": false
+    },
+    {
+      "id": 93,
+      "category": "strategy_management",
+      "subcategory": "ESG・サステナビリティ経営",
+      "question": "企業のESG取り組みにおいて「マテリアリティ分析」の目的は？",
+      "options": [
+        "財務コストを最小化する",
+        "競合他社との差別化を図る",
+        "ステークホルダーと企業双方にとって重要度の高いESG課題を特定する",
+        "規制当局の要求を満たす"
+      ],
+      "correct": 2,
+      "explanation": "マテリアリティ分析は、企業活動や業績に大きな影響を与え、かつステークホルダーにとっても重要性が高いESG課題を特定・優先順位付けするプロセスです。限られた経営資源を効果的に配分するための重要な手法です。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "ステークホルダーエンゲージメント",
+        "重要性評価",
+        "資源配分"
+      ],
+      "source": "GRIスタンダード",
+      "deleted": false
+    },
+    {
+      "id": 94,
+      "category": "communication_presentation",
+      "subcategory": "結論ファースト・構造化思考",
+      "question": "PREP法における「E」が表すものは？",
+      "options": [
+        "Evidence（根拠）",
+        "Example（事例）",
+        "Emotion（感情）",
+        "Evaluation（評価）"
+      ],
+      "correct": 1,
+      "explanation": "PREP法のEはExample（事例・具体例）を指します。Point（結論）→Reason（理由）→Example（事例）→Point（結論）の順で構成し、具体例により理解を深めます。",
+      "difficulty": "基礎",
+      "timeLimit": 25,
+      "relatedTopics": [
+        "プレゼンテーション構成",
+        "論理的説明",
+        "コミュニケーション技法"
+      ],
+      "source": "ビジネスコミュニケーション基礎",
+      "deleted": false
+    },
+    {
+      "id": 95,
+      "category": "finance",
+      "subcategory": "事業計画・資金調達",
+      "question": "スタートアップ企業の資金調達において「バリュエーション」を決定する主な要因として最も重要なのは？",
+      "options": [
+        "過去の財務実績のみ",
+        "現在の資産価値",
+        "市場規模、成長可能性、競合優位性、経営チームの実績",
+        "業界平均の株価収益率"
+      ],
+      "correct": 2,
+      "explanation": "スタートアップのバリュエーションは、市場規模（TAM）、成長可能性、競合に対する優位性、経営チームの実績など将来の成長ポテンシャルを総合的に評価して決定されます。過去の実績よりも将来性が重視されます。",
+      "difficulty": "中級",
+      "timeLimit": 40,
+      "relatedTopics": [
+        "企業価値評価",
+        "投資判断",
+        "成長戦略"
+      ],
+      "source": "ベンチャーキャピタル投資ガイド",
+      "deleted": false
+    },
+    {
+      "id": 96,
+      "category": "communication_presentation",
+      "subcategory": "資料作成・可視化技術",
+      "question": "PowerPointプレゼンテーション資料で「6×6ルール」が推奨する内容は？",
+      "options": [
+        "1スライドに最大6個の要素、1要素につき最大6語",
+        "6枚のスライドで6分間のプレゼンテーション",
+        "6つのセクションで構成し、各セクション6個のポイント",
+        "フォントサイズを6の倍数にする"
+      ],
+      "correct": 0,
+      "explanation": "6×6ルールは、1つのスライドに最大6個の箇条書き、1つの箇条書きにつき最大6語程度にとどめることで、視認性と理解しやすさを向上させるプレゼンテーション設計の原則です。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "スライド設計",
+        "情報整理",
+        "視覚的コミュニケーション"
+      ],
+      "source": "プレゼンテーション設計の基礎",
+      "deleted": false
+    },
+    {
+      "id": 97,
+      "category": "communication_presentation",
+      "subcategory": "会議運営・ファシリテーション",
+      "question": "効果的な会議運営において「グランドルール」を設定する主な目的は？",
+      "options": [
+        "全員が建設的な議論に参加できる環境を作る",
+        "参加者を統制し、発言を制限する",
+        "会議時間を短縮する",
+        "議事録作成を簡素化する"
+      ],
+      "correct": 0,
+      "explanation": "グランドルールは、相互尊重、時間厳守、建設的な議論などの基本的な行動規範を事前に合意することで、全員が安心して発言でき、生産性の高い会議を実現するためのものです。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "心理的安全性",
+        "チームワーク",
+        "コミュニケーションルール"
+      ],
+      "source": "ファシリテーション実践ガイド",
+      "deleted": false
+    },
+    {
+      "id": 98,
+      "category": "strategy_management",
+      "subcategory": "競争戦略・フレームワーク",
+      "question": "マイケル・ポーターの「5つの競争要因」に含まれないものは？",
+      "options": [
+        "新規参入者の脅威",
+        "代替品の脅威",
+        "技術革新の速度",
+        "買い手の交渉力"
+      ],
+      "correct": 2,
+      "explanation": "ポーターの5つの競争要因は、①既存企業間の競争、②新規参入者の脅威、③代替品の脅威、④買い手の交渉力、⑤売り手の交渉力です。技術革新の速度は直接含まれていません。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "業界構造分析",
+        "競争戦略",
+        "戦略フレームワーク"
+      ],
+      "source": "マイケル・ポーター『競争の戦略』",
+      "deleted": false
+    },
+    {
+      "id": 99,
+      "category": "strategy_management",
+      "subcategory": "新事業開発・イノベーション",
+      "question": "「リーンスタートアップ」手法において最も重要な概念は？",
+      "options": [
+        "仮説検証サイクル（Build-Measure-Learn）を高速で回す",
+        "完璧な製品を最初から作り上げる",
+        "大規模な初期投資を行う",
+        "詳細な事業計画書を作成する"
+      ],
+      "correct": 0,
+      "explanation": "リーンスタートアップの核心は、Build（構築）→Measure（測定）→Learn（学習）のサイクルを高速で繰り返し、仮説を検証しながら顧客にとって価値のある製品・サービスを開発することです。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "MVP開発",
+        "仮説検証",
+        "スタートアップ経営"
+      ],
+      "source": "エリック・リース『リーン・スタートアップ』",
+      "deleted": false
+    },
+    {
+      "id": 100,
+      "category": "marketing_sales",
+      "subcategory": "顧客分析・セグメンテーション",
+      "question": "RFM分析において「M」が表す指標は？",
+      "options": [
+        "Margin（利益率）",
+        "Method（購入方法）",
+        "Monetary（購入金額）",
+        "Member（会員期間）"
+      ],
+      "correct": 2,
+      "explanation": "RFM分析は、Recency（最新購入日）、Frequency（購入頻度）、Monetary（購入金額）の3つの指標で顧客をセグメント化し、マーケティング戦略を最適化する手法です。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "顧客セグメンテーション",
+        "CRM",
+        "マーケティング分析"
+      ],
+      "source": "データベースマーケティング",
+      "deleted": false
+    },
+    {
+      "id": 101,
+      "category": "marketing_sales",
+      "subcategory": "ブランディング・ポジショニング",
+      "question": "ブランドポジショニングを検討する際の「知覚マップ」の主な目的は？",
+      "options": [
+        "競合他社の価格設定を把握する",
+        "販売チャネルの効率性を分析する",
+        "顧客の認知における自社と競合の位置関係を視覚化する",
+        "広告予算の配分を決定する"
+      ],
+      "correct": 2,
+      "explanation": "知覚マップ（ポジショニングマップ）は、価格と品質、伝統と革新性など重要な軸で、顧客の認知における自社ブランドと競合ブランドの相対的位置を視覚化し、差別化戦略を策定するツールです。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "競合分析",
+        "差別化戦略",
+        "ブランド戦略"
+      ],
+      "source": "ブランド・マネジメント",
+      "deleted": false
+    },
+    {
+      "id": 102,
+      "category": "marketing_sales",
+      "subcategory": "営業戦略・CRM",
+      "question": "B2B営業において「BANT」で評価する要素に含まれないのは？",
+      "options": [
+        "Budget（予算）",
+        "Authority（決裁権限）",
+        "Timeline（導入時期）",
+        "Competitor（競合状況）"
+      ],
+      "correct": 3,
+      "explanation": "BANTは、Budget（予算）、Authority（決裁権限）、Need（必要性）、Timeline（導入時期）の4要素で見込み客を評価するフレームワークです。競合状況は含まれません。",
+      "difficulty": "基礎",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "見込み客評価",
+        "営業プロセス",
+        "セールス・クオリフィケーション"
+      ],
+      "source": "B2Bセールス・メソドロジー",
+      "deleted": false
+    },
+    {
+      "id": 103,
+      "category": "leadership_hr",
+      "subcategory": "チームマネジメント・モチベーション",
+      "question": "マズローの欲求階層説において、最も高次の欲求は？",
+      "options": [
+        "安全欲求",
+        "承認欲求",
+        "自己実現欲求",
+        "社会的欲求"
+      ],
+      "correct": 2,
+      "explanation": "マズローの欲求階層説では、①生理的欲求、②安全欲求、③社会的欲求、④承認欲求、⑤自己実現欲求の順で階層があり、自己実現欲求が最も高次の欲求とされています。",
+      "difficulty": "基礎",
+      "timeLimit": 25,
+      "relatedTopics": [
+        "動機理論",
+        "人間心理",
+        "組織行動論"
+      ],
+      "source": "アブラハム・マズロー『人間性の心理学』",
+      "deleted": false
+    },
+    {
+      "id": 104,
+      "category": "leadership_hr",
+      "subcategory": "タレントマネジメント・育成",
+      "question": "「70:20:10の法則」において、70%を占める学習方法は？",
+      "options": [
+        "研修やセミナーでの学習",
+        "実際の業務経験を通じた学習",
+        "書籍や資料からの学習",
+        "メンターからの指導"
+      ],
+      "correct": 1,
+      "explanation": "70:20:10の法則では、効果的な学習の70%は実際の業務経験、20%は他者からのフィードバックや助言、10%は研修や読書などの座学とされています。実践が最も重要です。",
+      "difficulty": "中級",
+      "timeLimit": 30,
+      "relatedTopics": [
+        "人材開発",
+        "経験学習",
+        "OJT"
+      ],
+      "source": "ロミンガー社 人材開発研究",
+      "deleted": false
+    },
+    {
+      "id": 105,
+      "category": "leadership_hr",
+      "subcategory": "組織開発・変革リーダーシップ",
+      "question": "コッターの「8段階の変革プロセス」で最初に行うべきステップは？",
+      "options": [
+        "短期的成果の達成",
+        "ビジョンの策定",
+        "変革推進チームの結成",
+        "危機意識の醸成"
+      ],
+      "correct": 3,
+      "explanation": "コッターの8段階モデルでは、まず「危機意識の醸成」から始まります。変革の必要性を組織全体が理解し、現状に満足しない状況を作ることが変革成功の前提条件です。",
+      "difficulty": "中級",
+      "timeLimit": 35,
+      "relatedTopics": [
+        "変革マネジメント",
+        "組織変革",
+        "チェンジリーダーシップ"
+      ],
+      "source": "ジョン・コッター『企業変革力』",
+      "deleted": true
+    },
+    {
+      "id": 106,
+      "category": "communication_presentation",
+      "subcategory": "category_level",
+      "question": "効果的なビジネスコミュニケーションにおいて、論理的思考と感情的訴求のバランスを取る際に最も重要な考慮点は？",
+      "options": [
+        "感情的訴求を完全に排除して論理のみで構成する",
+        "常に感情的訴求を優先する",
+        "データと論理のみに依存する",
+        "聴衆の立場や状況を理解し、適切な比重で両要素を組み合わせる"
+      ],
+      "correct": 3,
+      "explanation": "効果的なコミュニケーションには論理的な説得力と感情的な共感の両方が必要です。聴衆の専門性、関心、意思決定プロセスを理解し、状況に応じて適切なバランスを取ることが重要です。",
+      "difficulty": "中級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "アリストテレスの説得技法",
+        "聴衆分析",
+        "コミュニケーション戦略"
+      ],
+      "source": "ビジネスコミュニケーション統合理論",
+      "deleted": false
+    },
+    {
+      "id": 107,
+      "category": "logical_thinking_problem_solving",
+      "subcategory": "category_level",
+      "question": "複雑なビジネス課題に対してMECE思考、仮説思考、データ分析を統合的に活用する際の最適なアプローチは？",
+      "options": [
+        "すべての手法を同時並行で実施する",
+        "データ分析の結果のみに基づいて判断する",
+        "直感的な判断を優先する",
+        "MECE思考で問題を構造化→仮説設定→データで検証のサイクルを回す"
+      ],
+      "correct": 3,
+      "explanation": "問題解決の効果的なアプローチは、まずMECE思考で問題を体系的に分解・構造化し、仮説を設定してからデータで検証するサイクルを繰り返すことです。この順序性が重要です。",
+      "difficulty": "上級",
+      "timeLimit": 50,
+      "relatedTopics": [
+        "問題解決プロセス",
+        "仮説検証サイクル",
+        "構造化思考"
+      ],
+      "source": "コンサルティング思考統合手法",
+      "deleted": false
+    },
+    {
+      "id": 108,
+      "category": "strategy_management",
+      "subcategory": "category_level",
+      "question": "企業戦略立案において、外部環境分析と内部経営資源分析を統合して競争優位を構築する際の核心的な考え方は？",
+      "options": [
+        "外部環境の要求に完全に適応する",
+        "市場機会と自社の独自性の交点で価値創造ポジションを確立する",
+        "内部の強みのみを活かす戦略を取る",
+        "競合他社の戦略をそのまま模倣する"
+      ],
+      "correct": 1,
+      "explanation": "持続的競争優位は、外部環境の市場機会と自社の独自の経営資源・能力の交点において、他社が容易に模倣できない価値創造ポジションを確立することで実現されます。",
+      "difficulty": "上級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "SWOT統合分析",
+        "競争優位の源泉",
+        "戦略的ポジショニング"
+      ],
+      "source": "戦略経営統合理論",
+      "deleted": false
+    },
+    {
+      "id": 109,
+      "category": "finance",
+      "subcategory": "category_level",
+      "question": "企業の財務戦略において、資本構成最適化、投資判断、リスク管理を統合的に考慮する際の最重要原則は？",
+      "options": [
+        "ステークホルダー価値とリスク・リターンのバランスを取りながら持続的成長を目指す",
+        "株主価値最大化のみを追求する",
+        "リスクを完全に回避する",
+        "短期的利益を最優先する"
+      ],
+      "correct": 0,
+      "explanation": "現代の財務戦略では、株主だけでなく従業員、顧客、社会などの多様なステークホルダーの価値を考慮し、適切なリスクテイクにより持続的な企業価値向上を図ることが重要です。",
+      "difficulty": "上級",
+      "timeLimit": 50,
+      "relatedTopics": [
+        "ステークホルダー資本主義",
+        "統合的リスク管理",
+        "サステナブルファイナンス"
+      ],
+      "source": "現代コーポレートファイナンス",
+      "deleted": false
+    },
+    {
+      "id": 110,
+      "category": "marketing_sales",
+      "subcategory": "category_level",
+      "question": "デジタル時代のマーケティング戦略において、顧客体験設計、データ活用、ブランド構築を統合する際の核心的アプローチは？",
+      "options": [
+        "デジタル技術のみに依存する",
+        "従来のマス広告手法を継続する",
+        "顧客の行動データに基づき、パーソナライズされた価値提供でブランド関係を深化させる",
+        "価格競争力のみで差別化する"
+      ],
+      "correct": 2,
+      "explanation": "デジタル時代のマーケティングでは、顧客の行動データとAI技術を活用して個々の顧客にパーソナライズされた体験を提供し、長期的なブランド関係を構築することが競争優位の源泉となります。",
+      "difficulty": "中級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "カスタマーエクスペリエンス",
+        "データドリブンマーケティング",
+        "リレーションシップマーケティング"
+      ],
+      "source": "デジタルマーケティング統合戦略",
+      "deleted": false
+    },
+    {
+      "id": 111,
+      "category": "leadership_hr",
+      "subcategory": "category_level",
+      "question": "多様性の高いチームで高いパフォーマンスを実現するために、リーダーが統合的に発揮すべき能力の組み合わせは？",
+      "options": [
+        "心理的安全性の確保、ビジョンの共有、個別の能力開発支援を組み合わせる",
+        "権威的なリーダーシップのみを発揮する",
+        "メンバーの自主性に完全に任せる",
+        "統一的な管理手法を全メンバーに適用する"
+      ],
+      "correct": 0,
+      "explanation": "多様性の高いチームでは、メンバーが安心して発言できる心理的安全性、共通の目標となるビジョン、そして個々の特性に応じた能力開発支援を統合的に提供することで、多様性を強みに変換できます。",
+      "difficulty": "上級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "インクルーシブリーダーシップ",
+        "チームダイナミクス",
+        "適応的リーダーシップ"
+      ],
+      "source": "現代リーダーシップ統合理論",
+      "deleted": true
+    },
+    {
+      "id": 112,
+      "category": "ai_digital_utilization",
+      "subcategory": "category_level",
+      "question": "組織のデジタル変革を成功させるために、AI技術導入、データ戦略、組織変革を統合的に推進する際の最重要成功要因は？",
+      "options": [
+        "技術導入と並行して組織文化・スキル・プロセスを変革し、データドリブンな意思決定文化を醸成する",
+        "最新技術の導入のみに集中する",
+        "既存業務プロセスを完全に保持する",
+        "外部ベンダーに全てを委託する"
+      ],
+      "correct": 0,
+      "explanation": "デジタル変革の成功には技術導入だけでなく、組織文化の変革、従業員のデジタルスキル向上、新しい業務プロセスの定着、そしてデータに基づく意思決定文化の醸成が不可欠です。",
+      "difficulty": "上級",
+      "timeLimit": 50,
+      "relatedTopics": [
+        "デジタルトランスフォーメーション",
+        "組織変革管理",
+        "データドリブン経営"
+      ],
+      "source": "DX推進戦略統合ガイド",
+      "deleted": false
+    },
+    {
+      "id": 113,
+      "category": "project_operations",
+      "subcategory": "category_level",
+      "question": "複雑なプロジェクトにおいて、スコープ管理、リソース管理、ステークホルダー管理を統合的に行う際の最適なアプローチは？",
+      "options": [
+        "各要素を独立して管理する",
+        "スコープ固定を最優先する",
+        "ステークホルダーの期待値調整とリソース配分の最適化を反復的に行いながらスコープを調整する",
+        "外部リソースのみに依存する"
+      ],
+      "correct": 2,
+      "explanation": "複雑なプロジェクトでは、ステークホルダーの期待値とプロジェクトの現実的な制約条件を継続的に調整し、限られたリソースの中で最大価値を創出するスコープに動的に調整することが重要です。",
+      "difficulty": "中級",
+      "timeLimit": 45,
+      "relatedTopics": [
+        "アジャイルプロジェクト管理",
+        "価値創出最大化",
+        "動的スコープ管理"
+      ],
+      "source": "複雑プロジェクト管理統合手法",
+      "deleted": false
+    },
+    {
+      "id": 114,
+      "category": "business_process_analysis",
+      "subcategory": "category_level",
+      "question": "業務プロセス改革において、現状分析、システム設計、組織変革を統合的に推進する際の成功の鍵は？",
+      "options": [
+        "システム導入のみに集中する",
+        "理想的な業務フローを設計し、それを支えるシステムと組織体制を同時に構築する",
+        "現状の業務をそのままシステム化する",
+        "段階的な変更を避けて一気に変革する"
+      ],
+      "correct": 1,
+      "explanation": "効果的な業務プロセス改革は、顧客価値創出の観点から理想的な業務フローを再設計し、それを支えるシステムと組織能力を同時に構築することで実現されます。システムありきではなく、価値創出ありきの発想が重要です。",
+      "difficulty": "上級",
+      "timeLimit": 50,
+      "relatedTopics": [
+        "ビジネスプロセス・リエンジニアリング",
+        "システム思考",
+        "変革管理"
+      ],
+      "source": "業務改革統合アプローチ",
+      "deleted": false
+    },
+    {
+      "id": 115,
+      "category": "risk_crisis_management",
+      "subcategory": "category_level",
+      "question": "企業リスク管理において、予防的リスク管理、危機対応、事業継続性を統合的に構築する際の基本的な考え方は？",
+      "options": [
+        "リスクの相互関連性を理解し、段階的な対応レベルと迅速な復旧メカニズムを事前に構築する",
+        "起こりうるすべてのリスクに対して個別に対策を立てる",
+        "危機が発生してから対応を検討する",
+        "リスク回避のみに集中する"
+      ],
+      "correct": 0,
+      "explanation": "統合的リスク管理では、リスク間の相互関連性を理解し、予防→初期対応→危機管理→事業継続→復旧の段階的対応レベルを事前に構築することで、組織の resilience（回復力）を高めることが重要です。",
+      "difficulty": "上級",
+      "timeLimit": 50,
+      "relatedTopics": [
+        "統合リスク管理",
+        "組織レジリエンス",
+        "事業継続マネジメント"
+      ],
+      "source": "統合リスク管理フレームワーク",
+      "deleted": false
+    }
+  ],
+  "lastUpdated": "2025-09-16T07:53:15.790Z",
+  "totalQuestions": 115
+}

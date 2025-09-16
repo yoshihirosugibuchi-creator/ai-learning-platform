@@ -1,0 +1,815 @@
+{
+  "id": "marketing_practice",
+  "title": "マーケティング実践コース",
+  "description": "顧客理解から戦略立案、施策実行まで体系的に学ぶ",
+  "estimatedDays": 18,
+  "difficulty": "intermediate",
+  "icon": "📈",
+  "color": "#EF4444",
+  "displayOrder": 2,
+  "genres": [
+    {
+      "id": "customer_understanding",
+      "title": "顧客理解",
+      "description": "データとインサイトに基づく顧客分析とセグメンテーション",
+      "categoryId": "marketing_sales",
+      "subcategoryId": "顧客分析・セグメンテーション",
+      "estimatedDays": 8,
+      "displayOrder": 1,
+      "badge": {
+        "id": "customer_expert_badge",
+        "title": "顧客理解エキスパート",
+        "description": "データに基づく顧客分析とセグメンテーション技術を習得",
+        "icon": "👥",
+        "color": "#3B82F6"
+      },
+      "themes": [
+        {
+          "id": "customer_journey_mapping",
+          "title": "カスタマージャーニーマップ",
+          "description": "顧客の行動と感情を可視化し、タッチポイントを最適化",
+          "estimatedMinutes": 9,
+          "displayOrder": 1,
+          "rewardCard": {
+            "id": "customer_journey_card",
+            "title": "カスタマージャーニーマップ",
+            "summary": "顧客の購買プロセス全体を可視化し、各段階での課題と機会を特定する手法",
+            "keyPoints": [
+              "認知→検討→購入→利用→推奨の各段階分析",
+              "タッチポイントと感情の変化を可視化",
+              "改善機会の優先順位付け"
+            ],
+            "icon": "🗺️",
+            "color": "#3B82F6"
+          },
+          "sessions": [
+            {
+              "id": "journey_mapping_basics",
+              "title": "カスタマージャーニーマップ基礎",
+              "estimatedMinutes": 3,
+              "type": "knowledge",
+              "displayOrder": 1,
+              "content": [
+                {
+                  "id": "cjm_concept",
+                  "type": "text",
+                  "title": "カスタマージャーニーマップとは",
+                  "content": "カスタマージャーニーマップは、顧客が商品やサービスを認知してから購入・利用・推奨に至るまでの一連の体験を時系列で可視化したものです。各段階での顧客の行動、思考、感情を詳細に把握することで、顧客体験の改善点を発見し、マーケティング戦略を最適化できます。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "cjm_phases",
+                  "type": "key_points",
+                  "title": "ジャーニーの5段階",
+                  "content": "• 認知（Awareness）：課題を認識し情報収集開始\n• 検討（Consideration）：選択肢を比較検討\n• 購入（Purchase）：決定と購買行動\n• 利用（Usage）：実際の使用体験\n• 推奨（Advocacy）：他者への推薦行動",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "cjm_benefits",
+                  "type": "example",
+                  "title": "活用メリット",
+                  "content": "【課題発見】各段階での離脱要因を特定\n【体験改善】顧客視点での改善優先度を明確化\n【部門連携】営業・CS・開発部門の共通認識を構築\n【投資判断】最大効果が見込める改善領域を特定",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "cjm_quiz_1",
+                  "question": "カスタマージャーニーマップで最も重要な要素は？",
+                  "options": [
+                    "美しいデザイン",
+                    "顧客の感情と行動の変化",
+                    "詳細な統計データ",
+                    "競合比較情報"
+                  ],
+                  "correct": 1,
+                  "explanation": "顧客の感情と行動の変化を可視化することで、真の課題と改善機会を発見できます。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "journey_mapping_practice",
+              "title": "ジャーニーマップ作成実習",
+              "estimatedMinutes": 3,
+              "type": "practice",
+              "displayOrder": 2,
+              "content": [
+                {
+                  "id": "mapping_exercise",
+                  "type": "text",
+                  "title": "実践ワーク：ECサイトのジャーニーマップ",
+                  "content": "オンライン書籍ECサイトを例に、新規顧客のカスタマージャーニーを作成しましょう。認知から推奨まで各段階で、顧客がどのような行動を取り、どんな感情を持つかを整理してください。特に離脱しやすいポイントと改善機会に注目しましょう。",
+                  "duration": 2,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "mapping_framework",
+                  "type": "key_points",
+                  "title": "作成時のチェックポイント",
+                  "content": "• 実際の顧客データ・声に基づいているか\n• 各段階の感情の変化が明確か\n• タッチポイントが網羅されているか\n• 改善の優先順位が見えるか",
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "mapping_practice_quiz",
+                  "question": "ECサイトで「検討」段階の主要な顧客行動は？",
+                  "options": [
+                    "SNSでの口コミ投稿",
+                    "商品比較と口コミ確認",
+                    "友人への推薦",
+                    "カスタマーサポートへの感謝"
+                  ],
+                  "correct": 1,
+                  "explanation": "検討段階では、複数の選択肢を比較し、他者の評価を確認する行動が中心となります。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "journey_optimization",
+              "title": "ジャーニー最適化戦略",
+              "estimatedMinutes": 3,
+              "type": "case_study",
+              "displayOrder": 3,
+              "content": [
+                {
+                  "id": "optimization_strategy",
+                  "type": "text",
+                  "title": "ジャーニー改善の戦略的アプローチ",
+                  "content": "カスタマージャーニーの最適化は、単なる部分的改善ではなく、全体最適を目指す戦略的取り組みです。各段階での改善がどう連鎖し、最終的な顧客満足度とビジネス成果にどう影響するかを考慮して、改善の優先順位を決定することが重要です。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "success_case",
+                  "type": "example",
+                  "title": "成功事例：SaaS企業のジャーニー改善",
+                  "content": "【課題】トライアル→有料転換率が12%と低迷\n【分析】ジャーニーマップで「利用」段階での離脱多発を発見\n【施策】オンボーディング強化、プロダクトツアー改善\n【結果】転換率が28%に向上、顧客満足度も大幅改善",
+                  "duration": 2,
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "optimization_quiz",
+                  "question": "ジャーニー最適化で最も重要な考え方は？",
+                  "options": [
+                    "各段階の個別最適化",
+                    "全体最適の視点",
+                    "コスト削減優先",
+                    "競合模倣"
+                  ],
+                  "correct": 1,
+                  "explanation": "各段階の改善が全体にどう影響するかを考慮した全体最適の視点が重要です。",
+                  "type": "single_choice"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "persona_development",
+          "title": "ペルソナ開発",
+          "description": "データに基づく具体的な顧客像の構築と活用",
+          "estimatedMinutes": 9,
+          "displayOrder": 2,
+          "rewardCard": {
+            "id": "persona_card",
+            "title": "ペルソナ開発",
+            "summary": "定量・定性データを統合し、マーケティング戦略の核となる具体的な顧客像を構築",
+            "keyPoints": [
+              "デモグラフィック＋心理的特性の統合",
+              "実データに基づく仮説構築",
+              "チーム内での顧客認識統一"
+            ],
+            "icon": "👤",
+            "color": "#10B981"
+          },
+          "sessions": [
+            {
+              "id": "persona_fundamentals",
+              "title": "ペルソナ設計の基礎",
+              "estimatedMinutes": 3,
+              "type": "knowledge",
+              "displayOrder": 1,
+              "content": [
+                {
+                  "id": "persona_definition",
+                  "type": "text",
+                  "title": "効果的なペルソナとは",
+                  "content": "ペルソナは単なる顧客の典型例ではなく、実際のデータに基づいて作成された「戦略的な顧客モデル」です。デモグラフィック情報（年齢、職業など）と心理的特性（価値観、悩み、動機）を組み合わせ、チーム全員が同じ顧客イメージを共有できる具体的な人物像を作成します。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "persona_elements",
+                  "type": "key_points",
+                  "title": "ペルソナの構成要素",
+                  "content": "• 基本情報：年齢、職業、収入、家族構成\n• 行動パターン：情報収集方法、購買行動、利用シーン\n• 心理的特性：価値観、悩み、目標、動機\n• 情報接触：利用メディア、情報源、影響者",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "persona_pitfalls",
+                  "type": "example",
+                  "title": "よくある間違い",
+                  "content": "【❌NG例】「20代女性、都内在住」のような曖昧な設定\n【✅OK例】「田中さん（28歳）、IT企業勤務、時短勤務で2歳の子育て中。効率重視で、SNSで情報収集し、レビューを重視する」",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "persona_quiz_1",
+                  "question": "効果的なペルソナに必須の要素は？",
+                  "options": [
+                    "詳細すぎる個人情報",
+                    "実データに基づく具体性",
+                    "理想的な顧客像",
+                    "競合企業の模倣"
+                  ],
+                  "correct": 1,
+                  "explanation": "実際の顧客データに基づいた具体的な人物像が、戦略立案に有効なペルソナとなります。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "persona_research",
+              "title": "ペルソナリサーチ手法",
+              "estimatedMinutes": 3,
+              "type": "practice",
+              "displayOrder": 2,
+              "content": [
+                {
+                  "id": "research_methods",
+                  "type": "text",
+                  "title": "データ収集の多角的アプローチ",
+                  "content": "効果的なペルソナ作成には、定量データと定性データの両方が必要です。Webアナリティクス、顧客アンケート、購買データなどの定量情報で全体傾向を把握し、インタビューや行動観察などの定性調査で深層心理や文脈を理解します。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "data_sources",
+                  "type": "key_points",
+                  "title": "主要なデータソース",
+                  "content": "• 定量データ：Webアナリティクス、購買履歴、アンケート統計\n• 定性データ：顧客インタビュー、観察調査、SNS分析\n• 内部データ：営業・CS部門の顧客接点情報\n• 外部データ：市場調査レポート、業界統計",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "research_tips",
+                  "type": "example",
+                  "title": "リサーチ実施のコツ",
+                  "content": "【インタビュー】「なぜ？」を5回繰り返して本音を引き出す\n【アンケート】選択式で傾向把握、自由記述で深層理解\n【データ分析】異なるセグメントの行動差異に注目\n【継続更新】市場変化に応じて定期的にペルソナを見直し",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "research_quiz",
+                  "question": "ペルソナリサーチで「なぜ？」を繰り返す目的は？",
+                  "options": [
+                    "データ量を増やすため",
+                    "顧客の本音と深層動機を理解するため",
+                    "競合分析の精度向上",
+                    "コスト削減"
+                  ],
+                  "correct": 1,
+                  "explanation": "表面的な回答の奥にある真の動機や価値観を理解することで、より効果的なマーケティング戦略を立案できます。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "persona_activation",
+              "title": "ペルソナ活用戦略",
+              "estimatedMinutes": 3,
+              "type": "case_study",
+              "displayOrder": 3,
+              "content": [
+                {
+                  "id": "activation_strategy",
+                  "type": "text",
+                  "title": "ペルソナの戦略的活用",
+                  "content": "作成したペルソナは、マーケティング戦略のあらゆる側面で活用できる強力なツールです。商品開発、コンテンツ制作、広告配信、営業アプローチなど、顧客との接点すべてにおいてペルソナを軸とした一貫性のある体験を設計することで、顧客満足度と事業成果を同時に向上させることができます。",
+                  "duration": 2,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "practical_applications",
+                  "type": "example",
+                  "title": "活用事例",
+                  "content": "【商品開発】ペルソナのニーズに基づく機能優先順位付け\n【コンテンツ戦略】ペルソナの情報収集行動に合わせた配信\n【広告運用】ペルソナの属性・興味に基づくターゲティング\n【営業戦略】ペルソナの課題に響く提案ストーリー構築",
+                  "duration": 1,
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "activation_quiz",
+                  "question": "ペルソナ活用で最も重要なことは？",
+                  "options": [
+                    "詳細な設定の記録",
+                    "全部門での一貫した活用",
+                    "定期的な更新作業",
+                    "競合との差別化"
+                  ],
+                  "correct": 1,
+                  "explanation": "全部門がペルソナを共通認識として活用することで、一貫性のある顧客体験を提供できます。",
+                  "type": "single_choice"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "market_segmentation",
+          "title": "市場セグメンテーション",
+          "description": "効果的なターゲット選定と市場細分化戦略",
+          "estimatedMinutes": 9,
+          "displayOrder": 3,
+          "rewardCard": {
+            "id": "segmentation_card",
+            "title": "市場セグメンテーション",
+            "summary": "多様な顧客を意味のある塊に分類し、最適なターゲティング戦略を構築",
+            "keyPoints": [
+              "セグメンテーション軸の戦略的選択",
+              "セグメント評価とターゲット選定",
+              "セグメント別アプローチの最適化"
+            ],
+            "icon": "🎯",
+            "color": "#F59E0B"
+          },
+          "sessions": [
+            {
+              "id": "segmentation_strategy",
+              "title": "セグメンテーション戦略",
+              "estimatedMinutes": 3,
+              "type": "knowledge",
+              "displayOrder": 1,
+              "content": [
+                {
+                  "id": "segmentation_concept",
+                  "type": "text",
+                  "title": "戦略的セグメンテーション",
+                  "content": "市場セグメンテーションは、多様な顧客を類似のニーズや特性を持つグループに分類する戦略的プロセスです。効果的なセグメンテーションにより、限られた経営資源を最も成果の見込める顧客層に集中投下し、競争優位性を構築できます。重要なのは、自社の強みと市場機会が交差するセグメントを発見することです。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "segmentation_criteria",
+                  "type": "key_points",
+                  "title": "セグメンテーション軸",
+                  "content": "• 地理的：地域、気候、都市規模、人口密度\n• 人口統計的：年齢、性別、職業、所得、教育\n• 心理的：ライフスタイル、価値観、性格\n• 行動的：使用頻度、ブランド忠誠度、利用シーン",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "segmentation_evaluation",
+                  "type": "example",
+                  "title": "セグメント評価の4基準",
+                  "content": "【測定可能性】セグメントサイズや特性が測定可能か\n【到達可能性】効果的にリーチできるか\n【実質性】十分な市場規模と収益性があるか\n【実行可能性】自社リソースで対応可能か",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "segmentation_quiz_1",
+                  "question": "セグメンテーションで最も重要な視点は？",
+                  "options": [
+                    "セグメント数の最大化",
+                    "自社リソースとの適合性",
+                    "競合との差別化",
+                    "データ収集の容易さ"
+                  ],
+                  "correct": 1,
+                  "explanation": "自社の強みとリソースに適合し、実際に実行可能なセグメンテーションが重要です。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "targeting_strategy",
+              "title": "ターゲティング戦略",
+              "estimatedMinutes": 3,
+              "type": "practice",
+              "displayOrder": 2,
+              "content": [
+                {
+                  "id": "targeting_approaches",
+                  "type": "text",
+                  "title": "ターゲティング戦略の選択",
+                  "content": "セグメンテーション後は、どのセグメントを標的とするかのターゲティング戦略を決定します。無差別マーケティング、差別化マーケティング、集中マーケティングの3つの基本戦略から、自社の状況に最適な手法を選択し、各セグメントに対する具体的なアプローチを設計します。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "targeting_types",
+                  "type": "key_points",
+                  "title": "3つのターゲティング戦略",
+                  "content": "• 無差別：全セグメントに同一アプローチ（規模の経済）\n• 差別化：複数セグメントに個別アプローチ（多様なニーズ対応）\n• 集中：単一セグメントに特化（リソース集中）",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "target_selection",
+                  "type": "example",
+                  "title": "ターゲット選定の実例",
+                  "content": "【スタートアップ】集中戦略でニッチセグメントを深堀り\n【成長企業】差別化戦略で複数セグメントを段階的攻略\n【大企業】無差別戦略でマス市場をカバー",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "targeting_quiz",
+                  "question": "リソースが限られたスタートアップに最適な戦略は？",
+                  "options": [
+                    "無差別マーケティング",
+                    "差別化マーケティング",
+                    "集中マーケティング",
+                    "全戦略の同時実行"
+                  ],
+                  "correct": 2,
+                  "explanation": "限られたリソースを特定セグメントに集中投下する集中マーケティングが効果的です。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "positioning_strategy",
+              "title": "ポジショニング戦略",
+              "estimatedMinutes": 3,
+              "type": "case_study",
+              "displayOrder": 3,
+              "content": [
+                {
+                  "id": "positioning_concept",
+                  "type": "text",
+                  "title": "戦略的ポジショニング",
+                  "content": "ポジショニングは、ターゲット顧客の頭の中で自社製品・サービスが占める位置を戦略的に設計することです。競合との差別化を図り、顧客にとって独自の価値を提供する明確なポジションを確立することで、価格競争を回避し、持続的な競争優位性を構築できます。",
+                  "duration": 2,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "positioning_success_case",
+                  "type": "example",
+                  "title": "成功事例：スターバックス",
+                  "content": "【従来の喫茶店】「安くて美味しいコーヒー」\n【スターバックス】「第3の場所（サードプレイス）」\n【差別化ポイント】居心地の良い空間、カスタマイズ体験、ライフスタイル提案\n【結果】プレミアム価格でも選ばれるブランドを確立",
+                  "duration": 1,
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "positioning_quiz",
+                  "question": "効果的なポジショニングの条件は？",
+                  "options": [
+                    "価格の安さ",
+                    "顧客にとっての独自価値",
+                    "多機能性",
+                    "市場シェア"
+                  ],
+                  "correct": 1,
+                  "explanation": "顧客にとって他にはない独自の価値を提供することが、強力なポジショニングの基盤となります。",
+                  "type": "single_choice"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "digital_marketing",
+      "title": "デジタルマーケティング",
+      "description": "デジタルチャネルを活用した効果的なマーケティング施策",
+      "categoryId": "marketing_sales",
+      "subcategoryId": "デジタルマーケティング",
+      "estimatedDays": 10,
+      "displayOrder": 2,
+      "badge": {
+        "id": "digital_marketing_badge",
+        "title": "デジタルマーケティング実践者",
+        "description": "デジタルチャネルを駆使した現代的マーケティング手法を習得",
+        "icon": "📱",
+        "color": "#8B5CF6"
+      },
+      "themes": [
+        {
+          "id": "content_marketing",
+          "title": "コンテンツマーケティング",
+          "description": "価値あるコンテンツで顧客との関係性を構築",
+          "estimatedMinutes": 9,
+          "displayOrder": 1,
+          "rewardCard": {
+            "id": "content_marketing_card",
+            "title": "コンテンツマーケティング",
+            "summary": "顧客の課題解決に役立つ価値あるコンテンツを通じて信頼関係を構築し、ビジネス成果につなげる手法",
+            "keyPoints": [
+              "顧客価値優先のコンテンツ設計",
+              "カスタマージャーニーに応じた配信戦略",
+              "効果測定と継続改善"
+            ],
+            "icon": "📝",
+            "color": "#10B981"
+          },
+          "sessions": [
+            {
+              "id": "content_strategy_foundation",
+              "title": "コンテンツ戦略の基盤",
+              "estimatedMinutes": 3,
+              "type": "knowledge",
+              "displayOrder": 1,
+              "content": [
+                {
+                  "id": "content_marketing_definition",
+                  "type": "text",
+                  "title": "コンテンツマーケティングの本質",
+                  "content": "コンテンツマーケティングは、顧客の課題解決や価値提供を最優先とし、売り込まずに顧客との信頼関係を構築するマーケティング手法です。短期的な売上よりも長期的な顧客関係を重視し、専門性と有用性の高いコンテンツを継続的に提供することで、顧客の購買意欲と忠誠心を自然に育成します。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "content_types",
+                  "type": "key_points",
+                  "title": "主要コンテンツ形式",
+                  "content": "• テキスト系：ブログ記事、ホワイトペーパー、ケーススタディ\n• ビジュアル系：インフォグラフィック、画像、スライド\n• 動画系：解説動画、ウェビナー、ライブ配信\n• インタラクティブ系：診断ツール、計算機、チェックリスト",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "content_benefits",
+                  "type": "example",
+                  "title": "ビジネス効果",
+                  "content": "【ブランド認知】専門性の高いコンテンツで業界での存在感向上\n【リード獲得】有用な情報と引き換えに見込客の連絡先獲得\n【顧客育成】段階的な情報提供で購買意欲を醸成\n【顧客満足】継続的な価値提供で既存顧客の満足度向上",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "content_strategy_quiz",
+                  "question": "コンテンツマーケティングの最優先事項は？",
+                  "options": [
+                    "短期的な売上向上",
+                    "顧客への価値提供",
+                    "競合との差別化",
+                    "SEO効果の最大化"
+                  ],
+                  "correct": 1,
+                  "explanation": "顧客の課題解決と価値提供を最優先とすることで、長期的な信頼関係とビジネス成果を獲得できます。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "content_planning",
+              "title": "コンテンツ企画と制作",
+              "estimatedMinutes": 3,
+              "type": "practice",
+              "displayOrder": 2,
+              "content": [
+                {
+                  "id": "content_planning_process",
+                  "type": "text",
+                  "title": "戦略的コンテンツ企画",
+                  "content": "効果的なコンテンツ制作には、ターゲット顧客の深い理解と体系的な企画プロセスが不可欠です。顧客のカスタマージャーニーの各段階で必要な情報を整理し、検索キーワード調査、競合分析、自社の専門領域を組み合わせて、独自性のあるコンテンツテーマを発見します。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "content_calendar",
+                  "type": "key_points",
+                  "title": "コンテンツカレンダーの要素",
+                  "content": "• テーマ・トピック（顧客の関心事との整合性）\n• 配信日時（ターゲット層の行動パターン考慮）\n• 形式・媒体（コンテンツ特性と顧客の好み）\n• 目標指標（認知・検討・決定段階別の成果指標）",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "content_creation_tips",
+                  "type": "example",
+                  "title": "質の高いコンテンツの特徴",
+                  "content": "【実用性】具体的で実行可能なアドバイス\n【信頼性】データ・事例に基づく客観的な情報\n【独自性】自社ならではの視点や経験\n【読みやすさ】構造化された分かりやすい表現",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "content_planning_quiz",
+                  "question": "コンテンツ企画で最も重要な起点は？",
+                  "options": [
+                    "自社の商品・サービス",
+                    "競合他社の動向",
+                    "顧客のニーズと課題",
+                    "トレンドキーワード"
+                  ],
+                  "correct": 2,
+                  "explanation": "顧客のニーズと課題を起点とすることで、真に価値あるコンテンツを企画できます。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "content_distribution",
+              "title": "コンテンツ配信と最適化",
+              "estimatedMinutes": 3,
+              "type": "case_study",
+              "displayOrder": 3,
+              "content": [
+                {
+                  "id": "distribution_strategy",
+                  "type": "text",
+                  "title": "効果的な配信戦略",
+                  "content": "優れたコンテンツも、適切な配信戦略がなければ価値を発揮できません。オウンドメディア（自社サイト・ブログ）、アーンドメディア（PR・口コミ）、ペイドメディア（広告）を組み合わせ、ターゲット顧客が最もアクティブなチャネルで最適なタイミングにコンテンツを届ける戦略的アプローチが重要です。",
+                  "duration": 2,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "measurement_optimization",
+                  "type": "example",
+                  "title": "成果測定と改善事例",
+                  "content": "【BtoB企業の事例】\n・課題：技術系ホワイトペーパーのダウンロード率低迷\n・分析：タイトルと導入部分の見直し実施\n・改善：具体的なメリットを前面に打ち出し\n・結果：ダウンロード率が3倍向上、営業案件化率も改善",
+                  "duration": 1,
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "distribution_quiz",
+                  "question": "コンテンツ配信で重視すべき要素は？",
+                  "options": [
+                    "配信チャネルの数",
+                    "ターゲットとのタイミング適合",
+                    "コンテンツの長さ",
+                    "更新頻度"
+                  ],
+                  "correct": 1,
+                  "explanation": "ターゲット顧客が最もアクティブなタイミングで適切なチャネルから配信することが重要です。",
+                  "type": "single_choice"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "social_media_marketing",
+          "title": "ソーシャルメディアマーケティング",
+          "description": "SNSを活用したコミュニティ構築とエンゲージメント向上",
+          "estimatedMinutes": 9,
+          "displayOrder": 2,
+          "rewardCard": {
+            "id": "social_media_card",
+            "title": "ソーシャルメディアマーケティング",
+            "summary": "SNSプラットフォームの特性を活かし、顧客との双方向コミュニケーションを通じてブランド価値を向上させる手法",
+            "keyPoints": [
+              "プラットフォーム別の最適化戦略",
+              "コミュニティ構築とエンゲージメント",
+              "インフルエンサー・UGC活用"
+            ],
+            "icon": "📱",
+            "color": "#8B5CF6"
+          },
+          "sessions": [
+            {
+              "id": "social_platform_strategy",
+              "title": "プラットフォーム戦略",
+              "estimatedMinutes": 3,
+              "type": "knowledge",
+              "displayOrder": 1,
+              "content": [
+                {
+                  "id": "platform_characteristics",
+                  "type": "text",
+                  "title": "主要SNSプラットフォームの特徴",
+                  "content": "各SNSプラットフォームには独自のユーザー属性、利用シーン、コンテンツ形式があります。Instagram（ビジュアル重視）、Twitter（リアルタイム性）、LinkedIn（ビジネス関係）、TikTok（エンターテイメント）など、プラットフォームの特性を理解し、ターゲット顧客の行動パターンに合わせた戦略的活用が成功の鍵となります。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "platform_selection",
+                  "type": "key_points",
+                  "title": "プラットフォーム選定の基準",
+                  "content": "• ターゲット顧客の利用状況（年齢、職業、利用時間）\n• 自社コンテンツとの親和性（画像、動画、テキスト）\n• ビジネス目標との適合性（認知、集客、売上）\n• 運用リソースとの整合性（頻度、工数、専門性）",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "platform_examples",
+                  "type": "example",
+                  "title": "業界別プラットフォーム活用例",
+                  "content": "【BtoB企業】LinkedIn中心でThought Leadership発信\n【小売・EC】Instagram/TikTokで商品の魅力的な見せ方\n【サービス業】TwitterでリアルタイムなCS対応\n【コンサル】複数プラットフォームで専門性アピール",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "platform_quiz",
+                  "question": "SNSプラットフォーム選定で最も重要な要素は？",
+                  "options": [
+                    "フォロワー数の多さ",
+                    "ターゲット顧客の利用状況",
+                    "競合他社の動向",
+                    "運用の簡単さ"
+                  ],
+                  "correct": 1,
+                  "explanation": "ターゲット顧客がアクティブに利用するプラットフォームを選択することが最重要です。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "engagement_building",
+              "title": "エンゲージメント構築",
+              "estimatedMinutes": 3,
+              "type": "practice",
+              "displayOrder": 2,
+              "content": [
+                {
+                  "id": "engagement_concept",
+                  "type": "text",
+                  "title": "エンゲージメント向上の戦略",
+                  "content": "SNSでの成功は、単なるフォロワー数ではなく、コミュニティとの深いエンゲージメントによって決まります。一方的な情報発信ではなく、ユーザーとの双方向コミュニケーションを重視し、コメントへの返信、ユーザー生成コンテンツの活用、コミュニティイベントの開催などを通じて、熱量の高いファンベースを構築します。",
+                  "duration": 1,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "engagement_tactics",
+                  "type": "key_points",
+                  "title": "エンゲージメント向上施策",
+                  "content": "• 質問型投稿でユーザーの参加を促進\n• ユーザー生成コンテンツ（UGC）の積極活用\n• リアルタイム配信でライブ感演出\n• コミュニティ限定の特典・情報提供",
+                  "displayOrder": 2
+                },
+                {
+                  "id": "community_management",
+                  "type": "example",
+                  "title": "コミュニティ管理のベストプラクティス",
+                  "content": "【迅速な応答】コメント・DM返信は24時間以内\n【価値提供】宣伝よりも有用な情報を優先\n【人間性表現】ブランドの向こうにいる人を感じられる投稿\n【一貫性維持】ブランドボイス・トーンの統一",
+                  "duration": 1,
+                  "displayOrder": 3
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "engagement_quiz",
+                  "question": "SNSエンゲージメント向上で最も効果的なのは？",
+                  "options": [
+                    "投稿頻度を増やす",
+                    "フォロワーとの双方向コミュニケーション",
+                    "商品宣伝を強化する",
+                    "有名人とのコラボ"
+                  ],
+                  "correct": 1,
+                  "explanation": "ユーザーとの双方向の対話を通じて信頼関係を構築することが、持続的なエンゲージメントにつながります。",
+                  "type": "single_choice"
+                }
+              ]
+            },
+            {
+              "id": "social_commerce",
+              "title": "ソーシャルコマース活用",
+              "estimatedMinutes": 3,
+              "type": "case_study",
+              "displayOrder": 3,
+              "content": [
+                {
+                  "id": "social_commerce_trend",
+                  "type": "text",
+                  "title": "ソーシャルコマースの進化",
+                  "content": "SNSプラットフォーム上での直接購買が可能になったソーシャルコマースは、発見から購入までのカスタマージャーニーを大幅に短縮します。Instagram Shopping、Facebook Shop、TikTok Shopなどの機能を活用し、魅力的なコンテンツとシームレスな購買体験を組み合わせることで、従来のECを超える新しい販売機会を創出できます。",
+                  "duration": 2,
+                  "displayOrder": 1
+                },
+                {
+                  "id": "social_commerce_success",
+                  "type": "example",
+                  "title": "成功事例：D2Cブランド",
+                  "content": "【戦略】Instagramを中心とした世界観構築\n【施策】インフルエンサーとのコラボ、UGC活用、ライブコマース\n【結果】従来EC売上の40%をSNS経由で獲得\n【学び】コンテンツ品質とコミュニティ醸成が成功の要因",
+                  "duration": 1,
+                  "displayOrder": 2
+                }
+              ],
+              "quiz": [
+                {
+                  "id": "social_commerce_quiz",
+                  "question": "ソーシャルコマース成功の要因は？",
+                  "options": [
+                    "商品価格の安さ",
+                    "魅力的なコンテンツと購買体験の融合",
+                    "広告費の大量投入",
+                    "商品ラインナップの多様性"
+                  ],
+                  "correct": 1,
+                  "explanation": "質の高いコンテンツとスムーズな購買体験の組み合わせが、ソーシャルコマース成功の鍵です。",
+                  "type": "single_choice"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
