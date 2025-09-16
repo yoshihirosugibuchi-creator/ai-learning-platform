@@ -12,10 +12,12 @@ import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import { Question } from '@/lib/types'
 import { getAllQuestions, getCategories } from '@/lib/questions'
+import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function QuizPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { user, profile, loading: authLoading } = useAuth()
   const mode = searchParams.get('mode')
   const categoryParam = searchParams.get('category')
   const levelParam = searchParams.get('level')
@@ -68,6 +70,16 @@ export default function QuizPage() {
     setIsQuizActive(true)
   }
 
+  // 認証ガード
+  if (authLoading) {
+    return <LoadingScreen message="認証を確認中..." />
+  }
+
+  if (!user) {
+    router.push('/login')
+    return <LoadingScreen message="ログインページに移動中..." />
+  }
+
   if (loading) {
     return <LoadingScreen message="問題を読み込んでいます..." />
   }
@@ -89,6 +101,8 @@ export default function QuizPage() {
             questions={questions}
             category={selectedCategory || undefined}
             level={selectedLevel}
+            user={user}
+            profile={profile}
             onComplete={handleQuizComplete}
             onExit={handleQuizExit}
           />

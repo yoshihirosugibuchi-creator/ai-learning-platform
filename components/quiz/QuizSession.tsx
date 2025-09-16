@@ -9,14 +9,13 @@ import { Trophy, Target, Clock, BarChart3, Zap } from 'lucide-react'
 import QuizCard from './QuizCard'
 import { Question } from '@/lib/types'
 import { getRandomQuestions } from '@/lib/questions'
-import { useUserContext } from '@/contexts/UserContext'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { 
-  saveQuizResult, 
-  addCardToCollection,
-  saveEnhancedQuizResult,
-  QuestionAnswer,
-  QuizSession
-} from '@/lib/storage'
+  saveQuizResult as saveQuizResultSupabase,
+  updateUserProgress
+} from '@/lib/supabase-quiz'
+import { UserProfile } from '@/lib/supabase-user'
+import type { User } from '@supabase/supabase-js'
 import { getRandomWisdomCard, WisdomCard as WisdomCardType } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
 import { getCategoryDisplayName } from '@/lib/category-mapping'
@@ -25,6 +24,8 @@ interface QuizSessionProps {
   questions: Question[]
   category?: string
   level?: string | null
+  user: User
+  profile: UserProfile | null
   onComplete: (results: QuizResults) => void
   onExit: () => void
 }
@@ -44,10 +45,11 @@ export default function QuizSession({
   questions,
   category,
   level,
+  user,
+  profile,
   onComplete,
   onExit
 }: QuizSessionProps) {
-  const { updateProgress, updateStreak, user, updateUser, refreshUser } = useUserContext()
   const router = useRouter()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
@@ -157,7 +159,7 @@ export default function QuizSession({
     }
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     // Update confidence for current question if provided
     if (currentConfidence !== null && questionAnswers.length > 0) {
       const lastAnswerIndex = questionAnswers.length - 1
@@ -195,48 +197,43 @@ export default function QuizSession({
         category
       }
       
-      // Update user progress
-      const xpGained = finalResults.correctAnswers * 100
+      // Save quiz results to Supabase
+      const xpGained = finalResults.correctAnswers * 10
       console.log('🎯 Quiz completed:', {
         correctAnswers: finalResults.correctAnswers,
         totalQuestions: finalResults.totalQuestions,
         xpGained,
         categoryScores: finalResults.categoryScores
       })
-      const skpEarned = updateProgress(finalResults.totalQuestions, finalResults.correctAnswers, xpGained, finalResults.categoryScores)
-      console.log('📈 Progress updated:', { skpEarned, newUserData: user })
-      setSkpGained(skpEarned)
-      updateStreak()
       
-      // 追加でrefreshUserを呼び出して確実に状態を更新
-      setTimeout(() => {
-        refreshUser()
-      }, 200)
-      
-      // Save enhanced quiz result with detailed data (user-specific)
+      // Save quiz result to Supabase
       if (user?.id) {
-        saveEnhancedQuizResult({
-          category,
-          score: finalResults.score,
-          totalQuestions: finalResults.totalQuestions,
-          correctAnswers: finalResults.correctAnswers,
-          timeSpent: finalResults.timeSpent,
-          categoryScores: finalResults.categoryScores,
-          session: sessionData,
-          questionAnswers: questionAnswers
-        }, user.id)
-        
-        // Also save to legacy format for backwards compatibility
-        saveQuizResult({
-          category,
-          score: finalResults.score,
-          totalQuestions: finalResults.totalQuestions,
-          correctAnswers: finalResults.correctAnswers,
-          timeSpent: finalResults.timeSpent,
-          categoryScores: finalResults.categoryScores
-        }, user.id)
-        
-        console.log(`💾 Quiz results saved for user: ${user.id}`)
+        try {
+          await saveQuizResultSupabase({
+            user_id: user.id,
+            category_id: category || 'general',
+            subcategory_id: null,
+            questions: currentQuestions,
+            answers: questionAnswers,
+            score: finalResults.score,
+            total_questions: finalResults.totalQuestions,
+            time_taken: finalResults.timeSpent,
+            completed_at: new Date().toISOString()
+          })
+          
+          // Update user progress
+          await updateUserProgress(
+            user.id,
+            category || 'general',
+            null,
+            finalResults.correctAnswers,
+            finalResults.totalQuestions
+          )
+          
+          console.log(`💾 Quiz results saved to Supabase for user: ${user.id}`)
+        } catch (error) {
+          console.error('❌ Error saving quiz results:', error)
+        }
       } else {
         console.warn('⚠️ No user ID available, quiz results not saved')
       }
