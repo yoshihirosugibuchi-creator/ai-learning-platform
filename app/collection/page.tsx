@@ -584,11 +584,11 @@ export default function CollectionPage() {
     ).map(card => ({ id: card.id, title: card.title, obtained: card.obtained })))
     
     return {
-      collection,
-      stats,
+      collection: knowledgeCollectionData.collection,
+      stats: knowledgeCollectionData.stats,
       cardsWithStatus: knowledgeCards
     }
-  }, [user])
+  }, [user, knowledgeCollectionData])
 
   // 格言カード用フィルタリング
   const filteredWisdomCards = useMemo(() => {
