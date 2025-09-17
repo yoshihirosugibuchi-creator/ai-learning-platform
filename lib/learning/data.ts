@@ -58,11 +58,12 @@ export async function getLearningCourses(): Promise<{
 // 特定コースの詳細データ取得
 export async function getLearningCourseDetails(courseId: string): Promise<LearningCourse | null> {
   try {
-    const response = await fetch(`/learning-data/${courseId}.json`)
+    const response = await fetch(`/learning-data/${courseId}.json?t=${Date.now()}`)
     if (!response.ok) {
       throw new Error(`Failed to fetch course details for ${courseId}`)
     }
     const courseData = await response.json()
+    console.log('🔍 Raw course data loaded:', courseData)
     return courseData
   } catch (error) {
     console.error(`Error loading course details for ${courseId}:`, error)
@@ -77,62 +78,48 @@ export async function getAvailableLearningCourses() {
   return courses.filter(course => course.status === 'available')
 }
 
-// 学習進捗の取得・保存（ユーザー別localStorage使用）
-export function getLearningProgress(userId: string) {
-  if (typeof window === 'undefined') return {}
-  
+// 学習進捗の取得・保存（Supabase使用）
+import { getLearningProgressSupabase, saveLearningProgressSupabase } from '@/lib/supabase-learning'
+
+export async function getLearningProgress(userId: string) {
   try {
-    // User-specific learning progress storage
-    const progress = localStorage.getItem(`ale_learning_progress_${userId}`)
-    return progress ? JSON.parse(progress) : {}
+    const progress = await getLearningProgressSupabase(userId)
+    return progress
   } catch (error) {
-    console.error('Error loading learning progress:', error)
+    console.error('Error loading learning progress from Supabase:', error)
     return {}
   }
 }
 
-export function saveLearningProgress(userId: string, courseId: string, genreId: string, themeId: string, sessionId: string, completed: boolean) {
-  if (typeof window === 'undefined') return
-  
+export async function saveLearningProgress(userId: string, courseId: string, genreId: string, themeId: string, sessionId: string, completed: boolean) {
   try {
-    const progress = getLearningProgress(userId)
-    const key = `${courseId}_${genreId}_${themeId}_${sessionId}`
-    
-    progress[key] = {
-      courseId,
-      genreId,
-      themeId,
-      sessionId,
-      completed,
-      completedAt: completed ? new Date().toISOString() : null,
-      lastAccessedAt: new Date().toISOString()
+    const success = await saveLearningProgressSupabase(userId, courseId, genreId, themeId, sessionId, completed)
+    if (!success) {
+      console.error('Failed to save learning progress to Supabase')
     }
-    
-    // Save to user-specific storage key
-    localStorage.setItem(`ale_learning_progress_${userId}`, JSON.stringify(progress))
-    
-    console.log(`💾 Saved learning progress for user ${userId}:`, progress[key])
+    return success
   } catch (error) {
-    console.error('Error saving learning progress:', error)
+    console.error('Error saving learning progress to Supabase:', error)
+    return false
   }
 }
 
 // 学習統計の計算
-export function calculateLearningStats(userId: string) {
-  const progress = getLearningProgress(userId)
+export async function calculateLearningStats(userId: string) {
+  const progress = await getLearningProgress(userId)
   const completedSessions = Object.values(progress).filter((p: any) => p.completed)
   
   return {
     totalSessionsCompleted: completedSessions.length,
     totalTimeSpent: completedSessions.length * 3, // 概算（セッション1つ=3分）
-    currentStreak: calculateLearningStreak(userId),
+    currentStreak: await calculateLearningStreak(userId),
     lastLearningDate: completedSessions.length > 0 ? 
       new Date(Math.max(...completedSessions.map((p: any) => new Date(p.completedAt).getTime()))) : null
   }
 }
 
-function calculateLearningStreak(userId: string): number {
-  const progress = getLearningProgress(userId)
+async function calculateLearningStreak(userId: string): Promise<number> {
+  const progress = await getLearningProgress(userId)
   const completedSessions = Object.values(progress)
     .filter((p: any) => p.completed)
     .sort((a: any, b: any) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())

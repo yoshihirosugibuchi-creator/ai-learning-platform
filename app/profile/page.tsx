@@ -13,12 +13,14 @@ import {
   History, 
   BarChart3,
   Crown,
-  Calendar
+  Calendar,
+  Coins
 } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { getUserStats } from '@/lib/supabase-quiz'
+import { getUserSKPBalance, getUserSKPTransactions } from '@/lib/supabase-learning'
 
 export default function ProfilePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -31,12 +33,29 @@ export default function ProfilePage() {
     averageScore: 0,
     totalTimeSpent: 0
   })
+  const [skpBalance, setSkpBalance] = useState(0)
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([])
 
-  // クイズ統計を取得
+  // クイズ統計とSKPバランスを取得
   useEffect(() => {
     if (user && profile) {
+      // クイズ統計を取得
       getUserStats(user.id).then(stats => {
         setQuizStats(stats)
+      })
+      
+      // SKPバランスを取得
+      getUserSKPBalance(user.id).then(balance => {
+        setSkpBalance(balance)
+      }).catch(error => {
+        console.error('Error fetching SKP balance:', error)
+      })
+      
+      // 最近のSKP取引を取得
+      getUserSKPTransactions(user.id).then(transactions => {
+        setRecentTransactions(transactions.slice(0, 5)) // 最新5件
+      }).catch(error => {
+        console.error('Error fetching SKP transactions:', error)
       })
     }
   }, [user, profile])
@@ -136,12 +155,12 @@ export default function ProfilePage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">参加日数</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">SKPポイント</CardTitle>
+              <Coins className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1</div>
-              <p className="text-xs text-muted-foreground">日</p>
+              <div className="text-2xl font-bold text-yellow-600">{skpBalance}</div>
+              <p className="text-xs text-muted-foreground">SKP</p>
             </CardContent>
           </Card>
         </div>
@@ -165,6 +184,43 @@ export default function ProfilePage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* 最近のSKP獲得履歴 */}
+        {recentTransactions.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Coins className="h-5 w-5 text-yellow-600" />
+                <span>最近のSKP獲得履歴</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {recentTransactions.map((transaction, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+                    <div>
+                      <p className="text-sm font-medium">{transaction.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(transaction.timestamp).toLocaleDateString('ja-JP')}
+                      </p>
+                    </div>
+                    <div className={`text-sm font-bold ${
+                      transaction.type === 'earned' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {transaction.type === 'earned' ? '+' : '-'}{transaction.amount} SKP
+                    </div>
+                  </div>
+                ))}
+                <div className="pt-2">
+                  <Button variant="outline" size="sm" onClick={() => window.location.href = '/skp-history'}>
+                    <History className="h-4 w-4 mr-2" />
+                    全履歴を見る
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* プロフィール設定 */}
         <Card className="mt-6">

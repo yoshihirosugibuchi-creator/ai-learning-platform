@@ -18,10 +18,9 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { LearningSession as LearningSessionType, SessionTypeLabels } from '@/lib/types/learning'
-import { saveLearningProgress } from '@/lib/learning/data'
-import { saveLearningSession, updateLearningSession, LearningSession as LearningSessionData } from '@/lib/storage'
-import { addKnowledgeCardToCollection } from '@/lib/knowledge-cards'
-import { useUserContext } from '@/contexts/UserContext'
+import { saveLearningProgressSupabase, saveLearningSession as saveLearningSessionSupabase, updateLearningSession, LearningSession as LearningSessionData } from '@/lib/supabase-learning'
+import { addKnowledgeCardToCollection } from '@/lib/supabase-cards'
+import { useAuth } from '@/components/auth/AuthProvider'
 
 interface LearningSessionProps {
   courseId: string
@@ -58,7 +57,7 @@ export default function LearningSession({
   onExit
 }: LearningSessionProps) {
   const router = useRouter()
-  const { user } = useUserContext()
+  const { user } = useAuth()
   const [viewState, setViewState] = useState<ViewState>('content')
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0)
   const [quizAnswers, setQuizAnswers] = useState<{ [key: number]: string }>({})
@@ -68,6 +67,7 @@ export default function LearningSession({
   const [cardAcquired, setCardAcquired] = useState(false)
   const [startTime] = useState(new Date())
   const [currentSessionData, setCurrentSessionData] = useState<LearningSessionData | null>(null)
+  const [isCompletingSession, setIsCompletingSession] = useState(false)
 
   const hasQuiz = session.quiz && session.quiz.length > 0
   const isLastSession = currentSessionIndex === totalSessions - 1
@@ -76,21 +76,29 @@ export default function LearningSession({
   useEffect(() => {
     if (user?.id && !currentSessionData) {
       const sessionData: LearningSessionData = {
-        id: crypto.randomUUID(),
-        userId: user.id,
-        courseId,
-        genreId,
-        themeId,
-        sessionId: session.id,
-        startTime: startTime.toISOString(),
+        user_id: user.id,
+        session_id: session.id,
+        course_id: courseId,
+        genre_id: genreId,
+        theme_id: themeId,
+        start_time: startTime.toISOString(),
         completed: false
       }
       setCurrentSessionData(sessionData)
-      saveLearningSession(sessionData)
+      
+      // Save to Supabase
+      saveLearningSessionSupabase(sessionData).then((savedSession) => {
+        if (savedSession) {
+          setCurrentSessionData(savedSession)
+          console.log('📚 Learning session started:', savedSession.id)
+        }
+      }).catch(error => {
+        console.error('❌ Error saving learning session:', error)
+      })
     }
   }, [user?.id, courseId, genreId, themeId, session.id, startTime, currentSessionData])
 
-  const handleStartQuiz = () => {
+  const handleStartQuiz = async () => {
     if (hasQuiz) {
       setViewState('quiz')
       setCurrentQuizIndex(0)
@@ -98,7 +106,7 @@ export default function LearningSession({
       setQuizResults({})
       setShowQuizResult(false)
     } else {
-      completeSession()
+      await completeSession()
     }
   }
 
@@ -119,34 +127,48 @@ export default function LearningSession({
     setShowQuizResult(true)
   }
 
-  const handleNextQuizQuestion = () => {
+  const handleNextQuizQuestion = async () => {
     if (currentQuizIndex < session.quiz!.length - 1) {
       setCurrentQuizIndex(prev => prev + 1)
       setShowQuizResult(false)
     } else {
-      completeSession()
+      await completeSession()
     }
   }
 
-  const completeSession = () => {
-    if (user?.id && !sessionCompleted) {
+  const completeSession = async () => {
+    if (!user?.id || sessionCompleted || isCompletingSession) {
+      console.error('❌ Cannot complete session: missing user or session already completed or in progress')
+      return
+    }
+
+    console.log('🚀 Starting session completion...')
+    setIsCompletingSession(true)
+
+    try {
       const endTime = new Date()
       const duration = endTime.getTime() - startTime.getTime()
       
       // Save learning progress
-      saveLearningProgress(user.id, courseId, genreId, themeId, session.id, true)
+      console.log('📝 Saving learning progress...', { userId: user.id, courseId, genreId, themeId, sessionId: session.id })
+      const progressSaved = await saveLearningProgressSupabase(user.id, courseId, genreId, themeId, session.id, true)
+      console.log('📝 Progress save result:', progressSaved)
       
-      // Update learning session with completion data
-      if (currentSessionData) {
-        updateLearningSession(currentSessionData.id, {
-          endTime: endTime.toISOString(),
+      // Update learning session with completion data in Supabase
+      if (currentSessionData?.id) {
+        console.log('🔄 Updating learning session...', { sessionId: currentSessionData.id })
+        const sessionUpdated = await updateLearningSession(currentSessionData.id, {
+          end_time: endTime.toISOString(),
           duration,
           completed: true,
-          quizScore: hasQuiz ? getQuizScore() : undefined
+          quiz_score: hasQuiz ? getQuizScore() : undefined
         })
+        console.log('🔄 Session update result:', sessionUpdated)
+      } else {
+        console.warn('⚠️ No current session data found, skipping session update')
       }
       
-      // 最後のセッション完了時にナレッジカードを獲得
+      // Award knowledge card if this is the last session
       console.log('Session completion debug:', {
         isLastSession,
         themeRewardCard,
@@ -158,18 +180,42 @@ export default function LearningSession({
         console.log('🎉 ATTEMPTING TO ACQUIRE CARD:', themeRewardCard.id, 'for user:', user.id)
         console.log('Card details:', themeRewardCard)
         
-        const result = addKnowledgeCardToCollection(themeRewardCard.id, user.id)
-        setCardAcquired(result.isNew)
-        
-        console.log('🎯 CARD ACQUISITION RESULT:', result, 'for card:', themeRewardCard.id)
-        
-        // LocalStorage の状態をデバッグ出力（ユーザー別）
-        const userKey = `ale_knowledge_card_collection_${user.id}`
-        const currentCollection = JSON.parse(localStorage.getItem(userKey) || '[]')
-        console.log(`💾 CURRENT KNOWLEDGE CARD COLLECTION for user ${user.id}:`, currentCollection)
-        
-        // 全てのlocalStorageキーを確認
-        console.log('🗺️ ALL localStorage keys:', Object.keys(localStorage))
+        try {
+          // Use the card ID directly - the addKnowledgeCardToCollection function will handle conversion
+          console.log('🎯 ATTEMPTING CARD ACQUISITION:', {
+            userId: user.id,
+            cardId: themeRewardCard.id,
+            cardTitle: themeRewardCard.title,
+            isLastSession,
+            themeId,
+            genreId,
+            courseId
+          })
+          
+          const result = await addKnowledgeCardToCollection(user.id, themeRewardCard.id)
+          setCardAcquired(result.isNew)
+          
+          console.log('🎯 CARD ACQUISITION RESULT:', {
+            result,
+            cardId: themeRewardCard.id,
+            cardTitle: themeRewardCard.title,
+            isNew: result.isNew,
+            count: result.count
+          })
+          
+          if (result.isNew) {
+            console.log('🎉 NEW CARD ACQUIRED! Card should appear in collection.')
+          } else {
+            console.log('♻️  Card was already in collection.')
+          }
+        } catch (error) {
+          console.error('❌ Error acquiring knowledge card:', error)
+          console.error('❌ Error details:', {
+            cardId: themeRewardCard.id,
+            userId: user.id,
+            error: error
+          })
+        }
       } else {
         console.log('⚠️ Card acquisition skipped:', {
           isLastSession,
@@ -181,6 +227,16 @@ export default function LearningSession({
       setSessionCompleted(true)
       setViewState('completed')
       onComplete(session.id)
+      
+      console.log('✅ Session completed successfully')
+    } catch (error) {
+      console.error('❌ Error completing session:', error)
+      // Still allow the UI to show completion even if some operations failed
+      setSessionCompleted(true)
+      setViewState('completed')
+      onComplete(session.id)
+    } finally {
+      setIsCompletingSession(false)
     }
   }
 
@@ -249,56 +305,85 @@ export default function LearningSession({
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="prose max-w-none space-y-6">
-            {session.content.map((contentItem: any, index: number) => (
-              <div key={contentItem.id || index} className="space-y-3">
-                {contentItem.title && (
-                  <h3 className="text-lg font-semibold text-primary">
-                    {contentItem.title}
-                  </h3>
-                )}
-                
-                {contentItem.type === 'text' && (
-                  <div className="space-y-3">
-                    {contentItem.content.split('\n').map((paragraph: string, pIndex: number) => (
-                      paragraph.trim() && (
-                        <p key={pIndex} className="leading-relaxed text-gray-700">
-                          {paragraph.trim()}
-                        </p>
-                      )
-                    ))}
-                  </div>
-                )}
-                
-                {contentItem.type === 'key_points' && (
-                  <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
-                    <div className="space-y-2">
-                      {contentItem.content.split('\n').map((point: string, pIndex: number) => (
-                        point.trim() && (
-                          <div key={pIndex} className="flex items-start space-x-2">
-                            <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
-                            <span className="text-sm text-blue-800">{point.trim().replace(/^[•\-]\s*/, '')}</span>
-                          </div>
-                        )
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {contentItem.type === 'example' && (
-                  <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
-                    <div className="space-y-2">
-                      {contentItem.content.split('\n').map((line: string, pIndex: number) => (
-                        line.trim() && (
-                          <p key={pIndex} className="text-sm text-green-800 leading-relaxed">
-                            {line.trim()}
+            {/* Debug session content */}
+            {console.log('🔍 Session content debug:', {
+              hasContent: !!session.content,
+              contentLength: session.content?.length,
+              sessionStructure: Object.keys(session),
+              sessionId: session.id,
+              sessionTitle: session.title,
+              sessionType: session.type,
+              hasQuiz: !!session.quiz,
+              quizLength: session.quiz?.length
+            })}
+            {console.log('🔍 Full session object:', session)}
+            {console.log('🔍 Session properties in detail:', {
+              id: session.id,
+              title: session.title,
+              type: session.type,
+              estimatedMinutes: session.estimatedMinutes,
+              displayOrder: session.displayOrder,
+              icon: session.icon,
+              content: session.content,
+              quiz: session.quiz,
+              allKeys: Object.keys(session)
+            })}
+            {session.content && session.content.length > 0 ? (
+              session.content.map((contentItem: any, index: number) => (
+                <div key={contentItem.id || index} className="space-y-3">
+                  {contentItem.title && (
+                    <h3 className="text-lg font-semibold text-primary">
+                      {contentItem.title}
+                    </h3>
+                  )}
+                  
+                  {contentItem.type === 'text' && (
+                    <div className="space-y-3">
+                      {contentItem.content.split('\n').map((paragraph: string, pIndex: number) => (
+                        paragraph.trim() && (
+                          <p key={pIndex} className="leading-relaxed text-gray-700">
+                            {paragraph.trim()}
                           </p>
                         )
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
+                  
+                  {contentItem.type === 'key_points' && (
+                    <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
+                      <div className="space-y-2">
+                        {contentItem.content.split('\n').map((point: string, pIndex: number) => (
+                          point.trim() && (
+                            <div key={pIndex} className="flex items-start space-x-2">
+                              <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                              <span className="text-sm text-blue-800">{point.trim().replace(/^[•\-]\s*/, '')}</span>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {contentItem.type === 'example' && (
+                    <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+                      <div className="space-y-2">
+                        {contentItem.content.split('\n').map((line: string, pIndex: number) => (
+                          line.trim() && (
+                            <p key={pIndex} className="text-sm text-green-800 leading-relaxed">
+                              {line.trim()}
+                            </p>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">コンテンツを読み込んでいます...</p>
               </div>
-            ))}
+            )}
           </div>
 
 
@@ -308,8 +393,14 @@ export default function LearningSession({
               onClick={handleStartQuiz}
               size="lg"
               className="flex items-center space-x-2"
+              disabled={isCompletingSession}
             >
-              {hasQuiz ? (
+              {isCompletingSession ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  <span>処理中...</span>
+                </>
+              ) : hasQuiz ? (
                 <>
                   <BookOpen className="h-4 w-4" />
                   <span>理解度チェック</span>
@@ -409,8 +500,16 @@ export default function LearningSession({
                   {currentQuiz.explanation}
                 </p>
                 <div className="flex justify-center">
-                  <Button onClick={handleNextQuizQuestion}>
-                    {currentQuizIndex === session.quiz!.length - 1 ? (
+                  <Button 
+                    onClick={handleNextQuizQuestion}
+                    disabled={isCompletingSession}
+                  >
+                    {isCompletingSession && currentQuizIndex === session.quiz!.length - 1 ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                        処理中...
+                      </>
+                    ) : currentQuizIndex === session.quiz!.length - 1 ? (
                       <>
                         <Check className="h-4 w-4 mr-2" />
                         セッション完了

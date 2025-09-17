@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -16,16 +16,42 @@ import {
 } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
-import { useUserContext } from '@/contexts/UserContext'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { useRouter } from 'next/navigation'
+import { getUserSKPTransactions, getUserSKPBalance } from '@/lib/supabase-learning'
 
 type FilterType = 'all' | 'earned' | 'spent'
 
 export default function SkpHistoryPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [filter, setFilter] = useState<FilterType>('all')
-  const { user } = useUserContext()
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [currentBalance, setCurrentBalance] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
   const router = useRouter()
+
+  // Load SKP transactions and balance
+  useEffect(() => {
+    if (user?.id) {
+      const loadData = async () => {
+        try {
+          setLoading(true)
+          const [transactionsData, balance] = await Promise.all([
+            getUserSKPTransactions(user.id),
+            getUserSKPBalance(user.id)
+          ])
+          setTransactions(transactionsData)
+          setCurrentBalance(balance)
+        } catch (error) {
+          console.error('Error loading SKP data:', error)
+        } finally {
+          setLoading(false)
+        }
+      }
+      loadData()
+    }
+  }, [user])
 
   if (!user) {
     return (
@@ -41,7 +67,19 @@ export default function SkpHistoryPage() {
     )
   }
 
-  const transactions = user.skpTransactions || []
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)} />
+        <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+        <main className="container mx-auto px-4 py-6">
+          <div className="text-center py-12">
+            <p>データを読み込んでいます...</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
   
   const filteredTransactions = transactions.filter(transaction => {
     if (filter === 'all') return true
@@ -127,7 +165,7 @@ export default function SkpHistoryPage() {
             <CardContent className="pt-6 text-center">
               <div className="flex flex-col items-center space-y-2">
                 <Zap className="h-8 w-8 text-yellow-500" />
-                <div className="text-2xl font-bold text-yellow-600">{user.skpBalance}</div>
+                <div className="text-2xl font-bold text-yellow-600">{currentBalance}</div>
                 <div className="text-xs text-muted-foreground">現在のポイント</div>
               </div>
             </CardContent>

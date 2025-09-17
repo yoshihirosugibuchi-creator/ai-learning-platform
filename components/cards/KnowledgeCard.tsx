@@ -12,10 +12,11 @@ import {
   Clock,
   Star
 } from 'lucide-react'
-import { KnowledgeCard, getDifficultyColor, reviewKnowledgeCard } from '@/lib/knowledge-cards'
+import { KnowledgeCard, getDifficultyColor } from '@/lib/knowledge-cards'
+import { reviewKnowledgeCard } from '@/lib/supabase-cards'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useUserContext } from '@/contexts/UserContext'
+import { useAuth } from '@/components/auth/AuthProvider'
 
 interface KnowledgeCardProps {
   card: KnowledgeCard
@@ -30,12 +31,19 @@ export default function KnowledgeCard({
 }: KnowledgeCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const router = useRouter()
-  const { user } = useUserContext()
+  const { user } = useAuth()
 
-  const handleReview = () => {
+  const handleReview = async () => {
     // 復習回数をカウントアップ
-    reviewKnowledgeCard(card.id, user?.id)
-    onReview?.(card.id)
+    if (user?.id) {
+      // Convert string ID to number for Supabase
+      const cardId = !isNaN(Number(card.id)) 
+        ? Number(card.id)
+        : Math.abs(card.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0))
+      
+      await reviewKnowledgeCard(user.id, cardId)
+      onReview?.(card.id)
+    }
     
     // 学習セッションにナビゲート
     if (card.source) {

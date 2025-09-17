@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import { UserProfile, getOrCreateUserProfile } from '@/lib/supabase-user'
+import { UserProfile, getOrCreateUserProfile, debugDatabaseAccess } from '@/lib/supabase-user'
 
 type AuthContextType = {
   user: User | null
@@ -38,8 +38,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserProfile = async (user: User | null) => {
     if (user) {
-      const userProfile = await getOrCreateUserProfile(user)
-      setProfile(userProfile)
+      try {
+        const userProfile = await getOrCreateUserProfile(user)
+        setProfile(userProfile)
+      } catch (error) {
+        console.error('❌ Error loading user profile:', error)
+        // Set a fallback profile to keep the app working
+        setProfile({
+          id: user.id,
+          email: user.email!,
+          name: user.email?.split('@')[0] || 'User',
+          skill_level: 'beginner',
+          learning_style: 'mixed',
+          experience_level: 'beginner',
+          total_xp: 0,
+          current_level: 1,
+          streak: 0,
+          last_active: new Date().toISOString()
+        })
+      }
     } else {
       setProfile(null)
     }

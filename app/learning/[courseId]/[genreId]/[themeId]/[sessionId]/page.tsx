@@ -55,7 +55,13 @@ export default function SessionPage() {
           throw new Error('Theme not found')
         }
 
+        console.log('🔍 Theme object:', theme)
+        console.log('🔍 Theme sessions:', theme.sessions)
+        console.log('🔍 Looking for sessionId:', sessionId)
+        
         const session = theme.sessions.find(s => s.id === sessionId)
+        console.log('🔍 Found session:', session)
+        
         if (!session) {
           throw new Error('Session not found')
         }

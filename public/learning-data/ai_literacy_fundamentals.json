@@ -96,6 +96,7 @@
               "estimatedMinutes": 9,
               "type": "case_study",
               "displayOrder": 2,
+              "icon": "💼",
               "content": [
                 {
                   "id": "industry_applications",
@@ -143,6 +144,18 @@
               "estimatedMinutes": 9,
               "type": "knowledge",
               "displayOrder": 3,
+              "rewardCard": {
+                "id": "ai_limitations_ethics_card",
+                "title": "AI倫理とリスク管理",
+                "summary": "AIの限界を理解し、倫理的配慮とリスク管理の重要性を学習",
+                "keyPoints": [
+                  "AIの技術的限界とデータ依存性",
+                  "バイアス・プライバシー・透明性の課題",
+                  "責任あるAI活用のガイドライン"
+                ],
+                "icon": "⚖️",
+                "color": "#EF4444"
+              },
               "content": [
                 {
                   "id": "ai_limitations",

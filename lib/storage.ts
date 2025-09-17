@@ -1167,15 +1167,22 @@ export function initializeUserSpecificData(userId: string): void {
     // Run migration to move any existing global data to user-specific storage
     migrateUserDataToUserSpecific()
     
-    // Initialize personalization system
-    const { getUserQuizConfig, createDefaultQuizConfig } = require('./personalization')
-    const config = getUserQuizConfig(userId)
-    if (!config) {
-      const defaultConfig = createDefaultQuizConfig(userId)
-      const { saveUserQuizConfig } = require('./personalization')
-      saveUserQuizConfig(defaultConfig)
-      console.log('📝 Created default quiz personalization config')
-    }
+    // Initialize personalization system with Supabase
+    const { getUserQuizConfig, createDefaultQuizConfig, saveUserQuizConfig } = require('./supabase-personalization')
+    
+    // Use async initialization
+    getUserQuizConfig(userId).then((config: any) => {
+      if (!config) {
+        const defaultConfig = createDefaultQuizConfig(userId)
+        saveUserQuizConfig(defaultConfig).then((success: boolean) => {
+          if (success) {
+            console.log('📝 Created default quiz personalization config')
+          }
+        })
+      }
+    }).catch((error: any) => {
+      console.error('Error initializing personalization:', error)
+    })
     
     console.log('✅ User-specific data management initialized successfully')
   } catch (error) {

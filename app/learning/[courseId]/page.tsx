@@ -13,12 +13,12 @@ import LoadingScreen from '@/components/layout/LoadingScreen'
 import { getLearningCourseDetails, getLearningProgress } from '@/lib/learning/data'
 import { LearningCourse, DifficultyLabels, SessionTypeLabels } from '@/lib/types/learning'
 import { getCategoryInfoForCourse, getCategoryInfoForGenre } from '@/lib/learning/category-integration'
-import { useUserContext } from '@/contexts/UserContext'
+import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function CourseDetailPage() {
   const router = useRouter()
   const params = useParams()
-  const { user } = useUserContext()
+  const { user } = useAuth()
   const [course, setCourse] = useState<LearningCourse | null>(null)
   const [loading, setLoading] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -41,7 +41,9 @@ export default function CourseDetailPage() {
 
         // ユーザーの進捗を取得
         if (user?.id && courseData) {
-          const progress = getLearningProgress(user.id)
+          console.log('📚 Loading learning progress for user:', user.id)
+          const progress = await getLearningProgress(user.id)
+          console.log('📚 Loaded progress data:', progress)
           setUserProgress(progress)
         }
       } catch (error) {
@@ -60,7 +62,9 @@ export default function CourseDetailPage() {
 
   const isSessionCompleted = (genreId: string, themeId: string, sessionId: string) => {
     const key = `${courseId}_${genreId}_${themeId}_${sessionId}`
-    return userProgress[key]?.completed || false
+    const isCompleted = userProgress[key]?.completed || false
+    console.log(`🔍 Checking session completion: ${key} -> ${isCompleted}`)
+    return isCompleted
   }
 
   const getThemeProgress = (genreId: string, themeId: string, sessions: any[]) => {

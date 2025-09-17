@@ -11,11 +11,11 @@ import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import CourseCard from '@/components/learning/CourseCard'
 import { getLearningCourses, getLearningProgress, calculateLearningStats } from '@/lib/learning/data'
-import { useUserContext } from '@/contexts/UserContext'
+import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function LearningPage() {
   const router = useRouter()
-  const { user } = useUserContext()
+  const { user } = useAuth()
   const [courses, setCourses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -34,7 +34,7 @@ export default function LearningPage() {
 
         // ユーザーの学習統計を計算
         if (user?.id) {
-          const stats = calculateLearningStats(user.id)
+          const stats = await calculateLearningStats(user.id)
           setLearningStats(stats)
         }
       } catch (error) {
