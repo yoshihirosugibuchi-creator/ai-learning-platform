@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isHydrated, setIsHydrated] = useState(false)
 
   const loadUserProfile = async (user: User | null) => {
     if (user) {
@@ -63,33 +64,93 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const user = session?.user ?? null
-      setUser(user)
-      await loadUserProfile(user)
-      setLoading(false)
-    })
+    let isMounted = true
+    
+    // Set a shorter timeout to prevent long loading states
+    const loadingTimeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn('⚠️ Auth loading timeout - stopping loading state')
+        setLoading(false)
+      }
+    }, 3000) // Reduced to 3 second timeout
+
+    // Get initial session with faster error handling
+    const initializeAuth = async () => {
+      try {
+        setIsHydrated(true) // Mark as hydrated first
+        
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (!isMounted) return
+        
+        const user = session?.user ?? null
+        setUser(user)
+        
+        // Load user profile without blocking the loading state
+        if (user) {
+          loadUserProfile(user).catch(error => {
+            console.error('❌ Error loading user profile during init:', error)
+          })
+        }
+        
+        setLoading(false)
+        clearTimeout(loadingTimeout)
+      } catch (error) {
+        if (isMounted) {
+          console.error('❌ Auth session error:', error)
+          setIsHydrated(true)
+          setLoading(false)
+          clearTimeout(loadingTimeout)
+        }
+      }
+    }
+
+    initializeAuth()
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        const user = session?.user ?? null
-        setUser(user)
-        await loadUserProfile(user)
-        setLoading(false)
+        try {
+          const user = session?.user ?? null
+          setUser(user)
+          await loadUserProfile(user)
+        } catch (error) {
+          console.error('❌ Auth state change error:', error)
+        } finally {
+          setLoading(false)
+        }
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+      clearTimeout(loadingTimeout)
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { error }
+    console.log('🔄 SignIn started with email:', email)
+    
+    try {
+      // Normal Supabase authentication
+      console.log('🌐 Attempting Supabase authentication...')
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      
+      if (error) {
+        console.error('❌ Supabase authentication error:', error)
+      } else {
+        console.log('✅ Supabase authentication successful')
+      }
+      
+      return { error }
+    } catch (err) {
+      console.error('❌ SignIn exception:', err)
+      return { error: err }
+    }
   }
 
   const signUp = async (email: string, password: string) => {

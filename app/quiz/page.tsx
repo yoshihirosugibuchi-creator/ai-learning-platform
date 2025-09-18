@@ -27,7 +27,7 @@ export default function QuizPage() {
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam)
   const [selectedLevel, setSelectedLevel] = useState<string | null>(levelParam)
-  const [isQuizActive, setIsQuizActive] = useState(mode === 'random' || (categoryParam && levelParam))
+  const [isQuizActive, setIsQuizActive] = useState(mode === 'random' || !!categoryParam)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export default function QuizPage() {
                 <div className="mx-auto mb-2 p-3 bg-primary/10 rounded-full w-fit">
                   <TrendingUp className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="text-lg">ランダムクイズ</CardTitle>
+                <CardTitle className="text-lg">チャレンジクイズ</CardTitle>
               </CardHeader>
               <CardContent className="text-center space-y-4">
                 <p className="text-sm text-muted-foreground">

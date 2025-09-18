@@ -25,23 +25,37 @@ export interface UserProgress {
   created_at?: string
 }
 
-// クイズ結果を保存
+// クイズ結果を保存（シンプル版）
 export async function saveQuizResult(result: Omit<QuizResult, 'id' | 'created_at'>): Promise<QuizResult | null> {
-  const { data, error } = await supabase
-    .from('quiz_results')
-    .insert([{
-      ...result,
-      completed_at: new Date(result.completed_at).toISOString()
-    }])
-    .select()
-    .single()
+  console.log('🔍 Attempting to save quiz result:', result)
+  
+  try {
+    const { data, error } = await supabase
+      .from('quiz_results')
+      .insert([{
+        ...result,
+        completed_at: new Date(result.completed_at).toISOString()
+      }])
+      .select()
+      .single()
 
-  if (error) {
-    console.error('Error saving quiz result:', error)
-    return null
+    if (error) {
+      console.error('❌ Quiz result save error details:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        insertData: result
+      })
+      return null
+    }
+
+    console.log('✅ Quiz result saved successfully:', data)
+    return data
+  } catch (saveError) {
+    console.error('❌ Quiz save exception:', saveError.message)
+    throw saveError
   }
-
-  return data
 }
 
 // ユーザーのクイズ結果を取得
@@ -113,7 +127,13 @@ export async function updateUserProgress(
       .single()
 
     if (error) {
-      console.error('Error updating user progress:', error)
+      console.error('❌ User progress update error details:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        updateData: progressData
+      })
       return null
     }
     return data
@@ -126,18 +146,29 @@ export async function updateUserProgress(
       .single()
 
     if (error) {
-      console.error('Error creating user progress:', error)
+      console.error('❌ User progress creation error details:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        insertData: progressData
+      })
       return null
     }
     return data
   }
 }
 
-// ユーザーの総合統計を取得
+// ユーザーの総合統計を取得（クイズ＋コース学習の統合統計）
 export async function getUserStats(userId: string) {
-  const quizResults = await getUserQuizResults(userId)
-  
-  if (quizResults.length === 0) {
+  // CategoryProgressから全カテゴリーの統計を取得
+  const { data: categoryProgress, error } = await supabase
+    .from('category_progress')
+    .select('correct_answers, total_answers')
+    .eq('user_id', userId)
+
+  if (error) {
+    console.error('Error fetching category progress for stats:', error)
     return {
       totalQuestions: 0,
       correctAnswers: 0,
@@ -148,17 +179,21 @@ export async function getUserStats(userId: string) {
     }
   }
 
-  const totalQuestions = quizResults.reduce((sum, result) => sum + result.total_questions, 0)
-  const totalScore = quizResults.reduce((sum, result) => sum + result.score, 0)
+  // CategoryProgressから全体統計を集計
+  const totalAnswers = categoryProgress?.reduce((sum, cat) => sum + cat.total_answers, 0) || 0
+  const totalCorrect = categoryProgress?.reduce((sum, cat) => sum + cat.correct_answers, 0) || 0
+
+  // クイズ結果から追加統計を取得
+  const quizResults = await getUserQuizResults(userId)
   const totalTimeSpent = quizResults.reduce((sum, result) => sum + result.time_taken, 0)
-  const correctAnswers = Math.round((totalScore / 100) * totalQuestions)
+  const averageScore = quizResults.length > 0 ? Math.round(quizResults.reduce((sum, result) => sum + result.score, 0) / quizResults.length) : 0
 
   return {
-    totalQuestions,
-    correctAnswers,
-    accuracy: totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0,
+    totalQuestions: totalAnswers,
+    correctAnswers: totalCorrect,
+    accuracy: totalAnswers > 0 ? Math.round((totalCorrect / totalAnswers) * 100) : 0,
     totalQuizzes: quizResults.length,
-    averageScore: Math.round(totalScore / quizResults.length),
+    averageScore,
     totalTimeSpent
   }
 }

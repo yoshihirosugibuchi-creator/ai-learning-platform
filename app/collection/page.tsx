@@ -40,23 +40,18 @@ import {
 import { 
   KnowledgeCard as KnowledgeCardType
 } from '@/lib/knowledge-cards'
+import { getUserBadges, getBadgeStats } from '@/lib/supabase-badges'
+import { UserBadge } from '@/lib/types/learning'
 
 export default function CollectionPage() {
+  // すべてのState Hooksを最初に宣言
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [selectedRarity, setSelectedRarity] = useState<string>('all')
   const [selectedWisdomCategory, setSelectedWisdomCategory] = useState<string>('all')
   const [selectedKnowledgeCategory, setSelectedKnowledgeCategory] = useState<string>('all')
+  const [selectedBadgeStatus, setSelectedBadgeStatus] = useState<string>('all')
   const [activeTab, setActiveTab] = useState('wisdom')
   const { user, loading } = useAuth()
-
-  // 認証ガード
-  if (loading) {
-    return <div>Loading...</div>
-  }
-
-  if (!user) {
-    return <div>ログインが必要です</div>
-  }
 
   // 格言カード（従来のカード）データ - Supabase版
   const [wisdomCollectionData, setWisdomCollectionData] = useState({
@@ -64,37 +59,7 @@ export default function CollectionPage() {
     stats: { totalObtained: 0, totalCards: 0, uniqueCards: 0 },
     cardsWithStatus: wisdomCards.map(card => ({ ...card, obtained: false, count: 0 }))
   })
-
-  useEffect(() => {
-    if (user?.id) {
-      const loadWisdomCards = async () => {
-        try {
-          const [collection, stats] = await Promise.all([
-            getUserWisdomCards(user.id),
-            getWisdomCardStats(user.id)
-          ])
-
-          const cardsWithStatus = await Promise.all(
-            wisdomCards.map(async (card) => ({
-              ...card,
-              obtained: await hasWisdomCard(user.id, card.id),
-              count: await getWisdomCardCount(user.id, card.id)
-            }))
-          )
-
-          setWisdomCollectionData({
-            collection,
-            stats,
-            cardsWithStatus
-          })
-        } catch (error) {
-          console.error('Error loading wisdom cards:', error)
-        }
-      }
-
-      loadWisdomCards()
-    }
-  }, [user])
+  const [wisdomDataLoading, setWisdomDataLoading] = useState(true)
 
   // ナレッジカードデータ（学習コンテンツから獲得） - Supabase版
   const [knowledgeCollectionData, setKnowledgeCollectionData] = useState({
@@ -102,6 +67,81 @@ export default function CollectionPage() {
     stats: { totalObtained: 0, totalCards: 0, uniqueCards: 0 },
     cardsWithStatus: []
   })
+
+  // バッジデータ
+  const [userBadges, setUserBadges] = useState<UserBadge[]>([])
+  const [badgeLoading, setBadgeLoading] = useState(true)
+
+  // すべてのuseEffectを一箇所に集約
+  useEffect(() => {
+    if (user?.id) {
+      const loadWisdomCards = async () => {
+        try {
+          setWisdomDataLoading(true)
+          
+          // 最初に基本データを取得
+          const [collection, stats] = await Promise.all([
+            getUserWisdomCards(user.id),
+            getWisdomCardStats(user.id)
+          ])
+
+          // 初期状態をセット（数値が確定してから表示）
+          setWisdomCollectionData(prev => ({
+            ...prev,
+            collection,
+            stats
+          }))
+
+          // 次に各カードの取得状況を並列取得
+          const cardsWithStatus = await Promise.all(
+            wisdomCards.map(async (card) => {
+              try {
+                const [obtained, count] = await Promise.all([
+                  hasWisdomCard(user.id, card.id),
+                  getWisdomCardCount(user.id, card.id)
+                ])
+                return { ...card, obtained, count }
+              } catch (error) {
+                console.error(`Error loading card ${card.id}:`, error)
+                return { ...card, obtained: false, count: 0 }
+              }
+            })
+          )
+
+          // 最終データをセット
+          setWisdomCollectionData({
+            collection,
+            stats,
+            cardsWithStatus
+          })
+        } catch (error) {
+          console.error('Error loading wisdom cards:', error)
+        } finally {
+          setWisdomDataLoading(false)
+        }
+      }
+
+      loadWisdomCards()
+    }
+  }, [user])
+
+  useEffect(() => {
+    const fetchBadges = async () => {
+      if (!user?.id) return
+      
+      setBadgeLoading(true)
+      try {
+        const badges = await getUserBadges(user.id)
+        setUserBadges(badges)
+      } catch (error) {
+        console.error('Error fetching badges:', error)
+      } finally {
+        setBadgeLoading(false)
+      }
+    }
+
+    fetchBadges()
+  }, [user?.id])
 
   useEffect(() => {
     if (user?.id) {
@@ -132,6 +172,23 @@ export default function CollectionPage() {
               const hasCard = collection.some(c => c.card_id === numericId)
               console.log(`🔍 Card ${cardId} (${numericId}) obtained: ${hasCard}`)
             })
+            
+            // Debug localStorage knowledge cards
+            if (typeof window !== 'undefined' && window.localStorage) {
+              const localCardKeys = Object.keys(localStorage).filter(key => key.startsWith('knowledge_card_'))
+              console.log(`💾 LocalStorage knowledge cards found: ${localCardKeys.length}`)
+              localCardKeys.forEach(key => {
+                const cardData = localStorage.getItem(key)
+                if (cardData) {
+                  try {
+                    const parsed = JSON.parse(cardData)
+                    console.log(`💾 LocalStorage card: ${key} →`, parsed)
+                  } catch (e) {
+                    console.error(`❌ Failed to parse localStorage card: ${key}`)
+                  }
+                }
+              })
+            }
           }
 
           setKnowledgeCollectionData(prev => ({
@@ -145,10 +202,6 @@ export default function CollectionPage() {
       }
 
       loadKnowledgeCards()
-      
-      // Set up periodic refresh to catch newly acquired cards
-      const interval = setInterval(loadKnowledgeCards, 10000) // Refresh every 10 seconds
-      return () => clearInterval(interval)
     }
   }, [user])
 
@@ -553,7 +606,7 @@ export default function CollectionPage() {
         source: {
           courseId: 'ai_literacy_fundamentals',
           genreId: 'ai_fundamentals',
-          themeId: 'ai_business_applications'
+          themeId: 'ai_basic_concepts'
         },
         obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('ai_business_applications_card')),
         obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('ai_business_applications_card'))?.obtained_at
@@ -674,16 +727,31 @@ export default function CollectionPage() {
 
   // ナレッジカード用フィルタリング
   const filteredKnowledgeCards = useMemo(() => {
-    return knowledgeCollectionData.cardsWithStatus.filter(card => {
+    return knowledgeCardsProcessed.cardsWithStatus.filter(card => {
       const categoryMatch = selectedKnowledgeCategory === 'all' || card.category === selectedKnowledgeCategory
       return categoryMatch
     })
-  }, [knowledgeCollectionData.cardsWithStatus, selectedKnowledgeCategory])
+  }, [knowledgeCardsProcessed.cardsWithStatus, selectedKnowledgeCategory])
 
   const obtainedWisdomCards = filteredWisdomCards.filter(card => card.obtained)
   const lockedWisdomCards = filteredWisdomCards.filter(card => !card.obtained)
   const obtainedKnowledgeCards = filteredKnowledgeCards.filter(card => card.obtained)
   const lockedKnowledgeCards = filteredKnowledgeCards.filter(card => !card.obtained)
+
+  // バッジフィルタリング
+  const filteredBadges = useMemo(() => {
+    if (!userBadges) return []
+    
+    return userBadges.filter(badge => {
+      if (selectedBadgeStatus === 'all') return true
+      if (selectedBadgeStatus === 'active') return !badge.isExpired
+      if (selectedBadgeStatus === 'expired') return badge.isExpired
+      return true
+    })
+  }, [userBadges, selectedBadgeStatus])
+
+  const activeBadges = userBadges.filter(badge => !badge.isExpired)
+  const expiredBadges = userBadges.filter(badge => badge.isExpired)
 
   // 格言カードのカテゴリー（10基本カテゴリー全てを表示）
   const wisdomCategories = [
@@ -729,7 +797,7 @@ export default function CollectionPage() {
     })
   }, [wisdomCollectionData.cardsWithStatus])
 
-  const wisdomCollectionRate = Math.round((wisdomCollectionData.stats.uniqueCards / wisdomCards.length) * 100)
+  const wisdomCollectionRate = wisdomDataLoading ? 0 : Math.round((wisdomCollectionData.stats.uniqueCards / wisdomCards.length) * 100)
   const knowledgeCollectionRate = knowledgeCollectionData.cardsWithStatus.length > 0 
     ? Math.round((obtainedKnowledgeCards.length / knowledgeCollectionData.cardsWithStatus.length) * 100)
     : 0
@@ -769,7 +837,7 @@ export default function CollectionPage() {
 
         {/* Main Collection Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 h-12">
+          <TabsList className="grid w-full grid-cols-3 h-12">
             <TabsTrigger value="wisdom" className="flex items-center space-x-2">
               <Crown className="h-4 w-4" />
               <span>格言カード</span>
@@ -782,6 +850,13 @@ export default function CollectionPage() {
               <span>ナレッジカード</span>
               <Badge variant="secondary" className="ml-2">
                 {obtainedKnowledgeCards.length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="badges" className="flex items-center space-x-2">
+              <Trophy className="h-4 w-4" />
+              <span>修了証</span>
+              <Badge variant="secondary" className="ml-2">
+                {activeBadges.length}
               </Badge>
             </TabsTrigger>
           </TabsList>
@@ -805,7 +880,13 @@ export default function CollectionPage() {
                 <CardContent className="pt-6 text-center">
                   <div className="flex flex-col items-center space-y-1">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    <div className="text-2xl font-bold">{wisdomCollectionData.stats.uniqueCards}</div>
+                    <div className="text-2xl font-bold">
+                      {wisdomDataLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
+                      ) : (
+                        wisdomCollectionData.stats.uniqueCards
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">獲得カード数</p>
                   </div>
                 </CardContent>
@@ -815,7 +896,13 @@ export default function CollectionPage() {
                 <CardContent className="pt-6 text-center">
                   <div className="flex flex-col items-center space-y-1">
                     <Star className="h-4 w-4 text-blue-500" />
-                    <div className="text-2xl font-bold">{wisdomCollectionData.stats.totalCards}</div>
+                    <div className="text-2xl font-bold">
+                      {wisdomDataLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
+                      ) : (
+                        wisdomCollectionData.stats.totalCards
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">総コレクション</p>
                   </div>
                 </CardContent>
@@ -908,15 +995,15 @@ export default function CollectionPage() {
               <TabsList className="grid grid-cols-1 md:grid-cols-3 h-auto">
                 <TabsTrigger value="all" className="flex items-center space-x-2">
                   <Sparkles className="h-4 w-4" />
-                  <span>全て ({filteredWisdomCards.length})</span>
+                  <span>全て ({wisdomDataLoading ? '...' : filteredWisdomCards.length})</span>
                 </TabsTrigger>
                 <TabsTrigger value="obtained" className="flex items-center space-x-2">
                   <Trophy className="h-4 w-4" />
-                  <span>獲得済み ({obtainedWisdomCards.length})</span>
+                  <span>獲得済み ({wisdomDataLoading ? '...' : obtainedWisdomCards.length})</span>
                 </TabsTrigger>
                 <TabsTrigger value="locked" className="flex items-center space-x-2">
                   <Target className="h-4 w-4" />
-                  <span>未獲得 ({lockedWisdomCards.length})</span>
+                  <span>未獲得 ({wisdomDataLoading ? '...' : lockedWisdomCards.length})</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -1089,6 +1176,209 @@ export default function CollectionPage() {
                 )}
               </TabsContent>
             </Tabs>
+          </TabsContent>
+
+          {/* バッジ（修了証）タブ */}
+          <TabsContent value="badges" className="space-y-6">
+            {/* Badge Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Trophy className="h-5 w-5 text-yellow-500" />
+                    <span className="font-semibold">総修了証数</span>
+                  </div>
+                  <div className="text-2xl font-bold">{userBadges.length}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Sparkles className="h-5 w-5 text-green-500" />
+                    <span className="font-semibold">有効な修了証</span>
+                  </div>
+                  <div className="text-2xl font-bold text-green-600">{activeBadges.length}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Target className="h-5 w-5 text-gray-500" />
+                    <span className="font-semibold">期限切れ</span>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-600">{expiredBadges.length}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Star className="h-5 w-5 text-purple-500" />
+                    <span className="font-semibold">完了率</span>
+                  </div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {userBadges.length > 0 ? Math.round((activeBadges.length / userBadges.length) * 100) : 0}%
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Badge Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Filter className="h-5 w-5" />
+                  <span>フィルター</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs value={selectedBadgeStatus} onValueChange={setSelectedBadgeStatus} className="w-full">
+                  <TabsList className="grid grid-cols-1 md:grid-cols-3 h-auto">
+                    <TabsTrigger value="all" className="flex items-center space-x-2">
+                      <Sparkles className="h-4 w-4" />
+                      <span>全て ({filteredBadges.length})</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="active" className="flex items-center space-x-2">
+                      <Trophy className="h-4 w-4" />
+                      <span>有効 ({activeBadges.length})</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="expired" className="flex items-center space-x-2">
+                      <Target className="h-4 w-4" />
+                      <span>期限切れ ({expiredBadges.length})</span>
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="all">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                      {filteredBadges.map(badge => (
+                        <Card key={badge.id} className={`relative overflow-hidden ${badge.isExpired ? 'opacity-70' : ''}`}>
+                          <CardHeader className="text-center pb-3">
+                            <div className="text-4xl mb-2">🏆</div>
+                            <CardTitle className="text-lg">{badge.badge.title}</CardTitle>
+                            <div className="flex items-center justify-center space-x-2">
+                              <Badge variant={badge.badge.difficulty === 'beginner' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
+                                {badge.badge.difficulty === 'beginner' ? '初級' : badge.badge.difficulty === 'intermediate' ? '中級' : '上級'}
+                              </Badge>
+                              {badge.isExpired && (
+                                <Badge variant="outline" className="text-red-600 border-red-600">
+                                  期限切れ
+                                </Badge>
+                              )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="text-center space-y-2">
+                            <p className="text-sm text-muted-foreground">{badge.badge.description}</p>
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              <div>コース: {badge.courseName}</div>
+                              <div>獲得日: {badge.earnedAt.toLocaleDateString('ja-JP')}</div>
+                              {badge.expiresAt && (
+                                <div className={badge.isExpired ? 'text-red-600' : ''}>
+                                  有効期限: {badge.expiresAt.toLocaleDateString('ja-JP')}
+                                </div>
+                              )}
+                            </div>
+                            {badge.isExpired && (
+                              <div className="absolute inset-0 bg-gray-900 bg-opacity-20 flex items-center justify-center">
+                                <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold transform rotate-12">
+                                  期限切れ
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    
+                    {filteredBadges.length === 0 && (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Trophy className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                        <p>修了証がありません</p>
+                        <p className="text-sm mt-2">コースを完了して修了証を獲得しましょう！</p>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="active">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                      {activeBadges.map(badge => (
+                        <Card key={badge.id} className="relative overflow-hidden">
+                          <CardHeader className="text-center pb-3">
+                            <div className="text-4xl mb-2">🏆</div>
+                            <CardTitle className="text-lg">{badge.badge.title}</CardTitle>
+                            <Badge variant={badge.badge.difficulty === 'beginner' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
+                              {badge.badge.difficulty === 'beginner' ? '初級' : badge.badge.difficulty === 'intermediate' ? '中級' : '上級'}
+                            </Badge>
+                          </CardHeader>
+                          <CardContent className="text-center space-y-2">
+                            <p className="text-sm text-muted-foreground">{badge.badge.description}</p>
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              <div>コース: {badge.courseName}</div>
+                              <div>獲得日: {badge.earnedAt.toLocaleDateString('ja-JP')}</div>
+                              {badge.expiresAt && (
+                                <div>有効期限: {badge.expiresAt.toLocaleDateString('ja-JP')}</div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    
+                    {activeBadges.length === 0 && (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Trophy className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                        <p>有効な修了証がありません</p>
+                        <p className="text-sm mt-2">コースを完了して修了証を獲得しましょう！</p>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="expired">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                      {expiredBadges.map(badge => (
+                        <Card key={badge.id} className="relative overflow-hidden opacity-70">
+                          <CardHeader className="text-center pb-3">
+                            <div className="text-4xl mb-2">🏆</div>
+                            <CardTitle className="text-lg">{badge.badge.title}</CardTitle>
+                            <div className="flex items-center justify-center space-x-2">
+                              <Badge variant={badge.badge.difficulty === 'beginner' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
+                                {badge.badge.difficulty === 'beginner' ? '初級' : badge.badge.difficulty === 'intermediate' ? '中級' : '上級'}
+                              </Badge>
+                              <Badge variant="outline" className="text-red-600 border-red-600">
+                                期限切れ
+                              </Badge>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="text-center space-y-2">
+                            <p className="text-sm text-muted-foreground">{badge.badge.description}</p>
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              <div>コース: {badge.courseName}</div>
+                              <div>獲得日: {badge.earnedAt.toLocaleDateString('ja-JP')}</div>
+                              <div className="text-red-600">
+                                有効期限: {badge.expiresAt?.toLocaleDateString('ja-JP')}
+                              </div>
+                            </div>
+                            <div className="absolute inset-0 bg-gray-900 bg-opacity-20 flex items-center justify-center">
+                              <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold transform rotate-12">
+                                期限切れ
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    
+                    {expiredBadges.length === 0 && (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Trophy className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                        <p>期限切れの修了証はありません</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>

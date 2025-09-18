@@ -35,21 +35,27 @@ export default function LoginPage() {
   // ログイン処理
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('🚀 Login form submitted')
     setIsLoading(true)
     setError('')
     
     try {
+      console.log('📝 Calling signIn with:', loginForm.email)
       const { error } = await signIn(loginForm.email, loginForm.password)
       
       if (error) {
+        console.error('❌ Login error:', error)
         setError('メールアドレスまたはパスワードが正しくありません')
       } else {
+        console.log('✅ Login successful, redirecting to home')
         router.push('/')
       }
     } catch (err) {
+      console.error('❌ Login exception:', err)
       setError('ログイン中にエラーが発生しました')
     } finally {
       setIsLoading(false)
+      console.log('🏁 Login process completed')
     }
   }
 

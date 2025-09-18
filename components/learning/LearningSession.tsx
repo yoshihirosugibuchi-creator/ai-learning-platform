@@ -21,6 +21,7 @@ import { LearningSession as LearningSessionType, SessionTypeLabels } from '@/lib
 import { saveLearningProgressSupabase, saveLearningSession as saveLearningSessionSupabase, updateLearningSession, LearningSession as LearningSessionData } from '@/lib/supabase-learning'
 import { addKnowledgeCardToCollection } from '@/lib/supabase-cards'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { checkAndAwardCourseBadge } from '@/lib/course-completion'
 
 interface LearningSessionProps {
   courseId: string
@@ -65,6 +66,7 @@ export default function LearningSession({
   const [showQuizResult, setShowQuizResult] = useState(false)
   const [sessionCompleted, setSessionCompleted] = useState(false)
   const [cardAcquired, setCardAcquired] = useState(false)
+  const [badgeAwarded, setBadgeAwarded] = useState<any>(null)
   const [startTime] = useState(new Date())
   const [currentSessionData, setCurrentSessionData] = useState<LearningSessionData | null>(null)
   const [isCompletingSession, setIsCompletingSession] = useState(false)
@@ -224,6 +226,21 @@ export default function LearningSession({
         })
       }
       
+      // コース完了チェック＆バッジ授与
+      console.log('🏆 Checking for course completion and badge award...')
+      const badgeResult = await checkAndAwardCourseBadge(
+        user.id,
+        courseId,
+        genreId,
+        themeId,
+        session.id
+      )
+      
+      if (badgeResult.completed && badgeResult.badge) {
+        console.log('🎉 Course completed! Badge awarded:', badgeResult.badge)
+        setBadgeAwarded(badgeResult.badge)
+      }
+
       setSessionCompleted(true)
       setViewState('completed')
       onComplete(session.id)
@@ -583,6 +600,45 @@ export default function LearningSession({
                   コレクションで確認できます。
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Badge Award Notification */}
+        {badgeAwarded && (
+          <Card className="max-w-md mx-auto bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+            <CardHeader className="text-center">
+              <CardTitle className="flex items-center justify-center space-x-2">
+                <Award className="h-5 w-5 text-purple-500" />
+                <span>
+                  {new Date(badgeAwarded.earnedAt).toDateString() === new Date().toDateString() 
+                    ? '修了証を獲得！' 
+                    : '修了証を確認'
+                  }
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center space-y-2">
+              <div className="text-4xl">🏆</div>
+              <div className="font-semibold text-purple-800">{badgeAwarded.badge.title}</div>
+              <div className="text-sm text-purple-700">
+                {badgeAwarded.badge.description}
+              </div>
+              <div className="text-xs text-purple-600">
+                獲得日: {badgeAwarded.earnedAt.toLocaleDateString('ja-JP')}
+              </div>
+              {badgeAwarded.expiresAt && (
+                <div className="text-xs text-purple-600">
+                  有効期限: {badgeAwarded.expiresAt.toLocaleDateString('ja-JP')}
+                </div>
+              )}
+              <div className="mt-3 p-3 bg-purple-100 rounded text-sm text-purple-800">
+                {new Date(badgeAwarded.earnedAt).toDateString() === new Date().toDateString() ? (
+                  <>🎉 コース完了おめでとうございます！<br/>修了証はコレクションで確認できます。</>
+                ) : (
+                  <>📋 既に修了済みのコースです。<br/>修了証はコレクションで確認できます。</>
+                )}
+              </div>
             </CardContent>
           </Card>
         )}

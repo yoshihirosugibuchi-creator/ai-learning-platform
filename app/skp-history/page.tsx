@@ -41,6 +41,8 @@ export default function SkpHistoryPage() {
             getUserSKPTransactions(user.id),
             getUserSKPBalance(user.id)
           ])
+          
+          
           setTransactions(transactionsData)
           setCurrentBalance(balance)
         } catch (error) {
@@ -86,13 +88,12 @@ export default function SkpHistoryPage() {
     return transaction.type === filter
   })
 
-  const totalEarned = transactions
-    .filter(t => t.type === 'earned')
-    .reduce((sum, t) => sum + t.amount, 0)
+  const earnedTransactions = transactions.filter(t => t.type === 'earned')
+  const totalEarned = earnedTransactions.reduce((sum, t) => sum + t.amount, 0)
   
-  const totalSpent = transactions
-    .filter(t => t.type === 'spent')
-    .reduce((sum, t) => sum + t.amount, 0)
+  const spentTransactions = transactions.filter(t => t.type === 'spent')
+  const totalSpent = spentTransactions.reduce((sum, t) => sum + t.amount, 0)
+  
 
   const getTransactionIcon = (type: string) => {
     return type === 'earned' ? (

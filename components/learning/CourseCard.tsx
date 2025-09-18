@@ -39,6 +39,19 @@ export default function CourseCard({ course, progress, onStartCourse }: CourseCa
     ? Math.round((progress.completedSessions / progress.totalSessions) * 100)
     : 0
 
+  // ホバー時のプリフェッチ
+  const handleMouseEnter = async () => {
+    if (!isAvailable) return
+    
+    try {
+      const { getLearningCourseDetails } = await import('@/lib/learning/data')
+      // バックグラウンドでプリフェッチ（エラーは無視）
+      getLearningCourseDetails(course.id).catch(() => {})
+    } catch (error) {
+      // プリフェッチエラーは無視
+    }
+  }
+
   // カテゴリー情報を取得
   const categoryInfo = course.genres ? getCategoryInfoForCourse(course) : null
 
@@ -48,6 +61,7 @@ export default function CourseCard({ course, progress, onStartCourse }: CourseCa
         !isAvailable ? 'opacity-60' : 'hover:scale-105'
       }`}
       style={{ borderTop: `4px solid ${course.color}` }}
+      onMouseEnter={handleMouseEnter}
     >
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between mb-2">

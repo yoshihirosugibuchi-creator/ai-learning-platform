@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Brain, Menu, ArrowLeft, User, Bookmark, Bell, Flame, Zap, Home, BookOpen, GraduationCap, LogOut } from 'lucide-react'
+import { Brain, Menu, ArrowLeft, User, Bookmark, Bell, Flame, Zap, Home, BookOpen, GraduationCap, LogOut, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { getUserSKPBalance, getUserLearningStreak } from '@/lib/supabase-learning'
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void
@@ -28,13 +29,31 @@ export default function Header({
   const router = useRouter()
   const { user, loading, signOut } = useAuth()
   const [displaySKP, setDisplaySKP] = useState(0)
+  const [learningStreak, setLearningStreak] = useState(0)
+  const [dataLoading, setDataLoading] = useState(false)
 
-  // TODO: SKPバランス機能は後で実装
-  // useEffect(() => {
-  //   if (user) {
-  //     setDisplaySKP(user.skpBalance)
-  //   }
-  // }, [user])
+  // ユーザーデータ取得
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (user?.id && !dataLoading) {
+        setDataLoading(true)
+        try {
+          const [skpBalance, streak] = await Promise.all([
+            getUserSKPBalance(user.id),
+            getUserLearningStreak(user.id)
+          ])
+          setDisplaySKP(skpBalance)
+          setLearningStreak(streak)
+        } catch (error) {
+          console.error('Error loading user data:', error)
+        } finally {
+          setDataLoading(false)
+        }
+      }
+    }
+
+    loadUserData()
+  }, [user?.id])
 
   const handleLogout = async () => {
     await signOut()
@@ -77,49 +96,66 @@ export default function Header({
         </div>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
-          {user && !loading ? (
+          {loading ? (
+            // Loading state - show minimal loading indicator
+            <div className="flex items-center space-x-2">
+              <div className="w-16 h-8 bg-gray-200 animate-pulse rounded"></div>
+              <div className="w-20 h-8 bg-gray-200 animate-pulse rounded"></div>
+            </div>
+          ) : user ? (
             <>
-              {/* Learning Streak - TODO: Implement user progress tracking */}
+              {/* Learning Streak */}
               <div className="hidden md:flex items-center space-x-1 text-sm">
                 <Flame className="h-4 w-4 text-orange-500" />
-                <span className="font-medium">0</span>
+                <span className="font-medium">{learningStreak}</span>
                 <span className="text-muted-foreground">日連続</span>
               </div>
 
               {/* Quick Actions */}
               <div className="flex items-center space-x-1">
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/">
+                  <Link href="/" prefetch={true}>
                     <Home className="h-4 w-4" />
                     <span className="hidden md:inline ml-1">ホーム</span>
                   </Link>
                 </Button>
                 
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/learning">
+                  <Link 
+                    href="/learning" 
+                    prefetch={true}
+                    onClick={() => console.log('🔗 Header: Navigating to /learning')}
+                  >
                     <GraduationCap className="h-4 w-4" />
                     <span className="hidden md:inline ml-1">コース</span>
                   </Link>
                 </Button>
                 
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/categories">
+                  <Link href="/categories" prefetch={true}>
                     <BookOpen className="h-4 w-4" />
                     <span className="hidden md:inline ml-1">カテゴリー</span>
                   </Link>
                 </Button>
                 
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/profile">
+                  <Link href="/profile" prefetch={true}>
                     <User className="h-4 w-4" />
                     <span className="hidden md:inline ml-1">マイページ</span>
                   </Link>
                 </Button>
                 
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/collection">
+                  <Link href="/collection" prefetch={true}>
                     <Bookmark className="h-4 w-4" />
                     <span className="hidden md:inline ml-1">コレクション</span>
+                  </Link>
+                </Button>
+                
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/analytics" prefetch={true}>
+                    <Brain className="h-4 w-4" />
+                    <span className="hidden md:inline ml-1">分析</span>
                   </Link>
                 </Button>
                 
@@ -155,6 +191,12 @@ export default function Header({
                       <Link href="/profile" className="flex items-center">
                         <User className="mr-2 h-4 w-4" />
                         <span>マイページ</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings" className="flex items-center">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>設定</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />

@@ -54,6 +54,7 @@ export interface UserProfile {
   current_level: number
   streak: number
   last_active: string
+  selected_industry_categories?: string[] // 業界カテゴリー選択
   created_at?: string
   updated_at?: string
 }

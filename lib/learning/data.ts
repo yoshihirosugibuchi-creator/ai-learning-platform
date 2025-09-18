@@ -1,4 +1,5 @@
 import { LearningCourse } from '@/lib/types/learning'
+import { globalCache } from '@/lib/performance-optimizer'
 
 /**
  * 学習コンテンツデータ読み込み関数
@@ -19,7 +20,17 @@ export async function getLearningCourses(): Promise<{
   status: 'available' | 'coming_soon' | 'draft'
   genres?: any[]
 }[]> {
+  const cacheKey = 'learning_courses_list'
+  
+  // キャッシュから取得を試行
+  const cached = globalCache.get(cacheKey)
+  if (cached) {
+    console.log('🚀 Courses loaded from cache')
+    return cached
+  }
+  
   try {
+    console.log('📡 Fetching courses from server')
     // まずコース一覧を取得
     const response = await fetch('/learning-data/courses.json')
     if (!response.ok) {
@@ -48,25 +59,43 @@ export async function getLearningCourses(): Promise<{
       })
     )
     
+    // キャッシュに保存（5分間）
+    globalCache.set(cacheKey, coursesWithGenres, 5 * 60 * 1000)
+    console.log('✅ Courses loaded and cached, count:', coursesWithGenres.length)
+    
     return coursesWithGenres
   } catch (error) {
-    console.error('Error loading learning courses:', error)
+    console.error('❌ Error loading learning courses:', error)
     return []
   }
 }
 
 // 特定コースの詳細データ取得
 export async function getLearningCourseDetails(courseId: string): Promise<LearningCourse | null> {
+  const cacheKey = `course_details_${courseId}`
+  
+  // キャッシュから取得を試行
+  const cached = globalCache.get(cacheKey)
+  if (cached) {
+    console.log('🚀 Course details loaded from cache:', courseId)
+    return cached
+  }
+  
   try {
-    const response = await fetch(`/learning-data/${courseId}.json?t=${Date.now()}`)
+    console.log('📡 Fetching course details from server:', courseId)
+    const response = await fetch(`/learning-data/${courseId}.json`)
     if (!response.ok) {
       throw new Error(`Failed to fetch course details for ${courseId}`)
     }
     const courseData = await response.json()
-    console.log('🔍 Raw course data loaded:', courseData)
+    
+    // キャッシュに保存（10分間）
+    globalCache.set(cacheKey, courseData, 10 * 60 * 1000)
+    console.log('✅ Course details loaded and cached:', courseId)
+    
     return courseData
   } catch (error) {
-    console.error(`Error loading course details for ${courseId}:`, error)
+    console.error(`❌ Error loading course details for ${courseId}:`, error)
     return null
   }
 }
@@ -108,13 +137,38 @@ export async function saveLearningProgress(userId: string, courseId: string, gen
 export async function calculateLearningStats(userId: string) {
   const progress = await getLearningProgress(userId)
   const completedSessions = Object.values(progress).filter((p: any) => p.completed)
+  const totalAvailableSessions = await getTotalAvailableSessions()
   
   return {
     totalSessionsCompleted: completedSessions.length,
+    totalAvailableSessions,
     totalTimeSpent: completedSessions.length * 3, // 概算（セッション1つ=3分）
     currentStreak: await calculateLearningStreak(userId),
     lastLearningDate: completedSessions.length > 0 ? 
       new Date(Math.max(...completedSessions.map((p: any) => new Date(p.completedAt).getTime()))) : null
+  }
+}
+
+// 利用可能な全セッション数を計算
+export async function getTotalAvailableSessions(): Promise<number> {
+  try {
+    const courses = await getLearningCourses()
+    let totalSessions = 0
+    
+    for (const course of courses) {
+      if (course.status === 'available' && course.genres) {
+        for (const genre of course.genres) {
+          for (const theme of genre.themes) {
+            totalSessions += theme.sessions ? theme.sessions.length : 0
+          }
+        }
+      }
+    }
+    
+    return totalSessions
+  } catch (error) {
+    console.error('Error calculating total available sessions:', error)
+    return 0
   }
 }
 

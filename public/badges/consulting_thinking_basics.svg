@@ -1,0 +1,55 @@
+<svg width="120" height="150" viewBox="0 0 120 150" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF8C00;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="ribbonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Ribbon -->
+  <path d="M 30 120 L 30 145 L 45 135 L 60 145 L 60 120 Z" fill="url(#ribbonGradient)" filter="url(#shadow)"/>
+  <path d="M 60 120 L 60 145 L 75 135 L 90 145 L 90 120 Z" fill="url(#ribbonGradient)" filter="url(#shadow)"/>
+  
+  <!-- Main Badge Circle -->
+  <circle cx="60" cy="60" r="45" fill="url(#goldGradient)" stroke="#B45309" stroke-width="2" filter="url(#shadow)"/>
+  
+  <!-- Inner Circle -->
+  <circle cx="60" cy="60" r="35" fill="#FFFFFF" stroke="#B45309" stroke-width="1.5"/>
+  
+  <!-- Decorative Stars -->
+  <g fill="#FFD700" stroke="#B45309" stroke-width="0.5">
+    <path d="M 25 25 L 27 30 L 32 30 L 28 33 L 30 38 L 25 35 L 20 38 L 22 33 L 18 30 L 23 30 Z"/>
+    <path d="M 95 25 L 97 30 L 102 30 L 98 33 L 100 38 L 95 35 L 90 38 L 92 33 L 88 30 L 93 30 Z"/>
+    <path d="M 15 75 L 17 80 L 22 80 L 18 83 L 20 88 L 15 85 L 10 88 L 12 83 L 8 80 L 13 80 Z"/>
+    <path d="M 105 75 L 107 80 L 112 80 L 108 83 L 110 88 L 105 85 L 100 88 L 102 83 L 98 80 L 103 80 Z"/>
+  </g>
+  
+  <!-- Brain Icon -->
+  <g transform="translate(60, 60)" fill="#6366F1">
+    <path d="M -8 -10 C -12 -10 -15 -7 -15 -3 C -15 -1 -14 1 -12 2 C -13 4 -12 6 -10 7 C -8 8 -6 7 -4 6 C -2 7 0 7 2 6 C 4 7 6 8 8 7 C 10 6 11 4 10 2 C 12 1 13 -1 13 -3 C 13 -7 10 -10 6 -10 C 4 -10 2 -9 0 -8 C -2 -9 -4 -10 -6 -10 Z"/>
+    <path d="M -6 -8 C -4 -6 -2 -6 0 -6 C 2 -6 4 -6 6 -8" stroke="#4F46E5" stroke-width="1" fill="none"/>
+    <path d="M -8 -2 C -6 0 -4 0 -2 0" stroke="#4F46E5" stroke-width="1" fill="none"/>
+    <path d="M 2 0 C 4 0 6 0 8 -2" stroke="#4F46E5" stroke-width="1" fill="none"/>
+  </g>
+  
+  <!-- Title -->
+  <text x="60" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#B45309">
+    CONSULTING
+  </text>
+  <text x="60" y="110" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#B45309">
+    THINKING
+  </text>
+  
+  <!-- Achievement Text -->
+  <text x="60" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="6" fill="#059669">
+    修了証
+  </text>
+</svg>

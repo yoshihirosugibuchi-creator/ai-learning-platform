@@ -29,7 +29,8 @@ import {
   Target,
   TrendingUp,
   Users,
-  CheckCircle
+  CheckCircle,
+  Play
 } from 'lucide-react'
 
 export default function CategoryDetailPage() {
@@ -153,42 +154,6 @@ export default function CategoryDetailPage() {
             </div>
           </div>
 
-          {/* Progress Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <div className="flex items-center justify-center space-x-2 mb-2">
-                  <TrendingUp className="h-5 w-5 text-green-500" />
-                  <div className="text-2xl font-bold">{realStats.completionRate}%</div>
-                </div>
-                <p className="text-sm text-muted-foreground">進捗率</p>
-                <Progress value={realStats.completionRate} className="mt-2 h-2" />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {realStats.correctAnswers}/{realStats.totalAnswers}問正解
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <div className="flex items-center justify-center space-x-2 mb-2">
-                  <BookOpen className="h-5 w-5 text-blue-500" />
-                  <div className="text-2xl font-bold">{realStats.totalQuizzes}</div>
-                </div>
-                <p className="text-sm text-muted-foreground">クイズ問題</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <div className="flex items-center justify-center space-x-2 mb-2">
-                  <Clock className="h-5 w-5 text-purple-500" />
-                  <div className="text-2xl font-bold">{Math.round(realStats.learningTime / 60)}h</div>
-                </div>
-                <p className="text-sm text-muted-foreground">学習時間</p>
-              </CardContent>
-            </Card>
-          </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 h-auto">
@@ -230,7 +195,7 @@ export default function CategoryDetailPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Users className="h-5 w-5" />
-                      <span>推奨レベル</span>
+                      <span>チャレンジクイズ</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -250,6 +215,68 @@ export default function CategoryDetailPage() {
                           </Badge>
                         </div>
                       ))}
+                      
+                      {/* 総問題数を表示 */}
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-primary bg-primary/5">
+                        <div>
+                          <div className="font-medium text-primary">総問題数</div>
+                          <div className="text-sm text-muted-foreground">このカテゴリーの全問題</div>
+                        </div>
+                        <Badge className="bg-primary text-primary-foreground">
+                          {realStats.totalQuizzes}問
+                        </Badge>
+                      </div>
+                      
+                      {/* クイズ開始ボタン */}
+                      <div className="mt-4 pt-4 border-t space-y-3">
+                        {/* 全難易度クイズ */}
+                        <Button 
+                          onClick={() => router.push(`/quiz?category=${categoryId}`)}
+                          className="w-full"
+                          disabled={realStats.totalQuizzes === 0}
+                        >
+                          <Play className="h-4 w-4 mr-2" />
+                          {realStats.totalQuizzes > 0 ? 'このカテゴリーのクイズに挑戦' : '問題準備中'}
+                        </Button>
+                        
+                        {/* 難易度別クイズボタン */}
+                        {realStats.totalQuizzes > 0 && (
+                          <div className="grid grid-cols-2 gap-2">
+                            {skillLevels.map((level) => {
+                              const difficultyMapping = {
+                                'basic': '基礎',
+                                'intermediate': '中級', 
+                                'advanced': '上級',
+                                'expert': 'エキスパート'
+                              }
+                              const difficulty = difficultyMapping[level.id as keyof typeof difficultyMapping]
+                              const count = questionsByDifficulty[difficulty] || 0
+                              
+                              return (
+                                <Button
+                                  key={level.id}
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => router.push(`/quiz?category=${categoryId}&level=${level.id}`)}
+                                  disabled={count === 0}
+                                  className="text-xs"
+                                >
+                                  {level.name}
+                                  <Badge variant="secondary" className="ml-1 text-xs">
+                                    {count}
+                                  </Badge>
+                                </Button>
+                              )
+                            })}
+                          </div>
+                        )}
+                        
+                        {realStats.totalQuizzes > 0 && (
+                          <p className="text-xs text-muted-foreground text-center">
+                            このカテゴリーから最大10問出題されます
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

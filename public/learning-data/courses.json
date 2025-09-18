@@ -11,7 +11,16 @@
       "displayOrder": 1,
       "genreCount": 2,
       "themeCount": 4,
-      "status": "available"
+      "status": "available",
+      "badge": {
+        "id": "badge_consulting_thinking_basics",
+        "title": "コンサル思考法基礎 修了証",
+        "description": "論理的思考とフレームワーク活用のスキルを修得",
+        "icon": "🏆",
+        "color": "#10B981",
+        "badgeImageUrl": "/badges/consulting_thinking_basics.svg",
+        "validityPeriodMonths": null
+      }
     },
     {
       "id": "business_numbers_mastery",
@@ -24,7 +33,16 @@
       "displayOrder": 3,
       "genreCount": 2,
       "themeCount": 6,
-      "status": "coming_soon"
+      "status": "coming_soon",
+      "badge": {
+        "id": "badge_business_numbers_mastery",
+        "title": "ビジネス数字力強化 修了証",
+        "description": "財務分析と数字に基づく意思決定力を修得",
+        "icon": "🏆",
+        "color": "#F59E0B",
+        "badgeImageUrl": "/badges/business_numbers_mastery.svg",
+        "validityPeriodMonths": 24
+      }
     },
     {
       "id": "marketing_practice",
@@ -37,7 +55,16 @@
       "displayOrder": 2,
       "genreCount": 2,
       "themeCount": 5,
-      "status": "available"
+      "status": "available",
+      "badge": {
+        "id": "badge_marketing_practice",
+        "title": "マーケティング実践 修了証",
+        "description": "顧客理解から戦略立案・施策実行のスキルを修得",
+        "icon": "🏆",
+        "color": "#F59E0B",
+        "badgeImageUrl": "/badges/marketing_practice.svg",
+        "validityPeriodMonths": 24
+      }
     },
     {
       "id": "team_leader_basics",
@@ -50,7 +77,16 @@
       "displayOrder": 4,
       "genreCount": 2,
       "themeCount": 6,
-      "status": "coming_soon"
+      "status": "coming_soon",
+      "badge": {
+        "id": "badge_team_leader_basics",
+        "title": "チームリーダー基礎 修了証",
+        "description": "チーム運営と人材育成の基本スキルを修得",
+        "icon": "🏆",
+        "color": "#10B981",
+        "badgeImageUrl": "/badges/team_leader_basics.svg",
+        "validityPeriodMonths": null
+      }
     },
     {
       "id": "dx_introduction",
@@ -63,7 +99,16 @@
       "displayOrder": 5,
       "genreCount": 2,
       "themeCount": 6,
-      "status": "coming_soon"
+      "status": "coming_soon",
+      "badge": {
+        "id": "badge_dx_introduction",
+        "title": "DX推進入門 修了証",
+        "description": "デジタル変革の基礎知識とデータ活用スキルを修得",
+        "icon": "🏆",
+        "color": "#10B981",
+        "badgeImageUrl": "/badges/dx_introduction.svg",
+        "validityPeriodMonths": null
+      }
     },
     {
       "id": "ai_literacy_fundamentals",
@@ -76,7 +121,16 @@
       "displayOrder": 6,
       "genreCount": 4,
       "themeCount": 4,
-      "status": "available"
+      "status": "available",
+      "badge": {
+        "id": "badge_ai_literacy_fundamentals",
+        "title": "AI活用リテラシー基礎 修了証",
+        "description": "ビジネスでのAI活用とプロンプト技術を修得",
+        "icon": "🏆",
+        "color": "#10B981",
+        "badgeImageUrl": "/badges/ai_literacy_fundamentals.svg",
+        "validityPeriodMonths": null
+      }
     }
   ]
 }

@@ -166,8 +166,11 @@ export async function updateCategoryProgress(
   userId: string, 
   categoryId: string, 
   correctAnswers: number, 
-  totalAnswers: number
+  totalAnswers: number,
+  xpGained: number = 0 // XPは外部で計算されて渡される
 ): Promise<CategoryProgress | null> {
+  console.log(`📊 updateCategoryProgress: userId=${userId}, categoryId=${categoryId}, correctAnswers=${correctAnswers}, totalAnswers=${totalAnswers}, xpGained=${xpGained}`)
+  
   // Get existing progress
   const { data: existing } = await supabase
     .from('category_progress')
@@ -176,18 +179,24 @@ export async function updateCategoryProgress(
     .eq('category_id', categoryId)
     .single()
 
+  console.log(`Found existing progress:`, existing ? 'Yes' : 'No')
+
   const now = new Date().toISOString()
-  const xpGained = correctAnswers * 50 // 50 XP per correct answer
 
   if (existing) {
     // Update existing progress
+    const newTotalXP = existing.total_xp + xpGained
+    const newLevel = Math.floor(newTotalXP / 500) + 1 // メインカテゴリー閾値500XP
+    
     const updatedData = {
       correct_answers: existing.correct_answers + correctAnswers,
       total_answers: existing.total_answers + totalAnswers,
-      total_xp: existing.total_xp + xpGained,
-      current_level: Math.floor((existing.total_xp + xpGained) / 500) + 1,
+      total_xp: newTotalXP,
+      current_level: newLevel,
       last_answered_at: now
     }
+    
+    console.log(`📈 Updating progress: old_xp=${existing.total_xp} + ${xpGained} = ${newTotalXP}, level=${newLevel}`)
 
     const { data, error } = await supabase
       .from('category_progress')
@@ -204,15 +213,19 @@ export async function updateCategoryProgress(
     return data
   } else {
     // Create new progress record
+    const newLevel = Math.floor(xpGained / 500) + 1 // メインカテゴリー閾値500XP
+    
     const newProgress = {
       user_id: userId,
       category_id: categoryId,
       correct_answers: correctAnswers,
       total_answers: totalAnswers,
       total_xp: xpGained,
-      current_level: Math.floor(xpGained / 500) + 1,
+      current_level: newLevel,
       last_answered_at: now
     }
+    
+    console.log(`📝 Creating new progress: xp=${xpGained}, level=${newLevel}`)
 
     const { data, error } = await supabase
       .from('category_progress')
@@ -224,7 +237,8 @@ export async function updateCategoryProgress(
       console.error('Error creating category progress:', error)
       return null
     }
-
+    
+    console.log(`✅ Created new progress record:`, data)
     return data
   }
 }
@@ -306,7 +320,9 @@ export async function saveLearningProgressSupabase(
 
     const { error } = await supabase
       .from('user_settings')
-      .upsert(progressData)
+      .upsert(progressData, {
+        onConflict: 'user_id,setting_key'
+      })
 
     if (error) {
       console.error('📋 Raw error object:', error)
@@ -518,6 +534,45 @@ export async function getPersonalizationSettings(userId: string, settingKey?: st
   })
 
   return settings
+}
+
+// ユーザーの学習ストリーク（連続学習日数）を計算
+export async function getUserLearningStreak(userId: string): Promise<number> {
+  try {
+    const sessions = await getUserLearningSessions(userId)
+    
+    if (sessions.length === 0) return 0
+
+    // 学習した日付のリストを作成（重複除去してソート）
+    const learningDates = sessions
+      .map(session => new Date(session.start_time).toDateString())
+      .filter((date, index, arr) => arr.indexOf(date) === index)
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+
+    if (learningDates.length === 0) return 0
+
+    // 今日から連続で学習している日数を計算
+    const today = new Date()
+    let streak = 0
+    let currentDate = new Date(today)
+
+    for (const dateStr of learningDates) {
+      const sessionDate = new Date(dateStr)
+      const diffDays = Math.floor((currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24))
+      
+      if (diffDays === streak) {
+        streak++
+        currentDate = sessionDate
+      } else {
+        break
+      }
+    }
+
+    return streak
+  } catch (error) {
+    console.error('Error calculating learning streak:', error)
+    return 0
+  }
 }
 
 export async function getQuestionPerformanceStats(userId: string): Promise<{

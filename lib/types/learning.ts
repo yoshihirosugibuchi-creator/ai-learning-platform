@@ -70,6 +70,19 @@ export interface LearningBadge {
   description: string
   icon: string
   color: string
+  badgeImageUrl?: string // 勲章画像URL
+  difficulty: 'beginner' | 'intermediate' | 'advanced'
+  validityPeriodMonths?: number // 有効期限（月数）、未設定は永続
+}
+
+export interface UserBadge {
+  id: string
+  badge: LearningBadge
+  earnedAt: Date
+  expiresAt?: Date // 有効期限がある場合
+  isExpired: boolean
+  courseId: string
+  courseName: string
 }
 
 export interface LearningRewardCard {
@@ -100,7 +113,7 @@ export interface UserLearningStats {
   totalThemesCompleted: number
   totalSessionsCompleted: number
   totalTimeSpent: number // 分
-  badges: LearningBadge[]
+  badges: UserBadge[] // 獲得したバッジ（修了証）
   rewardCards: LearningRewardCard[]
   currentStreak: number
   longestStreak: number

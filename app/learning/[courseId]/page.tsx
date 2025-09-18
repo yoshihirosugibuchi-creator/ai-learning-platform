@@ -29,25 +29,37 @@ export default function CourseDetailPage() {
 
   useEffect(() => {
     const loadCourseData = async () => {
+      if (!courseId) return
+      
       try {
-        const courseData = await getLearningCourseDetails(courseId)
-        setCourse(courseData)
-
-        // カテゴリー情報を取得
-        if (courseData) {
-          const catInfo = getCategoryInfoForCourse(courseData)
-          setCategoryInfo(catInfo)
+        console.log('📚 Loading course data for:', courseId)
+        
+        // コースデータと進捗を並列で取得
+        const coursePromise = getLearningCourseDetails(courseId)
+        const progressPromise = user?.id ? getLearningProgress(user.id) : Promise.resolve({})
+        
+        const [courseData, progress] = await Promise.all([coursePromise, progressPromise])
+        
+        if (!courseData) {
+          console.error('❌ Course data not found for:', courseId)
+          setLoading(false)
+          return
         }
 
-        // ユーザーの進捗を取得
-        if (user?.id && courseData) {
-          console.log('📚 Loading learning progress for user:', user.id)
-          const progress = await getLearningProgress(user.id)
-          console.log('📚 Loaded progress data:', progress)
+        console.log('✅ Course data loaded:', courseData.title)
+        setCourse(courseData)
+
+        // カテゴリー情報を取得（同期処理）
+        const catInfo = getCategoryInfoForCourse(courseData)
+        setCategoryInfo(catInfo)
+
+        // 進捗データを設定
+        if (user?.id) {
+          console.log('📈 Progress data loaded, sessions:', Object.keys(progress).length)
           setUserProgress(progress)
         }
       } catch (error) {
-        console.error('Failed to load course details:', error)
+        console.error('❌ Failed to load course details:', error)
       } finally {
         setLoading(false)
       }
@@ -91,7 +103,7 @@ export default function CourseDetailPage() {
   }
 
   if (loading) {
-    return <LoadingScreen message="コース詳細を読み込んでいます..." />
+    return <LoadingScreen message={`コース詳細を読み込んでいます... (${courseId})`} />
   }
 
   if (!course) {

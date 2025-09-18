@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,8 +19,11 @@ import type { User } from '@supabase/supabase-js'
 import { getRandomWisdomCard, WisdomCard as WisdomCardType } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
 import { getCategoryDisplayName } from '@/lib/category-mapping'
+import { isValidCategoryId } from '@/lib/categories'
 import { addWisdomCardToCollection } from '@/lib/supabase-cards'
 import { saveSKPTransaction, saveDetailedQuizData, updateCategoryProgress } from '@/lib/supabase-learning'
+import { updateProgressAfterQuiz, calculateChallengeQuizRewards, saveChallengeQuizProgressToDatabase } from '@/lib/xp-level-system'
+import { getSubcategoryId } from '@/lib/categories'
 
 interface QuizSessionProps {
   questions: Question[]
@@ -92,8 +95,56 @@ export default function QuizSession({
   const [currentConfidence, setCurrentConfidence] = useState<number | null>(null)
   const [showConfidenceInput, setShowConfidenceInput] = useState(false)
   const [skpGained, setSkpGained] = useState(0)
+  const [isCompleting, setIsCompleting] = useState(false)
+  const completionInProgress = useRef(false)
+  const [challengeQuizUpdateData, setChallengeQuizUpdateData] = useState<{
+    userId: string;
+    categoryResults: Record<string, any>;
+  } | null>(null)
+
+  // 🆕 完了画面表示後のチャレンジクイズDB更新
+  useEffect(() => {
+    if (isFinished && challengeQuizUpdateData && !category) {
+      console.log('🎯 Challenge quiz completion detected - starting DB updates...')
+      
+      const executeDBUpdates = async () => {
+        try {
+          const updateResult = await saveChallengeQuizProgressToDatabase(
+            challengeQuizUpdateData.userId, 
+            challengeQuizUpdateData.categoryResults
+          );
+          
+          if (updateResult.success) {
+            console.log('✅ Challenge quiz DB updates completed successfully:', updateResult.updatedCategories);
+          } else {
+            console.warn('⚠️ Some challenge quiz DB updates failed:', updateResult.errors);
+          }
+        } catch (error) {
+          console.error('❌ Challenge quiz DB update failure:', error);
+        } finally {
+          // 更新データをクリア
+          setChallengeQuizUpdateData(null);
+        }
+      }
+      
+      // 少し遅延をつけて画面描画を確実にする
+      setTimeout(executeDBUpdates, 100);
+    }
+  }, [isFinished, challengeQuizUpdateData, category]);
 
   useEffect(() => {
+    // クイズ開始時の状態リセット
+    setIsFinished(false)
+    setIsCompleting(false)
+    setCurrentQuestionIndex(0)
+    setSelectedOption(null)
+    setShowResult(false)
+    setQuestionAnswers([])
+    setCurrentConfidence(null)
+    setShowConfidenceInput(false)
+    completionInProgress.current = false
+    setChallengeQuizUpdateData(null)
+    
     let filteredQuestions = questions
     
     // カテゴリーでフィルタリング
@@ -202,6 +253,16 @@ export default function QuizSession({
       setShowConfidenceInput(false)
       setCurrentConfidence(null)
     } else {
+      // 重複実行を防ぐ（useRefを使用した確実な方法）
+      if (completionInProgress.current || isFinished) {
+        console.log('⚠️ Quiz completion already in progress or finished, skipping...')
+        return
+      }
+      
+      completionInProgress.current = true
+      setIsCompleting(true)
+      console.log('🏁 Starting quiz completion...')
+      
       const endTime = Date.now()
       const sessionDuration = endTime - startTime
       
@@ -220,85 +281,292 @@ export default function QuizSession({
         category
       }
       
-      // Save quiz results to Supabase
-      const xpGained = finalResults.correctAnswers * 10
-      console.log('🎯 Quiz completed:', {
-        correctAnswers: finalResults.correctAnswers,
-        totalQuestions: finalResults.totalQuestions,
-        xpGained,
-        categoryScores: finalResults.categoryScores
-      })
-      
-      // Save quiz result to Supabase
+      // Save quiz result to Supabase and update progress using new system
       if (user?.id) {
         try {
-          const quizResult = await saveQuizResultSupabase({
-            user_id: user.id,
-            category_id: category || 'general',
-            subcategory_id: null,
-            questions: sessionQuestions,
-            answers: questionAnswers,
-            score: finalResults.score,
-            total_questions: finalResults.totalQuestions,
-            time_taken: finalResults.timeSpent,
-            completed_at: new Date().toISOString()
-          })
+          console.log('🚀 Starting quiz completion process...')
           
-          // Save detailed quiz data for analytics
-          if (quizResult && questionAnswers.length > 0) {
-            const detailData = questionAnswers.map(answer => ({
-              user_id: user.id,
-              quiz_result_id: quizResult.id!,
-              question_id: answer.questionId,
-              question_text: answer.questionText,
-              selected_answer: answer.selectedAnswer,
-              correct_answer: answer.correctAnswer,
-              is_correct: answer.isCorrect,
-              response_time: answer.responseTime,
-              confidence_level: answer.confidenceLevel,
-              category: answer.category,
-              difficulty: answer.difficulty
-            }))
-            
-            await saveDetailedQuizData(detailData)
-          }
-          
-          // Update user progress in Supabase
-          await updateUserProgress(
-            user.id,
-            category || 'general',
-            null,
-            finalResults.correctAnswers,
-            finalResults.totalQuestions
-          )
-          
-          // Update category progress
-          await updateCategoryProgress(
-            user.id,
-            category || 'general',
-            finalResults.correctAnswers,
-            finalResults.totalQuestions
-          )
-          
-          // Save SKP transaction
-          const skpGained = finalResults.correctAnswers * 10
-          if (skpGained > 0) {
-            await saveSKPTransaction({
-              user_id: user.id,
-              type: 'earned',
-              amount: skpGained,
-              source: 'quiz_completion',
-              description: `クイズ完了 (${finalResults.correctAnswers}/${finalResults.totalQuestions}問正解)`,
-              timestamp: new Date().toISOString()
+          // チャレンジクイズの場合、実際の問題カテゴリーを検出
+          let quizCategory = category
+          if (!category) {
+            const categoryCount: Record<string, number> = {}
+            sessionQuestions.forEach(q => {
+              if (q.category) {
+                categoryCount[q.category] = (categoryCount[q.category] || 0) + 1
+              }
             })
+            
+            const categories = Object.keys(categoryCount)
+            if (categories.length > 0) {
+              const detectedCategory = categories.reduce((a, b) => 
+                categoryCount[a] > categoryCount[b] ? a : b
+              )
+              
+              // 有効なカテゴリー（メイン＋業界）かチェック
+              if (isValidCategoryId(detectedCategory)) {
+                quizCategory = detectedCategory
+              } else {
+                // 無効なカテゴリーの場合はデフォルトを使用
+                quizCategory = 'logical_thinking_problem_solving'
+                console.warn('⚠️ Invalid category detected, using fallback:', detectedCategory)
+              }
+            } else {
+              // フォールバック: デフォルトカテゴリーを使用
+              quizCategory = 'logical_thinking_problem_solving'
+              console.warn('⚠️ No categories found in questions, using fallback category')
+            }
+            console.log('🎯 Detected quiz category:', quizCategory, categoryCount)
           }
           
-          console.log(`💾 Quiz results and analytics saved to Supabase for user: ${user.id}`)
+          // Save quiz result to database with detailed error logging
+          console.log('💾 Saving quiz result with enhanced logging...')
+          let quizResult = null
+          
+          try {
+            console.log('📝 Quiz result data to save:', {
+              user_id: user.id,
+              category_id: quizCategory,
+              subcategory_id: null,
+              score: finalResults.score,
+              total_questions: finalResults.totalQuestions,
+              time_taken: finalResults.timeSpent,
+              completed_at: new Date().toISOString()
+            })
+            
+            console.log('🚀 Calling saveQuizResultSupabase...')
+            quizResult = await saveQuizResultSupabase({
+              user_id: user.id,
+              category_id: quizCategory,
+              subcategory_id: null,
+              questions: sessionQuestions,
+              answers: questionAnswers,
+              score: finalResults.score,
+              total_questions: finalResults.totalQuestions,
+              time_taken: finalResults.timeSpent,
+              completed_at: new Date().toISOString()
+            })
+            console.log('✅ Quiz result saved successfully:', quizResult?.id)
+            
+          } catch (quizSaveError) {
+            console.error('❌ Quiz save error details:', {
+              error: quizSaveError,
+              stack: quizSaveError.stack,
+              message: quizSaveError.message
+            })
+            quizResult = { id: 'error-fallback-' + Date.now() }
+          }
+          
+          // Save detailed quiz data with enhanced logging
+          if (quizResult && questionAnswers.length > 0) {
+            console.log('📊 Saving detailed quiz data with enhanced logging...')
+            try {
+              const detailData = questionAnswers.map(answer => ({
+                user_id: user.id,
+                quiz_result_id: quizResult.id!,
+                question_id: answer.questionId,
+                question_text: answer.questionText,
+                selected_answer: answer.selectedAnswer,
+                correct_answer: answer.correctAnswer,
+                is_correct: answer.isCorrect,
+                response_time: answer.responseTime,
+                confidence_level: answer.confidenceLevel,
+                category: answer.category,
+                difficulty: answer.difficulty
+              }))
+              
+              console.log('📝 Detail data sample (first item):', detailData[0])
+              console.log('🚀 Calling saveDetailedQuizData...')
+              await saveDetailedQuizData(detailData)
+              console.log('✅ Detailed quiz data saved successfully')
+              
+            } catch (detailSaveError) {
+              console.error('❌ Detail save error:', {
+                error: detailSaveError,
+                stack: detailSaveError.stack,
+                message: detailSaveError.message
+              })
+            }
+          }
+          
+          // 🆕 新しい統合進捗更新システムを使用
+          console.log('🔧 Starting integrated progress update...')
+          const difficulty = (level as 'basic' | 'intermediate' | 'advanced' | 'expert') || 'basic'
+          
+          let progressResult;
+          
+          if (!category) {
+            // チャレンジクイズの場合：即座にXP/SKP計算、DB更新は背景処理
+            console.log('🎯 Challenge quiz: Instant calculation, background DB updates...')
+            
+            // 即座にXP/SKP計算（DBアクセスなし）
+            const rewardData = calculateChallengeQuizRewards(
+              questionAnswers.map(qa => {
+                const question = sessionQuestions.find(q => q.id === qa.questionId);
+                
+                // サブカテゴリーIDの決定: subcategory_id > サブカテゴリー名変換 > メインカテゴリー
+                let targetCategory = qa.category; // デフォルトはメインカテゴリー
+                
+                if (question?.subcategory_id) {
+                  // 新しいsubcategory_idフィールドがあれば最優先
+                  targetCategory = question.subcategory_id;
+                  console.log(`✅ Using subcategory_id: ${question.subcategory_id}`);
+                } else if (question?.subcategory) {
+                  // category_level問題の特別処理
+                  if (question.subcategory === 'category_level') {
+                    targetCategory = qa.category; // メインカテゴリーをそのまま使用
+                    console.log(`📂 Category-level question: using main category "${qa.category}"`);
+                  } else {
+                    // 既存のサブカテゴリー名からIDに変換
+                    const subcategoryId = getSubcategoryId(question.subcategory);
+                    if (subcategoryId) {
+                      targetCategory = subcategoryId;
+                      console.log(`🔄 Converted subcategory: "${question.subcategory}" -> "${subcategoryId}"`);
+                    } else {
+                      console.warn(`⚠️ Unknown subcategory: "${question.subcategory}", using main category: ${qa.category}`);
+                    }
+                  }
+                }
+                
+                return {
+                  questionId: qa.questionId,
+                  category: targetCategory,
+                  isCorrect: qa.isCorrect,
+                  difficulty: qa.difficulty
+                };
+              }),
+              difficulty
+            );
+            
+            console.log('✅ Challenge quiz rewards calculated instantly:', {
+              totalXP: rewardData.totalXP,
+              totalSKP: rewardData.totalSKP,
+              categories: Object.keys(rewardData.categoryResults).length
+            });
+            
+            // 結果画面用にSKP情報を即座に設定
+            setSkpGained(rewardData.totalSKP);
+            
+            // 🆕 DB更新データをstateに保存（完了画面表示後にuseEffectで実行するため）
+            setChallengeQuizUpdateData({
+              userId: user.id,
+              categoryResults: rewardData.categoryResults
+            });
+            
+            progressResult = { categoryResults: rewardData.categoryResults, success: true };
+          } else {
+            // カテゴリー指定クイズの場合
+            console.log('📝 Category quiz completion parameters:', {
+              userId: user.id,
+              category: quizCategory,
+              correctAnswers: finalResults.correctAnswers,
+              totalQuestions: finalResults.totalQuestions,
+              difficulty
+            });
+            
+            // 🆕 業界カテゴリーかメインカテゴリーかで処理を分岐
+            const industryCategories = ['consulting_industry', 'si_industry', 'trading_company_industry'];
+            const isIndustryCategory = industryCategories.includes(quizCategory);
+            
+            if (isIndustryCategory) {
+              // 業界カテゴリーの場合：サブカテゴリー別にXP蓄積
+              console.log('🏢 Industry category quiz - processing by subcategories...');
+              
+              const categoryAnswers = questionAnswers.map(qa => {
+                const question = sessionQuestions.find(q => q.id === qa.questionId);
+                
+                // サブカテゴリーIDの決定
+                let targetCategory = qa.category; // デフォルトは業界カテゴリー
+                
+                if (question?.subcategory_id) {
+                  targetCategory = question.subcategory_id;
+                  console.log(`✅ Using subcategory_id: ${question.subcategory_id}`);
+                } else if (question?.subcategory) {
+                  const subcategoryId = getSubcategoryId(question.subcategory);
+                  if (subcategoryId) {
+                    targetCategory = subcategoryId;
+                    console.log(`🔄 Converted subcategory: "${question.subcategory}" -> "${subcategoryId}"`);
+                  } else {
+                    console.warn(`⚠️ Unknown subcategory: "${question.subcategory}", using industry category: ${qa.category}`);
+                  }
+                }
+                
+                return {
+                  questionId: qa.questionId,
+                  category: targetCategory,
+                  isCorrect: qa.isCorrect,
+                  difficulty: qa.difficulty
+                };
+              });
+              
+              // チャレンジクイズと同じ処理を実行
+              const rewardData = calculateChallengeQuizRewards(categoryAnswers, difficulty);
+              
+              console.log('✅ Industry category quiz rewards calculated:', {
+                totalXP: rewardData.totalXP,
+                totalSKP: rewardData.totalSKP,
+                categories: Object.keys(rewardData.categoryResults).length
+              });
+              
+              // 結果画面用にSKP情報を設定
+              setSkpGained(rewardData.totalSKP);
+              
+              // 即座にDB更新を実行
+              try {
+                const updateResult = await saveChallengeQuizProgressToDatabase(user.id, rewardData.categoryResults);
+                if (updateResult.success) {
+                  console.log('✅ Industry category quiz DB updates completed successfully:', updateResult.updatedCategories);
+                } else {
+                  console.warn('⚠️ Some industry category quiz DB updates failed:', updateResult.errors);
+                }
+              } catch (error) {
+                console.error('❌ Industry category quiz DB update failure:', error);
+              }
+              
+              progressResult = { categoryResults: rewardData.categoryResults, success: true };
+            } else {
+              // メインカテゴリーの場合：従来の方法
+              console.log('📋 Main category quiz - using traditional method...');
+              
+              progressResult = await updateProgressAfterQuiz(
+                user.id,
+                quizCategory,
+                finalResults.correctAnswers,
+                finalResults.totalQuestions,
+                difficulty
+              );
+              
+              if (progressResult.success) {
+                console.log('🎯 Main category quiz progress updated successfully:', {
+                  correctAnswers: finalResults.correctAnswers,
+                  totalQuestions: finalResults.totalQuestions,
+                  xpGained: progressResult.xpResult.xpGained,
+                  skpGained: progressResult.skpResult.skpGained,
+                  levelUp: progressResult.xpResult.leveledUp
+                });
+                
+                // 結果画面用にSKP情報を保存
+                setSkpGained(progressResult.skpResult.skpGained);
+              }
+            }
+          }
+          
+          if (!progressResult.success) {
+            console.error('❌ Failed to update quiz progress')
+          }
+          
+          console.log(`💾 All quiz data saved successfully for user: ${user.id}`)
         } catch (error) {
-          console.error('❌ Error saving quiz results:', error)
+          console.error('❌ Error in quiz completion process:', error)
+          console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+          // エラーが発生してもクイズを完了状態にする
+        } finally {
+          setIsCompleting(false)
+          completionInProgress.current = false // エラー時もリセット
         }
       } else {
         console.warn('⚠️ No user ID available, quiz results not saved')
+        setIsCompleting(false)
+        completionInProgress.current = false // リセット
       }
       
       // Award wisdom card based on performance
@@ -327,8 +595,11 @@ export default function QuizSession({
       }
       
       // Set the updated results for display
+      console.log('🏁 Setting final results and finishing quiz...')
       setResults(updatedResults)
       setIsFinished(true)
+      completionInProgress.current = false // リセット
+      console.log('✅ Quiz completion finished, calling onComplete...')
       onComplete(updatedResults)
     }
   }
@@ -368,9 +639,12 @@ export default function QuizSession({
               </div>
               <div className="text-3xl font-bold text-yellow-600 mb-1">+{skpGained} SKP</div>
               <div className="text-sm text-yellow-700">
-                基本ポイント: {results.correctAnswers * 5} SKP
+                正解: {results.correctAnswers}問 × 10SKP = {results.correctAnswers * 10}SKP
+                {(results.totalQuestions - results.correctAnswers) > 0 && (
+                  <span><br />不正解: {results.totalQuestions - results.correctAnswers}問 × 2SKP = {(results.totalQuestions - results.correctAnswers) * 2}SKP</span>
+                )}
                 {results.correctAnswers === results.totalQuestions && results.totalQuestions >= 3 && (
-                  <span> + 全問正解ボーナス: 10 SKP</span>
+                  <span><br />+ 全問正解ボーナス: 50SKP</span>
                 )}
               </div>
             </div>
@@ -474,7 +748,27 @@ export default function QuizSession({
             }} variant="outline" className="flex-1">
               ホームに戻る
             </Button>
-            <Button onClick={() => window.location.reload()} className="flex-1">
+            <Button onClick={() => {
+              // 状態を完全リセットしてクイズを再開
+              setIsFinished(false)
+              setIsCompleting(false)
+              setCurrentQuestionIndex(0)
+              setSelectedOption(null)
+              setShowResult(false)
+              setQuestionAnswers([])
+              setCurrentConfidence(null)
+              setShowConfidenceInput(false)
+              setSkpGained(0)
+              completionInProgress.current = false
+              setChallengeQuizUpdateData(null)
+              setResults({
+                score: 0,
+                totalQuestions: sessionQuestions.length,
+                correctAnswers: 0,
+                timeSpent: 0,
+                categoryScores: {}
+              })
+            }} className="flex-1">
               もう一度挑戦
             </Button>
           </div>
@@ -489,7 +783,7 @@ export default function QuizSession({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">
-          {category || 'ランダムクイズ'}
+          {category || 'チャレンジクイズ'}
         </h2>
         <Button variant="outline" size="sm" onClick={onExit}>
           終了

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Home, User, Bookmark, Bell, X, BookOpen, GraduationCap, LogOut } from 'lucide-react'
+import { Home, User, Bookmark, Bell, X, BookOpen, GraduationCap, LogOut, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUserContext } from '@/contexts/UserContext'
 
@@ -36,38 +36,50 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
         
         <nav className="p-4 space-y-2">
           <Button variant="ghost" className="w-full justify-start" onClick={onClose} asChild>
-            <Link href="/">
+            <Link href="/" prefetch={true}>
               <Home className="h-4 w-4 mr-2" />
               ホーム
             </Link>
           </Button>
           <Button variant="ghost" className="w-full justify-start" onClick={onClose} asChild>
-            <Link href="/learning">
+            <Link href="/learning" prefetch={true}>
               <GraduationCap className="h-4 w-4 mr-2" />
               コース
             </Link>
           </Button>
           <Button variant="ghost" className="w-full justify-start" onClick={onClose} asChild>
-            <Link href="/categories">
+            <Link href="/categories" prefetch={true}>
               <BookOpen className="h-4 w-4 mr-2" />
               カテゴリー
             </Link>
           </Button>
           <Button variant="ghost" className="w-full justify-start" onClick={onClose} asChild>
-            <Link href="/profile">
+            <Link href="/profile" prefetch={true}>
               <User className="h-4 w-4 mr-2" />
               マイページ
             </Link>
           </Button>
           <Button variant="ghost" className="w-full justify-start" onClick={onClose} asChild>
-            <Link href="/collection">
+            <Link href="/collection" prefetch={true}>
               <Bookmark className="h-4 w-4 mr-2" />
               コレクション
+            </Link>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start" onClick={onClose} asChild>
+            <Link href="/analytics" prefetch={true}>
+              <Bell className="h-4 w-4 mr-2" />
+              分析
             </Link>
           </Button>
           <Button variant="ghost" className="w-full justify-start" onClick={onClose}>
             <Bell className="h-4 w-4 mr-2" />
             通知
+          </Button>
+          <Button variant="ghost" className="w-full justify-start" onClick={onClose} asChild>
+            <Link href="/settings" prefetch={true}>
+              <Settings className="h-4 w-4 mr-2" />
+              設定
+            </Link>
           </Button>
           
           <hr className="my-4" />

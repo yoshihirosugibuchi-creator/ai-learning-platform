@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
         id: question.id,
         category: question.category,
         subcategory: question.subcategory || '',
+        subcategory_id: question.subcategory_id || '',
         question: question.question,
         options: question.options,
         correct: question.correct,

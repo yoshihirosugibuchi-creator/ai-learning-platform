@@ -5,7 +5,9 @@ export function getCardNumericId(cardId: string | number): number {
   if (typeof cardId === 'number') return cardId
   
   // Generate consistent hash from string
-  return Math.abs(cardId.split('').reduce((a, b) => a + b.charCodeAt(0), 0))
+  const numericId = Math.abs(cardId.split('').reduce((a, b) => a + b.charCodeAt(0), 0))
+  console.log(`🔢 Card ID conversion: "${cardId}" → ${numericId}`)
+  return numericId
 }
 
 // Wisdom Card Collection Types
@@ -32,6 +34,7 @@ export interface KnowledgeCardCollection {
 // Wisdom Card Functions
 export async function getUserWisdomCards(userId: string): Promise<WisdomCardCollection[]> {
   try {
+    console.log('🔍 Attempting to fetch wisdom cards for user:', userId)
     const { data, error } = await supabase
       .from('wisdom_card_collection')
       .select('*')
@@ -39,17 +42,25 @@ export async function getUserWisdomCards(userId: string): Promise<WisdomCardColl
       .order('obtained_at', { ascending: false })
 
     if (error) {
-      if (error.code === '406' || error.code === '42P01' || error.message?.includes('policy')) {
-        console.warn('Wisdom card collection not accessible, returning empty array')
+      console.log('❌ Wisdom card fetch error details:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      })
+      
+      if (error.code === '406' || error.code === '42P01' || error.message?.includes('policy') || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+        console.warn('🚫 Wisdom card collection not accessible, returning empty array')
         return []
       }
       console.error('Error fetching wisdom cards:', error)
       return []
     }
 
+    console.log('✅ Wisdom cards fetched successfully:', data?.length || 0)
     return data || []
   } catch (error) {
-    console.warn('Exception in getUserWisdomCards:', error)
+    console.warn('⚠️ Exception in getUserWisdomCards:', error)
     return []
   }
 }
@@ -116,8 +127,48 @@ export async function getWisdomCardStats(userId: string) {
   }
 }
 
+// Migrate old localStorage keys to new user ID
+function migrateLocalStorageCards(oldUserId: string, newUserId: string) {
+  if (typeof window === 'undefined' || !window.localStorage) return
+  
+  try {
+    const oldKeys = Object.keys(localStorage).filter(key => 
+      key.startsWith(`knowledge_card_${oldUserId}_`)
+    )
+    
+    console.log(`🔄 Migrating ${oldKeys.length} localStorage cards from ${oldUserId} to ${newUserId}`)
+    
+    oldKeys.forEach(oldKey => {
+      const cardData = localStorage.getItem(oldKey)
+      if (cardData) {
+        try {
+          const parsed = JSON.parse(cardData)
+          parsed.user_id = newUserId // Update user_id
+          
+          // Create new key with new user ID
+          const cardId = oldKey.split('_').pop()
+          const newKey = `knowledge_card_${newUserId}_${cardId}`
+          
+          localStorage.setItem(newKey, JSON.stringify(parsed))
+          localStorage.removeItem(oldKey) // Remove old key
+          
+          console.log(`✅ Migrated card: ${oldKey} → ${newKey}`)
+        } catch (error) {
+          console.error(`❌ Failed to migrate card ${oldKey}:`, error)
+        }
+      }
+    })
+  } catch (error) {
+    console.error('❌ Error during localStorage migration:', error)
+  }
+}
+
 // Knowledge Card Functions
 export async function getUserKnowledgeCards(userId: string): Promise<KnowledgeCardCollection[]> {
+  // Migrate old test-user-123 cards if they exist
+  if (userId === '550e8400-e29b-41d4-a716-446655440000') {
+    migrateLocalStorageCards('test-user-123', userId)
+  }
   const { data, error } = await supabase
     .from('knowledge_card_collection')
     .select('*')
@@ -126,6 +177,39 @@ export async function getUserKnowledgeCards(userId: string): Promise<KnowledgeCa
 
   if (error) {
     console.error('Error fetching knowledge cards:', error)
+    
+    // Fallback to localStorage
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const localCards: KnowledgeCardCollection[] = []
+        // Also check for old test-user-123 keys for backward compatibility
+        const localStorageKeys = Object.keys(localStorage).filter(key => 
+          key.startsWith(`knowledge_card_${userId}_`) || 
+          key.startsWith('knowledge_card_test-user-123_')
+        )
+        
+        localStorageKeys.forEach(key => {
+          try {
+            const cardData = localStorage.getItem(key)
+            if (cardData) {
+              const parsedCard = JSON.parse(cardData)
+              // Update user_id to current user for compatibility
+              parsedCard.user_id = userId
+              localCards.push(parsedCard)
+            }
+          } catch (parseError) {
+            console.error('Error parsing localStorage card data:', parseError)
+          }
+        })
+        
+        console.log(`📱 Loaded ${localCards.length} knowledge cards from localStorage for user ${userId}`)
+        return localCards
+      } catch (localError) {
+        console.error('Error loading from localStorage:', localError)
+        return []
+      }
+    }
+    
     return []
   }
 
@@ -189,6 +273,37 @@ export async function addKnowledgeCardToCollection(userId: string, cardId: strin
     if (error) {
       console.error('❌ Error adding knowledge card:', error)
       console.error('❌ Insert error details:', { error, cardId, numericCardId, userId })
+      
+      // Fallback to localStorage if database fails
+      console.warn('⚠️ Database failed, using localStorage fallback for card acquisition')
+      if (typeof window !== 'undefined' && window.localStorage) {
+        try {
+          // Check if card already exists in localStorage (including old test-user-123 keys)
+          const existingKeys = Object.keys(localStorage).filter(key => 
+            key.includes(`_${numericCardId}`) && 
+            (key.startsWith(`knowledge_card_${userId}_`) || key.startsWith('knowledge_card_test-user-123_'))
+          )
+          
+          if (existingKeys.length > 0) {
+            console.log('📱 Card already exists in localStorage:', existingKeys[0])
+            return { count: 1, isNew: false }
+          }
+          
+          const localKey = `knowledge_card_${userId}_${numericCardId}`
+          const cardData = {
+            user_id: userId,
+            card_id: numericCardId,
+            count: 1,
+            obtained_at: new Date().toISOString(),
+            last_obtained_at: new Date().toISOString()
+          }
+          localStorage.setItem(localKey, JSON.stringify(cardData))
+          console.log('💾 Knowledge card saved to localStorage:', { cardId, numericCardId, userId })
+          return { count: 1, isNew: true }
+        } catch (localError) {
+          console.error('Failed to save card to localStorage:', localError)
+        }
+      }
       return { count: 0, isNew: false }
     }
 
@@ -218,20 +333,32 @@ export async function hasWisdomCard(userId: string, cardId: number): Promise<boo
       .single()
 
     if (error) {
+      // 詳細なエラー情報をログ出力（デバッグ用）
+      if (error.code === '406') {
+        console.log('🚫 406 Error in hasWisdomCard:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          userId,
+          cardId
+        })
+      }
+      
       // 406エラー、テーブル不存在、RLSエラーなどの場合はfalseを返す
-      if (error.code === '406' || error.code === '42P01' || error.message?.includes('policy')) {
+      if (error.code === '406' || error.code === '42P01' || error.message?.includes('policy') || error.message?.includes('relation') || error.message?.includes('does not exist')) {
         return false
       }
       if (error.code === 'PGRST116') { // No rows returned
         return false
       }
+      // その他のエラーのみログ出力
       console.warn('Wisdom card check error:', error.message)
       return false
     }
 
     return !!data
   } catch (error) {
-    console.warn('Exception in hasWisdomCard:', error)
+    // ネットワークエラーやその他の例外は静かに処理
     return false
   }
 }
@@ -259,7 +386,7 @@ export async function getWisdomCardCount(userId: string, cardId: number): Promis
       .single()
 
     if (error) {
-      if (error.code === '406' || error.code === '42P01' || error.message?.includes('policy') || error.code === 'PGRST116') {
+      if (error.code === '406' || error.code === '42P01' || error.message?.includes('policy') || error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
         return 0
       }
       console.warn('Wisdom card count error:', error.message)
@@ -268,7 +395,7 @@ export async function getWisdomCardCount(userId: string, cardId: number): Promis
 
     return data?.count || 0
   } catch (error) {
-    console.warn('Exception in getWisdomCardCount:', error)
+    // ネットワークエラーやその他の例外は静かに処理
     return 0
   }
 }
@@ -311,7 +438,13 @@ export async function reviewKnowledgeCard(userId: string, cardId: string | numbe
       .eq('card_id', numericCardId)
 
     if (error) {
-      console.error('Error updating knowledge card review:', error)
+      console.error('Error updating knowledge card review:', {
+        error,
+        userId,
+        cardId,
+        numericCardId,
+        existingCard
+      })
       return false
     }
 

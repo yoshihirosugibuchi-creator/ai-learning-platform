@@ -94,11 +94,11 @@ export default function Home() {
                       </div>
                       <CardTitle>クイズに挑戦</CardTitle>
                       <CardDescription>
-                        インタラクティブなクイズで知識をテスト
+                        毎日継続すると不思議とスキルがレベルアップ
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Link href="/quiz?mode=random">
+                      <Link href="/quiz?mode=random" prefetch={true}>
                         <Button className="w-full">
                           <Play className="h-4 w-4 mr-2" />
                           開始
@@ -112,13 +112,17 @@ export default function Home() {
                       <div className="mx-auto mb-2 p-3 bg-green-100 rounded-full w-fit">
                         <BookOpen className="h-6 w-6 text-green-600" />
                       </div>
-                      <CardTitle>学習コンテンツ</CardTitle>
+                      <CardTitle>コース学習</CardTitle>
                       <CardDescription>
                         体系的に学習できるカリキュラム
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Link href="/learning">
+                      <Link 
+                        href="/learning" 
+                        prefetch={true}
+                        onClick={() => console.log('🔗 Home: Navigating to /learning')}
+                      >
                         <Button variant="outline" className="w-full">
                           <BookOpen className="h-4 w-4 mr-2" />
                           学習を開始
@@ -132,16 +136,16 @@ export default function Home() {
                       <div className="mx-auto mb-2 p-3 bg-yellow-100 rounded-full w-fit">
                         <Trophy className="h-6 w-6 text-yellow-600" />
                       </div>
-                      <CardTitle>成績・統計</CardTitle>
+                      <CardTitle>学習分析</CardTitle>
                       <CardDescription>
                         学習の進捗状況を確認
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Link href="/analytics">
+                      <Link href="/analytics" prefetch={true}>
                         <Button variant="outline" className="w-full">
                           <Trophy className="h-4 w-4 mr-2" />
-                          統計を見る
+                          分析を見る
                         </Button>
                       </Link>
                     </CardContent>

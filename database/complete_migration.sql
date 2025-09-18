@@ -81,7 +81,26 @@ CREATE TABLE IF NOT EXISTS user_settings (
   UNIQUE(user_id, setting_key)
 );
 
--- 7. Detailed Quiz Data Table (for analytics)
+-- 7. User Badges Table (for course completion certificates)
+CREATE TABLE IF NOT EXISTS user_badges (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  course_id VARCHAR(100) NOT NULL,
+  course_name VARCHAR(200) NOT NULL,
+  badge_id VARCHAR(100) NOT NULL,
+  badge_title VARCHAR(200) NOT NULL,
+  badge_description TEXT,
+  badge_image_url VARCHAR(500),
+  badge_color VARCHAR(50),
+  difficulty VARCHAR(20) NOT NULL CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')),
+  earned_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  expires_at TIMESTAMP WITH TIME ZONE, -- NULL means no expiration
+  validity_period_months INTEGER, -- For reference
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, course_id) -- One badge per course per user
+);
+
+-- 8. Detailed Quiz Data Table (for analytics)
 CREATE TABLE IF NOT EXISTS detailed_quiz_data (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -107,6 +126,9 @@ CREATE INDEX IF NOT EXISTS idx_knowledge_card_collection_user_id ON knowledge_ca
 CREATE INDEX IF NOT EXISTS idx_learning_sessions_user_id ON learning_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_learning_sessions_course_id ON learning_sessions(course_id);
 CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_badges_user_id ON user_badges(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_badges_course_id ON user_badges(course_id);
+CREATE INDEX IF NOT EXISTS idx_user_badges_earned_at ON user_badges(earned_at);
 CREATE INDEX IF NOT EXISTS idx_detailed_quiz_data_user_id ON detailed_quiz_data(user_id);
 CREATE INDEX IF NOT EXISTS idx_detailed_quiz_data_quiz_result_id ON detailed_quiz_data(quiz_result_id);
 
@@ -117,6 +139,7 @@ ALTER TABLE wisdom_card_collection ENABLE ROW LEVEL SECURITY;
 ALTER TABLE knowledge_card_collection ENABLE ROW LEVEL SECURITY;
 ALTER TABLE learning_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_badges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE detailed_quiz_data ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies
@@ -149,6 +172,10 @@ CREATE POLICY "Users can view own settings" ON user_settings FOR SELECT USING (a
 CREATE POLICY "Users can insert own settings" ON user_settings FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own settings" ON user_settings FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own settings" ON user_settings FOR DELETE USING (auth.uid() = user_id);
+
+-- User Badges policies
+CREATE POLICY "Users can view own badges" ON user_badges FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own badges" ON user_badges FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Detailed Quiz Data policies
 CREATE POLICY "Users can view own detailed quiz data" ON detailed_quiz_data FOR SELECT USING (auth.uid() = user_id);
