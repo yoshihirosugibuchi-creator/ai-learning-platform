@@ -50,10 +50,22 @@ export default function LearningPage() {
       console.log('👤 User state:', { userId: user?.id, userEmail: user?.email })
       
       try {
-        console.log('📡 Fetching courses...')
+        // キャッシュから先に確認
+        const cacheKey = 'learning_courses'
+        const cachedCourses = globalCache.get(cacheKey)
+        
+        if (cachedCourses) {
+          console.log('🎯 Using cached courses data')
+          setCourses(cachedCourses)
+          setLoading(false) // キャッシュデータがあれば即座に表示
+        }
+        
+        // バックグラウンドでフレッシュデータを取得
+        console.log('📡 Fetching fresh courses...')
         const coursesData = await getLearningCourses()
-        console.log('✅ Courses loaded:', coursesData.length)
+        console.log('✅ Fresh courses loaded:', coursesData.length)
         setCourses(coursesData)
+        globalCache.set(cacheKey, coursesData, 5 * 60 * 1000) // 5分キャッシュ
 
         // ユーザーの学習統計を計算
         if (user?.id) {
@@ -157,7 +169,7 @@ export default function LearningPage() {
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center space-x-3">
               <GraduationCap className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold">コース学習メニュー</h1>
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">コース学習メニュー</h1>
             </div>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               3分のマイクロラーニングで、ビジネススキルを体系的に身につけよう

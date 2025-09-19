@@ -153,7 +153,7 @@ export default function SkpHistoryPage() {
 
         {/* Page Title */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold flex items-center justify-center space-x-2 mb-2">
+          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold flex items-center justify-center space-x-2 mb-2">
             <Zap className="h-8 w-8 text-yellow-500" />
             <span>SKPポイント履歴</span>
           </h1>

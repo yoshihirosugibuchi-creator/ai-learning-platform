@@ -825,7 +825,7 @@ export default function CollectionPage() {
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div className="mb-4 md:mb-0">
-            <h1 className="text-3xl font-bold flex items-center space-x-2">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold flex items-center space-x-2">
               <Bookmark className="h-8 w-8 text-primary" />
               <span>カードコレクション</span>
             </h1>
@@ -837,25 +837,27 @@ export default function CollectionPage() {
 
         {/* Main Collection Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 h-12">
-            <TabsTrigger value="wisdom" className="flex items-center space-x-2">
-              <Crown className="h-4 w-4" />
-              <span>格言カード</span>
-              <Badge variant="secondary" className="ml-2">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-12 gap-1 p-1">
+            <TabsTrigger value="wisdom" className="flex items-center justify-center space-x-1 text-xs sm:text-sm py-2">
+              <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">格言カード</span>
+              <span className="sm:hidden">格言</span>
+              <Badge variant="secondary" className="text-xs px-1">
                 {obtainedWisdomCards.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="knowledge" className="flex items-center space-x-2">
-              <Brain className="h-4 w-4" />
-              <span>ナレッジカード</span>
-              <Badge variant="secondary" className="ml-2">
+            <TabsTrigger value="knowledge" className="flex items-center justify-center space-x-1 text-xs sm:text-sm py-2">
+              <Brain className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">ナレッジカード</span>
+              <span className="sm:hidden">ナレッジ</span>
+              <Badge variant="secondary" className="text-xs px-1">
                 {obtainedKnowledgeCards.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="badges" className="flex items-center space-x-2">
-              <Trophy className="h-4 w-4" />
+            <TabsTrigger value="badges" className="flex items-center justify-center space-x-1 text-xs sm:text-sm py-2">
+              <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>修了証</span>
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="text-xs px-1">
                 {activeBadges.length}
               </Badge>
             </TabsTrigger>

@@ -125,7 +125,7 @@ export default function QuizPage() {
       <main className="container mx-auto px-4 py-6">
         <div className="space-y-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold mb-2">クイズに挑戦</h1>
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2">クイズに挑戦</h1>
             <p className="text-muted-foreground">
               AIがあなたの学習レベルに合わせた問題を出題します
             </p>

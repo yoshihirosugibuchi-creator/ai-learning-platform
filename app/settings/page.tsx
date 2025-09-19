@@ -94,7 +94,7 @@ export default function SettingsPage() {
               <Settings className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">設定</h1>
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">設定</h1>
               <p className="text-muted-foreground">
                 アプリケーションの設定と管理オプション
               </p>

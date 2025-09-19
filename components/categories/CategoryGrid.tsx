@@ -164,7 +164,7 @@ export default function CategoryGrid({
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold mb-2">{title}</h1>
+        <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2">{title}</h1>
         <p className="text-muted-foreground">{description}</p>
       </div>
 

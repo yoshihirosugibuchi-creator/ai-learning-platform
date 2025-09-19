@@ -59,7 +59,7 @@ export default function Home() {
 
         <main className="container mx-auto px-4 py-6">
           <div className="text-center py-12">
-            <h1 className="text-4xl font-bold mb-4">
+            <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold mb-4">
               AI Learning Enterprise
             </h1>
             <p className="text-xl text-muted-foreground mb-8">

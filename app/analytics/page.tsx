@@ -182,7 +182,7 @@ export default function AnalyticsPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">学習分析</h1>
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">学習分析</h1>
             <p className="text-gray-600 mt-2">あなたの学習進捗と成果を詳しく分析します</p>
           </div>
           <Button onClick={refreshAnalytics} disabled={isLoading} variant="outline">
@@ -192,12 +192,12 @@ export default function AnalyticsPage() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">概要</TabsTrigger>
-            <TabsTrigger value="performance">パフォーマンス</TabsTrigger>
-            <TabsTrigger value="patterns">学習パターン</TabsTrigger>
-            <TabsTrigger value="industry">業界分析</TabsTrigger>
-            <TabsTrigger value="insights">インサイト</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto lg:h-10 gap-1 p-1">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">概要</TabsTrigger>
+            <TabsTrigger value="performance" className="text-xs sm:text-sm py-2">パフォーマンス</TabsTrigger>
+            <TabsTrigger value="patterns" className="text-xs sm:text-sm py-2">学習パターン</TabsTrigger>
+            <TabsTrigger value="industry" className="text-xs sm:text-sm py-2">業界分析</TabsTrigger>
+            <TabsTrigger value="insights" className="text-xs sm:text-sm py-2">インサイト</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
