@@ -102,35 +102,40 @@ export default function QuizSession({
     categoryResults: Record<string, any>;
   } | null>(null)
 
-  // 🆕 完了画面表示後のチャレンジクイズDB更新
-  useEffect(() => {
-    if (isFinished && challengeQuizUpdateData && !category) {
-      console.log('🎯 Challenge quiz completion detected - starting DB updates...')
-      
-      const executeDBUpdates = async () => {
-        try {
-          const updateResult = await saveChallengeQuizProgressToDatabase(
-            challengeQuizUpdateData.userId, 
-            challengeQuizUpdateData.categoryResults
-          );
-          
-          if (updateResult.success) {
-            console.log('✅ Challenge quiz DB updates completed successfully:', updateResult.updatedCategories);
-          } else {
-            console.warn('⚠️ Some challenge quiz DB updates failed:', updateResult.errors);
-          }
-        } catch (error) {
-          console.error('❌ Challenge quiz DB update failure:', error);
-        } finally {
-          // 更新データをクリア
-          setChallengeQuizUpdateData(null);
-        }
-      }
-      
-      // 少し遅延をつけて画面描画を確実にする
-      setTimeout(executeDBUpdates, 100);
-    }
-  }, [isFinished, challengeQuizUpdateData, category]);
+  // 🔧 チャレンジクイズDB更新機能を一時的に無効化（フリーズ問題解決のため）
+  // useEffect(() => {
+  //   if (isFinished && challengeQuizUpdateData && !category) {
+  //     console.log('🎯 Challenge quiz completion detected - starting DB updates...')
+  //     
+  //     const executeDBUpdates = async () => {
+  //       try {
+  //         console.log('💾 Executing DB updates with data:', challengeQuizUpdateData)
+  //         const updateResult = await saveChallengeQuizProgressToDatabase(
+  //           challengeQuizUpdateData.userId, 
+  //           challengeQuizUpdateData.categoryResults
+  //         );
+  //         
+  //         if (updateResult.success) {
+  //           console.log('✅ Challenge quiz DB updates completed successfully:', updateResult.updatedCategories);
+  //         } else {
+  //           console.warn('⚠️ Some challenge quiz DB updates failed:', updateResult.errors);
+  //         }
+  //       } catch (error) {
+  //         console.error('❌ Challenge quiz DB update failure:', error);
+  //         // エラー詳細を表示
+  //         if (error instanceof Error) {
+  //           console.error('Error details:', error.message, error.stack);
+  //         }
+  //       } finally {
+  //         // 更新データをクリア
+  //         setChallengeQuizUpdateData(null);
+  //       }
+  //     }
+  //     
+  //     // 少し遅延をつけて画面描画を確実にする
+  //     setTimeout(executeDBUpdates, 100);
+  //   }
+  // }, [isFinished, challengeQuizUpdateData, category]);
 
   useEffect(() => {
     // クイズ開始時の状態リセット
