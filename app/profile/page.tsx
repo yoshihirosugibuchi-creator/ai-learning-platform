@@ -150,18 +150,14 @@ export default function ProfilePage() {
         {/* プロフィールヘッダー */}
         <div className="mb-8">
           <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-6">
-              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-3xl font-bold shadow-lg">
+            <div className="flex items-center space-x-3 sm:space-x-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-lg sm:text-2xl lg:text-3xl font-bold shadow-lg">
                 {(profileData.displayName || profileData.name || user.email)?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div className="space-y-1 min-w-0 flex-1">
                 <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 break-words word-break-all overflow-hidden">
                   {profileData.displayName || profileData.name || 'ユーザー'}
                 </h1>
-                <p className="text-gray-600 flex items-center text-sm sm:text-base min-w-0">
-                  <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
-                  <span className="truncate min-w-0">{user.email}</span>
-                </p>
                 {profileData.industry && (
                   <p className="text-gray-600 flex items-center">
                     <Building2 className="h-4 w-4 mr-2" />
@@ -169,18 +165,19 @@ export default function ProfilePage() {
                     {profileData.experienceYears && ` (${profileData.experienceYears}年)`}
                   </p>
                 )}
-                <div className="flex items-center space-x-4 pt-2">
-                  <Badge variant="outline" className="flex items-center space-x-1">
+                <div className="flex flex-wrap items-center gap-2 pt-2">
+                  <Badge variant="outline" className="flex items-center space-x-1 text-xs">
                     <Trophy className="h-3 w-3" />
-                    <span>レベル {profile?.current_level || 1}</span>
+                    <span className="hidden sm:inline">レベル </span><span>{profile?.current_level || 1}</span>
                   </Badge>
-                  <Badge variant="outline" className="flex items-center space-x-1">
+                  <Badge variant="outline" className="flex items-center space-x-1 text-xs">
                     <Flame className="h-3 w-3" />
-                    <span>{profile?.streak || 0}日連続</span>
+                    <span className="hidden sm:inline">{profile?.streak || 0}日連続</span>
+                    <span className="sm:hidden">{profile?.streak || 0}日</span>
                   </Badge>
-                  <Badge variant="outline" className="flex items-center space-x-1 text-yellow-600">
+                  <Badge variant="outline" className="flex items-center space-x-1 text-yellow-600 text-xs">
                     <Coins className="h-3 w-3" />
-                    <span>{skpBalance} SKP</span>
+                    <span>{skpBalance}<span className="hidden sm:inline"> SKP</span></span>
                   </Badge>
                 </div>
               </div>
