@@ -318,11 +318,15 @@ export default function QuizSession({
             console.log('🎯 Detected quiz category:', quizCategory, categoryCount)
           }
           
-          // Save quiz result to database with detailed error logging
-          console.log('💾 Saving quiz result with enhanced logging...')
-          let quizResult = null
+          // 🚀 クイズ結果保存を非同期化（画面表示を妨げない）
+          console.log('💾 Scheduling quiz result save in background...')
           
-          try {
+          // バックグラウンドでクイズ結果保存
+          setTimeout(async () => {
+            console.log('💾 Processing quiz result save in background...')
+            let quizResult = null
+            
+            try {
             console.log('📝 Quiz result data to save:', {
               user_id: user.id,
               category_id: quizCategory,
@@ -524,37 +528,42 @@ export default function QuizSession({
               
               progressResult = { categoryResults: rewardData.categoryResults, success: true };
             } else {
-              // メインカテゴリーの場合：従来の方法
-              console.log('📋 Main category quiz - using traditional method...');
+              // メインカテゴリーの場合：即座にSKP計算、DB更新は後で
+              console.log('📋 Main category quiz - instant calculation...');
               
-              progressResult = await updateProgressAfterQuiz(
-                user.id,
-                quizCategory,
+              // ⚡ 即座にSKP計算（DBアクセスなし）
+              const { calculateQuizRewards } = await import('@/lib/xp-level-system');
+              const rewardData = calculateQuizRewards(
                 finalResults.correctAnswers,
                 finalResults.totalQuestions,
                 difficulty
               );
               
-              if (progressResult.success) {
-                console.log('🎯 Main category quiz progress updated successfully:', {
-                  correctAnswers: finalResults.correctAnswers,
-                  totalQuestions: finalResults.totalQuestions,
-                  xpGained: progressResult.xpResult.xpGained,
-                  skpGained: progressResult.skpResult.skpGained,
-                  levelUp: progressResult.xpResult.leveledUp
-                });
-                
-                // 結果画面用にSKP情報を保存
-                setSkpGained(progressResult.skpResult.skpGained);
-              }
+              console.log('✅ Main category rewards calculated instantly:', rewardData);
+              setSkpGained(rewardData.skpGained);
+              
+              // DB更新は後でバックグラウンド実行（遅延）
+              setTimeout(async () => {
+                try {
+                  console.log('🔄 Processing main category DB updates in background...');
+                  const progressResult = await updateProgressAfterQuiz(
+                    user.id,
+                    quizCategory,
+                    finalResults.correctAnswers,
+                    finalResults.totalQuestions,
+                    difficulty
+                  );
+                  console.log('✅ Background DB update completed:', progressResult.success);
+                } catch (bgError) {
+                  console.error('❌ Background DB update error:', bgError);
+                }
+              }, 100);
+              
+              progressResult = { success: true }; // 即座成功として処理
             }
-          }
+          }, 75); // 75ms遅延でDB処理開始
           
-          if (!progressResult.success) {
-            console.error('❌ Failed to update quiz progress')
-          }
-          
-          console.log(`💾 All quiz data saved successfully for user: ${user.id}`)
+          console.log(`⚡ Quiz completion optimized - UI first, DB later for user: ${user.id}`)
         } catch (error) {
           console.error('❌ Error in quiz completion process:', error)
           console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
@@ -569,42 +578,47 @@ export default function QuizSession({
         completionInProgress.current = false // リセット
       }
       
-      // Award wisdom card based on performance
-      const accuracyRate = (finalResults.correctAnswers / finalResults.totalQuestions) * 100
-      let updatedResults = finalResults
-      
-      if (accuracyRate >= 70) { // Only award card if 70% or better accuracy
-        const randomCard = getRandomWisdomCard(accuracyRate)
-        
-        try {
-          const cardResult = await addWisdomCardToCollection(user.id, randomCard.id)
-          
-          // Update results with card reward info
-          updatedResults = {
-            ...finalResults,
-            rewardedCard: randomCard,
-            isNewCard: cardResult.isNew,
-            cardCount: cardResult.count
-          }
-          
-          console.log(`🂺 Card added to collection for user ${user?.id}:`, { cardId: randomCard.id, isNew: cardResult.isNew })
-        } catch (error) {
-          console.error('Error adding wisdom card:', error)
-          // Continue without card reward if error occurs
-        }
-      }
-      
-      // Set the updated results for display
-      console.log('🏁 Setting final results and finishing quiz...')
-      setResults(updatedResults)
+      // 🚀 即座に結果画面を表示（UX最優先）
+      console.log('⚡ Setting final results immediately for instant display...')
+      console.log('🔍 Debug: Setting isFinished to true for completion screen')
+      console.log('📊 Final results:', finalResults)
+      setResults(finalResults)
       setIsFinished(true)
-      completionInProgress.current = false // リセット
-      console.log('✅ Quiz completion finished, calling onComplete...')
-      onComplete(updatedResults)
+      completionInProgress.current = false
+      onComplete(finalResults)
+      
+      // 🎴 格言カード処理を非同期で実行（画面表示を妨げない）
+      const accuracyRate = (finalResults.correctAnswers / finalResults.totalQuestions) * 100
+      
+      if (accuracyRate >= 70) {
+        // バックグラウンドで格言カード処理
+        setTimeout(async () => {
+          try {
+            console.log('🎴 Processing wisdom card reward in background...')
+            const randomCard = getRandomWisdomCard(accuracyRate)
+            const cardResult = await addWisdomCardToCollection(user.id, randomCard.id)
+            
+            // 結果を更新（カード情報付き）
+            const updatedResults = {
+              ...finalResults,
+              rewardedCard: randomCard,
+              isNewCard: cardResult.isNew,
+              cardCount: cardResult.count
+            }
+            
+            console.log(`🂺 Card processed in background:`, { cardId: randomCard.id, isNew: cardResult.isNew })
+            setResults(updatedResults) // 非同期でカード情報を追加表示
+          } catch (error) {
+            console.error('❌ Background card processing error:', error)
+            // エラーでも画面表示は既に完了しているので問題なし
+          }
+        }, 50) // 50ms遅延で画面描画を確実に優先
+      }
     }
   }
 
   if (sessionQuestions.length === 0) {
+    console.log('⏳ Quiz loading state - no questions loaded yet')
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="flex items-center justify-center py-8">
@@ -618,6 +632,8 @@ export default function QuizSession({
   }
 
   if (isFinished) {
+    console.log('🎯 Quiz completion screen rendering - isFinished is true')
+    console.log('📊 Results for completion screen:', results)
     const accuracyRate = Math.round((results.correctAnswers / results.totalQuestions) * 100)
     
     return (

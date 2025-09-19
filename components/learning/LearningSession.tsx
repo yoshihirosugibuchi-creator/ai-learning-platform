@@ -101,6 +101,7 @@ export default function LearningSession({
   }, [user?.id, courseId, genreId, themeId, session.id, startTime, currentSessionData])
 
   const handleStartQuiz = async () => {
+    // Prevent scroll jump by not changing focus
     if (hasQuiz) {
       setViewState('quiz')
       setCurrentQuizIndex(0)
@@ -226,19 +227,38 @@ export default function LearningSession({
         })
       }
       
-      // コース完了チェック＆バッジ授与
-      console.log('🏆 Checking for course completion and badge award...')
-      const badgeResult = await checkAndAwardCourseBadge(
-        user.id,
-        courseId,
-        genreId,
-        themeId,
-        session.id
-      )
+      // 復習時は修了証表示をスキップ
+      const sessionKey = `${courseId}_${genreId}_${themeId}_${session.id}`
       
-      if (badgeResult.completed && badgeResult.badge) {
-        console.log('🎉 Course completed! Badge awarded:', badgeResult.badge)
-        setBadgeAwarded(badgeResult.badge)
+      // セッション完了状態を確認（簡易版）
+      let isReviewMode = false
+      try {
+        const { getLearningProgress } = await import('@/lib/learning/data')
+        const progress = await getLearningProgress(user.id)
+        isReviewMode = progress[sessionKey]?.completed || false
+        console.log(`📚 Session completion check: ${sessionKey} -> completed: ${isReviewMode}`)
+      } catch (error) {
+        console.warn('⚠️ Could not check session completion status:', error)
+        isReviewMode = false // エラー時は新規として扱う
+      }
+      
+      if (!isReviewMode) {
+        // 初回完了時のみコース完了チェック＆バッジ授与
+        console.log('🏆 Checking for course completion and badge award...')
+        const badgeResult = await checkAndAwardCourseBadge(
+          user.id,
+          courseId,
+          genreId,
+          themeId,
+          session.id
+        )
+        
+        if (badgeResult.completed && badgeResult.badge) {
+          console.log('🎉 Course completed! Badge awarded:', badgeResult.badge)
+          setBadgeAwarded(badgeResult.badge)
+        }
+      } else {
+        console.log('📚 Review mode - skipping badge award check')
       }
 
       setSessionCompleted(true)
@@ -320,7 +340,7 @@ export default function LearningSession({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 overflow-y-auto max-h-[70vh]">
           <div className="prose max-w-none space-y-6">
             {/* Debug session content */}
             {console.log('🔍 Session content debug:', {
@@ -404,31 +424,33 @@ export default function LearningSession({
           </div>
 
 
-          {/* Action Button */}
-          <div className="flex justify-center pt-4">
-            <Button 
-              onClick={handleStartQuiz}
-              size="lg"
-              className="flex items-center space-x-2"
-              disabled={isCompletingSession}
-            >
-              {isCompletingSession ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                  <span>処理中...</span>
-                </>
-              ) : hasQuiz ? (
-                <>
-                  <BookOpen className="h-4 w-4" />
-                  <span>理解度チェック</span>
-                </>
-              ) : (
-                <>
-                  <Check className="h-4 w-4" />
-                  <span>学習完了</span>
-                </>
-              )}
-            </Button>
+          {/* Action Button - Fixed at bottom with proper spacing */}
+          <div className="sticky bottom-0 bg-background pt-4 mt-6 border-t">
+            <div className="flex justify-center">
+              <Button 
+                onClick={handleStartQuiz}
+                size="lg"
+                className="flex items-center space-x-2"
+                disabled={isCompletingSession}
+              >
+                {isCompletingSession ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    <span>処理中...</span>
+                  </>
+                ) : hasQuiz ? (
+                  <>
+                    <BookOpen className="h-4 w-4" />
+                    <span>理解度チェック</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4" />
+                    <span>学習完了</span>
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

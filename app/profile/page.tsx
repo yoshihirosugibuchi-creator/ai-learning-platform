@@ -154,13 +154,13 @@ export default function ProfilePage() {
               <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-3xl font-bold shadow-lg">
                 {(profileData.displayName || profileData.name || user.email)?.charAt(0).toUpperCase() || 'U'}
               </div>
-              <div className="space-y-1">
-                <h1 className="text-3xl font-bold text-gray-900">
+              <div className="space-y-1 min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 break-words word-break-all overflow-hidden">
                   {profileData.displayName || profileData.name || 'ユーザー'}
                 </h1>
-                <p className="text-gray-600 flex items-center">
-                  <Mail className="h-4 w-4 mr-2" />
-                  {user.email}
+                <p className="text-gray-600 flex items-center text-sm sm:text-base min-w-0">
+                  <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate min-w-0">{user.email}</span>
                 </p>
                 {profileData.industry && (
                   <p className="text-gray-600 flex items-center">

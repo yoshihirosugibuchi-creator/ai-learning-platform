@@ -871,10 +871,16 @@ export default function CollectionPage() {
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-2 mb-2">
                     <Trophy className="h-4 w-4 text-yellow-500" />
-                    <div className="text-2xl font-bold">{wisdomCollectionRate}%</div>
+                    <div className="text-2xl font-bold">
+                      {wisdomDataLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
+                      ) : (
+                        `${wisdomCollectionRate}%`
+                      )}
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground">コレクション率</p>
-                  <Progress value={wisdomCollectionRate} className="mt-2 h-2" />
+                  <Progress value={wisdomDataLoading ? 0 : wisdomCollectionRate} className="mt-2 h-2" />
                 </CardContent>
               </Card>
 
@@ -1062,7 +1068,13 @@ export default function CollectionPage() {
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-2 mb-2">
                     <Brain className="h-4 w-4 text-blue-500" />
-                    <div className="text-2xl font-bold">{knowledgeCollectionRate}%</div>
+                    <div className="text-2xl font-bold">
+                      {knowledgeCollectionData.collection.length === 0 && knowledgeCollectionData.stats.totalObtained === 0 ? (
+                        <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
+                      ) : (
+                        `${knowledgeCollectionRate}%`
+                      )}
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground">習得率</p>
                   <Progress value={knowledgeCollectionRate} className="mt-2 h-2" />
@@ -1073,7 +1085,13 @@ export default function CollectionPage() {
                 <CardContent className="pt-6 text-center">
                   <div className="flex flex-col items-center space-y-1">
                     <BookOpen className="h-4 w-4 text-green-500" />
-                    <div className="text-2xl font-bold">{obtainedKnowledgeCards.length}</div>
+                    <div className="text-2xl font-bold">
+                      {knowledgeCollectionData.collection.length === 0 && knowledgeCollectionData.stats.totalObtained === 0 ? (
+                        <div className="animate-pulse bg-gray-200 h-8 w-12 rounded mx-auto"></div>
+                      ) : (
+                        obtainedKnowledgeCards.length
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">獲得スキル数</p>
                   </div>
                 </CardContent>
@@ -1083,7 +1101,13 @@ export default function CollectionPage() {
                 <CardContent className="pt-6 text-center">
                   <div className="flex flex-col items-center space-y-1">
                     <Star className="h-4 w-4 text-purple-500" />
-                    <div className="text-2xl font-bold">{knowledgeCollectionData.stats.totalReviews}</div>
+                    <div className="text-2xl font-bold">
+                      {knowledgeCollectionData.collection.length === 0 && knowledgeCollectionData.stats.totalObtained === 0 ? (
+                        <div className="animate-pulse bg-gray-200 h-8 w-12 rounded mx-auto"></div>
+                      ) : (
+                        knowledgeCollectionData.stats.totalReviews || 0
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">復習回数</p>
                   </div>
                 </CardContent>
@@ -1190,7 +1214,13 @@ export default function CollectionPage() {
                     <Trophy className="h-5 w-5 text-yellow-500" />
                     <span className="font-semibold">総修了証数</span>
                   </div>
-                  <div className="text-2xl font-bold">{userBadges.length}</div>
+                  <div className="text-2xl font-bold">
+                    {badgeLoading ? (
+                      <div className="animate-pulse bg-gray-200 h-8 w-8 rounded"></div>
+                    ) : (
+                      userBadges.length
+                    )}
+                  </div>
                 </CardContent>
               </Card>
               
@@ -1200,7 +1230,13 @@ export default function CollectionPage() {
                     <Sparkles className="h-5 w-5 text-green-500" />
                     <span className="font-semibold">有効な修了証</span>
                   </div>
-                  <div className="text-2xl font-bold text-green-600">{activeBadges.length}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {badgeLoading ? (
+                      <div className="animate-pulse bg-gray-200 h-8 w-8 rounded"></div>
+                    ) : (
+                      activeBadges.length
+                    )}
+                  </div>
                 </CardContent>
               </Card>
               
@@ -1210,7 +1246,13 @@ export default function CollectionPage() {
                     <Target className="h-5 w-5 text-gray-500" />
                     <span className="font-semibold">期限切れ</span>
                   </div>
-                  <div className="text-2xl font-bold text-gray-600">{expiredBadges.length}</div>
+                  <div className="text-2xl font-bold text-gray-600">
+                    {badgeLoading ? (
+                      <div className="animate-pulse bg-gray-200 h-8 w-8 rounded"></div>
+                    ) : (
+                      expiredBadges.length
+                    )}
+                  </div>
                 </CardContent>
               </Card>
               
@@ -1221,7 +1263,11 @@ export default function CollectionPage() {
                     <span className="font-semibold">完了率</span>
                   </div>
                   <div className="text-2xl font-bold text-purple-600">
-                    {userBadges.length > 0 ? Math.round((activeBadges.length / userBadges.length) * 100) : 0}%
+                    {badgeLoading ? (
+                      <div className="animate-pulse bg-gray-200 h-12 w-12 rounded"></div>
+                    ) : (
+                      `${userBadges.length > 0 ? Math.round((activeBadges.length / userBadges.length) * 100) : 0}%`
+                    )}
                   </div>
                 </CardContent>
               </Card>

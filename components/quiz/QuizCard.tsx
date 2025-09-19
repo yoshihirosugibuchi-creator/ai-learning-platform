@@ -92,18 +92,20 @@ export default function QuizCard({
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Badge variant="outline">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <Badge variant="outline" className="text-xs w-fit">
             問題 {questionNumber} / {totalQuestions}
           </Badge>
-          <Badge variant={question.difficulty === '初級' ? 'default' : question.difficulty === '中級' ? 'secondary' : 'destructive'}>
+          <Badge variant={question.difficulty === '初級' ? 'default' : question.difficulty === '中級' ? 'secondary' : 'destructive'} className="text-xs w-fit">
             {question.difficulty}
           </Badge>
         </div>
         
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
-          <span>{timeLeft}秒</span>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center space-x-2">
+            <Clock className="h-4 w-4" />
+            <span>{timeLeft}秒</span>
+          </div>
           <Progress value={progressPercentage} className="flex-1" />
         </div>
         
@@ -111,9 +113,11 @@ export default function QuizCard({
           {question.question}
         </CardTitle>
         
-        <Badge variant="outline" className="w-fit">
-          {getCategoryDisplayName(question.category)} • {getSubcategoryDisplayName(question.subcategory)}
-        </Badge>
+        <div className="flex justify-center">
+          <Badge variant="outline" className="text-xs">
+            {getSubcategoryDisplayName(question.subcategory)}
+          </Badge>
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-4">

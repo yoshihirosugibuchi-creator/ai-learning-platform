@@ -137,9 +137,9 @@ export default function CategoryDetailPage() {
               {category.icon}
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">{category.name}</h1>
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 leading-tight">{category.name}</h1>
               {category.description && (
-                <p className="text-lg text-muted-foreground">{category.description}</p>
+                <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">{category.description}</p>
               )}
               <div className="flex items-center space-x-4 mt-3">
                 <Badge 

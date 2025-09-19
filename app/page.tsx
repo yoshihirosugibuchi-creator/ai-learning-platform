@@ -62,7 +62,7 @@ export default function Home() {
             <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold mb-4">
               AI Learning Enterprise
             </h1>
-            <p className="text-xl text-muted-foreground mb-8">
+            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-8">
               AIパーソナライズ学習プラットフォーム
             </p>
             
