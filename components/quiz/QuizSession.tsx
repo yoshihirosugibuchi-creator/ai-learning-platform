@@ -327,243 +327,71 @@ export default function QuizSession({
             let quizResult = null
             
             try {
-            console.log('📝 Quiz result data to save:', {
-              user_id: user.id,
-              category_id: quizCategory,
-              subcategory_id: null,
-              score: finalResults.score,
-              total_questions: finalResults.totalQuestions,
-              time_taken: finalResults.timeSpent,
-              completed_at: new Date().toISOString()
-            })
-            
-            console.log('🚀 Calling saveQuizResultSupabase...')
-            quizResult = await saveQuizResultSupabase({
-              user_id: user.id,
-              category_id: quizCategory,
-              subcategory_id: null,
-              questions: sessionQuestions,
-              answers: questionAnswers,
-              score: finalResults.score,
-              total_questions: finalResults.totalQuestions,
-              time_taken: finalResults.timeSpent,
-              completed_at: new Date().toISOString()
-            })
-            console.log('✅ Quiz result saved successfully:', quizResult?.id)
-            
-          } catch (quizSaveError) {
-            console.error('❌ Quiz save error details:', {
-              error: quizSaveError,
-              stack: quizSaveError.stack,
-              message: quizSaveError.message
-            })
-            quizResult = { id: 'error-fallback-' + Date.now() }
-          }
-          
-          // Save detailed quiz data with enhanced logging
-          if (quizResult && questionAnswers.length > 0) {
-            console.log('📊 Saving detailed quiz data with enhanced logging...')
-            try {
-              const detailData = questionAnswers.map(answer => ({
+              console.log('📝 Quiz result data to save:', {
                 user_id: user.id,
-                quiz_result_id: quizResult.id!,
-                question_id: answer.questionId,
-                question_text: answer.questionText,
-                selected_answer: answer.selectedAnswer,
-                correct_answer: answer.correctAnswer,
-                is_correct: answer.isCorrect,
-                response_time: answer.responseTime,
-                confidence_level: answer.confidenceLevel,
-                category: answer.category,
-                difficulty: answer.difficulty
-              }))
-              
-              console.log('📝 Detail data sample (first item):', detailData[0])
-              console.log('🚀 Calling saveDetailedQuizData...')
-              await saveDetailedQuizData(detailData)
-              console.log('✅ Detailed quiz data saved successfully')
-              
-            } catch (detailSaveError) {
-              console.error('❌ Detail save error:', {
-                error: detailSaveError,
-                stack: detailSaveError.stack,
-                message: detailSaveError.message
+                category_id: quizCategory,
+                subcategory_id: null,
+                score: finalResults.score,
+                total_questions: finalResults.totalQuestions,
+                time_taken: finalResults.timeSpent,
+                completed_at: new Date().toISOString()
               })
+              
+              console.log('🚀 Calling saveQuizResultSupabase...')
+              quizResult = await saveQuizResultSupabase({
+                user_id: user.id,
+                category_id: quizCategory,
+                subcategory_id: null,
+                questions: sessionQuestions,
+                answers: questionAnswers,
+                score: finalResults.score,
+                total_questions: finalResults.totalQuestions,
+                time_taken: finalResults.timeSpent,
+                completed_at: new Date().toISOString()
+              })
+              console.log('✅ Quiz result saved successfully:', quizResult?.id)
+              
+            } catch (quizSaveError) {
+              console.error('❌ Quiz save error details:', {
+                error: quizSaveError,
+                stack: quizSaveError.stack,
+                message: quizSaveError.message
+              })
+              quizResult = { id: 'error-fallback-' + Date.now() }
             }
-          }
-          
-          // 🆕 新しい統合進捗更新システムを使用
-          console.log('🔧 Starting integrated progress update...')
-          const difficulty = (level as 'basic' | 'intermediate' | 'advanced' | 'expert') || 'basic'
-          
-          let progressResult;
-          
-          if (!category) {
-            // チャレンジクイズの場合：即座にXP/SKP計算、DB更新は背景処理
-            console.log('🎯 Challenge quiz: Instant calculation, background DB updates...')
             
-            // 即座にXP/SKP計算（DBアクセスなし）
-            const rewardData = calculateChallengeQuizRewards(
-              questionAnswers.map(qa => {
-                const question = sessionQuestions.find(q => q.id === qa.questionId);
-                
-                // サブカテゴリーIDの決定: subcategory_id > サブカテゴリー名変換 > メインカテゴリー
-                let targetCategory = qa.category; // デフォルトはメインカテゴリー
-                
-                if (question?.subcategory_id) {
-                  // 新しいsubcategory_idフィールドがあれば最優先
-                  targetCategory = question.subcategory_id;
-                  console.log(`✅ Using subcategory_id: ${question.subcategory_id}`);
-                } else if (question?.subcategory) {
-                  // category_level問題の特別処理
-                  if (question.subcategory === 'category_level') {
-                    targetCategory = qa.category; // メインカテゴリーをそのまま使用
-                    console.log(`📂 Category-level question: using main category "${qa.category}"`);
-                  } else {
-                    // 既存のサブカテゴリー名からIDに変換
-                    const subcategoryId = getSubcategoryId(question.subcategory);
-                    if (subcategoryId) {
-                      targetCategory = subcategoryId;
-                      console.log(`🔄 Converted subcategory: "${question.subcategory}" -> "${subcategoryId}"`);
-                    } else {
-                      console.warn(`⚠️ Unknown subcategory: "${question.subcategory}", using main category: ${qa.category}`);
-                    }
-                  }
-                }
-                
-                return {
-                  questionId: qa.questionId,
-                  category: targetCategory,
-                  isCorrect: qa.isCorrect,
-                  difficulty: qa.difficulty
-                };
-              }),
-              difficulty
-            );
-            
-            console.log('✅ Challenge quiz rewards calculated instantly:', {
-              totalXP: rewardData.totalXP,
-              totalSKP: rewardData.totalSKP,
-              categories: Object.keys(rewardData.categoryResults).length
-            });
-            
-            // 結果画面用にSKP情報を即座に設定
-            setSkpGained(rewardData.totalSKP);
-            
-            // 🆕 DB更新データをstateに保存（完了画面表示後にuseEffectで実行するため）
-            setChallengeQuizUpdateData({
-              userId: user.id,
-              categoryResults: rewardData.categoryResults
-            });
-            
-            progressResult = { categoryResults: rewardData.categoryResults, success: true };
-          } else {
-            // カテゴリー指定クイズの場合
-            console.log('📝 Category quiz completion parameters:', {
-              userId: user.id,
-              category: quizCategory,
-              correctAnswers: finalResults.correctAnswers,
-              totalQuestions: finalResults.totalQuestions,
-              difficulty
-            });
-            
-            // 🆕 業界カテゴリーかメインカテゴリーかで処理を分岐
-            const industryCategories = ['consulting_industry', 'si_industry', 'trading_company_industry'];
-            const isIndustryCategory = industryCategories.includes(quizCategory);
-            
-            if (isIndustryCategory) {
-              // 業界カテゴリーの場合：サブカテゴリー別にXP蓄積
-              console.log('🏢 Industry category quiz - processing by subcategories...');
-              
-              const categoryAnswers = questionAnswers.map(qa => {
-                const question = sessionQuestions.find(q => q.id === qa.questionId);
-                
-                // サブカテゴリーIDの決定
-                let targetCategory = qa.category; // デフォルトは業界カテゴリー
-                
-                if (question?.subcategory_id) {
-                  targetCategory = question.subcategory_id;
-                  console.log(`✅ Using subcategory_id: ${question.subcategory_id}`);
-                } else if (question?.subcategory) {
-                  const subcategoryId = getSubcategoryId(question.subcategory);
-                  if (subcategoryId) {
-                    targetCategory = subcategoryId;
-                    console.log(`🔄 Converted subcategory: "${question.subcategory}" -> "${subcategoryId}"`);
-                  } else {
-                    console.warn(`⚠️ Unknown subcategory: "${question.subcategory}", using industry category: ${qa.category}`);
-                  }
-                }
-                
-                return {
-                  questionId: qa.questionId,
-                  category: targetCategory,
-                  isCorrect: qa.isCorrect,
-                  difficulty: qa.difficulty
-                };
-              });
-              
-              // チャレンジクイズと同じ処理を実行
-              const rewardData = calculateChallengeQuizRewards(categoryAnswers, difficulty);
-              
-              console.log('✅ Industry category quiz rewards calculated:', {
-                totalXP: rewardData.totalXP,
-                totalSKP: rewardData.totalSKP,
-                categories: Object.keys(rewardData.categoryResults).length
-              });
-              
-              // 結果画面用にSKP情報を設定
-              setSkpGained(rewardData.totalSKP);
-              
-              // 即座にDB更新を実行
+            // Save detailed quiz data with enhanced logging
+            if (quizResult && questionAnswers.length > 0) {
+              console.log('📊 Saving detailed quiz data with enhanced logging...')
               try {
-                const updateResult = await saveChallengeQuizProgressToDatabase(user.id, rewardData.categoryResults);
-                if (updateResult.success) {
-                  console.log('✅ Industry category quiz DB updates completed successfully:', updateResult.updatedCategories);
-                } else {
-                  console.warn('⚠️ Some industry category quiz DB updates failed:', updateResult.errors);
-                }
-              } catch (error) {
-                console.error('❌ Industry category quiz DB update failure:', error);
+                const detailData = questionAnswers.map(answer => ({
+                  user_id: user.id,
+                  quiz_result_id: quizResult.id!,
+                  question_id: answer.questionId,
+                  question_text: answer.questionText,
+                  selected_answer: answer.selectedAnswer,
+                  correct_answer: answer.correctAnswer,
+                  is_correct: answer.isCorrect,
+                  response_time: answer.responseTime,
+                  confidence_level: answer.confidenceLevel,
+                  category: answer.category,
+                  difficulty: answer.difficulty
+                }))
+                
+                console.log('📝 Detail data sample (first item):', detailData[0])
+                console.log('🚀 Calling saveDetailedQuizData...')
+                await saveDetailedQuizData(detailData)
+                console.log('✅ Detailed quiz data saved successfully')
+                
+              } catch (detailSaveError) {
+                console.error('❌ Detail save error:', {
+                  error: detailSaveError,
+                  stack: detailSaveError.stack,
+                  message: detailSaveError.message
+                })
               }
-              
-              progressResult = { categoryResults: rewardData.categoryResults, success: true };
-            } else {
-              // メインカテゴリーの場合：即座にSKP計算、DB更新は後で
-              console.log('📋 Main category quiz - instant calculation...');
-              
-              // ⚡ 即座にSKP計算（DBアクセスなし）
-              const { calculateQuizRewards } = await import('@/lib/xp-level-system');
-              const rewardData = calculateQuizRewards(
-                finalResults.correctAnswers,
-                finalResults.totalQuestions,
-                difficulty
-              );
-              
-              console.log('✅ Main category rewards calculated instantly:', rewardData);
-              setSkpGained(rewardData.skpGained);
-              
-              // DB更新は後でバックグラウンド実行（遅延）
-              setTimeout(async () => {
-                try {
-                  console.log('🔄 Processing main category DB updates in background...');
-                  const progressResult = await updateProgressAfterQuiz(
-                    user.id,
-                    quizCategory,
-                    finalResults.correctAnswers,
-                    finalResults.totalQuestions,
-                    difficulty
-                  );
-                  console.log('✅ Background DB update completed:', progressResult.success);
-                } catch (bgError) {
-                  console.error('❌ Background DB update error:', bgError);
-                }
-              }, 100);
-              
-              progressResult = { success: true }; // 即座成功として処理
             }
           }, 75); // 75ms遅延でDB処理開始
-          
-          console.log(`⚡ Quiz completion optimized - UI first, DB later for user: ${user.id}`)
         } catch (error) {
           console.error('❌ Error in quiz completion process:', error)
           console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
