@@ -9,7 +9,7 @@
 #### 1. 全テーブルでRLSの有効化
 
 ```sql
--- 全13テーブルのRLSを有効化
+-- 全12テーブルのRLSを有効化
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quiz_results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE category_progress ENABLE ROW LEVEL SECURITY;
@@ -24,10 +24,9 @@ ALTER TABLE knowledge_card_collection ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wisdom_card_collection ENABLE ROW LEVEL SECURITY;
 ```
 
-**⚠️ 重要**: 開発中は上記**全13テーブル**のRLSが無効化されています。
-**📝 注意**: learning_progressテーブルは2025.09.18に新規作成・現在検証中。
+**⚠️ 重要**: 開発中は上記**全12テーブル**のRLSが無効化されています。
 
-#### 2. 全13テーブルのセキュリティポリシー設定
+#### 2. 全12テーブルのセキュリティポリシー設定
 
 ```sql
 -- users テーブルのポリシー
@@ -100,10 +99,10 @@ CREATE POLICY "Users can manage own wisdom cards" ON wisdom_card_collection
 
 #### 4. 開発中に無効化されたテーブルの確認
 
-本番リリース前に、開発中にRLSを無効化した**全13テーブル**のRLS状態を確認：
+本番リリース前に、開発中にRLSを無効化した**全12テーブル**のRLS状態を確認：
 
 ```sql
--- 全13テーブルのRLS状態を確認するクエリ
+-- 全12テーブルのRLS状態を確認するクエリ
 SELECT schemaname, tablename, rowsecurity 
 FROM pg_tables 
 WHERE schemaname = 'public' 
@@ -116,28 +115,21 @@ AND tablename IN (
 ORDER BY tablename;
 ```
 
-**📝 learning_progressテーブル事前準備**:
-- テーブルが存在しない場合: `database/create_learning_progress_table.sql` を実行
-- 作成後にRLS無効化・ポリシー設定が必要
-
 **期待される結果**: 全テーブルで `rowsecurity = true` であること。
 
-#### 5. テストユーザー確認
+#### 5. 開発モードの無効化
 
-**⚠️ 重要**: 開発中のテストユーザー `test@example.com` は実際のSupabaseに存在しません。
+本番環境では開発用のテストユーザー機能を無効化：
 
 ```typescript
-// components/auth/AuthProvider.tsx 確認事項
-// - テストユーザー機能は既に削除済み
-// - 現在は通常のSupabase認証のみ使用
-// - 疑似テストユーザーによる不安定動作は解決済み
+// components/auth/AuthProvider.tsx で以下をコメントアウト
+// Development mode: Allow test login
+if (email === 'test@example.com' && password === 'test123') {
+  // この部分をコメントアウトまたは削除
+}
 ```
 
-**本番チェック項目**:
-- [ ] テストユーザー関連コードが完全に削除されている
-- [ ] 実際のSupabaseユーザーでの認証テストが完了している
-
-#### 6. 問題発生時の対処
+#### 5. 問題発生時の対処
 
 もしRLS有効化後に406エラーや403エラーが発生した場合：
 
@@ -145,7 +137,6 @@ ORDER BY tablename;
 2. auth.uid()が正しく動作しているか確認
 3. テーブル構造とポリシーの整合性確認
 4. 開発中に無効化したテーブルの見落としがないか確認
-5. learning_progressテーブルが正しく作成・設定されているか確認
 
 ---
 

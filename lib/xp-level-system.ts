@@ -27,6 +27,24 @@ export const XP_CONFIG = {
   }
 } as const
 
+// ========== 難易度マッピング ==========
+export function mapDifficultyToEnglish(difficulty: string): 'basic' | 'intermediate' | 'advanced' | 'expert' {
+  switch (difficulty) {
+    case '基礎':
+    case '初級':
+      return 'basic'
+    case '中級':
+      return 'intermediate'
+    case '上級':
+      return 'advanced'
+    case 'エキスパート':
+      return 'expert'
+    default:
+      console.warn(`Unknown difficulty: ${difficulty}, defaulting to basic`)
+      return 'basic'
+  }
+}
+
 // ========== SKP管理定数 ==========
 export const SKP_CONFIG = {
   // クイズSKP

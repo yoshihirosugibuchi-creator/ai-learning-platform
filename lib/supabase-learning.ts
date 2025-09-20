@@ -64,9 +64,19 @@ export interface DetailedQuizData {
 
 // Learning Session Functions
 export async function saveLearningSession(session: Omit<LearningSession, 'id' | 'created_at' | 'updated_at'>): Promise<LearningSession | null> {
+  // learning_progressテーブルにデータを保存
+  const progressData = {
+    user_id: session.user_id,
+    course_id: session.course_id || '',
+    session_id: session.session_id,
+    progress_data: session.content_interactions || {},
+    completion_percentage: session.completed ? 100 : 0,
+    completed_at: session.completed ? (session.end_time || new Date().toISOString()) : null
+  }
+
   const { data, error } = await supabase
-    .from('learning_sessions')
-    .insert([session])
+    .from('learning_progress')
+    .insert([progressData])
     .select()
     .single()
 
@@ -75,28 +85,80 @@ export async function saveLearningSession(session: Omit<LearningSession, 'id' | 
     return null
   }
 
-  return data
+  // learning_progressデータをLearningSession形式に変換して返す
+  const learningSession: LearningSession = {
+    id: data.id,
+    user_id: session.user_id,
+    session_id: session.session_id,
+    course_id: session.course_id,
+    genre_id: session.genre_id,
+    theme_id: session.theme_id,
+    start_time: session.start_time,
+    end_time: session.end_time,
+    duration: session.duration,
+    completed: session.completed,
+    quiz_score: session.quiz_score,
+    content_interactions: session.content_interactions,
+    created_at: data.created_at,
+    updated_at: data.updated_at
+  }
+
+  return learningSession
 }
 
 export async function getUserLearningSessions(userId: string): Promise<LearningSession[]> {
+  // learning_progressテーブルから進捗データを取得
   const { data, error } = await supabase
-    .from('learning_sessions')
+    .from('learning_progress')
     .select('*')
     .eq('user_id', userId)
-    .order('start_time', { ascending: false })
+    .order('created_at', { ascending: false })
 
   if (error) {
     console.error('Error fetching learning sessions:', error)
     return []
   }
 
-  return data || []
+  // learning_progressデータをLearningSession形式に変換
+  const sessions = (data || []).map(progress => ({
+    id: progress.id,
+    user_id: userId,
+    session_id: progress.session_id || '',
+    course_id: progress.course_id,
+    genre_id: '',
+    theme_id: '',
+    start_time: progress.created_at,
+    end_time: progress.completed_at,
+    duration: 0,
+    completed: progress.completion_percentage === 100,
+    quiz_score: 0,
+    content_interactions: progress.progress_data,
+    created_at: progress.created_at,
+    updated_at: progress.updated_at
+  }))
+
+  return sessions
 }
 
 export async function updateLearningSession(sessionId: string, updates: Partial<LearningSession>): Promise<boolean> {
+  // LearningSessionの更新内容をlearning_progress形式に変換
+  const progressUpdates: any = {}
+  
+  if (updates.completed !== undefined) {
+    progressUpdates.completion_percentage = updates.completed ? 100 : 0
+  }
+  if (updates.end_time !== undefined) {
+    progressUpdates.completed_at = updates.end_time
+  }
+  if (updates.content_interactions !== undefined) {
+    progressUpdates.progress_data = updates.content_interactions
+  }
+  
+  progressUpdates.updated_at = new Date().toISOString()
+
   const { error } = await supabase
-    .from('learning_sessions')
-    .update(updates)
+    .from('learning_progress')
+    .update(progressUpdates)
     .eq('id', sessionId)
 
   if (error) {

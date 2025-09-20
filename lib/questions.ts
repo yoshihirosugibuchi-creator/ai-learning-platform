@@ -1,7 +1,7 @@
 import { Question } from './types'
 import { globalCache } from './performance-optimizer'
 
-// DB API使用版 - 軽量・高速
+// DB API使用版 - JSONフォールバック付き
 export async function getAllQuestions(): Promise<Question[]> {
   const cacheKey = 'all_questions_db'
   
@@ -31,6 +31,31 @@ export async function getAllQuestions(): Promise<Question[]> {
     
   } catch (error) {
     console.error('❌ Error loading questions from DB:', error)
+    console.log('🔄 Falling back to JSON file...')
+    
+    // JSONフォールバック
+    return await loadQuestionsFromJSON()
+  }
+}
+
+// JSONファイルからの問題読み込み（フォールバック用）
+async function loadQuestionsFromJSON(): Promise<Question[]> {
+  try {
+    console.log('📄 Loading questions from JSON fallback')
+    const response = await fetch('/questions.json')
+    
+    if (!response.ok) {
+      throw new Error(`JSON file request failed: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    const questions = data.questions || []
+    
+    console.log(`✅ Questions loaded from JSON: ${questions.length} questions`)
+    return questions
+    
+  } catch (error) {
+    console.error('❌ Error loading questions from JSON:', error)
     return []
   }
 }
@@ -65,8 +90,9 @@ async function getQuestionsByCategoryFromDB(category: string, limit: number = 10
     
   } catch (error) {
     console.error(`❌ Error loading questions for category ${category}:`, error)
-    // フォールバック: 全問題取得してフィルター
-    const allQuestions = await getAllQuestions()
+    console.log('🔄 Falling back to JSON for category filtering...')
+    // フォールバック: JSONから全問題取得してフィルター
+    const allQuestions = await loadQuestionsFromJSON()
     return allQuestions.filter(q => q.category === category && !q.deleted).slice(0, limit)
   }
 }
@@ -103,8 +129,9 @@ async function getRandomQuestionsFromDB(count: number = 10): Promise<Question[]>
     
   } catch (error) {
     console.error('❌ Error loading random questions from DB:', error)
-    // フォールバック: 全問題取得してランダム選択
-    const allQuestions = await getAllQuestions()
+    console.log('🔄 Falling back to JSON for random selection...')
+    // フォールバック: JSONから全問題取得してランダム選択
+    const allQuestions = await loadQuestionsFromJSON()
     const activeQuestions = allQuestions.filter(q => !q.deleted)
     const shuffled = [...activeQuestions].sort(() => 0.5 - Math.random())
     return shuffled.slice(0, count)
@@ -145,8 +172,9 @@ async function getCategoriesFromAPI(): Promise<string[]> {
     
   } catch (error) {
     console.error('❌ Error loading categories:', error)
-    // フォールバック: 全問題取得してカテゴリー抽出
-    const allQuestions = await getAllQuestions()
+    console.log('🔄 Falling back to JSON for categories...')
+    // フォールバック: JSONから全問題取得してカテゴリー抽出
+    const allQuestions = await loadQuestionsFromJSON()
     const activeQuestions = allQuestions.filter(q => !q.deleted)
     return Array.from(new Set(activeQuestions.map(q => q.category)))
   }
