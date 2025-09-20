@@ -69,7 +69,7 @@ export type QuizSubcategory =
   | 'DX・IT戦略'
 
 // 難易度の型定義
-export type QuizDifficulty = '基礎' | '中級' | '上級'
+export type QuizDifficulty = '基礎' | '中級' | '上級' | 'エキスパート'
 
 // メインカテゴリーの型定義
 export type QuizMainCategory = 

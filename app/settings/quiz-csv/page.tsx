@@ -22,6 +22,9 @@ import {
 import { getAllQuestions } from '@/lib/questions'
 import type { Question } from '@/lib/types'
 
+// DB連携用設定
+const USE_DATABASE = true // データベース使用フラグ
+
 interface ImportPreview {
   questions: Question[]
   errors: string[]
@@ -45,14 +48,36 @@ export default function QuizCSVPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // 初期データ読み込み
+  // 初期データ読み込み（DB対応）
   const loadQuestions = async () => {
     setLoading(true)
     try {
-      const data = await getAllQuestions()
+      let data: Question[]
+      
+      if (USE_DATABASE) {
+        console.log('📡 Loading questions from database via admin API...')
+        const response = await fetch('/api/admin/questions/db')
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`)
+        }
+        const result = await response.json()
+        data = result.questions || []
+        setMessage({ 
+          type: 'success', 
+          text: `${data.length}問のクイズ問題をデータベースから読み込みました` 
+        })
+      } else {
+        console.log('📄 Loading questions from JSON via questions API...')
+        data = await getAllQuestions()
+        setMessage({ 
+          type: 'success', 
+          text: `${data.length}問のクイズ問題をJSONから読み込みました` 
+        })
+      }
+      
       setQuestions(data)
-      setMessage({ type: 'success', text: `${data.length}問のクイズ問題を読み込みました` })
     } catch (error) {
+      console.error('❌ Load questions error:', error)
       setMessage({ type: 'error', text: 'クイズ問題の読み込みに失敗しました' })
     }
     setLoading(false)
@@ -277,14 +302,25 @@ export default function QuizCSVPage() {
     return result
   }
 
-  // インポート実行
+  // インポート実行（DB対応）
   const executeImport = async () => {
     if (!importPreview) return
 
     try {
       setLoading(true)
       
-      const response = await fetch('/api/admin/questions', {
+      // 大量データの警告
+      if (importPreview.questions.length > 200) {
+        setMessage({ 
+          type: 'info', 
+          text: `${importPreview.questions.length}問の大量データをインポート中です。処理に時間がかかる場合があります...` 
+        })
+      }
+      
+      const apiEndpoint = USE_DATABASE ? '/api/admin/questions/db' : '/api/admin/questions'
+      console.log(`🚀 Importing ${importPreview.questions.length} questions to ${USE_DATABASE ? 'database' : 'JSON'}...`)
+      
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -293,22 +329,34 @@ export default function QuizCSVPage() {
       })
 
       if (response.ok) {
+        const result = await response.json()
         setQuestions(importPreview.questions)
         const deletedCount = importPreview.stats.deleted
         const activeCount = importPreview.stats.active
         setImportPreview(null)
-        setMessage({ 
-          type: 'success', 
-          text: `${importPreview.stats.total}問のインポートが完了しました（有効: ${activeCount}問、削除: ${deletedCount}問）` 
-        })
+        
+        if (USE_DATABASE && result.stats) {
+          setMessage({ 
+            type: 'success', 
+            text: `データベースに${result.stats.processed}問をインポートしました（挿入: ${result.stats.inserted}問、更新: ${result.stats.updated}問）` 
+          })
+        } else {
+          setMessage({ 
+            type: 'success', 
+            text: `${importPreview.stats.total}問のインポートが完了しました（有効: ${activeCount}問、削除: ${deletedCount}問）` 
+          })
+        }
+        
         if (fileInputRef.current) {
           fileInputRef.current.value = ''
         }
       } else {
-        throw new Error('インポートAPIエラー')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'インポートAPIエラー')
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'インポートに失敗しました' })
+      console.error('❌ Import error:', error)
+      setMessage({ type: 'error', text: `インポートに失敗しました: ${error.message}` })
     }
     setLoading(false)
   }
@@ -337,12 +385,20 @@ export default function QuizCSVPage() {
             </div>
           </div>
 
-          {/* Important Notice */}
-          <Alert className="border-amber-200 bg-amber-50">
-            <Info className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-800">
-              <strong>重要:</strong> CSVデータの更新後は、変更を本番環境に反映するためにデプロイが必要です。
-              将来的にはデータベースでのリアルタイム更新に移行予定です。
+          {/* DB Status Notice */}
+          <Alert className={USE_DATABASE ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}>
+            <Info className={`h-4 w-4 ${USE_DATABASE ? 'text-green-600' : 'text-amber-600'}`} />
+            <AlertDescription className={USE_DATABASE ? 'text-green-800' : 'text-amber-800'}>
+              {USE_DATABASE ? (
+                <>
+                  <strong>データベースモード:</strong> Supabaseデータベースに直接読み書きします。
+                  変更は即座に全環境に反映されます。
+                </>
+              ) : (
+                <>
+                  <strong>JSONファイルモード:</strong> CSVデータの更新後は、変更を本番環境に反映するためにデプロイが必要です。
+                </>
+              )}
             </AlertDescription>
           </Alert>
 
@@ -356,9 +412,12 @@ export default function QuizCSVPage() {
             </CardHeader>
             <CardContent>
               <Button onClick={loadQuestions} disabled={loading}>
-                <FileText className="h-4 w-4 mr-2" />
-                問題を読み込み
+                <Database className="h-4 w-4 mr-2" />
+                {USE_DATABASE ? 'データベースから読み込み' : 'JSONファイルから読み込み'}
               </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                現在のモード: {USE_DATABASE ? 'データベース直接連携' : 'JSONファイル連携'}
+              </p>
             </CardContent>
           </Card>
 
