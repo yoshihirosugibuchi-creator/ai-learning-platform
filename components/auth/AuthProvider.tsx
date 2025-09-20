@@ -72,9 +72,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const loadingTimeout = setTimeout(() => {
       if (isMounted) {
         console.warn('⚠️ Auth loading timeout - stopping loading state')
+        setUser(null)
+        setProfile(null)
         setLoading(false)
       }
-    }, 5000) // 5秒タイムアウト
+    }, 3000) // 3秒タイムアウト（本番環境用短縮）
 
     // Get initial session with faster error handling
     const initializeAuth = async () => {
@@ -109,25 +111,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.warn('⚠️ Session expired, attempting refresh...')
             
             try {
-              const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+              // タイムアウト付きでリフレッシュを試行
+              const refreshPromise = supabase.auth.refreshSession()
+              const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Refresh timeout')), 5000)
+              )
+              
+              const { data: refreshData, error: refreshError } = await Promise.race([
+                refreshPromise,
+                timeoutPromise
+              ]) as any
               
               if (refreshError || !refreshData.session) {
-                console.error('❌ Session refresh failed:', refreshError)
+                console.error('❌ Session refresh failed, redirecting to login:', refreshError?.message)
                 setUser(null)
                 setProfile(null)
                 setLoading(false)
                 clearTimeout(loadingTimeout)
+                // ログインページへリダイレクト
+                window.location.href = '/login'
                 return
               }
               
               console.log('✅ Session refreshed successfully')
               currentSession = refreshData.session
             } catch (refreshErr) {
-              console.error('❌ Session refresh exception:', refreshErr)
+              console.error('❌ Session refresh exception, redirecting to login:', refreshErr)
               setUser(null)
               setProfile(null)
               setLoading(false)
               clearTimeout(loadingTimeout)
+              // ログインページへリダイレクト
+              window.location.href = '/login'
               return
             }
           }
@@ -191,10 +206,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    // 定期的なセッション健全性チェック（5分毎）
+    // 定期的なセッション健全性チェック（10分毎、本番負荷軽減）
     const sessionHealthCheck = setInterval(async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+        // タイムアウト付きでセッション確認
+        const sessionPromise = supabase.auth.getSession()
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Health check timeout')), 5000)
+        )
+        
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as any
         
         if (error) {
           console.error('⚠️ Session health check failed:', error)
@@ -209,13 +233,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // 5分以内に期限切れになる場合は事前リフレッシュ
           if (timeUntilExpiry < 300 && timeUntilExpiry > 0) {
             console.log('🔄 Pre-emptive session refresh (expires in', timeUntilExpiry, 'seconds)')
-            await supabase.auth.refreshSession()
+            try {
+              await Promise.race([
+                supabase.auth.refreshSession(),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Refresh timeout')), 5000)
+                )
+              ])
+            } catch (refreshError) {
+              console.error('❌ Pre-emptive refresh failed:', refreshError)
+            }
           }
         }
       } catch (error) {
         console.error('❌ Session health check error:', error)
       }
-    }, 5 * 60 * 1000) // 5分毎
+    }, 10 * 60 * 1000) // 10分毎（本番負荷軽減）
 
     return () => {
       console.log('🧹 AuthProvider: Cleanup')

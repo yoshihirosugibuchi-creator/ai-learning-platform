@@ -39,26 +39,50 @@ export default function LearningPage() {
   useResourceMonitor()
 
   useEffect(() => {
-    // 認証ローディング中はデータロードを待つ
+    // 認証ローディング中はデータロードを待つ（最大5秒）
     if (authLoading) {
       console.log('⏳ Auth loading, waiting...')
-      return
+      // タイムアウト付きで待機
+      const authTimeout = setTimeout(() => {
+        console.warn('⚠️ Auth loading timeout, proceeding without auth check')
+        setLoading(false)
+      }, 5000)
+      
+      return () => clearTimeout(authTimeout)
     }
 
     // セッション状態の詳細確認
     if (!user) {
       console.log('🚫 No user found in learning page')
-      // ここでセッション再確認を試行
+      // セッション再確認を試行（タイムアウト付き）
       const recheckSession = async () => {
         try {
           const { supabase } = await import('@/lib/supabase')
-          const { data: { session } } = await supabase.auth.getSession()
+          const sessionPromise = supabase.auth.getSession()
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Session check timeout')), 3000)
+          )
+          
+          const { data: { session } } = await Promise.race([
+            sessionPromise,
+            timeoutPromise
+          ]) as any
+          
           console.log('🔍 Session recheck result:', session ? session.user?.email : 'null')
+          
+          if (!session) {
+            console.log('🔄 No session found, redirecting to login')
+            router.push('/login')
+            return
+          }
         } catch (error) {
           console.error('❌ Session recheck failed:', error)
+          router.push('/login')
+          return
         }
       }
       recheckSession()
+      return
     }
 
     const loadData = async () => {
@@ -66,6 +90,12 @@ export default function LearningPage() {
       console.log('👤 User state:', { userId: user?.id, userEmail: user?.email })
       
       try {
+        // 全体のタイムアウト設定（30秒）
+        const dataTimeout = setTimeout(() => {
+          console.warn('⚠️ Data loading timeout, showing error state')
+          setLoading(false)
+        }, 30000)
+        
         // キャッシュから先に確認
         const cacheKey = 'learning_courses'
         const cachedCourses = globalCache.get(cacheKey)
@@ -74,23 +104,45 @@ export default function LearningPage() {
           console.log('🎯 Using cached courses data')
           setCourses(cachedCourses)
           setLoading(false) // キャッシュデータがあれば即座に表示
+          clearTimeout(dataTimeout)
         }
         
-        // バックグラウンドでフレッシュデータを取得
+        // バックグラウンドでフレッシュデータを取得（タイムアウト付き）
         console.log('📡 Fetching fresh courses...')
-        const coursesData = await getLearningCourses()
-        console.log('✅ Fresh courses loaded:', coursesData.length)
-        setCourses(coursesData)
-        globalCache.set(cacheKey, coursesData, 5 * 60 * 1000) // 5分キャッシュ
+        const coursesPromise = getLearningCourses()
+        const coursesTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Courses fetch timeout')), 15000)
+        )
+        
+        try {
+          const coursesData = await Promise.race([coursesPromise, coursesTimeout])
+          console.log('✅ Fresh courses loaded:', coursesData.length)
+          setCourses(coursesData)
+          globalCache.set(cacheKey, coursesData, 5 * 60 * 1000) // 5分キャッシュ
+          clearTimeout(dataTimeout)
+        } catch (coursesError) {
+          console.error('❌ Courses loading failed:', coursesError)
+          if (!cachedCourses) {
+            // キャッシュもない場合は空配列で継続
+            setCourses([])
+            setLoading(false)
+            clearTimeout(dataTimeout)
+          }
+        }
 
-        // ユーザーの学習統計を計算
+        // ユーザーの学習統計を計算（タイムアウト付き）
         if (user?.id) {
           console.log('📊 Loading user statistics...')
           try {
-            const [stats, badges] = await Promise.all([
+            const statsPromise = Promise.all([
               calculateLearningStats(user.id),
               getBadgeStats(user.id)
             ])
+            const statsTimeout = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Stats timeout')), 10000)
+            )
+            
+            const [stats, badges] = await Promise.race([statsPromise, statsTimeout])
             console.log('✅ Statistics loaded:', { stats, badges })
             setLearningStats(stats)
             setBadgeStats(badges)
