@@ -11,7 +11,6 @@ import {
   TrendingUp, 
   Brain, 
   Calendar,
-  Download,
   RefreshCw,
   Flame,
   Clock,
@@ -21,8 +20,6 @@ import {
   Lightbulb,
   Zap,
   Users,
-  TrendingDown,
-  AlertCircle,
   CheckCircle2
 } from 'lucide-react'
 import Header from '@/components/layout/Header'

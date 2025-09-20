@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-interface CategoryStat {
-  category_id: string
-  count: number
-}
-
 interface DifficultyStats {
   [difficulty: string]: number
 }

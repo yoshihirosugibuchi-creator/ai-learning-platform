@@ -19,21 +19,22 @@ interface APIQuestion {
 }
 
 // DB行をQuestion型に変換
-function dbRowToQuestion(row: any): APIQuestion {
+function dbRowToQuestion(row: unknown): APIQuestion {
+  const dbRow = row as Record<string, unknown>
   return {
-    id: row.legacy_id,
-    category: row.category_id,
-    subcategory: row.subcategory,
-    subcategory_id: row.subcategory_id,
-    question: row.question,
-    options: [row.option1, row.option2, row.option3, row.option4],
-    correct: row.correct_answer,
-    explanation: row.explanation,
-    difficulty: row.difficulty,
-    timeLimit: row.time_limit,
-    relatedTopics: row.related_topics || [],
-    source: row.source,
-    deleted: row.is_deleted
+    id: dbRow.legacy_id,
+    category: dbRow.category_id,
+    subcategory: dbRow.subcategory,
+    subcategory_id: dbRow.subcategory_id,
+    question: dbRow.question,
+    options: [dbRow.option1, dbRow.option2, dbRow.option3, dbRow.option4],
+    correct: dbRow.correct_answer,
+    explanation: dbRow.explanation,
+    difficulty: dbRow.difficulty,
+    timeLimit: dbRow.time_limit,
+    relatedTopics: dbRow.related_topics || [],
+    source: dbRow.source,
+    deleted: dbRow.is_deleted
   }
 }
 

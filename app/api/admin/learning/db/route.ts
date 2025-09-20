@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import type { LearningCourse } from '@/lib/types/learning'
 import fs from 'fs'
 import path from 'path'
 
@@ -95,7 +94,7 @@ export async function POST(request: NextRequest) {
     try {
       const coursesJsonPath = path.join(process.cwd(), 'public', 'learning-data', 'courses.json')
       const coursesJson = {
-        courses: courses.map((course: any) => ({
+        courses: courses.map((course: Record<string, unknown>) => ({
           id: course.id,
           title: course.title,
           description: course.description,
@@ -104,8 +103,8 @@ export async function POST(request: NextRequest) {
           icon: course.icon,
           color: course.color,
           displayOrder: course.display_order,
-          genreCount: genres.filter((g: any) => g.course_id === course.id).length,
-          themeCount: themes.filter((t: any) => t.course_id === course.id).length,
+          genreCount: genres.filter((g: Record<string, unknown>) => g.course_id === course.id).length,
+          themeCount: themes.filter((t: Record<string, unknown>) => t.course_id === course.id).length,
           status: course.status
         })),
         lastUpdated: new Date().toISOString(),
@@ -123,7 +122,7 @@ export async function POST(request: NextRequest) {
     // 各コースの詳細JSONファイルを更新
     for (const course of courses) {
       try {
-        const courseGenres = genres.filter((g: any) => g.course_id === course.id)
+        const courseGenres = genres.filter((g: Record<string, unknown>) => g.course_id === course.id)
         const courseJsonPath = path.join(process.cwd(), 'public', 'learning-data', `${course.id}.json`)
         
         const courseJson = {
@@ -136,29 +135,29 @@ export async function POST(request: NextRequest) {
           color: course.color,
           displayOrder: course.display_order,
           status: course.status,
-          genres: courseGenres.map((genre: any) => {
-            const genreThemes = themes.filter((t: any) => t.genre_id === genre.id)
+          genres: courseGenres.map((genre: Record<string, unknown>) => {
+            const genreThemes = themes.filter((t: Record<string, unknown>) => t.genre_id === genre.id)
             return {
               id: genre.id,
               title: genre.title,
               description: genre.description,
               displayOrder: genre.display_order,
-              themes: genreThemes.map((theme: any) => {
-                const themeSessions = sessions.filter((s: any) => s.theme_id === theme.id)
+              themes: genreThemes.map((theme: Record<string, unknown>) => {
+                const themeSessions = sessions.filter((s: Record<string, unknown>) => s.theme_id === theme.id)
                 return {
                   id: theme.id,
                   title: theme.title,
                   description: theme.description,
                   displayOrder: theme.display_order,
-                  sessions: themeSessions.map((session: any) => {
-                    const sessionContents = contents.filter((c: any) => c.session_id === session.id)
-                    const sessionQuizzes = quizzes.filter((q: any) => q.session_id === session.id)
+                  sessions: themeSessions.map((session: Record<string, unknown>) => {
+                    const sessionContents = contents.filter((c: Record<string, unknown>) => c.session_id === session.id)
+                    const sessionQuizzes = quizzes.filter((q: Record<string, unknown>) => q.session_id === session.id)
                     return {
                       id: session.id,
                       title: session.title,
                       description: session.description,
                       displayOrder: session.display_order,
-                      contents: sessionContents.map((content: any) => ({
+                      contents: sessionContents.map((content: Record<string, unknown>) => ({
                         id: content.id,
                         type: content.content_type,
                         title: content.title,
@@ -189,8 +188,8 @@ export async function POST(request: NextRequest) {
           status: 'updated', 
           items: {
             genres: courseGenres.length,
-            themes: themes.filter((t: any) => t.course_id === course.id).length,
-            sessions: sessions.filter((s: any) => s.course_id === course.id).length
+            themes: themes.filter((t: Record<string, unknown>) => t.course_id === course.id).length,
+            sessions: sessions.filter((s: Record<string, unknown>) => s.course_id === course.id).length
           }
         })
         console.log(`✅ Updated ${course.id}.json`)

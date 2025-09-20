@@ -11,10 +11,7 @@ import {
   Upload, 
   FileText, 
   AlertTriangle,
-  CheckCircle,
-  Trash2,
-  Edit,
-  Plus
+  CheckCircle
 } from 'lucide-react'
 import { getAllQuestions } from '@/lib/questions'
 import type { Question } from '@/lib/types'
@@ -156,7 +153,7 @@ export default function AdminPage() {
           const values = parseCSVLine(lines[i])
           if (values.length < headers.length) continue
 
-          const questionData: any = {}
+          const questionData: Record<string, string> = {}
           headers.forEach((header, index) => {
             questionData[header] = values[index] || ''
           })

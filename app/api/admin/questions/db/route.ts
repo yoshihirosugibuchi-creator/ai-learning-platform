@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
     }))
     
     let insertedCount = 0
-    let updatedCount = 0
+    const updatedCount = 0
     const errors: string[] = []
     
     // 最適化されたバッチ処理（50件ずつで高速化）
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`⏳ Processing batch ${batchNum}/${Math.ceil(dbRows.length/BATCH_SIZE)}: ${batch.length} questions`)
         
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('quiz_questions')
           .upsert(batch, { 
             onConflict: 'legacy_id',
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
 }
 
 // DB対応版 - 問題データをJSONファイルに同期
-export async function PUT(request: NextRequest) {
+export async function PUT() {
   try {
     console.log('🚀 Admin: Starting questions DB→JSON sync')
     

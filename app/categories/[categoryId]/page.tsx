@@ -45,6 +45,21 @@ export default function CategoryDetailPage() {
   const categoryId = params.categoryId as string
   const category = [...mainCategories, ...industryCategories]
     .find(cat => cat.id === categoryId)
+
+  // Load questions data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const questionsData = await getAllQuestions()
+        setQuestions(questionsData)
+      } catch (error) {
+        console.error('Failed to load questions:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
   
   if (!category) {
     return (
@@ -62,21 +77,6 @@ export default function CategoryDetailPage() {
   }
 
   const subcategories = getSubcategoriesByParent(categoryId)
-
-  // Load questions data
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const questionsData = await getAllQuestions()
-        setQuestions(questionsData)
-      } catch (error) {
-        console.error('Failed to load questions:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadData()
-  }, [])
 
   // Calculate real stats based on actual data
   const categoryQuestions = questions.filter(q => q.category === categoryId)
