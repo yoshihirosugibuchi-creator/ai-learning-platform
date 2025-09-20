@@ -22,7 +22,7 @@ export function useDebounce<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   
   const debouncedCallback = useCallback((...args: Parameters<T>) => {
     if (timeoutRef.current) {
@@ -60,7 +60,9 @@ class InMemoryCache {
     // キャッシュサイズ制限
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value
-      this.cache.delete(firstKey)
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey)
+      }
     }
 
     this.cache.set(key, {

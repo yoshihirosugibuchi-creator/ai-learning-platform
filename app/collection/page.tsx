@@ -25,7 +25,7 @@ import MobileNav from '@/components/layout/MobileNav'
 import WisdomCard from '@/components/cards/WisdomCard'
 import KnowledgeCard from '@/components/cards/KnowledgeCard'
 import { useAuth } from '@/components/auth/AuthProvider'
-import { wisdomCards, getCategoryDisplayName } from '@/lib/cards'
+import { wisdomCards, getCategoryDisplayName, WisdomCard as WisdomCardType } from '@/lib/cards'
 import { 
   getUserWisdomCards, 
   getWisdomCardStats, 
@@ -35,7 +35,9 @@ import {
   getKnowledgeCardStats,
   hasKnowledgeCard,
   getKnowledgeCardCount,
-  getCardNumericId
+  getCardNumericId,
+  WisdomCardCollection,
+  KnowledgeCardCollection
 } from '@/lib/supabase-cards'
 import { 
   KnowledgeCard as KnowledgeCardType
@@ -54,7 +56,11 @@ export default function CollectionPage() {
   const { user, loading } = useAuth()
 
   // 格言カード（従来のカード）データ - Supabase版
-  const [wisdomCollectionData, setWisdomCollectionData] = useState({
+  const [wisdomCollectionData, setWisdomCollectionData] = useState<{
+    collection: WisdomCardCollection[]
+    stats: { totalObtained: number; totalCards: number; uniqueCards: number }
+    cardsWithStatus: Array<{ obtained: boolean; count: number; id: number; author: string; quote: string; categoryId: string; subcategoryId?: string; rarity: string; context: string; applicationArea: string }>
+  }>({
     collection: [],
     stats: { totalObtained: 0, totalCards: 0, uniqueCards: 0 },
     cardsWithStatus: wisdomCards.map(card => ({ ...card, obtained: false, count: 0 }))
@@ -62,9 +68,13 @@ export default function CollectionPage() {
   const [wisdomDataLoading, setWisdomDataLoading] = useState(true)
 
   // ナレッジカードデータ（学習コンテンツから獲得） - Supabase版
-  const [knowledgeCollectionData, setKnowledgeCollectionData] = useState({
+  const [knowledgeCollectionData, setKnowledgeCollectionData] = useState<{
+    collection: KnowledgeCardCollection[]
+    stats: { totalObtained: number; totalCards: number; uniqueCards: number; totalReviews?: number }
+    cardsWithStatus: Array<{ obtained: boolean; count: number; id: number; title: string; category: string; rarity: string; description: string; applicationArea: string }>
+  }>({
     collection: [],
-    stats: { totalObtained: 0, totalCards: 0, uniqueCards: 0 },
+    stats: { totalObtained: 0, totalCards: 0, uniqueCards: 0, totalReviews: 0 },
     cardsWithStatus: []
   })
 
@@ -1020,7 +1030,7 @@ export default function CollectionPage() {
                   {filteredWisdomCards.map(card => (
                     <WisdomCard 
                       key={card.id} 
-                      card={card} 
+                      card={card as WisdomCardType & { obtained?: boolean; count?: number }}
                       showDetails={true}
                     />
                   ))}
@@ -1032,7 +1042,7 @@ export default function CollectionPage() {
                   {obtainedWisdomCards.map(card => (
                     <WisdomCard 
                       key={card.id} 
-                      card={card} 
+                      card={card as WisdomCardType & { obtained?: boolean; count?: number }}
                       showDetails={true}
                     />
                   ))}
@@ -1051,7 +1061,7 @@ export default function CollectionPage() {
                   {lockedWisdomCards.map(card => (
                     <WisdomCard 
                       key={card.id} 
-                      card={card} 
+                      card={card as WisdomCardType & { obtained?: boolean; count?: number }}
                       showDetails={false}
                     />
                   ))}

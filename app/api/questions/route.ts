@@ -22,19 +22,19 @@ interface APIQuestion {
 function dbRowToQuestion(row: unknown): APIQuestion {
   const dbRow = row as Record<string, unknown>
   return {
-    id: dbRow.legacy_id,
-    category: dbRow.category_id,
-    subcategory: dbRow.subcategory,
-    subcategory_id: dbRow.subcategory_id,
-    question: dbRow.question,
-    options: [dbRow.option1, dbRow.option2, dbRow.option3, dbRow.option4],
-    correct: dbRow.correct_answer,
-    explanation: dbRow.explanation,
-    difficulty: dbRow.difficulty,
-    timeLimit: dbRow.time_limit,
-    relatedTopics: dbRow.related_topics || [],
-    source: dbRow.source,
-    deleted: dbRow.is_deleted
+    id: dbRow.legacy_id as number,
+    category: dbRow.category_id as string,
+    subcategory: dbRow.subcategory as string | undefined,
+    subcategory_id: dbRow.subcategory_id as string | undefined,
+    question: dbRow.question as string,
+    options: [dbRow.option1 as string, dbRow.option2 as string, dbRow.option3 as string, dbRow.option4 as string],
+    correct: dbRow.correct_answer as number,
+    explanation: dbRow.explanation as string | undefined,
+    difficulty: dbRow.difficulty as string | undefined,
+    timeLimit: dbRow.time_limit as number | undefined,
+    relatedTopics: (dbRow.related_topics as string[]) || [],
+    source: dbRow.source as string | undefined,
+    deleted: dbRow.is_deleted as boolean | undefined
   }
 }
 

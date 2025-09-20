@@ -37,8 +37,9 @@ import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { getUserStats } from '@/lib/supabase-quiz'
-import { getUserSKPBalance, getUserSKPTransactions } from '@/lib/supabase-learning'
+import { getUserSKPBalance, getUserSKPTransactions, SKPTransaction } from '@/lib/supabase-learning'
 import { getUserBadges } from '@/lib/supabase-badges'
+import { UserBadge } from '@/lib/types/learning'
 import { updateUserProfile } from '@/lib/supabase-user'
 import { mainCategories, industryCategories } from '@/lib/categories'
 import { getUserLevelSystem, LevelSystem } from '@/lib/xp-level-system'
@@ -58,9 +59,9 @@ export default function ProfilePage() {
     totalTimeSpent: 0
   })
   const [skpBalance, setSkpBalance] = useState(0)
-  const [allTransactions, setAllTransactions] = useState<Array<Record<string, unknown>>>([]) // 全トランザクション（統計用）
-  const [recentTransactions, setRecentTransactions] = useState<Array<Record<string, unknown>>>([]) // 表示用履歴
-  const [userBadges, setUserBadges] = useState<Array<Record<string, unknown>>>([])
+  const [allTransactions, setAllTransactions] = useState<SKPTransaction[]>([]) // 全トランザクション（統計用）
+  const [recentTransactions, setRecentTransactions] = useState<SKPTransaction[]>([]) // 表示用履歴
+  const [userBadges, setUserBadges] = useState<UserBadge[]>([])
   const [levelSystem, setLevelSystem] = useState<LevelSystem | null>(null)
   
   // SKPフィルター状態
@@ -73,10 +74,10 @@ export default function ProfilePage() {
     displayName: '',
     industry: '',
     experienceYears: '',
-    interestedIndustries: [],
-    learningGoals: [],
-    selectedCategories: [],
-    selectedIndustryCategories: []
+    interestedIndustries: [] as string[],
+    learningGoals: [] as string[],
+    selectedCategories: [] as string[],
+    selectedIndustryCategories: [] as string[]
   })
 
   // データ取得
@@ -119,15 +120,16 @@ export default function ProfilePage() {
       })
       
       // プロフィールデータを初期化
+      const profileRecord = profile as unknown as Record<string, unknown>
       setProfileData({
         name: profile.name || '',
-        displayName: profile.display_name || '',
-        industry: profile.industry || '',
-        experienceYears: profile.experience_years?.toString() || '',
-        interestedIndustries: profile.interested_industries || [],
-        learningGoals: profile.learning_goals || [],
-        selectedCategories: profile.selected_categories || [],
-        selectedIndustryCategories: profile.selected_industry_categories || []
+        displayName: (profileRecord.display_name as string) || '',
+        industry: (profileRecord.industry as string) || '',
+        experienceYears: (profileRecord.experience_years as number)?.toString() || '',
+        interestedIndustries: (profileRecord.interested_industries as string[]) || [],
+        learningGoals: (profileRecord.learning_goals as string[]) || [],
+        selectedCategories: (profileRecord.selected_categories as string[]) || [],
+        selectedIndustryCategories: (profileRecord.selected_industry_categories as string[]) || []
       })
     }
   }, [user, profile])
@@ -607,17 +609,20 @@ export default function ProfilePage() {
               <CardContent>
                 {userBadges.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {userBadges.map((badge) => (
-                      <div key={badge.id} className="text-center p-4 border rounded-lg">
-                        <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
-                          <Trophy className="h-8 w-8 text-white" />
+                    {userBadges.map((badge) => {
+                      const badgeData = badge as unknown as Record<string, unknown>
+                      return (
+                        <div key={badgeData.id as string} className="text-center p-4 border rounded-lg">
+                          <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
+                            <Trophy className="h-8 w-8 text-white" />
+                          </div>
+                          <h4 className="font-medium text-sm">{badgeData.badge_name as string}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(badgeData.earned_at as string).toLocaleDateString('ja-JP')}
+                          </p>
                         </div>
-                        <h4 className="font-medium text-sm">{badge.badge_name}</h4>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(badge.earned_at).toLocaleDateString('ja-JP')}
-                        </p>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
@@ -680,7 +685,7 @@ export default function ProfilePage() {
                       <div className="flex flex-col items-center space-y-2">
                         <Plus className="h-8 w-8 text-green-500" />
                         <div className="text-2xl font-bold text-green-600">
-                          {allTransactions.filter(t => t.type === 'earned').reduce((sum, t) => sum + t.amount, 0)}
+                          {allTransactions.filter(t => t.type === 'earned').reduce((sum, t) => sum + (t.amount as number), 0)}
                         </div>
                         <div className="text-xs text-muted-foreground">累計獲得</div>
                       </div>
@@ -692,7 +697,7 @@ export default function ProfilePage() {
                       <div className="flex flex-col items-center space-y-2">
                         <Minus className="h-8 w-8 text-red-500" />
                         <div className="text-2xl font-bold text-red-600">
-                          {allTransactions.filter(t => t.type === 'spent').reduce((sum, t) => sum + t.amount, 0)}
+                          {allTransactions.filter(t => t.type === 'spent').reduce((sum, t) => sum + (t.amount as number), 0)}
                         </div>
                         <div className="text-xs text-muted-foreground">累計使用</div>
                       </div>
@@ -761,10 +766,10 @@ export default function ProfilePage() {
                               )}
                             </div>
                             <div>
-                              <p className="text-sm font-medium">{transaction.description}</p>
+                              <p className="text-sm font-medium">{transaction.description as string}</p>
                               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                                 <Calendar className="h-3 w-3" />
-                                <span>{new Date(transaction.timestamp).toLocaleDateString('ja-JP', {
+                                <span>{new Date(transaction.timestamp as string).toLocaleDateString('ja-JP', {
                                   year: 'numeric',
                                   month: 'short',
                                   day: 'numeric',
@@ -772,7 +777,7 @@ export default function ProfilePage() {
                                   minute: '2-digit'
                                 })}</span>
                                 <Badge variant="outline" className="text-xs">
-                                  {transaction.source}
+                                  {transaction.source as string}
                                 </Badge>
                               </div>
                             </div>
@@ -780,7 +785,7 @@ export default function ProfilePage() {
                           <div className={`text-sm font-bold ${
                             transaction.type === 'earned' ? 'text-green-600' : 'text-red-600'
                           }`}>
-                            {transaction.type === 'earned' ? '+' : '-'}{transaction.amount} SKP
+                            {transaction.type === 'earned' ? '+' : '-'}{transaction.amount as number} SKP
                           </div>
                         </div>
                       ))}

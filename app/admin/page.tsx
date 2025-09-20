@@ -159,12 +159,13 @@ export default function AdminPage() {
           })
           
           // デバッグ: deletedフラグの値を確認
-          const isDeleted = questionData.deleted === 'true' || 
-                           questionData.deleted === true || 
-                           questionData.deleted === 'TRUE' || 
-                           questionData.deleted === '1' ||
-                           (typeof questionData.deleted === 'string' && 
-                            questionData.deleted.toLowerCase().trim() === 'true')
+          const deletedValue = questionData.deleted as unknown
+          const isDeleted = deletedValue === 'true' || 
+                           deletedValue === true || 
+                           deletedValue === 'TRUE' || 
+                           deletedValue === '1' ||
+                           (typeof deletedValue === 'string' && 
+                            deletedValue.toLowerCase().trim() === 'true')
           
           if (questionData.deleted && (questionData.deleted === 'TRUE' || questionData.deleted === 'FALSE')) {
             console.log(`行${i + 1}: deleted="${questionData.deleted}" → isDeleted=${isDeleted}`)
@@ -181,7 +182,8 @@ export default function AdminPage() {
             continue
           }
 
-          if (questionData.correct < 0 || questionData.correct > 3) {
+          const correctValue = Number(questionData.correct)
+          if (correctValue < 0 || correctValue > 3) {
             errors.push(`行${i + 1}: 正解番号は0-3の範囲で指定してください`)
             continue
           }
@@ -201,16 +203,16 @@ export default function AdminPage() {
             correct: Number(questionData.correct),
             explanation: questionData.explanation,
             difficulty: questionData.difficulty,
-            timeLimit: questionData.timeLimit ? Number(questionData.timeLimit) : undefined,
+            timeLimit: questionData.timeLimit ? Number(questionData.timeLimit) : 60,
             relatedTopics: questionData.relatedTopics ? 
               questionData.relatedTopics.split('|').filter((t: string) => t.trim()) : [],
             source: questionData.source,
-            deleted: questionData.deleted === 'true' || 
-                    questionData.deleted === true || 
-                    questionData.deleted === 'TRUE' || 
-                    questionData.deleted === '1' ||
-                    (typeof questionData.deleted === 'string' && 
-                     questionData.deleted.toLowerCase().trim() === 'true')
+            deleted: deletedValue === 'true' || 
+                    deletedValue === true || 
+                    deletedValue === 'TRUE' || 
+                    deletedValue === '1' ||
+                    (typeof deletedValue === 'string' && 
+                     deletedValue.toLowerCase().trim() === 'true')
           }
 
           parsedQuestions.push(question)

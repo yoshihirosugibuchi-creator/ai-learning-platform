@@ -102,7 +102,7 @@ export default function QuizCSVPage() {
         q.id,
         q.category || '',
         q.subcategory || '',
-        (q as Record<string, unknown>).subcategory_id as string || '',
+        (q as unknown as Record<string, unknown>).subcategory_id as string || '',
         `"${q.question.replace(/"/g, '""')}"`,
         `"${q.options[0]?.replace(/"/g, '""') || ''}"`,
         `"${q.options[1]?.replace(/"/g, '""') || ''}"`,
@@ -185,7 +185,7 @@ export default function QuizCSVPage() {
           const values = parseCSVLine(lines[i])
           if (values.length < headers.length) continue
 
-          const questionData: unknown = {}
+          const questionData: Record<string, unknown> = {}
           headers.forEach((header, index) => {
             questionData[header] = values[index] || ''
           })
@@ -196,12 +196,13 @@ export default function QuizCSVPage() {
             continue
           }
 
-          if (!questionData.question.trim()) {
+          if (!(questionData.question as string)?.trim()) {
             errors.push(`行${i + 1}: 問題文が空です`)
             continue
           }
 
-          if (questionData.correct < 0 || questionData.correct > 3) {
+          const correctValue = Number(questionData.correct)
+          if (correctValue < 0 || correctValue > 3) {
             errors.push(`行${i + 1}: 正解番号は0-3の範囲で指定してください`)
             continue
           }
@@ -209,23 +210,23 @@ export default function QuizCSVPage() {
           // Question型に変換
           const question: Question = {
             id: Number(questionData.id),
-            category: questionData.category,
-            subcategory: questionData.subcategory,
-            subcategory_id: questionData.subcategory_id,
-            question: questionData.question,
+            category: questionData.category as string,
+            subcategory: questionData.subcategory as string,
+            subcategory_id: questionData.subcategory_id as string,
+            question: questionData.question as string,
             options: [
-              questionData.option1,
-              questionData.option2,
-              questionData.option3,
-              questionData.option4
+              questionData.option1 as string,
+              questionData.option2 as string,
+              questionData.option3 as string,
+              questionData.option4 as string
             ],
             correct: Number(questionData.correct),
-            explanation: questionData.explanation,
-            difficulty: questionData.difficulty,
-            timeLimit: questionData.timeLimit ? Number(questionData.timeLimit) : undefined,
+            explanation: questionData.explanation as string,
+            difficulty: questionData.difficulty as string,
+            timeLimit: questionData.timeLimit ? Number(questionData.timeLimit) : 60,
             relatedTopics: questionData.relatedTopics ? 
-              questionData.relatedTopics.split('|').filter((t: string) => t.trim()) : [],
-            source: questionData.source,
+              (questionData.relatedTopics as string).split('|').filter((t: string) => t.trim()) : [],
+            source: questionData.source as string,
             deleted: questionData.deleted === 'true' || 
                     questionData.deleted === true || 
                     questionData.deleted === 'TRUE' || 
@@ -356,7 +357,7 @@ export default function QuizCSVPage() {
       }
     } catch (error) {
       console.error('❌ Import error:', error)
-      setMessage({ type: 'error', text: `インポートに失敗しました: ${error.message}` })
+      setMessage({ type: 'error', text: `インポートに失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}` })
     }
     setLoading(false)
   }
