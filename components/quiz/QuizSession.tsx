@@ -29,6 +29,7 @@ interface QuizSessionProps {
   questions: Question[]
   category?: string
   level?: string | null
+  difficulties?: string[]
   user: User
   profile: UserProfile | null
   onComplete: (results: QuizResults) => void
@@ -71,6 +72,7 @@ export default function QuizSession({
   questions,
   category,
   level,
+  difficulties,
   user,
   profile,
   onComplete,
@@ -157,27 +159,113 @@ export default function QuizSession({
       filteredQuestions = filteredQuestions.filter(q => q.category === category)
     }
     
-    // レベルでフィルタリング（'all'または未指定の場合はフィルタリングしない）
-    if (level && level !== 'all') {
-      const difficultyMap: Record<string, string> = {
-        'basic': '基礎',
-        'intermediate': '中級',
-        'advanced': '上級'
-      }
-      const targetDifficulty = difficultyMap[level]
-      if (targetDifficulty) {
-        filteredQuestions = filteredQuestions.filter(q => q.difficulty === targetDifficulty)
+    // 難易度でフィルタリング（複数選択対応）
+    if (difficulties && difficulties.length > 0) {
+      filteredQuestions = filteredQuestions.filter(q => 
+        difficulties.includes(q.difficulty)
+      )
+      console.log(`📊 Selected difficulties: ${difficulties.join(', ')} (${filteredQuestions.length} questions)`)
+      
+      // 選択した難易度で問題が不足している場合は他の難易度も含める
+      if (filteredQuestions.length < 10) {
+        console.log('⚠️ Not enough questions for selected difficulties, including all difficulties')
+        let allCategoryQuestions = questions
+        if (category) {
+          allCategoryQuestions = allCategoryQuestions.filter(q => q.category === category)
+        }
+        
+        // 選択した難易度を優先しつつ、他の難易度も追加
+        const remainingQuestions = allCategoryQuestions.filter(q => 
+          !difficulties.includes(q.difficulty)
+        )
+        filteredQuestions = [...filteredQuestions, ...remainingQuestions]
       }
     }
     
-    const selectedQuestions = getRandomQuestions(filteredQuestions, 10)
+    // 学習履歴に基づく最適化（難易度選択なしの場合）
+    let selectedQuestions: Question[]
+    if (!difficulties || difficulties.length === 0) {
+      selectedQuestions = optimizeQuestionsForUser(filteredQuestions, user.id, profile)
+    } else {
+      selectedQuestions = getRandomQuestions(filteredQuestions, 10)
+    }
+    
     setSessionQuestions(selectedQuestions)
     
     setResults(prev => ({
       ...prev,
       totalQuestions: selectedQuestions.length
     }))
-  }, [questions, category, level])
+  }, [questions, category, level, difficulties, user.id, profile])
+
+  // 学習履歴に基づく問題最適化関数
+  const optimizeQuestionsForUser = (questions: Question[], userId: string, userProfile: UserProfile | null): Question[] => {
+    if (!userProfile || questions.length === 0) {
+      return getRandomQuestions(questions, 10)
+    }
+
+    // ユーザーのカテゴリー別正答率を取得
+    const categoryProgress = userProfile.categoryProgress || []
+    const categoryStats = categoryProgress.find(cp => cp.categoryId === category)
+    
+    if (!categoryStats) {
+      // 初回の場合は基礎から中級中心
+      const basicQuestions = questions.filter(q => q.difficulty === '基礎')
+      const intermediateQuestions = questions.filter(q => q.difficulty === '中級')
+      const otherQuestions = questions.filter(q => !['基礎', '中級'].includes(q.difficulty))
+      
+      const optimized = [
+        ...getRandomQuestions(basicQuestions, 4),
+        ...getRandomQuestions(intermediateQuestions, 4),
+        ...getRandomQuestions(otherQuestions, 2)
+      ].filter(q => q) // nullを除外
+      
+      // 不足分をランダムで補完
+      if (optimized.length < 10) {
+        const remaining = questions.filter(q => !optimized.includes(q))
+        optimized.push(...getRandomQuestions(remaining, 10 - optimized.length))
+      }
+      
+      console.log('🎯 First time quiz - using basic/intermediate focus')
+      return optimized.slice(0, 10)
+    }
+    
+    // 正答率に基づく難易度調整
+    const accuracy = categoryStats.correctAnswers / Math.max(categoryStats.totalAnswers, 1)
+    console.log(`📈 User accuracy for ${category}: ${(accuracy * 100).toFixed(1)}%`)
+    
+    let difficultyDistribution: Record<string, number>
+    if (accuracy < 0.5) {
+      // 正答率50%未満: 基礎重視
+      difficultyDistribution = { '基礎': 6, '中級': 3, '上級': 1, 'エキスパート': 0 }
+    } else if (accuracy < 0.7) {
+      // 正答率50-70%: 中級重視
+      difficultyDistribution = { '基礎': 3, '中級': 5, '上級': 2, 'エキスパート': 0 }
+    } else if (accuracy < 0.85) {
+      // 正答率70-85%: 上級重視
+      difficultyDistribution = { '基礎': 2, '中級': 3, '上級': 4, 'エキスパート': 1 }
+    } else {
+      // 正答率85%以上: エキスパート重視
+      difficultyDistribution = { '基礎': 1, '中級': 2, '上級': 4, 'エキスパート': 3 }
+    }
+    
+    const optimized: Question[] = []
+    for (const [difficulty, count] of Object.entries(difficultyDistribution)) {
+      const difficultyQuestions = questions.filter(q => q.difficulty === difficulty)
+      optimized.push(...getRandomQuestions(difficultyQuestions, count))
+    }
+    
+    // 不足分をランダムで補完
+    if (optimized.length < 10) {
+      const remaining = questions.filter(q => !optimized.includes(q))
+      optimized.push(...getRandomQuestions(remaining, 10 - optimized.length))
+    }
+    
+    console.log(`🎯 Optimized quiz for accuracy ${(accuracy * 100).toFixed(1)}%:`, 
+      Object.entries(difficultyDistribution).map(([d, c]) => `${d}:${c}`).join(', '))
+    
+    return optimized.slice(0, 10)
+  }
 
   const currentQuestion = sessionQuestions[currentQuestionIndex]
   
@@ -582,23 +670,16 @@ export default function QuizSession({
                   正答率70%以上で格言カードを獲得できます<br />
                   現在の正答率: {accuracyRate}%
                 </p>
-                <div className="text-center">
-                  <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-                    再挑戦する
-                  </Button>
-                </div>
               </div>
             </div>
           ) : null}
 
           <div className="flex space-x-4">
-            <Button onClick={() => { 
-              router.push('/') 
-            }} variant="outline" className="flex-1">
-              ホームに戻る
+            <Button onClick={onExit} variant="outline" className="flex-1">
+              {category ? 'カテゴリーに戻る' : 'ホームに戻る'}
             </Button>
             <Button onClick={() => {
-              // 状態を完全リセットしてクイズを再開
+              // 状態を完全リセットして新しい問題セットでクイズを再開
               setIsFinished(false)
               setIsCompleting(false)
               setCurrentQuestionIndex(0)
@@ -612,11 +693,56 @@ export default function QuizSession({
               setChallengeQuizUpdateData(null)
               setResults({
                 score: 0,
-                totalQuestions: sessionQuestions.length,
+                totalQuestions: 0,
                 correctAnswers: 0,
                 timeSpent: 0,
                 categoryScores: {}
               })
+              
+              // 新しい問題セットを生成（useEffectが再実行される）
+              // questionsが変更されていなくても、keyを変更することで強制的に再生成
+              const now = Date.now()
+              console.log(`🔄 Generating new question set at ${now}`)
+              
+              // 同じフィルタリング条件で新しい問題セットを生成
+              let filteredQuestions = questions
+              
+              if (category) {
+                filteredQuestions = filteredQuestions.filter(q => q.category === category)
+              }
+              
+              if (difficulties && difficulties.length > 0) {
+                filteredQuestions = filteredQuestions.filter(q => 
+                  difficulties.includes(q.difficulty)
+                )
+                
+                if (filteredQuestions.length < 10) {
+                  let allCategoryQuestions = questions
+                  if (category) {
+                    allCategoryQuestions = allCategoryQuestions.filter(q => q.category === category)
+                  }
+                  const remainingQuestions = allCategoryQuestions.filter(q => 
+                    !difficulties.includes(q.difficulty)
+                  )
+                  filteredQuestions = [...filteredQuestions, ...remainingQuestions]
+                }
+              }
+              
+              // 新しい問題セットを生成
+              let newQuestions: Question[]
+              if (!difficulties || difficulties.length === 0) {
+                newQuestions = optimizeQuestionsForUser(filteredQuestions, user.id, profile)
+              } else {
+                newQuestions = getRandomQuestions(filteredQuestions, 10)
+              }
+              
+              setSessionQuestions(newQuestions)
+              setResults(prev => ({
+                ...prev,
+                totalQuestions: newQuestions.length
+              }))
+              
+              console.log(`✅ New question set generated: ${newQuestions.length} questions`)
             }} className="flex-1">
               もう一度挑戦
             </Button>

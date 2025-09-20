@@ -1,11 +1,20 @@
 import { LearningCourse } from '@/lib/types/learning'
 import { globalCache } from '@/lib/performance-optimizer'
+import { 
+  getCoursesFromDB, 
+  getCourseDetailsFromDB, 
+  getAvailableCoursesFromDB 
+} from './supabase-data'
 
 /**
  * 学習コンテンツデータ読み込み関数
+ * フィーチャーフラグでJSON/DB切り替え
  */
 
-// コース一覧の取得（カテゴリー情報含む）
+// フィーチャーフラグ: DB使用モード
+const USE_DATABASE = true // true: DB, false: JSON
+
+// コース一覧の取得（カテゴリー情報含む）- DB API使用版 with JSONフォールバック
 export async function getLearningCourses(): Promise<{ 
   id: string
   title: string
@@ -20,21 +29,48 @@ export async function getLearningCourses(): Promise<{
   status: 'available' | 'coming_soon' | 'draft'
   genres?: any[]
 }[]> {
-  const cacheKey = 'learning_courses_list'
+  const cacheKey = 'learning_courses_db'
   
-  // キャッシュから取得を試行
+  // キャッシュチェック（5分間）
   const cached = globalCache.get(cacheKey)
   if (cached) {
-    console.log('🚀 Courses loaded from cache')
+    console.log('🚀 Learning courses loaded from cache')
     return cached
   }
-  
+
+  if (USE_DATABASE) {
+    try {
+      console.log('📡 Fetching learning courses from DB API')
+      const courses = await getCoursesFromDB()
+      
+      // キャッシュに保存（5分間）
+      globalCache.set(cacheKey, courses, 5 * 60 * 1000)
+      
+      console.log(`✅ Learning courses loaded from DB: ${courses.length} courses`)
+      return courses
+      
+    } catch (error) {
+      console.error('❌ Error loading learning courses from DB:', error)
+      console.log('🔄 Falling back to JSON files...')
+      
+      // JSONフォールバック
+      return await loadLearningCoursesFromJSON()
+    }
+  }
+
+  // JSONモード（直接）
+  return await loadLearningCoursesFromJSON()
+}
+
+// JSONファイルからの学習コース読み込み（フォールバック用）
+async function loadLearningCoursesFromJSON(): Promise<any[]> {
   try {
-    console.log('📡 Fetching courses from server')
+    console.log('📄 Loading learning courses from JSON fallback')
+    
     // まずコース一覧を取得
     const response = await fetch('/learning-data/courses.json')
     if (!response.ok) {
-      throw new Error('Failed to fetch courses')
+      throw new Error(`JSON file request failed: ${response.status}`)
     }
     const data = await response.json()
     
@@ -59,51 +95,94 @@ export async function getLearningCourses(): Promise<{
       })
     )
     
-    // キャッシュに保存（5分間）
-    globalCache.set(cacheKey, coursesWithGenres, 5 * 60 * 1000)
-    console.log('✅ Courses loaded and cached, count:', coursesWithGenres.length)
-    
+    console.log(`✅ Learning courses loaded from JSON: ${coursesWithGenres.length} courses`)
     return coursesWithGenres
+    
   } catch (error) {
-    console.error('❌ Error loading learning courses:', error)
+    console.error('❌ Error loading learning courses from JSON:', error)
     return []
   }
 }
 
-// 特定コースの詳細データ取得
+// 特定コースの詳細データ取得 - DB API使用版 with JSONフォールバック
 export async function getLearningCourseDetails(courseId: string): Promise<LearningCourse | null> {
-  const cacheKey = `course_details_${courseId}`
+  const cacheKey = `course_details_db_${courseId}`
   
-  // キャッシュから取得を試行
+  // キャッシュチェック（10分間）
   const cached = globalCache.get(cacheKey)
   if (cached) {
     console.log('🚀 Course details loaded from cache:', courseId)
     return cached
   }
-  
-  try {
-    console.log('📡 Fetching course details from server:', courseId)
-    const response = await fetch(`/learning-data/${courseId}.json`)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch course details for ${courseId}`)
+
+  if (USE_DATABASE) {
+    try {
+      console.log('📡 Fetching course details from DB API:', courseId)
+      const courseData = await getCourseDetailsFromDB(courseId)
+      
+      if (courseData) {
+        // キャッシュに保存（10分間）
+        globalCache.set(cacheKey, courseData, 10 * 60 * 1000)
+        console.log('✅ Course details loaded from DB:', courseId)
+        return courseData
+      }
+      
+    } catch (error) {
+      console.error(`❌ Error loading course details from DB for ${courseId}:`, error)
+      console.log('🔄 Falling back to JSON file...')
+      
+      // JSONフォールバック
+      return await loadCourseDetailsFromJSON(courseId)
     }
-    const courseData = await response.json()
+  }
+
+  // JSONモード（直接）
+  return await loadCourseDetailsFromJSON(courseId)
+}
+
+// JSONファイルからのコース詳細読み込み（フォールバック用）
+async function loadCourseDetailsFromJSON(courseId: string): Promise<LearningCourse | null> {
+  try {
+    console.log('📄 Loading course details from JSON fallback:', courseId)
+    const response = await fetch(`/learning-data/${courseId}.json`)
     
-    // キャッシュに保存（10分間）
-    globalCache.set(cacheKey, courseData, 10 * 60 * 1000)
-    console.log('✅ Course details loaded and cached:', courseId)
+    if (!response.ok) {
+      throw new Error(`JSON file request failed: ${response.status}`)
+    }
+    
+    const courseData = await response.json()
+    console.log('✅ Course details loaded from JSON:', courseId)
     
     return courseData
+    
   } catch (error) {
-    console.error(`❌ Error loading course details for ${courseId}:`, error)
+    console.error(`❌ Error loading course details from JSON for ${courseId}:`, error)
     return null
   }
 }
 
 
-// 利用可能なコースのみを取得
+// 利用可能なコースのみを取得 - DB API使用版 with JSONフォールバック
 export async function getAvailableLearningCourses() {
-  const courses = await getLearningCourses()
+  if (USE_DATABASE) {
+    try {
+      console.log('📡 Fetching available courses from DB API')
+      const courses = await getAvailableCoursesFromDB()
+      console.log(`✅ Available courses loaded from DB: ${courses.length} courses`)
+      return courses
+      
+    } catch (error) {
+      console.error('❌ Error loading available courses from DB:', error)
+      console.log('🔄 Falling back to JSON files...')
+      
+      // JSONフォールバック
+      const courses = await loadLearningCoursesFromJSON()
+      return courses.filter(course => course.status === 'available')
+    }
+  }
+
+  // JSONモード（直接）
+  const courses = await loadLearningCoursesFromJSON()
   return courses.filter(course => course.status === 'available')
 }
 

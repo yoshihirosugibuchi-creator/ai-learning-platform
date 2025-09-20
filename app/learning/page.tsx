@@ -45,6 +45,22 @@ export default function LearningPage() {
       return
     }
 
+    // セッション状態の詳細確認
+    if (!user) {
+      console.log('🚫 No user found in learning page')
+      // ここでセッション再確認を試行
+      const recheckSession = async () => {
+        try {
+          const { supabase } = await import('@/lib/supabase')
+          const { data: { session } } = await supabase.auth.getSession()
+          console.log('🔍 Session recheck result:', session ? session.user?.email : 'null')
+        } catch (error) {
+          console.error('❌ Session recheck failed:', error)
+        }
+      }
+      recheckSession()
+    }
+
     const loadData = async () => {
       console.log('📚 Learning page: Starting data load')
       console.log('👤 User state:', { userId: user?.id, userEmail: user?.email })
@@ -118,7 +134,15 @@ export default function LearningPage() {
 
   // 認証ローディング中は認証完了を待つ
   if (authLoading) {
+    console.log('🔄 Learning: Auth still loading...')
     return <LoadingScreen message="認証状態を確認しています..." />
+  }
+
+  // 認証が必要だがユーザーがいない場合
+  if (!user) {
+    console.log('🚫 Learning: No user found, redirecting to login')
+    router.push('/login')
+    return <LoadingScreen message="ログインページに移動中..." />
   }
 
   // データローディング中

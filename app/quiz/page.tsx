@@ -21,12 +21,18 @@ export default function QuizPage() {
   const mode = searchParams.get('mode')
   const categoryParam = searchParams.get('category')
   const levelParam = searchParams.get('level')
+  const difficultiesParam = searchParams.get('difficulties')
+  const returnToParam = searchParams.get('returnTo')
   
   const [questions, setQuestions] = useState<Question[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam)
   const [selectedLevel, setSelectedLevel] = useState<string | null>(levelParam)
+  const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>(
+    difficultiesParam ? difficultiesParam.split(',') : []
+  )
+  const [returnTo, setReturnTo] = useState<string | null>(returnToParam)
   const [isQuizActive, setIsQuizActive] = useState(mode === 'random' || !!categoryParam)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
@@ -62,7 +68,8 @@ export default function QuizPage() {
   }
 
   const handleQuizExit = () => {
-    router.push('/')
+    // returnToパラメータがある場合はそこに戻る、なければホームに戻る
+    router.push(returnTo || '/')
   }
 
   const startQuiz = (category?: string) => {
@@ -101,6 +108,7 @@ export default function QuizPage() {
             questions={questions}
             category={selectedCategory || undefined}
             level={selectedLevel}
+            difficulties={selectedDifficulties.length > 0 ? selectedDifficulties : undefined}
             user={user}
             profile={profile}
             onComplete={handleQuizComplete}
@@ -163,9 +171,11 @@ export default function QuizPage() {
             {categories.map((category) => {
               const categoryQuestions = questions.filter(q => q.category === category)
               const difficultyCount = {
+                基礎: categoryQuestions.filter(q => q.difficulty === '基礎').length,
                 初級: categoryQuestions.filter(q => q.difficulty === '初級').length,
                 中級: categoryQuestions.filter(q => q.difficulty === '中級').length,
                 上級: categoryQuestions.filter(q => q.difficulty === '上級').length,
+                エキスパート: categoryQuestions.filter(q => q.difficulty === 'エキスパート').length,
               }
 
               return (
@@ -180,6 +190,11 @@ export default function QuizPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex flex-wrap gap-1">
+                      {difficultyCount.基礎 > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          基礎 {difficultyCount.基礎}
+                        </Badge>
+                      )}
                       {difficultyCount.初級 > 0 && (
                         <Badge variant="default" className="text-xs">
                           初級 {difficultyCount.初級}
@@ -193,6 +208,11 @@ export default function QuizPage() {
                       {difficultyCount.上級 > 0 && (
                         <Badge variant="destructive" className="text-xs">
                           上級 {difficultyCount.上級}
+                        </Badge>
+                      )}
+                      {difficultyCount.エキスパート > 0 && (
+                        <Badge variant="destructive" className="text-xs bg-purple-600 border-purple-600">
+                          エキスパート {difficultyCount.エキスパート}
                         </Badge>
                       )}
                     </div>

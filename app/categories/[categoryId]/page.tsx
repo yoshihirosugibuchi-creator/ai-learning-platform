@@ -40,6 +40,7 @@ export default function CategoryDetailPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>([])
 
   const categoryId = params.categoryId as string
   const category = [...mainCategories, ...industryCategories]
@@ -110,6 +111,27 @@ export default function CategoryDetailPage() {
     learningTime: userLearningTime,
     correctAnswers: userCategoryProgress?.correctAnswers || 0,
     totalAnswers: userCategoryProgress?.totalAnswers || 0
+  }
+
+  // 難易度選択の処理
+  const toggleDifficulty = (difficulty: string) => {
+    setSelectedDifficulties(prev => 
+      prev.includes(difficulty) 
+        ? prev.filter(d => d !== difficulty)
+        : [...prev, difficulty]
+    )
+  }
+
+  // クイズ開始処理
+  const startQuiz = () => {
+    const params = new URLSearchParams()
+    params.set('category', categoryId)
+    if (selectedDifficulties.length > 0) {
+      params.set('difficulties', selectedDifficulties.join(','))
+    }
+    // カテゴリー詳細に戻るためのリファラー情報を追加
+    params.set('returnTo', `/categories/${categoryId}`)
+    router.push(`/quiz?${params.toString()}`)
   }
 
 
@@ -200,21 +222,49 @@ export default function CategoryDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {skillLevels.map((level) => (
-                        <div key={level.id} className="flex items-center justify-between p-3 rounded-lg border">
-                          <div>
-                            <div className="font-medium">{level.name}</div>
-                            <div className="text-sm text-muted-foreground">{level.targetExperience}</div>
-                          </div>
-                          <Badge variant="outline">
-                            {questionsByDifficulty[
-                              level.id === 'basic' ? '基礎' :
-                              level.id === 'intermediate' ? '中級' :
-                              level.id === 'advanced' ? '上級' : 'エキスパート'
-                            ] || 0}問
-                          </Badge>
+                      {/* 難易度選択 */}
+                      <div className="space-y-3">
+                        <div className="text-sm font-medium text-muted-foreground">難易度選択（複数選択可）</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {skillLevels.map((level) => {
+                            const difficultyMapping = {
+                              'basic': '基礎',
+                              'intermediate': '中級', 
+                              'advanced': '上級',
+                              'expert': 'エキスパート'
+                            }
+                            const difficulty = difficultyMapping[level.id as keyof typeof difficultyMapping]
+                            const count = questionsByDifficulty[difficulty] || 0
+                            const isSelected = selectedDifficulties.includes(difficulty)
+                            
+                            return (
+                              <Button
+                                key={level.id}
+                                variant={isSelected ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => toggleDifficulty(difficulty)}
+                                disabled={count === 0}
+                                className={`text-xs justify-between ${isSelected ? 'bg-primary text-primary-foreground' : ''}`}
+                              >
+                                <span>{level.name}</span>
+                                <Badge 
+                                  variant={isSelected ? "secondary" : "outline"} 
+                                  className="ml-1 text-xs"
+                                >
+                                  {count}
+                                </Badge>
+                              </Button>
+                            )
+                          })}
                         </div>
-                      ))}
+                        
+                        {selectedDifficulties.length > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            選択中: {selectedDifficulties.join(', ')} 
+                            {' '}({selectedDifficulties.reduce((sum, diff) => sum + (questionsByDifficulty[diff] || 0), 0)}問)
+                          </div>
+                        )}
+                      </div>
                       
                       {/* 総問題数を表示 */}
                       <div className="flex items-center justify-between p-3 rounded-lg border border-primary bg-primary/5">
@@ -229,51 +279,34 @@ export default function CategoryDetailPage() {
                       
                       {/* クイズ開始ボタン */}
                       <div className="mt-4 pt-4 border-t space-y-3">
-                        {/* 全難易度クイズ */}
                         <Button 
-                          onClick={() => router.push(`/quiz?category=${categoryId}`)}
+                          onClick={startQuiz}
                           className="w-full"
                           disabled={realStats.totalQuizzes === 0}
                         >
                           <Play className="h-4 w-4 mr-2" />
-                          {realStats.totalQuizzes > 0 ? 'このカテゴリーのクイズに挑戦' : '問題準備中'}
+                          {selectedDifficulties.length > 0 
+                            ? `選択した難易度でクイズに挑戦 (${selectedDifficulties.reduce((sum, diff) => sum + (questionsByDifficulty[diff] || 0), 0)}問)`
+                            : realStats.totalQuizzes > 0 ? 'このカテゴリーのクイズに挑戦（全難易度）' : '問題準備中'
+                          }
                         </Button>
                         
-                        {/* 難易度別クイズボタン */}
-                        {realStats.totalQuizzes > 0 && (
-                          <div className="grid grid-cols-2 gap-2">
-                            {skillLevels.map((level) => {
-                              const difficultyMapping = {
-                                'basic': '基礎',
-                                'intermediate': '中級', 
-                                'advanced': '上級',
-                                'expert': 'エキスパート'
-                              }
-                              const difficulty = difficultyMapping[level.id as keyof typeof difficultyMapping]
-                              const count = questionsByDifficulty[difficulty] || 0
-                              
-                              return (
-                                <Button
-                                  key={level.id}
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => router.push(`/quiz?category=${categoryId}&level=${level.id}`)}
-                                  disabled={count === 0}
-                                  className="text-xs"
-                                >
-                                  {level.name}
-                                  <Badge variant="secondary" className="ml-1 text-xs">
-                                    {count}
-                                  </Badge>
-                                </Button>
-                              )
-                            })}
-                          </div>
+                        {selectedDifficulties.length > 0 && (
+                          <Button 
+                            variant="outline"
+                            onClick={() => setSelectedDifficulties([])}
+                            className="w-full text-xs"
+                          >
+                            難易度選択をクリア
+                          </Button>
                         )}
                         
                         {realStats.totalQuizzes > 0 && (
                           <p className="text-xs text-muted-foreground text-center">
-                            このカテゴリーから最大10問出題されます
+                            {selectedDifficulties.length > 0 
+                              ? '選択した難易度で不足する場合は他の難易度も含めて出題されます'
+                              : 'あなたの学習履歴に基づいて最適化された問題を出題します'
+                            }
                           </p>
                         )}
                       </div>

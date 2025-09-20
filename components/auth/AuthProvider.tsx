@@ -66,28 +66,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true
     
+    console.log('🔧 AuthProvider: Initializing auth...')
+    
     // Set a shorter timeout to prevent long loading states
     const loadingTimeout = setTimeout(() => {
       if (isMounted) {
         console.warn('⚠️ Auth loading timeout - stopping loading state')
         setLoading(false)
       }
-    }, 3000) // Reduced to 3 second timeout
+    }, 5000) // 5秒タイムアウト
 
     // Get initial session with faster error handling
     const initializeAuth = async () => {
       try {
-        setIsHydrated(true) // Mark as hydrated first
+        console.log('🔍 AuthProvider: Getting initial session...')
+        setIsHydrated(true)
         
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('❌ Auth session error:', error)
+          // セッションエラーの場合は自動的にログアウト状態にする
+          setUser(null)
+          setProfile(null)
+          setLoading(false)
+          clearTimeout(loadingTimeout)
+          return
+        }
         
         if (!isMounted) return
         
-        const user = session?.user ?? null
+        // セッションの有効性を確認
+        let currentSession = session
+        if (currentSession) {
+          const now = Math.floor(Date.now() / 1000)
+          const expiresAt = currentSession.expires_at || 0
+          
+          console.log('🕐 Session expires at:', new Date(expiresAt * 1000).toLocaleString())
+          console.log('🕐 Current time:', new Date().toLocaleString())
+          
+          if (expiresAt && now >= expiresAt) {
+            console.warn('⚠️ Session expired, attempting refresh...')
+            
+            try {
+              const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+              
+              if (refreshError || !refreshData.session) {
+                console.error('❌ Session refresh failed:', refreshError)
+                setUser(null)
+                setProfile(null)
+                setLoading(false)
+                clearTimeout(loadingTimeout)
+                return
+              }
+              
+              console.log('✅ Session refreshed successfully')
+              currentSession = refreshData.session
+            } catch (refreshErr) {
+              console.error('❌ Session refresh exception:', refreshErr)
+              setUser(null)
+              setProfile(null)
+              setLoading(false)
+              clearTimeout(loadingTimeout)
+              return
+            }
+          }
+        }
+        
+        const user = currentSession?.user ?? null
+        console.log('👤 AuthProvider: Session loaded, user:', user ? user.email : 'null')
         setUser(user)
         
         // Load user profile without blocking the loading state
         if (user) {
+          console.log('📖 AuthProvider: Loading user profile...')
           loadUserProfile(user).catch(error => {
             console.error('❌ Error loading user profile during init:', error)
           })
@@ -95,9 +147,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         setLoading(false)
         clearTimeout(loadingTimeout)
+        console.log('✅ AuthProvider: Initialization complete')
       } catch (error) {
         if (isMounted) {
-          console.error('❌ Auth session error:', error)
+          console.error('❌ Auth initialization error:', error)
+          setUser(null)
+          setProfile(null)
           setIsHydrated(true)
           setLoading(false)
           clearTimeout(loadingTimeout)
@@ -110,10 +165,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔄 AuthProvider: Auth state change:', event, session?.user?.email || 'null')
+        
+        // セッション期限切れを検知
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('🔄 Token refreshed automatically')
+        } else if (event === 'SIGNED_OUT') {
+          console.log('👋 User signed out')
+        }
+        
         try {
           const user = session?.user ?? null
           setUser(user)
-          await loadUserProfile(user)
+          
+          if (user) {
+            await loadUserProfile(user)
+          } else {
+            setProfile(null)
+          }
         } catch (error) {
           console.error('❌ Auth state change error:', error)
         } finally {
@@ -122,33 +191,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
+    // 定期的なセッション健全性チェック（5分毎）
+    const sessionHealthCheck = setInterval(async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('⚠️ Session health check failed:', error)
+          return
+        }
+        
+        if (session && session.expires_at) {
+          const now = Math.floor(Date.now() / 1000)
+          const expiresAt = session.expires_at
+          const timeUntilExpiry = expiresAt - now
+          
+          // 5分以内に期限切れになる場合は事前リフレッシュ
+          if (timeUntilExpiry < 300 && timeUntilExpiry > 0) {
+            console.log('🔄 Pre-emptive session refresh (expires in', timeUntilExpiry, 'seconds)')
+            await supabase.auth.refreshSession()
+          }
+        }
+      } catch (error) {
+        console.error('❌ Session health check error:', error)
+      }
+    }, 5 * 60 * 1000) // 5分毎
+
     return () => {
+      console.log('🧹 AuthProvider: Cleanup')
       isMounted = false
       subscription.unsubscribe()
       clearTimeout(loadingTimeout)
+      clearInterval(sessionHealthCheck)
     }
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    console.log('🔄 SignIn started with email:', email)
-    
     try {
-      // Normal Supabase authentication
-      console.log('🌐 Attempting Supabase authentication...')
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
       
       if (error) {
-        console.error('❌ Supabase authentication error:', error)
-      } else {
-        console.log('✅ Supabase authentication successful')
+        // ユーザー入力エラーは詳細ログを出さない
+        if (error.message.includes('Invalid login credentials') || 
+            error.message.includes('Email not confirmed') ||
+            error.status === 400) {
+          console.log('ℹ️ Login failed: Invalid credentials or unconfirmed email')
+        } else {
+          // システムエラーのみ詳細ログ
+          console.error('❌ System authentication error:', error.message)
+        }
       }
       
       return { error }
     } catch (err) {
-      console.error('❌ SignIn exception:', err)
+      console.error('❌ Authentication system error:', err)
       return { error: err }
     }
   }

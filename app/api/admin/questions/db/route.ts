@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import type { Question } from '@/lib/types'
+import fs from 'fs'
+import path from 'path'
 
 // DB対応版 - 問題データ取得
 export async function GET() {
@@ -10,6 +12,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('quiz_questions')
       .select('*')
+      .eq('is_deleted', false)
       .order('legacy_id', { ascending: true })
     
     if (error) {
@@ -211,6 +214,73 @@ export async function POST(request: NextRequest) {
     console.error('❌ Admin bulk upsert error:', error)
     return NextResponse.json(
       { error: 'Failed to update questions', details: error.message },
+      { status: 500 }
+    )
+  }
+}
+
+// DB対応版 - 問題データをJSONファイルに同期
+export async function PUT(request: NextRequest) {
+  try {
+    console.log('🚀 Admin: Starting questions DB→JSON sync')
+    
+    // DBから全データを取得
+    const response = await GET()
+    const data = await response.json()
+    
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: 'Failed to fetch data from DB', details: data.error },
+        { status: 500 }
+      )
+    }
+    
+    const questions = data.questions || []
+    
+    // JSONファイルパス
+    const questionsJsonPath = path.join(process.cwd(), 'public', 'questions.json')
+    const backupDir = path.join(process.cwd(), 'backups')
+    
+    // バックアップディレクトリを作成
+    if (!fs.existsSync(backupDir)) {
+      fs.mkdirSync(backupDir, { recursive: true })
+    }
+    
+    // 既存ファイルをバックアップ
+    let backupPath = null
+    if (fs.existsSync(questionsJsonPath)) {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+      backupPath = path.join(backupDir, `questions-backup-${timestamp}.json`)
+      fs.copyFileSync(questionsJsonPath, backupPath)
+      console.log(`💾 Backup created: ${path.basename(backupPath)}`)
+    }
+    
+    // 新しいJSONファイルを作成
+    const questionsJson = {
+      questions,
+      lastUpdated: new Date().toISOString(),
+      source: 'database_sync',
+      totalQuestions: questions.length
+    }
+    
+    fs.writeFileSync(questionsJsonPath, JSON.stringify(questionsJson, null, 2), 'utf-8')
+    
+    console.log(`✅ Admin: Questions synced to JSON - ${questions.length} questions`)
+    
+    return NextResponse.json({
+      success: true,
+      message: `Successfully synced ${questions.length} questions to JSON`,
+      stats: {
+        totalQuestions: questions.length,
+        syncedAt: new Date().toISOString(),
+        backupFile: backupPath ? path.basename(backupPath) : null
+      }
+    })
+    
+  } catch (error) {
+    console.error('❌ Admin questions sync error:', error)
+    return NextResponse.json(
+      { error: 'Failed to sync questions', details: error.message },
       { status: 500 }
     )
   }

@@ -124,7 +124,14 @@ export default function Header({
                   <Link 
                     href="/learning" 
                     prefetch={true}
-                    onClick={() => console.log('🔗 Header: Navigating to /learning')}
+                    onClick={() => {
+                      console.log('🔗 Header: Navigating to /learning')
+                      console.log('👤 Header: Current user state:', { 
+                        userId: user?.id, 
+                        email: user?.email, 
+                        loading 
+                      })
+                    }}
                   >
                     <GraduationCap className="h-4 w-4" />
                     <span className="hidden md:inline ml-1">コース</span>
