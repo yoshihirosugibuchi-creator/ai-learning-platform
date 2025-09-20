@@ -44,8 +44,8 @@ export interface QuizResult {
   user_id: string
   category_id: string
   subcategory_id?: string
-  questions: any[]
-  answers: any[]
+  questions: Record<string, unknown>[]
+  answers: Record<string, unknown>[]
   score: number
   total_questions: number
   time_taken: number

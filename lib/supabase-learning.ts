@@ -142,7 +142,7 @@ export async function getUserLearningSessions(userId: string): Promise<LearningS
 
 export async function updateLearningSession(sessionId: string, updates: Partial<LearningSession>): Promise<boolean> {
   // LearningSessionの更新内容をlearning_progress形式に変換
-  const progressUpdates: any = {}
+  const progressUpdates: Record<string, unknown> = {}
   
   if (updates.completed !== undefined) {
     progressUpdates.completion_percentage = updates.completed ? 100 : 0
@@ -551,7 +551,7 @@ export async function getLearningProgressSupabase(userId: string): Promise<Recor
 
 // Analytics Functions
 // Personalization Settings Functions
-export async function savePersonalizationSettings(userId: string, settingKey: string, settingValue: any): Promise<boolean> {
+export async function savePersonalizationSettings(userId: string, settingKey: string, settingValue: unknown): Promise<boolean> {
   const { error } = await supabase
     .from('user_settings')
     .upsert({

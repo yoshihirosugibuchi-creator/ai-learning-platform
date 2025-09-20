@@ -27,7 +27,7 @@ export async function getLearningCourses(): Promise<{
   genreCount: number
   themeCount: number
   status: 'available' | 'coming_soon' | 'draft'
-  genres?: any[]
+  genres?: Record<string, unknown>[]
 }[]> {
   const cacheKey = 'learning_courses_db'
   
@@ -76,7 +76,7 @@ async function loadLearningCoursesFromJSON(): Promise<any[]> {
     
     // 各コースについて詳細データからジャンル情報を取得
     const coursesWithGenres = await Promise.all(
-      data.courses.map(async (course: any) => {
+      data.courses.map(async (course: Record<string, unknown>) => {
         if (course.status === 'available') {
           try {
             const detailResponse = await fetch(`/learning-data/${course.id}.json`)
@@ -215,7 +215,7 @@ export async function saveLearningProgress(userId: string, courseId: string, gen
 // 学習統計の計算
 export async function calculateLearningStats(userId: string) {
   const progress = await getLearningProgress(userId)
-  const completedSessions = Object.values(progress).filter((p: any) => p.completed)
+  const completedSessions = Object.values(progress).filter((p: Record<string, unknown>) => p.completed)
   const totalAvailableSessions = await getTotalAvailableSessions()
   
   return {
@@ -224,7 +224,7 @@ export async function calculateLearningStats(userId: string) {
     totalTimeSpent: completedSessions.length * 3, // 概算（セッション1つ=3分）
     currentStreak: await calculateLearningStreak(userId),
     lastLearningDate: completedSessions.length > 0 ? 
-      new Date(Math.max(...completedSessions.map((p: any) => new Date(p.completedAt).getTime()))) : null
+      new Date(Math.max(...completedSessions.map((p: Record<string, unknown>) => new Date((p.completedAt as string)).getTime()))) : null
   }
 }
 
@@ -254,17 +254,17 @@ export async function getTotalAvailableSessions(): Promise<number> {
 async function calculateLearningStreak(userId: string): Promise<number> {
   const progress = await getLearningProgress(userId)
   const completedSessions = Object.values(progress)
-    .filter((p: any) => p.completed)
-    .sort((a: any, b: any) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
+    .filter((p: Record<string, unknown>) => p.completed)
+    .sort((a: Record<string, unknown>, b: Record<string, unknown>) => new Date((b.completedAt as string)).getTime() - new Date((a.completedAt as string)).getTime())
   
   if (completedSessions.length === 0) return 0
   
   let streak = 0
-  let currentDate = new Date()
+  const currentDate = new Date()
   currentDate.setHours(0, 0, 0, 0)
   
   for (const session of completedSessions) {
-    const sessionDate = new Date((session as any).completedAt)
+    const sessionDate = new Date((session as Record<string, unknown>).completedAt as string)
     sessionDate.setHours(0, 0, 0, 0)
     
     const diffDays = (currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24)

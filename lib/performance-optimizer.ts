@@ -18,7 +18,7 @@ export function useCleanup(cleanupFn: () => void) {
 }
 
 // デバウンス関数（API呼び出し最適化用）
-export function useDebounce<T extends (...args: any[]) => any>(
+export function useDebounce<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {

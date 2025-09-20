@@ -5,8 +5,8 @@ export interface QuizResult {
   user_id: string
   category_id: string
   subcategory_id?: string
-  questions: any[]
-  answers: any[]
+  questions: Record<string, unknown>[]
+  answers: Record<string, unknown>[]
   score: number
   total_questions: number
   time_taken: number // 秒単位
@@ -100,7 +100,7 @@ export async function updateUserProgress(
   totalQuestions: number
 ): Promise<UserProgress | null> {
   // 既存の進捗を取得
-  let { data: existing } = await supabase
+  const { data: existing } = await supabase
     .from('user_progress')
     .select('*')
     .eq('user_id', userId)
