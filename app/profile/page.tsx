@@ -58,9 +58,9 @@ export default function ProfilePage() {
     totalTimeSpent: 0
   })
   const [skpBalance, setSkpBalance] = useState(0)
-  const [allTransactions, setAllTransactions] = useState<any[]>([]) // 全トランザクション（統計用）
-  const [recentTransactions, setRecentTransactions] = useState<any[]>([]) // 表示用履歴
-  const [userBadges, setUserBadges] = useState<any[]>([])
+  const [allTransactions, setAllTransactions] = useState<Array<Record<string, unknown>>>([]) // 全トランザクション（統計用）
+  const [recentTransactions, setRecentTransactions] = useState<Array<Record<string, unknown>>>([]) // 表示用履歴
+  const [userBadges, setUserBadges] = useState<Array<Record<string, unknown>>>([])
   const [levelSystem, setLevelSystem] = useState<LevelSystem | null>(null)
   
   // SKPフィルター状態

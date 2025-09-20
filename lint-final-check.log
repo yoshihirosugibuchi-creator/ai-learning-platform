@@ -1,0 +1,198 @@
+
+> ai-learning-platform-next@0.1.0 lint
+> eslint
+
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/admin/page.tsx
+   47:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  101:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  218:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  252:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  316:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/analytics/page.tsx
+  30:51  warning  'RadarChartData' is defined but never used                    @typescript-eslint/no-unused-vars
+  52:9   warning  'debouncedIndustryChange' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/api/admin/questions/db/route.ts
+  148:11  warning  'updatedCount' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/categories/[categoryId]/page.tsx
+    8:10  warning  'Progress' is defined but never used          @typescript-eslint/no-unused-vars
+   12:8   warning  'CategorySelector' is defined but never used  @typescript-eslint/no-unused-vars
+   19:10  warning  'SkillLevel' is defined but never used        @typescript-eslint/no-unused-vars
+   25:3   warning  'ArrowLeft' is defined but never used         @typescript-eslint/no-unused-vars
+   27:3   warning  'Trophy' is defined but never used            @typescript-eslint/no-unused-vars
+   28:3   warning  'Clock' is defined but never used             @typescript-eslint/no-unused-vars
+   30:3   warning  'TrendingUp' is defined but never used        @typescript-eslint/no-unused-vars
+   42:10  warning  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  100:52  warning  'userCard' is defined but never used          @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/collection/page.tsx
+    5:10  warning  'Button' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+   14:3   warning  'Search' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+   36:3   warning  'hasKnowledgeCard' is defined but never used                                                                @typescript-eslint/no-unused-vars
+   37:3   warning  'getKnowledgeCardCount' is defined but never used                                                           @typescript-eslint/no-unused-vars
+   43:25  warning  'getBadgeStats' is defined but never used                                                                   @typescript-eslint/no-unused-vars
+   54:17  warning  'loading' is assigned a value but never used                                                                @typescript-eslint/no-unused-vars
+  186:28  warning  'e' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  717:6   warning  React Hook useMemo has an unnecessary dependency: 'user'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+  798:6   warning  React Hook useMemo has a missing dependency: 'rarities'. Either include it or remove the dependency array   react-hooks/exhaustive-deps
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/course/[categoryId]/page.tsx
+  57:30  warning  'subcategoryId' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/learning/[courseId]/[genreId]/[themeId]/[sessionId]/page.tsx
+  16:11  warning  'user' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/learning/[courseId]/page.tsx
+  9:34  warning  'BookOpen' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/learning/page.tsx
+   13:30  warning  'getLearningProgress' is defined but never used                                                          @typescript-eslint/no-unused-vars
+  117:6   warning  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/login/page.tsx
+  94:14  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/onboarding/page.tsx
+   7:10  warning  'Input' is defined but never used  @typescript-eslint/no-unused-vars
+  10:10  warning  'Badge' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/profile/page.tsx
+  14:3   warning  'History' is defined but never used                      @typescript-eslint/no-unused-vars
+  27:3   warning  'Clock' is defined but never used                        @typescript-eslint/no-unused-vars
+  28:3   warning  'Edit' is defined but never used                         @typescript-eslint/no-unused-vars
+  29:3   warning  'Mail' is defined but never used                         @typescript-eslint/no-unused-vars
+  33:3   warning  'MapPin' is defined but never used                       @typescript-eslint/no-unused-vars
+  42:10  warning  'updateUserProfile' is defined but never used            @typescript-eslint/no-unused-vars
+  62:10  warning  'recentTransactions' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/quiz/page.tsx
+  31:25  warning  'setSelectedLevel' is assigned a value but never used         @typescript-eslint/no-unused-vars
+  32:32  warning  'setSelectedDifficulties' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  35:20  warning  'setReturnTo' is assigned a value but never used              @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/settings/coming-soon/page.tsx
+  13:3  warning  'ArrowLeft' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/app/settings/quiz-csv/page.tsx
+   18:3   warning  'ArrowLeft' is defined but never used  @typescript-eslint/no-unused-vars
+  135:14  warning  'error' is defined but never used      @typescript-eslint/no-unused-vars
+  239:18  warning  'error' is defined but never used      @typescript-eslint/no-unused-vars
+  272:14  warning  'error' is defined but never used      @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/analytics/LearningInsights.tsx
+  234:52  warning  'index' is defined but never used  @typescript-eslint/no-unused-vars
+  262:59  warning  'index' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/analytics/PerformanceChart.tsx
+  17:26  warning  'Bar' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/analytics/SkillRadarChart.tsx
+  3:10  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+  3:21  warning  'useRef' is defined but never used     @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/auth/AuthProvider.tsx
+   6:47  warning  'debugDatabaseAccess' is defined but never used  @typescript-eslint/no-unused-vars
+  38:10  warning  'isHydrated' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/cards/KnowledgeCard.tsx
+  50:25  warning  'genreId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  50:34  warning  'themeId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/categories/CategoryCard.tsx
+  7:10  warning  'CheckCircle' is defined but never used  @typescript-eslint/no-unused-vars
+  7:23  warning  'Clock' is defined but never used        @typescript-eslint/no-unused-vars
+  7:30  warning  'BookOpen' is defined but never used     @typescript-eslint/no-unused-vars
+  7:40  warning  'TrendingUp' is defined but never used   @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/categories/CategoryGrid.tsx
+  7:10  warning  'Badge' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/layout/Header.tsx
+  56:6  warning  React Hook useEffect has a missing dependency: 'dataLoading'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/learning/CourseCard.tsx
+  50:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/learning/LearningSession.tsx
+  18:3  warning  'ChevronRight' is defined but never used     @typescript-eslint/no-unused-vars
+  57:3  warning  'onPrevious' is defined but never used       @typescript-eslint/no-unused-vars
+  60:9  warning  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/quiz/QuizCard.tsx
+  10:10  warning  'getCategoryDisplayName' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/quiz/QuizSession.tsx
+   12:10  warning  'useAuth' is defined but never used                                                                                          @typescript-eslint/no-unused-vars
+   15:3   warning  'updateUserProgress' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+   24:10  warning  'saveSKPTransaction' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+   24:52  warning  'updateCategoryProgress' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   25:10  warning  'updateProgressAfterQuiz' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+   25:35  warning  'calculateChallengeQuizRewards' is defined but never used                                                                    @typescript-eslint/no-unused-vars
+   25:66  warning  'saveChallengeQuizProgressToDatabase' is defined but never used                                                              @typescript-eslint/no-unused-vars
+   26:10  warning  'getSubcategoryId' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+   81:9   warning  'router' is assigned a value but never used                                                                                  @typescript-eslint/no-unused-vars
+  100:10  warning  'isCompleting' is assigned a value but never used                                                                            @typescript-eslint/no-unused-vars
+  102:10  warning  'challengeQuizUpdateData' is assigned a value but never used                                                                 @typescript-eslint/no-unused-vars
+  199:6   warning  React Hook useEffect has a missing dependency: 'optimizeQuestionsForUser'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  368:13  warning  'sessionData' is assigned a value but never used                                                                             @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/components/ui/select.tsx
+   74:23  warning  'value' is defined but never used  @typescript-eslint/no-unused-vars
+  121:29  warning  'value' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/hooks/useUser.ts
+  4:50  warning  'createDefaultUser' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/lib/ai-analytics.ts
+  373:32  warning  'index' is defined but never used       @typescript-eslint/no-unused-vars
+  814:28  warning  'dates' is defined but never used       @typescript-eslint/no-unused-vars
+  911:42  warning  'userId' is defined but never used      @typescript-eslint/no-unused-vars
+  911:58  warning  'questionId' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/lib/categories.ts
+  6:3  warning  'MainCategoryId' is defined but never used      @typescript-eslint/no-unused-vars
+  7:3  warning  'IndustryCategoryId' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/lib/course-completion.ts
+  10:3  warning  'genreId' is defined but never used    @typescript-eslint/no-unused-vars
+  11:3  warning  'themeId' is defined but never used    @typescript-eslint/no-unused-vars
+  12:3  warning  'sessionId' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/lib/industry-analytics.ts
+    4:46  warning  'skillLevels' is defined but never used  @typescript-eslint/no-unused-vars
+  412:50  warning  'score' is defined but never used        @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/lib/learning/category-integration.ts
+  85:3  warning  'progressData' is defined but never used  @typescript-eslint/no-unused-vars
+  86:3  warning  'courses' is defined but never used       @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/lib/personalization.ts
+  372:3  warning  'timeOfDay' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/lib/supabase-analytics.ts
+   76:9   warning  'oneWeekAgo' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  153:78  warning  'progressData' is defined but never used         @typescript-eslint/no-unused-vars
+  268:39  warning  'userId' is defined but never used               @typescript-eslint/no-unused-vars
+  276:11  warning  'cardKeys' is assigned a value but never used    @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/lib/supabase-badges.ts
+  18:19  warning  'progressData' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  34:19  warning  'badgesData' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  58:13  warning  'data' is assigned a value but never used          @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/lib/supabase-cards.ts
+   99:13  warning  'data' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  360:12  warning  'error' is defined but never used          @typescript-eslint/no-unused-vars
+  397:12  warning  'error' is defined but never used          @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/lib/supabase-user.ts
+  10:19  warning  'tableInfo' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/lib/xp-level-system.ts
+  1:10  warning  'supabase' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 111 problems (0 errors, 111 warnings)
+

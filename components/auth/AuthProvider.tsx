@@ -9,8 +9,8 @@ type AuthContextType = {
   user: User | null
   profile: UserProfile | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: any }>
-  signUp: (email: string, password: string) => Promise<{ error: any }>
+  signIn: (email: string, password: string) => Promise<{ error: unknown }>
+  signUp: (email: string, password: string) => Promise<{ error: unknown }>
   signOut: () => Promise<void>
 }
 

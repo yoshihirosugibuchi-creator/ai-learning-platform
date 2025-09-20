@@ -310,7 +310,7 @@ export default function OnboardingPage() {
                         variant={data.weeklyGoal === goal.id ? "default" : "outline"}
                         size="lg"
                         className="justify-start p-4 h-auto"
-                        onClick={() => setData(prev => ({ ...prev, weeklyGoal: goal.id as any }))}
+                        onClick={() => setData(prev => ({ ...prev, weeklyGoal: goal.id as unknown }))}
                       >
                         <div className="text-left">
                           <div className="font-semibold">{goal.label}</div>

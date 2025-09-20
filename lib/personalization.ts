@@ -206,12 +206,12 @@ export function getQuestionsForReview(userId: string, limit: number = 10): Quest
 // Get personalized question recommendations
 export function getPersonalizedQuestions(
   userId: string,
-  availableQuestions: any[],
+  availableQuestions: Array<Record<string, unknown>>,
   sessionLength: number = 10
 ): {
-  questions: any[]
+  questions: Array<Record<string, unknown>>
   reviewQuestions: QuestionMemoryStrength[]
-  newQuestions: any[]
+  newQuestions: Array<Record<string, unknown>>
   recommendedDifficulty: string
   learningEfficiency: number
 } {
@@ -222,7 +222,7 @@ export function getPersonalizedQuestions(
   // Get questions that haven't been attempted yet or have low memory strength
   const attemptedQuestionIds = new Set(memoryData.map(m => m.questionId))
   const newQuestions = availableQuestions
-    .filter(q => !attemptedQuestionIds.has(q.id))
+    .filter(q => !attemptedQuestionIds.has((q as Record<string, unknown>).id as string))
     .slice(0, Math.ceil(sessionLength * 0.4)) // 40% new questions
   
   // Calculate recommended difficulty based on performance
@@ -238,13 +238,13 @@ export function getPersonalizedQuestions(
   // Filter questions by preferred categories if set
   let filteredQuestions = availableQuestions
   if (config.categories.length > 0) {
-    filteredQuestions = availableQuestions.filter(q => config.categories.includes(q.category))
+    filteredQuestions = availableQuestions.filter(q => config.categories.includes((q as Record<string, unknown>).category as string))
   }
   
   // Combine review and new questions
   const reviewQuestionIds = new Set(questionsForReview.map(r => r.questionId))
   const selectedQuestions = [
-    ...filteredQuestions.filter(q => reviewQuestionIds.has(q.id)),
+    ...filteredQuestions.filter(q => reviewQuestionIds.has((q as Record<string, unknown>).id as string)),
     ...newQuestions
   ].slice(0, sessionLength)
   
@@ -309,7 +309,7 @@ export function getUserPerformanceStats(userId: string): {
 }
 
 // Calculate learning efficiency based on forgetting curve and retention
-function calculateLearningEfficiency(userId: string, userStats: any): number {
+function calculateLearningEfficiency(userId: string, userStats: { averageAccuracy: number }): number {
   const memoryData = getQuestionMemoryStrength(userId)
   
   if (memoryData.length === 0) return 0.5

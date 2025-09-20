@@ -25,7 +25,7 @@ type FilterType = 'all' | 'earned' | 'spent'
 export default function SkpHistoryPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [filter, setFilter] = useState<FilterType>('all')
-  const [transactions, setTransactions] = useState<any[]>([])
+  const [transactions, setTransactions] = useState<Array<Record<string, unknown>>>([])
   const [currentBalance, setCurrentBalance] = useState(0)
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()

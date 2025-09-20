@@ -124,7 +124,7 @@ class IndustryAnalytics {
   async analyzeIndustrySkills(
     userId: string, 
     industryId: string, 
-    progressData: any[]
+    progressData: unknown[]
   ): Promise<IndustrySkillProfile> {
     const industry = industryCategories.find(ind => ind.id === industryId)
     if (!industry) {
@@ -145,7 +145,7 @@ class IndustryAnalytics {
     }
   }
 
-  private calculateSkillAreas(progressData: any[], skillWeights: Record<string, number>): SkillArea[] {
+  private calculateSkillAreas(progressData: unknown[], skillWeights: Record<string, number>): SkillArea[] {
     const skillAreas: SkillArea[] = []
 
     mainCategories.forEach(category => {
@@ -164,7 +164,7 @@ class IndustryAnalytics {
         currentLevel,
         targetLevel: this.getTargetLevel(importance),
         score,
-        progress: categoryProgress.length > 0 ? (categoryProgress.filter((p: any) => p.isCorrect).length / categoryProgress.length) * 100 : 0,
+        progress: categoryProgress.length > 0 ? (categoryProgress.filter((p: unknown) => p.isCorrect).length / categoryProgress.length) * 100 : 0,
         importance
       })
     })
@@ -172,7 +172,7 @@ class IndustryAnalytics {
     return skillAreas.sort((a, b) => b.importance - a.importance)
   }
 
-  private calculateCategoryScore(categoryProgress: any[]): number {
+  private calculateCategoryScore(categoryProgress: unknown[]): number {
     if (categoryProgress.length === 0) return 0
     
     const correctAnswers = categoryProgress.filter(p => p.isCorrect).length
@@ -420,7 +420,7 @@ class IndustryAnalytics {
     return advantages[skill] || `${skill}分野で高い専門性を発揮できます`
   }
 
-  private createDevelopmentPath(criticalGaps: any[]): Array<{
+  private createDevelopmentPath(criticalGaps: unknown[]): Array<{
     phase: number
     duration: string
     skills: string[]

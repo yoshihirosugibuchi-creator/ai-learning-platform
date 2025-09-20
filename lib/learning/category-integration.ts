@@ -82,7 +82,7 @@ export function findLearningContentByCategory(
 
 // カテゴリー別学習進捗の集計（将来の統計機能用）
 export function aggregateLearningProgressByCategory(
-  progressData: any[], // 実際の進捗データ型に応じて後で更新
+  progressData: unknown[], // 実際の進捗データ型に応じて後で更新
   courses: LearningCourse[]
 ): Record<string, {
   categoryName: string

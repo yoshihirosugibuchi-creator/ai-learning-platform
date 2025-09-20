@@ -118,7 +118,7 @@ export interface QuestionProgress {
 
 class AILearningAnalytics {
   private initialized = false
-  private analysisCache = new Map<string, { data: any; timestamp: number }>()
+  private analysisCache = new Map<string, { data: unknown; timestamp: number }>()
   private cacheTimeout = 5 * 60 * 1000 // 5 minutes
 
   async init() {
@@ -186,7 +186,7 @@ class AILearningAnalytics {
       if (detailedData && detailedData.length > 0) {
         console.log(`[Analytics] Using detailed quiz data: ${detailedData.length} records`)
         
-        detailedData.forEach((record: any) => {
+        detailedData.forEach((record: unknown) => {
           // 詳細データからメインカテゴリーを特定
           const mainCategory = this.mapToMainCategory(record.category)
           if (mainCategory) {
@@ -214,7 +214,7 @@ class AILearningAnalytics {
           .order('created_at', { ascending: false })
 
         if (sessions) {
-          sessions.forEach((session: any) => {
+          sessions.forEach((session: unknown) => {
             // course_idからメインカテゴリーを推定（不正確だが一時的対応）
             const mainCategory = this.inferMainCategoryFromCourse(session.course_id)
             if (mainCategory) {
@@ -249,7 +249,7 @@ class AILearningAnalytics {
     }
   }
 
-  private inferDifficulty(session: any): string {
+  private inferDifficulty(session: unknown): string {
     const score = session.quiz_score || 80
     if (score >= 90) return 'easy'
     if (score >= 70) return 'medium'
@@ -724,7 +724,7 @@ class AILearningAnalytics {
     }
   }
 
-  private getTopItems(map: Map<any, number>, count: number) {
+  private getTopItems(map: Map<unknown, number>, count: number) {
     return Array.from(map.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, count)

@@ -47,7 +47,7 @@ export function useDebounce<T extends (...args: unknown[]) => unknown>(
 
 // インメモリキャッシュクラス
 class InMemoryCache {
-  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>()
+  private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>()
   private readonly maxSize: number
   private readonly defaultTTL: number
 
@@ -56,7 +56,7 @@ class InMemoryCache {
     this.defaultTTL = defaultTTL
   }
 
-  set(key: string, data: any, ttl?: number): void {
+  set(key: string, data: unknown, ttl?: number): void {
     // キャッシュサイズ制限
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value
@@ -70,7 +70,7 @@ class InMemoryCache {
     })
   }
 
-  get(key: string): any | null {
+  get(key: string): unknown | null {
     const item = this.cache.get(key)
     if (!item) return null
 
@@ -173,7 +173,7 @@ export function useResourceMonitor() {
 
     const logResourceUsage = () => {
       if ('memory' in performance) {
-        const memory = (performance as any).memory
+        const memory = (performance as unknown as { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory
         console.log('Memory Usage:', {
           used: `${(memory.usedJSHeapSize / 1048576).toFixed(2)} MB`,
           total: `${(memory.totalJSHeapSize / 1048576).toFixed(2)} MB`,
@@ -224,7 +224,7 @@ export async function cachedFetch(
   url: string, 
   options: RequestInit = {}, 
   ttl = 5 * 60 * 1000
-): Promise<any> {
+): Promise<unknown> {
   const cacheKey = `fetch_${url}_${JSON.stringify(options)}`
   
   // キャッシュから取得を試行

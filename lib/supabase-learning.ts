@@ -453,7 +453,7 @@ export async function saveLearningProgressSupabase(
   }
 }
 
-export async function getLearningProgressSupabase(userId: string): Promise<Record<string, any>> {
+export async function getLearningProgressSupabase(userId: string): Promise<Record<string, unknown>> {
   try {
     const { data, error } = await supabase
       .from('user_settings')
@@ -469,7 +469,7 @@ export async function getLearningProgressSupabase(userId: string): Promise<Recor
         // ブラウザ環境でのみlocalStorageを使用
         if (typeof window !== 'undefined' && window.localStorage) {
           try {
-            const progress: Record<string, any> = {}
+            const progress: Record<string, unknown> = {}
             const localStorageKeys = Object.keys(localStorage).filter(key => 
               key.startsWith(`lp_${userId}_`)
             )
@@ -478,7 +478,7 @@ export async function getLearningProgressSupabase(userId: string): Promise<Recor
               try {
                 const storedData = localStorage.getItem(key)
                 if (storedData) {
-                  const progressData = JSON.parse(storedData)
+                  const progressData = JSON.parse(storedData) as unknown
                   // Extract progress key from localStorage key format: lp_{userId}_{courseId}_{genreId}_{themeId}_{sessionId}
                   const progressKey = key.replace(`lp_${userId}_`, '')
                   progress[progressKey] = progressData
@@ -503,7 +503,7 @@ export async function getLearningProgressSupabase(userId: string): Promise<Recor
       return {}
     }
 
-    const progress: Record<string, any> = {}
+    const progress: Record<string, unknown> = {}
     data?.forEach(item => {
       const key = item.setting_key.replace('lp_', '')
       progress[key] = item.setting_value
@@ -517,7 +517,7 @@ export async function getLearningProgressSupabase(userId: string): Promise<Recor
     // ブラウザ環境でのみlocalStorageを使用
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
-        const progress: Record<string, any> = {}
+        const progress: Record<string, unknown> = {}
         const localStorageKeys = Object.keys(localStorage).filter(key => 
           key.startsWith(`lp_${userId}_`)
         )
@@ -526,7 +526,7 @@ export async function getLearningProgressSupabase(userId: string): Promise<Recor
           try {
             const storedData = localStorage.getItem(key)
             if (storedData) {
-              const progressData = JSON.parse(storedData)
+              const progressData = JSON.parse(storedData) as unknown
               // Extract progress key from localStorage key format: lp_{userId}_{courseId}_{genreId}_{themeId}_{sessionId}
               const progressKey = key.replace(`lp_${userId}_`, '')
               progress[progressKey] = progressData
@@ -568,7 +568,7 @@ export async function savePersonalizationSettings(userId: string, settingKey: st
   return true
 }
 
-export async function getPersonalizationSettings(userId: string, settingKey?: string): Promise<any> {
+export async function getPersonalizationSettings(userId: string, settingKey?: string): Promise<Record<string, unknown> | unknown> {
   let query = supabase
     .from('user_settings')
     .select('setting_key, setting_value')
@@ -590,7 +590,7 @@ export async function getPersonalizationSettings(userId: string, settingKey?: st
   }
 
   // Return all settings as a key-value object
-  const settings: Record<string, any> = {}
+  const settings: Record<string, unknown> = {}
   data?.forEach(item => {
     settings[item.setting_key] = item.setting_value
   })

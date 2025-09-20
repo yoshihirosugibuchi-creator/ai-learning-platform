@@ -63,7 +63,7 @@ export async function getLearningCourses(): Promise<{
 }
 
 // JSONファイルからの学習コース読み込み（フォールバック用）
-async function loadLearningCoursesFromJSON(): Promise<any[]> {
+async function loadLearningCoursesFromJSON(): Promise<Record<string, unknown>[]> {
   try {
     console.log('📄 Loading learning courses from JSON fallback')
     

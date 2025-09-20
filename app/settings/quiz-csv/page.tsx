@@ -102,7 +102,7 @@ export default function QuizCSVPage() {
         q.id,
         q.category || '',
         q.subcategory || '',
-        (q as any).subcategory_id || '',
+        (q as Record<string, unknown>).subcategory_id as string || '',
         `"${q.question.replace(/"/g, '""')}"`,
         `"${q.options[0]?.replace(/"/g, '""') || ''}"`,
         `"${q.options[1]?.replace(/"/g, '""') || ''}"`,
@@ -185,7 +185,7 @@ export default function QuizCSVPage() {
           const values = parseCSVLine(lines[i])
           if (values.length < headers.length) continue
 
-          const questionData: any = {}
+          const questionData: unknown = {}
           headers.forEach((header, index) => {
             questionData[header] = values[index] || ''
           })

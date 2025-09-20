@@ -57,7 +57,7 @@ export default function QuizPage() {
     totalQuestions: number 
     correctAnswers: number 
     timeSpent: number 
-    rewardedCard?: any
+    rewardedCard?: unknown
     isNewCard?: boolean
     cardCount?: number
   }) => {

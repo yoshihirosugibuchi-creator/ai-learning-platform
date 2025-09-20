@@ -21,7 +21,7 @@ interface CourseCardProps {
     genreCount: number
     themeCount: number
     status: 'available' | 'coming_soon' | 'draft'
-    genres?: any[]
+    genres?: unknown[]
   }
   progress?: {
     completedThemes: number
@@ -98,7 +98,7 @@ export default function CourseCard({ course, progress, onStartCourse }: CourseCa
         {categoryInfo && categoryInfo.uniqueMainCategories.length > 0 && (
           <div className="mt-3 space-y-1">
             <div className="flex flex-wrap gap-1">
-              {categoryInfo.categories.map((cat: any, index: number) => (
+              {categoryInfo.categories.map((cat: unknown, index: number) => (
                 cat.mainCategory && (
                   <Badge 
                     key={index}

@@ -10,7 +10,7 @@ export async function checkAndAwardCourseBadge(
   genreId: string,
   themeId: string,
   sessionId: string
-): Promise<{ completed: boolean; badge?: any }> {
+): Promise<{ completed: boolean; badge?: unknown }> {
   try {
     console.log('🏆 Checking course completion for badge award...', { courseId, userId })
     

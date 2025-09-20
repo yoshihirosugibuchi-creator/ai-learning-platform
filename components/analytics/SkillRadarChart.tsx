@@ -51,7 +51,7 @@ export default function SkillRadarChart({ data, title }: SkillRadarChartProps) {
         cornerRadius: 6,
         displayColors: true,
         callbacks: {
-          label: function(context: any) {
+          label: function(context: unknown) {
             return `${context.dataset.label}: ${context.parsed.r}点`
           }
         }

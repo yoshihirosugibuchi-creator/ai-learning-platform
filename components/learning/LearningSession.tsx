@@ -66,7 +66,7 @@ export default function LearningSession({
   const [showQuizResult, setShowQuizResult] = useState(false)
   const [sessionCompleted, setSessionCompleted] = useState(false)
   const [cardAcquired, setCardAcquired] = useState(false)
-  const [badgeAwarded, setBadgeAwarded] = useState<any>(null)
+  const [badgeAwarded, setBadgeAwarded] = useState<Record<string, unknown> | null>(null)
   const [startTime] = useState(new Date())
   const [currentSessionData, setCurrentSessionData] = useState<LearningSessionData | null>(null)
   const [isCompletingSession, setIsCompletingSession] = useState(false)
@@ -366,7 +366,7 @@ export default function LearningSession({
               allKeys: Object.keys(session)
             })}
             {session.content && session.content.length > 0 ? (
-              session.content.map((contentItem: any, index: number) => (
+              session.content.map((contentItem: unknown, index: number) => (
                 <div key={contentItem.id || index} className="space-y-3">
                   {contentItem.title && (
                     <h3 className="text-lg font-semibold text-primary">

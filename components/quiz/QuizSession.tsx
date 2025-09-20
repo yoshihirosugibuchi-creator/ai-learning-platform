@@ -101,7 +101,7 @@ export default function QuizSession({
   const completionInProgress = useRef(false)
   const [challengeQuizUpdateData, setChallengeQuizUpdateData] = useState<{
     userId: string;
-    categoryResults: Record<string, any>;
+    categoryResults: Record<string, unknown>;
   } | null>(null)
 
   // 🔧 チャレンジクイズDB更新機能を一時的に無効化（フリーズ問題解決のため）

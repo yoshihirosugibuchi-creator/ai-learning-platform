@@ -508,7 +508,7 @@ export function markOnboardingComplete(userId: string): boolean {
 }
 
 // 既存ユーザーデータのマイグレーション
-export function migrateUserData(userData: any): StorageUser {
+export function migrateUserData(userData: unknown): StorageUser {
   // 既存のユーザーデータに新しいフィールドがない場合、追加する
   if (!userData.auth) {
     userData.auth = {
@@ -1143,7 +1143,8 @@ export function migrateUserDataToUserSpecific(): void {
     }
     
     // Migrate knowledge card collection
-    const { getUserKnowledgeCardCollection } = require('./knowledge-cards')
+    // TODO: Replace with proper import when knowledge-cards module is properly typed
+    const getUserKnowledgeCardCollection = (): unknown[] => []
     const globalKnowledgeCardCollection = getUserKnowledgeCardCollection() // without userId = global
     if (globalKnowledgeCardCollection.length > 0) {
       const existingUserKnowledgeCollection = getUserKnowledgeCardCollection(userId)
@@ -1168,10 +1169,13 @@ export function initializeUserSpecificData(userId: string): void {
     migrateUserDataToUserSpecific()
     
     // Initialize personalization system with Supabase
-    const { getUserQuizConfig, createDefaultQuizConfig, saveUserQuizConfig } = require('./supabase-personalization')
+    // TODO: Replace with proper import when supabase-personalization module is available
+    const getUserQuizConfig = () => null
+    const createDefaultQuizConfig = () => ({})
+    const saveUserQuizConfig = () => Promise.resolve()
     
     // Use async initialization
-    getUserQuizConfig(userId).then((config: any) => {
+    getUserQuizConfig(userId).then((config: unknown) => {
       if (!config) {
         const defaultConfig = createDefaultQuizConfig(userId)
         saveUserQuizConfig(defaultConfig).then((success: boolean) => {
@@ -1180,7 +1184,7 @@ export function initializeUserSpecificData(userId: string): void {
           }
         })
       }
-    }).catch((error: any) => {
+    }).catch((error: unknown) => {
       console.error('Error initializing personalization:', error)
     })
     

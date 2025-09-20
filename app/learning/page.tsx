@@ -18,7 +18,7 @@ import { getBadgeStats } from '@/lib/supabase-badges'
 export default function LearningPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const [courses, setCourses] = useState<any[]>([])
+  const [courses, setCourses] = useState<Array<Record<string, unknown>>>([])
   const [loading, setLoading] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [learningStats, setLearningStats] = useState({

@@ -22,8 +22,8 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState<LearningCourse | null>(null)
   const [loading, setLoading] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [userProgress, setUserProgress] = useState<any>({})
-  const [categoryInfo, setCategoryInfo] = useState<any>(null)
+  const [userProgress, setUserProgress] = useState<Record<string, unknown>>({})
+  const [categoryInfo, setCategoryInfo] = useState<Record<string, unknown> | null>(null)
 
   const courseId = params.courseId as string
 
@@ -79,20 +79,20 @@ export default function CourseDetailPage() {
     return isCompleted
   }
 
-  const getThemeProgress = (genreId: string, themeId: string, sessions: any[]) => {
+  const getThemeProgress = (genreId: string, themeId: string, sessions: Record<string, unknown>[]) => {
     const completed = sessions.filter(session => 
       isSessionCompleted(genreId, themeId, session.id)
     ).length
     return { completed, total: sessions.length }
   }
 
-  const getGenreProgress = (genre: any) => {
+  const getGenreProgress = (genre: Record<string, unknown>) => {
     let totalSessions = 0
     let completedSessions = 0
     
-    genre.themes.forEach((theme: any) => {
+    genre.themes.forEach((theme: Record<string, unknown>) => {
       totalSessions += theme.sessions.length
-      theme.sessions.forEach((session: any) => {
+      theme.sessions.forEach((session: Record<string, unknown>) => {
         if (isSessionCompleted(genre.id, theme.id, session.id)) {
           completedSessions++
         }
@@ -179,7 +179,7 @@ export default function CourseDetailPage() {
                     <span>関連カテゴリー</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {categoryInfo.categories.map((cat: any, index: number) => (
+                    {(categoryInfo.categories as Record<string, unknown>[]).map((cat: Record<string, unknown>, index: number) => (
                       cat.mainCategory && (
                         <Badge 
                           key={index}

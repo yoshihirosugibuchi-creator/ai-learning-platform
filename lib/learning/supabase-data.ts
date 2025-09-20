@@ -18,7 +18,7 @@ interface DbCourse {
   color: string
   display_order: number
   status: 'draft' | 'available' | 'coming_soon' | 'archived'
-  badge_data: any
+  badge_data: unknown
   created_at: string
   updated_at: string
 }
@@ -32,7 +32,7 @@ interface DbGenre {
   subcategory_id: string | null
   estimated_days: number
   display_order: number
-  badge_data: any
+  badge_data: unknown
 }
 
 interface DbTheme {
@@ -42,7 +42,7 @@ interface DbTheme {
   description: string
   estimated_minutes: number
   display_order: number
-  reward_card_data: any
+  reward_card_data: unknown
 }
 
 interface DbSession {
@@ -88,7 +88,7 @@ export async function getCoursesFromDB(): Promise<{
   genreCount: number
   themeCount: number
   status: 'available' | 'coming_soon' | 'draft'
-  genres?: any[]
+  genres?: unknown[]
 }[]> {
   const cacheKey = 'learning_courses_db_list'
   

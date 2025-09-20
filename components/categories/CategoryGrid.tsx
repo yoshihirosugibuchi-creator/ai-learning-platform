@@ -40,7 +40,7 @@ export default function CategoryGrid({
   categoryStats
 }: CategoryGridProps) {
   const { user } = useUserContext()
-  const [allQuestions, setAllQuestions] = useState<any[]>([])
+  const [allQuestions, setAllQuestions] = useState<Array<Record<string, unknown>>>([])
   
   // Load all questions on component mount
   useEffect(() => {
@@ -89,10 +89,10 @@ export default function CategoryGrid({
       }
       acc[question.category].push(question)
       return acc
-    }, {} as Record<string, any[]>)
+    }, {} as Record<string, Array<Record<string, unknown>>>)
     
     // Calculate stats for each category
-    const categoryStats: Record<string, any> = {}
+    const categoryStats: Record<string, Record<string, unknown>> = {}
     
     // First, initialize all categories with zero stats
     const allCategoryIds = [...mainCategories, ...industryCategories].map(cat => cat.id)
