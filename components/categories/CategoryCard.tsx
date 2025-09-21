@@ -50,10 +50,24 @@ export default function CategoryCard({
     })
   }
 
+  // Check category status based on isActive and isVisible
+  const isActive = category.isActive === true
+  const isComingSoon = category.isActive === false && category.isVisible !== false
+  const isSuspended = category.isActive === false && category.isVisible === false
+  const isClickable = isActive
+
   return (
     <Card 
-      className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${className}`}
-      onClick={onClick}
+      className={`transition-all duration-200 ${
+        isClickable 
+          ? 'cursor-pointer hover:shadow-lg hover:scale-[1.02]' 
+          : 'cursor-not-allowed'
+      } ${
+        isComingSoon 
+          ? 'opacity-60 bg-gray-50 border-dashed' 
+          : ''
+      } ${className}`}
+      onClick={isClickable ? onClick : undefined}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -86,7 +100,7 @@ export default function CategoryCard({
         {/* Subcategories */}
         <div>
           <div className="flex flex-wrap gap-2">
-            {category.subcategories.slice(0, 4).map((subcat, index) => (
+            {(category.subcategories || []).slice(0, 4).map((subcat, index) => (
               <Badge 
                 key={index}
                 variant="outline" 
@@ -95,9 +109,9 @@ export default function CategoryCard({
                 {typeof subcat === 'string' ? subcat : subcat}
               </Badge>
             ))}
-            {category.subcategories.length > 4 && (
+            {(category.subcategories || []).length > 4 && (
               <Badge variant="outline" className="text-xs">
-                +{category.subcategories.length - 4}個
+                +{(category.subcategories || []).length - 4}個
               </Badge>
             )}
           </div>
@@ -140,13 +154,13 @@ export default function CategoryCard({
         {!showProgress && (
           <div className="text-center py-2">
             <div className="text-lg font-semibold text-muted-foreground">
-              {category.subcategories.length}
+              {(category.subcategories || []).length}
             </div>
             <div className="text-xs text-muted-foreground">サブカテゴリー</div>
           </div>
         )}
 
-        {/* Category Type Badge */}
+        {/* Category Type Badge and Status */}
         <div className="flex justify-between items-center">
           <Badge 
             variant={category.type === 'main' ? 'default' : 'secondary'}
@@ -155,11 +169,18 @@ export default function CategoryCard({
             {category.type === 'main' ? '基本スキル' : '業界特化'}
           </Badge>
           
-          {category.type === 'industry' && (
-            <div className="text-xs text-muted-foreground">
-              専門分野
-            </div>
-          )}
+          <div className="flex items-center space-x-2">
+            {isComingSoon && (
+              <Badge variant="outline" className="text-xs bg-yellow-50 border-yellow-200 text-yellow-800">
+                Coming Soon
+              </Badge>
+            )}
+            {category.type === 'industry' && !isComingSoon && (
+              <div className="text-xs text-muted-foreground">
+                専門分野
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

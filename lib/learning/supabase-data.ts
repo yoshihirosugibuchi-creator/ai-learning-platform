@@ -13,7 +13,7 @@ interface DbCourse {
   title: string
   description: string
   estimated_days: number
-  difficulty: 'beginner' | 'intermediate' | 'advanced'
+  difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert'
   icon: string
   color: string
   display_order: number

@@ -13,7 +13,9 @@ import {
   Shield, 
   Bell, 
   Palette,
-  ChevronRight
+  ChevronRight,
+  Cog,
+  Users
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
@@ -29,6 +31,24 @@ export default function SettingsPage() {
       icon: <FileText className="h-5 w-5" />,
       href: '/settings/quiz-csv',
       category: 'データ管理',
+      available: true
+    },
+    {
+      id: 'categories-admin',
+      title: 'カテゴリー管理',
+      description: 'カテゴリーの追加・編集・有効化管理',
+      icon: <Cog className="h-5 w-5" />,
+      href: '/admin/categories',
+      category: '管理者機能',
+      available: true
+    },
+    {
+      id: 'subcategories-admin',
+      title: 'サブカテゴリー管理',
+      description: 'サブカテゴリーの追加・編集・並び順管理',
+      icon: <Users className="h-5 w-5" />,
+      href: '/admin/subcategories',
+      category: '管理者機能',
       available: true
     },
     {

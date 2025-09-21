@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Brain, Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { logAuthDebugInfo, debugLoginAttempt, setupGlobalErrorHandling } from '@/lib/debug-auth'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -17,6 +18,14 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+
+  // Setup debugging on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setupGlobalErrorHandling()
+      logAuthDebugInfo()
+    }
+  }, [])
 
   // ログインフォーム状態
   const [loginForm, setLoginForm] = useState({
@@ -39,18 +48,31 @@ export default function LoginPage() {
     setIsLoading(true)
     setError('')
     
+    // Create a timeout for the entire login process
+    const loginTimeout = setTimeout(() => {
+      setIsLoading(false)
+      setError('ログイン処理がタイムアウトしました。再度お試しください。')
+      console.error('❌ Login process timeout')
+    }, 20000) // 20秒タイムアウト
+    
     try {
       console.log('📝 Calling signIn with:', loginForm.email)
+      debugLoginAttempt(loginForm.email)
       const { error } = await signIn(loginForm.email, loginForm.password)
+      
+      // Clear timeout if we get here
+      clearTimeout(loginTimeout)
       
       if (error) {
         console.error('❌ Login error:', error)
-        setError('メールアドレスまたはパスワードが正しくありません')
+        const errorMessage = error.message || 'メールアドレスまたはパスワードが正しくありません'
+        setError(errorMessage)
       } else {
         console.log('✅ Login successful, redirecting to home')
         router.push('/')
       }
     } catch (err) {
+      clearTimeout(loginTimeout)
       console.error('❌ Login exception:', err)
       setError('ログイン中にエラーが発生しました')
     } finally {

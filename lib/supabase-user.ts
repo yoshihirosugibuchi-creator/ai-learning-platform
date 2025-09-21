@@ -169,35 +169,59 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
 export async function getOrCreateUserProfile(user: SupabaseUser): Promise<UserProfile | null> {
   console.log('🔄 Getting or creating user profile for:', user.id, user.email)
   
+  // まずは即座にフォールバックプロファイルを準備
+  const fallbackProfile: UserProfile = {
+    id: user.id,
+    email: user.email!,
+    name: user.email?.split('@')[0] || 'User',
+    skill_level: 'beginner',
+    learning_style: 'mixed',
+    experience_level: 'beginner',
+    total_xp: 0,
+    current_level: 1,
+    streak: 0,
+    last_active: new Date().toISOString()
+  }
+  
   try {
-    // まず既存のプロファイルを取得
-    let profile = await getUserProfile(user.id)
+    // 短いタイムアウトで既存プロファイルを取得試行
+    const fetchTimeout = new Promise<UserProfile | null>((_, reject) => 
+      setTimeout(() => reject(new Error('Profile fetch timeout')), 2000)
+    )
     
-    // プロファイルが存在しない場合は作成
-    if (!profile) {
-      console.log('👤 No existing profile found, creating new one...')
-      profile = await createUserProfile(user)
-    } else {
-      console.log('✅ Existing profile found:', profile)
+    let profile: UserProfile | null = null
+    
+    try {
+      const fetchOperation = getUserProfile(user.id)
+      profile = await Promise.race([fetchOperation, fetchTimeout])
+      
+      if (profile) {
+        console.log('✅ Existing profile found:', profile)
+        return profile
+      }
+    } catch (fetchError) {
+      console.warn('⚠️ Profile fetch failed or timed out:', fetchError)
     }
-
-    return profile
+    
+    // プロファイル作成を試行（非同期で実行、失敗してもフォールバックを返す）
+    console.log('👤 No existing profile found, attempting background creation...')
+    
+    // バックグラウンドでプロファイル作成を試行（結果を待たない）
+    createUserProfile(user).then(createdProfile => {
+      if (createdProfile) {
+        console.log('✅ Profile created in background:', createdProfile)
+      }
+    }).catch(createError => {
+      console.warn('⚠️ Background profile creation failed:', createError)
+    })
+    
+    // フォールバックプロファイルを即座に返す
+    console.log('🔄 Using fallback profile for immediate use')
+    return fallbackProfile
+    
   } catch (error) {
     console.error('❌ Error in getOrCreateUserProfile:', error)
-    
-    // If all else fails, return a basic profile to keep the app working
     console.warn('⚠️ Using fallback profile to keep app functional')
-    return {
-      id: user.id,
-      email: user.email!,
-      name: user.email?.split('@')[0] || 'User',
-      skill_level: 'beginner',
-      learning_style: 'mixed',
-      experience_level: 'beginner',
-      total_xp: 0,
-      current_level: 1,
-      streak: 0,
-      last_active: new Date().toISOString()
-    }
+    return fallbackProfile
   }
 }

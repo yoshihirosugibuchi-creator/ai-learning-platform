@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { mainCategories, industryCategories, skillLevels } from '@/lib/categories'
+import { getCategories, getSkillLevels, getAllCategoriesSync, skillLevels as staticSkillLevels } from '@/lib/categories'
 import { MainCategory, IndustryCategory, SkillLevel } from '@/lib/types/category'
-import { CheckCircle, Circle, Users, Building2 } from 'lucide-react'
+import { CheckCircle, Circle, Users, Building2, Loader2 } from 'lucide-react'
 
 interface CategorySelectorProps {
   selectedCategory?: string
@@ -30,6 +30,39 @@ export default function CategorySelector({
 }: CategorySelectorProps) {
   const [currentSkillLevel, setCurrentSkillLevel] = useState<SkillLevel>(selectedSkillLevel)
   const [activeTab, setActiveTab] = useState<'main' | 'industry'>('main')
+  const [categories, setCategories] = useState<(MainCategory | IndustryCategory)[]>(getAllCategoriesSync())
+  const [skillLevels, setSkillLevels] = useState(staticSkillLevels)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // DB からデータを取得
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        // 有効なカテゴリーのみを取得
+        const [dbCategories, dbSkillLevels] = await Promise.all([
+          getCategories({ activeOnly: true }),
+          getSkillLevels()
+        ])
+        
+        setCategories(dbCategories)
+        setSkillLevels(dbSkillLevels)
+      } catch (err) {
+        console.error('Failed to load categories:', err)
+        setError('カテゴリーの読み込みに失敗しました。静的データを使用します。')
+        // フォールバック: 静的データを使用
+        setCategories(getAllCategoriesSync())
+        setSkillLevels(staticSkillLevels)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadData()
+  }, [])
 
   const handleCategoryClick = (categoryId: string) => {
     onCategorySelect(categoryId, currentSkillLevel)
@@ -160,26 +193,57 @@ export default function CategorySelector({
         </TabsList>
 
         <TabsContent value="main" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {mainCategories.map((category) => 
-              renderCategoryCard(
-                category, 
-                selectedCategory === category.id
-              )
-            )}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>カテゴリーを読み込み中...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {categories
+                .filter(cat => cat.type === 'main')
+                .map((category) => 
+                  renderCategoryCard(
+                    category, 
+                    selectedCategory === category.id
+                  )
+                )}
+            </div>
+          )}
         </TabsContent>
 
         {showIndustryCategories && (
           <TabsContent value="industry" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {industryCategories.map((category) => 
-                renderCategoryCard(
-                  category, 
-                  selectedCategory === category.id
-                )
-              )}
-            </div>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <span>業界カテゴリーを読み込み中...</span>
+              </div>
+            ) : (
+              <>
+                {error && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                    <p className="text-yellow-800 text-sm">{error}</p>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {categories
+                    .filter(cat => cat.type === 'industry')
+                    .map((category) => 
+                      renderCategoryCard(
+                        category, 
+                        selectedCategory === category.id
+                      )
+                    )}
+                </div>
+                {categories.filter(cat => cat.type === 'industry').length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>利用可能な業界カテゴリーがありません</p>
+                  </div>
+                )}
+              </>
+            )}
           </TabsContent>
         )}
       </Tabs>
@@ -194,7 +258,7 @@ export default function CategorySelector({
                 <div>
                   <span className="font-semibold">選択中:</span>
                   <span className="ml-2">
-                    {[...mainCategories, ...industryCategories]
+                    {categories
                       .find(cat => cat.id === selectedCategory)?.name}
                   </span>
                   {allowSkillLevelSelection && (

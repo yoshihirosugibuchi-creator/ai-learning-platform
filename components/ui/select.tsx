@@ -46,7 +46,7 @@ const Select = ({ value, onValueChange, children }: SelectProps) => {
 const SelectTrigger = React.forwardRef<
   HTMLDivElement,
   SelectTriggerProps & { value?: string; onValueChange?: (value: string) => void }
->(({ className, children, ...props }, ref) => (
+>(({ className, children, value, onValueChange, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(

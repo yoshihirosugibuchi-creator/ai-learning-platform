@@ -7,6 +7,9 @@ import { Progress } from '@/components/ui/progress'
 import { Clock, BookOpen, Play, Lock, Tag } from 'lucide-react'
 import { DifficultyLabels, DifficultyColors } from '@/lib/types/learning'
 import { getCategoryInfoForCourse } from '@/lib/learning/category-integration'
+import { useState, useEffect } from 'react'
+import { getSkillLevels } from '@/lib/categories'
+import { SkillLevelDefinition } from '@/lib/types/category'
 
 interface CourseCardProps {
   course: {
@@ -14,7 +17,7 @@ interface CourseCardProps {
     title: string
     description: string
     estimatedDays: number
-    difficulty: 'beginner' | 'intermediate' | 'advanced'
+    difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert'
     icon: string
     color: string
     displayOrder: number
@@ -33,11 +36,26 @@ interface CourseCardProps {
 }
 
 export default function CourseCard({ course, progress, onStartCourse }: CourseCardProps) {
+  const [dbSkillLevels, setDbSkillLevels] = useState<SkillLevelDefinition[]>([])
   const isAvailable = course.status === 'available'
   const hasProgress = progress && progress.completedSessions > 0
   const progressPercentage = progress 
     ? Math.round((progress.completedSessions / progress.totalSessions) * 100)
     : 0
+
+  // DBスキルレベルを取得
+  useEffect(() => {
+    const loadSkillLevels = async () => {
+      try {
+        const skillLevels = await getSkillLevels()
+        setDbSkillLevels(skillLevels)
+      } catch (error) {
+        console.error('Error loading skill levels:', error)
+        setDbSkillLevels([]) // Fallback to static data via DifficultyLabels
+      }
+    }
+    loadSkillLevels()
+  }, [])
 
   // ホバー時のプリフェッチ
   const handleMouseEnter = async () => {
@@ -54,6 +72,26 @@ export default function CourseCard({ course, progress, onStartCourse }: CourseCa
 
   // カテゴリー情報を取得
   const categoryInfo = course.genres ? getCategoryInfoForCourse(course) : null
+
+  // スキルレベルのラベルと色を取得（DB優先、フォールバック付き）
+  const getDifficultyDisplay = () => {
+    // DBスキルレベルから該当するものを検索
+    const dbSkillLevel = dbSkillLevels.find(level => level.id === course.difficulty)
+    if (dbSkillLevel) {
+      return {
+        label: dbSkillLevel.name,
+        color: DifficultyColors[course.difficulty] || '#6B7280'
+      }
+    }
+    
+    // フォールバック: 静的データを使用
+    return {
+      label: DifficultyLabels[course.difficulty] || course.difficulty,
+      color: DifficultyColors[course.difficulty] || '#6B7280'
+    }
+  }
+
+  const difficultyDisplay = getDifficultyDisplay()
 
   return (
     <Card 
@@ -78,11 +116,11 @@ export default function CourseCard({ course, progress, onStartCourse }: CourseCa
                 variant="secondary" 
                 className="mt-1"
                 style={{ 
-                  backgroundColor: DifficultyColors[course.difficulty],
+                  backgroundColor: difficultyDisplay.color,
                   color: 'white'
                 }}
               >
-                {DifficultyLabels[course.difficulty]}
+                {difficultyDisplay.label}
               </Badge>
             </div>
           </div>

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import CategoryCard from './CategoryCard'
-import { mainCategories, industryCategories, skillLevels } from '@/lib/categories'
+import { mainCategories, industryCategories, skillLevels, getCategories, getSkillLevels } from '@/lib/categories'
 import { MainCategory, IndustryCategory, SkillLevel } from '@/lib/types/category'
 import { Search, Filter, Users, Building2, TrendingUp, BookOpen } from 'lucide-react'
 import { useUserContext } from '@/contexts/UserContext'
@@ -41,20 +41,34 @@ export default function CategoryGrid({
 }: CategoryGridProps) {
   const { user } = useUserContext()
   const [allQuestions, setAllQuestions] = useState<Array<Record<string, unknown>>>([])
+  const [dbCategories, setDbCategories] = useState<(MainCategory | IndustryCategory)[]>([])
+  const [dbSkillLevels, setDbSkillLevels] = useState<SkillLevel[]>([])
+  const [loading, setLoading] = useState(true)
   
-  // Load all questions on component mount
+  // Load all questions and DB data on component mount
   useEffect(() => {
-    const loadQuestions = async () => {
+    const loadData = async () => {
       try {
-        const questions = await getAllQuestions()
+        const [questions, categories, skillLevels] = await Promise.all([
+          getAllQuestions(),
+          getCategories({ activeOnly: false }), // Show all categories including coming soon
+          getSkillLevels()
+        ])
         setAllQuestions(questions)
+        setDbCategories(categories)
+        setDbSkillLevels(skillLevels)
       } catch (error) {
-        console.error('Error loading questions:', error)
+        console.error('Error loading data:', error)
         setAllQuestions([])
+        setDbCategories([...mainCategories, ...industryCategories]) // Fallback to static
+        setDbSkillLevels(skillLevels) // Fallback to static
+      } finally {
+        setLoading(false)
       }
     }
-    loadQuestions()
+    loadData()
   }, [])
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSkillLevel, setSelectedSkillLevel] = useState<SkillLevel | 'all'>('all')
   const [activeTab, setActiveTab] = useState<'main' | 'industry'>('main')
@@ -65,14 +79,21 @@ export default function CategoryGrid({
       const matchesSearch = category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            category.description?.toLowerCase().includes(searchTerm.toLowerCase())
       
+      // Hide suspended categories (isActive: false, isVisible: false)
+      const isVisible = category.isVisible !== false // Show active and coming soon, hide suspended
+      
       // For now, show all categories regardless of skill level
       // In real implementation, this would filter based on available content for that skill level
-      return matchesSearch
+      return matchesSearch && isVisible
     })
   }
 
-  const filteredMainCategories = filterCategories(mainCategories)
-  const filteredIndustryCategories = filterCategories(industryCategories)
+  // Split DB categories by type
+  const dbMainCategories = dbCategories.filter(cat => cat.type === 'main')
+  const dbIndustryCategories = dbCategories.filter(cat => cat.type === 'industry')
+  
+  const filteredMainCategories = filterCategories(dbMainCategories.length > 0 ? dbMainCategories : mainCategories)
+  const filteredIndustryCategories = filterCategories(dbIndustryCategories.length > 0 ? dbIndustryCategories : industryCategories)
 
   // Calculate real category stats based on user's quiz results and available questions
   const realStats = useMemo(() => {
@@ -95,7 +116,7 @@ export default function CategoryGrid({
     const categoryStats: Record<string, Record<string, unknown>> = {}
     
     // First, initialize all categories with zero stats
-    const allCategoryIds = [...mainCategories, ...industryCategories].map(cat => cat.id)
+    const allCategoryIds = [...filteredMainCategories, ...filteredIndustryCategories].map(cat => cat.id)
     allCategoryIds.forEach(categoryId => {
       const totalQuestions = questionsByCategory[categoryId]?.length || 0
       categoryStats[categoryId] = {
@@ -160,6 +181,21 @@ export default function CategoryGrid({
   
   const statsToUse = categoryStats || realStats
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2">{title}</h1>
+          <p className="text-muted-foreground">{description}</p>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground mt-2">カテゴリーを読み込んでいます...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -203,7 +239,7 @@ export default function CategoryGrid({
                   >
                     すべて
                   </Button>
-                  {skillLevels.map((level) => (
+                  {(dbSkillLevels.length > 0 ? dbSkillLevels : skillLevels).map((level) => (
                     <Button
                       key={level.id}
                       variant={selectedSkillLevel === level.id ? 'default' : 'outline'}
@@ -227,7 +263,7 @@ export default function CategoryGrid({
             <CardContent className="pt-6 text-center">
               <div className="flex items-center justify-center space-x-2">
                 <BookOpen className="h-5 w-5 text-blue-500" />
-                <div className="text-2xl font-bold">{mainCategories.length}</div>
+                <div className="text-2xl font-bold">{filteredMainCategories.length}</div>
               </div>
               <p className="text-sm text-muted-foreground">基本スキル</p>
             </CardContent>
@@ -237,7 +273,7 @@ export default function CategoryGrid({
             <CardContent className="pt-6 text-center">
               <div className="flex items-center justify-center space-x-2">
                 <Building2 className="h-5 w-5 text-green-500" />
-                <div className="text-2xl font-bold">{industryCategories.length}</div>
+                <div className="text-2xl font-bold">{filteredIndustryCategories.length}</div>
               </div>
               <p className="text-sm text-muted-foreground">業界特化</p>
             </CardContent>
@@ -248,8 +284,8 @@ export default function CategoryGrid({
               <div className="flex items-center justify-center space-x-2">
                 <Users className="h-5 w-5 text-orange-500" />
                 <div className="text-2xl font-bold">
-                  {mainCategories.reduce((total, cat) => total + cat.subcategories.length, 0) + 
-                   industryCategories.reduce((total, cat) => total + cat.subcategories.length, 0)}
+                  {filteredMainCategories.reduce((total, cat) => total + ((cat.subcategories || []).length), 0) + 
+                   filteredIndustryCategories.reduce((total, cat) => total + ((cat.subcategories || []).length), 0)}
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">サブカテゴリー総数</p>

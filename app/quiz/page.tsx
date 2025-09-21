@@ -11,7 +11,9 @@ import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import { Question } from '@/lib/types'
+import { MainCategory, IndustryCategory } from '@/lib/types/category'
 import { getAllQuestions, getCategories } from '@/lib/questions'
+import { getCategories as getDbCategories } from '@/lib/categories'
 import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function QuizPage() {
@@ -25,13 +27,10 @@ export default function QuizPage() {
   const returnToParam = searchParams.get('returnTo')
   
   const [questions, setQuestions] = useState<Question[]>([])
-  const [categories, setCategories] = useState<string[]>([])
+  const [dbCategories, setDbCategories] = useState<(MainCategory | IndustryCategory)[]>([])
+  const [inactiveCategories, setInactiveCategories] = useState<(MainCategory | IndustryCategory)[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam)
-  const [selectedLevel, setSelectedLevel] = useState<string | null>(levelParam)
-  const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>(
-    difficultiesParam ? difficultiesParam.split(',') : []
-  )
   const [returnTo, setReturnTo] = useState<string | null>(returnToParam)
   const [isQuizActive, setIsQuizActive] = useState(mode === 'random' || !!categoryParam)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -39,9 +38,19 @@ export default function QuizPage() {
   useEffect(() => {
     const loadQuestions = async () => {
       try {
-        const questionsData = await getAllQuestions()
+        const [questionsData, activeDbCategoriesData, inactiveDbCategoriesData] = await Promise.all([
+          getAllQuestions(),
+          getDbCategories({ activeOnly: true }), // Active categories for quiz play
+          getDbCategories({ activeOnly: false }) // All categories including inactive for Coming Soon
+        ])
+        
+        // Filter inactive categories (those that are not in active list)
+        const activeCategoryIds = new Set(activeDbCategoriesData.map(cat => cat.id))
+        const inactiveCategoryList = inactiveDbCategoriesData.filter(cat => !activeCategoryIds.has(cat.id))
+        
         setQuestions(questionsData)
-        setCategories(getCategories(questionsData))
+        setDbCategories(activeDbCategoriesData)
+        setInactiveCategories(inactiveCategoryList)
       } catch (error) {
         console.error('Failed to load questions:', error)
       } finally {
@@ -107,8 +116,6 @@ export default function QuizPage() {
           <QuizSession
             questions={questions}
             category={selectedCategory || undefined}
-            level={selectedLevel}
-            difficulties={selectedDifficulties.length > 0 ? selectedDifficulties : undefined}
             user={user}
             profile={profile}
             onComplete={handleQuizComplete}
@@ -168,8 +175,14 @@ export default function QuizPage() {
               </CardContent>
             </Card>
 
-            {categories.map((category) => {
-              const categoryQuestions = questions.filter(q => q.category === category)
+            {dbCategories
+              .filter(dbCategory => {
+                // Only show categories that have questions available
+                const categoryQuestions = questions.filter(q => q.category === dbCategory.name || q.category === dbCategory.id)
+                return categoryQuestions.length > 0
+              })
+              .map((dbCategory) => {
+              const categoryQuestions = questions.filter(q => q.category === dbCategory.name || q.category === dbCategory.id)
               const difficultyCount = {
                 基礎: categoryQuestions.filter(q => q.difficulty === '基礎').length,
                 初級: categoryQuestions.filter(q => q.difficulty === '初級').length,
@@ -179,14 +192,20 @@ export default function QuizPage() {
               }
 
               return (
-                <Card key={category} className="hover:shadow-lg transition-shadow">
+                <Card key={dbCategory.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{category}</CardTitle>
+                      <CardTitle className="text-lg flex items-center space-x-2">
+                        <span className="text-lg">{dbCategory.icon || '📚'}</span>
+                        <span>{dbCategory.name}</span>
+                      </CardTitle>
                       <Badge variant="outline">
                         {categoryQuestions.length}問
                       </Badge>
                     </div>
+                    {dbCategory.description && (
+                      <p className="text-sm text-muted-foreground">{dbCategory.description}</p>
+                    )}
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex flex-wrap gap-1">
@@ -229,7 +248,7 @@ export default function QuizPage() {
                     </div>
 
                     <Button 
-                      onClick={() => startQuiz(category)} 
+                      onClick={() => startQuiz(dbCategory.name)} 
                       className="w-full"
                       variant="outline"
                     >
@@ -241,6 +260,59 @@ export default function QuizPage() {
               )
             })}
           </div>
+
+          {/* Coming Soon Categories */}
+          {inactiveCategories.length > 0 && (
+            <section className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">近日公開予定のカテゴリ</h2>
+                <Badge variant="outline" className="bg-yellow-50 border-yellow-200">
+                  {inactiveCategories.length}カテゴリ
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {inactiveCategories.map((category) => (
+                  <Card key={category.id} className="opacity-75 border-dashed border-2 border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center space-x-2">
+                          <span className="text-lg">{category.icon || '🔜'}</span>
+                          <span>{category.name}</span>
+                        </CardTitle>
+                        <Badge variant="secondary" className="bg-yellow-200 text-yellow-800">
+                          準備中
+                        </Badge>
+                      </div>
+                      {category.description && (
+                        <p className="text-sm text-muted-foreground">{category.description}</p>
+                      )}
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="text-center py-4">
+                        <div className="text-3xl mb-2">🚧</div>
+                        <p className="text-sm text-muted-foreground">
+                          現在問題を準備中です
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          公開をお楽しみに！
+                        </p>
+                      </div>
+                      
+                      <Button 
+                        disabled
+                        className="w-full opacity-50 cursor-not-allowed"
+                        variant="outline"
+                      >
+                        <Clock className="h-4 w-4 mr-2" />
+                        近日公開
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </main>
     </div>

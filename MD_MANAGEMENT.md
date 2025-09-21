@@ -2,7 +2,7 @@
 
 **目的**: プロジェクト内のMarkdownファイルの管理・更新・整合性チェック  
 **更新責任**: 作業終了時に必ず確認・更新  
-**最終確認**: 2025年9月20日
+**最終確認**: 2025年9月21日
 
 ---
 
@@ -15,6 +15,7 @@
 | `DEVELOPMENT_STATUS.md` | 現在の開発状況 | 機能追加・修正・ステータス変更時 | 開発状況・技術構成・課題 |
 | `RELEASE_HISTORY.md` | 変更履歴 | リリース・機能完成時 | 時系列変更記録 |
 | `PRODUCTION_CHECKLIST.md` | 本番リリース手順 | セキュリティ・テーブル・設定変更時 | 本番移行作業項目 |
+| `DEPLOY_DEBUG_CHECKLIST.md` | デプロイ・デバッグ手順 | デプロイ時・問題発生時 | デプロイ作業・トラブルシューティング |
 
 ### **🟡 プロジェクトドキュメント (定期更新)**
 
@@ -23,6 +24,7 @@
 | `README.md` | プロジェクト概要 | 大きな機能追加・技術変更時 | セットアップ・基本使用方法 |
 | `SYSTEM_ARCHITECTURE.md` | システム構成 | アーキテクチャ・技術スタック変更時 | 技術構成・データフロー |
 | `DATA_MANAGEMENT_SPECIFICATIONS.md` | データ管理共通仕様 | データ管理パターン・API・同期方法変更時 | DB/JSON同期・フォールバック・管理者機能 |
+| `VERCEL_ENV_SETUP.md` | Vercel環境設定 | 環境変数・デプロイ設定変更時 | 本番環境・環境変数管理 |
 
 ### **🟢 アーカイブ (保管・参照用)**
 
@@ -33,6 +35,9 @@
 | `old/DEVELOPMENT_LOG.md` | 旧開発ログ | 更新なし | アーカイブ |
 | `old/RELEASE_NOTES.md` | 旧リリースノート | 更新なし | アーカイブ |
 | `old/PRODUCTION_CHECKLIST.md` | 旧チェックリスト | 更新なし | アーカイブ |
+| `DEVELOPMENT_LOG.md` | 開発ログ | 更新なし | 廃止予定 |
+| `DEVELOPMENT_NOTES.md` | 開発ノート | 更新なし | 廃止予定 |
+| `RELEASE_NOTES.md` | リリースノート | 更新なし | 廃止予定 |
 
 ### **📊 専門ドキュメント (`docs/`フォルダ)**
 
@@ -46,6 +51,8 @@
 | `docs/ALE-LEARNING-OPTIMIZATION.md` | 学習最適化 | 学習機能変更時 | 📋 検討中 |
 | `docs/DEVELOPMENT-ROADMAP.md` | 開発ロードマップ | 計画変更時 | 📋 検討中 |
 | `docs/QUICK-WINS.md` | 短期改善案 | 改善実施時 | 📋 検討中 |
+| `docs/learning-content-migration-plan.md` | 学習コンテンツ移行計画 | 学習コンテンツ移行時 | 📋 計画段階 |
+| `docs/NEXT_WORK_TODO.md` | 次回作業TODO | 作業完了時・引き継ぎ時 | 📋 作業管理 |
 
 ---
 

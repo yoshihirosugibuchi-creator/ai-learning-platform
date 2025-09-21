@@ -10,7 +10,7 @@ import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import CourseCard from '@/components/learning/CourseCard'
-import { getLearningCourses, getLearningProgress, calculateLearningStats } from '@/lib/learning/data'
+import { getLearningCourses, calculateLearningStats } from '@/lib/learning/data'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { globalCache, useResourceMonitor } from '@/lib/performance-optimizer'
 import { getBadgeStats } from '@/lib/supabase-badges'
@@ -66,7 +66,7 @@ export default function LearningPage() {
           const { data: { session } } = await Promise.race([
             sessionPromise,
             timeoutPromise
-          ]) as any
+          ]) as { data: { session: { user?: { email?: string } } | null } }
           
           console.log('🔍 Session recheck result:', session ? session.user?.email : 'null')
           

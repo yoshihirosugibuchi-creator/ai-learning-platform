@@ -35,6 +35,8 @@ export interface Category {
   type: CategoryType
   parentId?: string
   displayOrder: number
+  isActive?: boolean
+  isVisible?: boolean
   createdAt?: Date
   updatedAt?: Date
 }

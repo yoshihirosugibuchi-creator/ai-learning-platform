@@ -20,7 +20,7 @@ export async function getLearningCourses(): Promise<{
   title: string
   description: string
   estimatedDays: number
-  difficulty: 'beginner' | 'intermediate' | 'advanced'
+  difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert'
   icon: string
   color: string
   displayOrder: number

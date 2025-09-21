@@ -7,7 +7,7 @@ export interface LearningCourse {
   title: string
   description: string
   estimatedDays: number
-  difficulty: 'beginner' | 'intermediate' | 'advanced'
+  difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert'
   icon: string
   color: string
   genres: LearningGenre[]
@@ -71,7 +71,7 @@ export interface LearningBadge {
   icon: string
   color: string
   badgeImageUrl?: string // 勲章画像URL
-  difficulty: 'beginner' | 'intermediate' | 'advanced'
+  difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert'
   validityPeriodMonths?: number // 有効期限（月数）、未設定は永続
 }
 
@@ -135,15 +135,17 @@ export const SessionTypeDescriptions: Record<SessionType, string> = {
   case_study: '実際の企業事例 + 分析視点 + 教訓'
 }
 
-// 難易度ラベル
+// 難易度ラベル（DB統一スキルレベルに対応）
 export const DifficultyLabels: Record<LearningCourse['difficulty'], string> = {
-  beginner: '初級',
+  basic: '基礎',
   intermediate: '中級',
-  advanced: '上級'
+  advanced: '上級',
+  expert: 'エキスパート'
 }
 
 export const DifficultyColors: Record<LearningCourse['difficulty'], string> = {
-  beginner: '#10B981',
+  basic: '#10B981',
   intermediate: '#F59E0B', 
-  advanced: '#EF4444'
+  advanced: '#EF4444',
+  expert: '#8B5CF6'
 }

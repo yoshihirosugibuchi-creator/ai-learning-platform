@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
@@ -19,6 +19,11 @@ const notoSansJP = Noto_Sans_JP({
 export const metadata: Metadata = {
   title: "AI Learning Enterprise - AIパーソナライズ学習プラットフォーム",
   description: "AI powered personalized learning platform",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({

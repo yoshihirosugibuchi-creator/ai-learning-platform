@@ -39,24 +39,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserProfile = async (user: User | null) => {
     if (user) {
+      console.log('👤 Loading user profile for:', user.email)
+      
+      // Create fallback profile immediately to prevent blocking
+      const fallbackProfile = {
+        id: user.id,
+        email: user.email!,
+        name: user.email?.split('@')[0] || 'User',
+        skill_level: 'beginner' as const,
+        learning_style: 'mixed' as const,
+        experience_level: 'beginner',
+        total_xp: 0,
+        current_level: 1,
+        streak: 0,
+        last_active: new Date().toISOString()
+      }
+      
+      // Set fallback profile immediately for responsive UX
+      setProfile(fallbackProfile)
+      console.log('✅ Fallback profile set immediately for responsive UX')
+      
+      // Try to load/create actual profile in background (non-blocking)
       try {
-        const userProfile = await getOrCreateUserProfile(user)
-        setProfile(userProfile)
+        console.log('🔄 Attempting to load actual profile in background...')
+        
+        // Much shorter timeout for background operation
+        const profileTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Background profile loading timeout')), 5000)
+        )
+        
+        const userProfilePromise = getOrCreateUserProfile(user)
+        const userProfile = await Promise.race([userProfilePromise, profileTimeout])
+        
+        if (userProfile) {
+          console.log('✅ Actual user profile loaded successfully, updating...')
+          setProfile(userProfile)
+        } else {
+          console.log('⚠️ No actual profile returned, keeping fallback')
+        }
       } catch (error) {
-        console.error('❌ Error loading user profile:', error)
-        // Set a fallback profile to keep the app working
-        setProfile({
-          id: user.id,
-          email: user.email!,
-          name: user.email?.split('@')[0] || 'User',
-          skill_level: 'beginner',
-          learning_style: 'mixed',
-          experience_level: 'beginner',
-          total_xp: 0,
-          current_level: 1,
-          streak: 0,
-          last_active: new Date().toISOString()
-        })
+        console.warn('⚠️ Background profile loading failed, keeping fallback profile:', error)
+        // Keep the fallback profile - don't update state
       }
     } else {
       setProfile(null)
@@ -120,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const { data: refreshData, error: refreshError } = await Promise.race([
                 refreshPromise,
                 timeoutPromise
-              ]) as any
+              ]) as { data: { session: unknown }, error: unknown }
               
               if (refreshError || !refreshData.session) {
                 console.error('❌ Session refresh failed, redirecting to login:', refreshError?.message)
@@ -218,7 +241,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session }, error } = await Promise.race([
           sessionPromise,
           timeoutPromise
-        ]) as any
+        ]) as { data: { session: unknown }, error: unknown }
         
         if (error) {
           console.error('⚠️ Session health check failed:', error)
@@ -260,11 +283,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
+    console.log('🔐 AuthProvider: Starting signIn process...')
+    
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Login timeout - request took too long')), 15000)
+      )
+      
+      const signInPromise = supabase.auth.signInWithPassword({
         email,
         password,
       })
+      
+      console.log('⏳ AuthProvider: Sending login request to Supabase...')
+      const { error } = await Promise.race([signInPromise, timeoutPromise])
+      
+      console.log('📨 AuthProvider: Login response received')
       
       if (error) {
         // ユーザー入力エラーは詳細ログを出さない
@@ -276,11 +311,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // システムエラーのみ詳細ログ
           console.error('❌ System authentication error:', error.message)
         }
+      } else {
+        console.log('✅ AuthProvider: Login successful')
       }
       
       return { error }
     } catch (err) {
       console.error('❌ Authentication system error:', err)
+      
+      // If it's a timeout, provide specific error message
+      if (err instanceof Error && err.message.includes('timeout')) {
+        return { error: { message: 'ログインリクエストがタイムアウトしました。再度お試しください。' } }
+      }
+      
       return { error: err }
     }
   }
