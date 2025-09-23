@@ -7,7 +7,19 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Clock, CheckCircle, XCircle, Lightbulb, Star } from 'lucide-react'
 import { Question } from '@/lib/types'
+import { getDifficultyDisplayName } from '@/lib/categories'
 import { getCategoryDisplayName, getSubcategoryDisplayName } from '@/lib/category-mapping'
+
+// 難易度に応じたバッジのバリアントを取得
+function getDifficultyBadgeVariant(difficulty: string): "default" | "secondary" | "destructive" | "outline" {
+  switch (difficulty) {
+    case '基礎': return 'outline'
+    case '中級': return 'secondary' 
+    case '上級': return 'destructive'
+    case 'エキスパート': return 'destructive'
+    default: return 'default'
+  }
+}
 
 interface QuizCardProps {
   question: Question
@@ -96,8 +108,8 @@ export default function QuizCard({
           <Badge variant="outline" className="text-xs w-fit">
             問題 {questionNumber} / {totalQuestions}
           </Badge>
-          <Badge variant={question.difficulty === '初級' ? 'default' : question.difficulty === '中級' ? 'secondary' : 'destructive'} className="text-xs w-fit">
-            {question.difficulty}
+          <Badge variant={getDifficultyBadgeVariant(getDifficultyDisplayName(question.difficulty))} className="text-xs w-fit">
+            {getDifficultyDisplayName(question.difficulty)}
           </Badge>
         </div>
         

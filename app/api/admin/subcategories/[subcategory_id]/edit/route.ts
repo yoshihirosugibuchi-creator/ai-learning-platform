@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase-admin'
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     subcategory_id: string
-  }
+  }>
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {

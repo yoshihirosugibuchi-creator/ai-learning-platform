@@ -9,7 +9,7 @@ export async function getAllQuestions(): Promise<Question[]> {
   const cached = globalCache.get(cacheKey)
   if (cached) {
     console.log('🚀 Questions loaded from cache')
-    return cached
+    return cached as Question[]
   }
 
   try {

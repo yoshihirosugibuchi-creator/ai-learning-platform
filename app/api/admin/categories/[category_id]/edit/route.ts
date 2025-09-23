@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase-admin'
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     category_id: string
-  }
+  }>
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
@@ -116,7 +116,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   } catch (error) {
     console.error('❌ カテゴリー更新API 例外エラー:', error)
     return NextResponse.json(
-      { error: 'サーバーエラーが発生しました', details: error.message },
+      { error: 'サーバーエラーが発生しました', details: (error as any)?.message || 'Unknown error' },
       { status: 500 }
     )
   }

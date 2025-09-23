@@ -509,35 +509,36 @@ export function markOnboardingComplete(userId: string): boolean {
 
 // 既存ユーザーデータのマイグレーション
 export function migrateUserData(userData: unknown): StorageUser {
+  const user = userData as Record<string, unknown>
   // 既存のユーザーデータに新しいフィールドがない場合、追加する
-  if (!userData.auth) {
-    userData.auth = {
+  if (!user.auth) {
+    user.auth = {
       isGuest: false,
       isOnboarded: true // 既存ユーザーはオンボーディング済みとみなす
     }
   }
   
-  if (!userData.profile) {
-    userData.profile = {}
+  if (!user.profile) {
+    user.profile = {}
   }
   
   // SKPポイント履歴関連のマイグレーション
-  if (userData.skpTotalEarned === undefined) {
-    userData.skpTotalEarned = userData.skpBalance || 0
+  if (user.skpTotalEarned === undefined) {
+    user.skpTotalEarned = user.skpBalance || 0
   }
   
-  if (!userData.skpTransactions) {
-    userData.skpTransactions = []
+  if (!user.skpTransactions) {
+    user.skpTransactions = []
   }
   
   // カテゴリー別進捗のマイグレーション
-  if (!userData.categoryProgress) {
-    userData.categoryProgress = []
+  if (!user.categoryProgress) {
+    user.categoryProgress = []
   }
   
   // マイグレーション後のデータを保存
-  saveUserData(userData as StorageUser)
-  return userData as StorageUser
+  saveUserData(user)
+  return user
 }
 
 export function updateUserProgress(
@@ -1147,7 +1148,7 @@ export function migrateUserDataToUserSpecific(): void {
     const getUserKnowledgeCardCollection = (): unknown[] => []
     const globalKnowledgeCardCollection = getUserKnowledgeCardCollection() // without userId = global
     if (globalKnowledgeCardCollection.length > 0) {
-      const existingUserKnowledgeCollection = getUserKnowledgeCardCollection(userId)
+      const existingUserKnowledgeCollection = getUserKnowledgeCardCollection()
       if (existingUserKnowledgeCollection.length === 0) {
         localStorage.setItem(`ale_knowledge_card_collection_${userId}`, JSON.stringify(globalKnowledgeCardCollection))
         console.log(`📚 Migrated ${globalKnowledgeCardCollection.length} knowledge cards to user collection`)
@@ -1175,13 +1176,11 @@ export function initializeUserSpecificData(userId: string): void {
     const saveUserQuizConfig = () => Promise.resolve()
     
     // Use async initialization
-    getUserQuizConfig(userId).then((config: unknown) => {
+    getUserQuizConfig().then((config: unknown) => {
       if (!config) {
-        const defaultConfig = createDefaultQuizConfig(userId)
-        saveUserQuizConfig(defaultConfig).then((success: boolean) => {
-          if (success) {
-            console.log('📝 Created default quiz personalization config')
-          }
+        const defaultConfig = createDefaultQuizConfig()
+        saveUserQuizConfig().then(() => {
+          console.log('📝 Created default quiz personalization config')
         })
       }
     }).catch((error: unknown) => {

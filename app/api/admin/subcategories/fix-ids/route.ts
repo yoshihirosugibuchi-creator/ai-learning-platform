@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase-admin'
 
 // PDFから抽出したサブカテゴリーIDマッピング（日本語ID → 英語ID）
@@ -120,7 +120,7 @@ const subcategoryIdMapping: Record<string, string> = {
   "カントリーリスク分析": "country_risk_analysis"
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log('🔄 サブカテゴリーIDの修正を開始します...')
 

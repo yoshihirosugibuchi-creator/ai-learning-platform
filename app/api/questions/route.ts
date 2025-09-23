@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { filterQuizzesByActiveCategories, generateCategoryNotificationMessage } from '@/lib/category-control'
 
 // Question型定義（レスポンス用）
 interface APIQuestion {
@@ -39,7 +40,7 @@ function dbRowToQuestion(row: unknown): APIQuestion {
 }
 
 // Questions API エンドポイント
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const { searchParams } = new URL(request.url)
     
@@ -60,6 +61,28 @@ export async function GET(request: NextRequest) {
       difficulty
     })
     
+    // カテゴリー制御チェック
+    const categoryControl = await filterQuizzesByActiveCategories(null, category || undefined)
+    
+    // カテゴリーが制限されている場合
+    if (categoryControl.blockedCategories.length > 0) {
+      console.log('🚫 Category access blocked:', categoryControl.blockedCategories)
+      return NextResponse.json({
+        questions: [],
+        total: 0,
+        blocked: true,
+        message: categoryControl.warnings.join(' '),
+        allowedCategories: categoryControl.allowedCategories,
+        filters: {
+          category,
+          subcategory,
+          difficulty,
+          random,
+          includeDeleted
+        }
+      })
+    }
+    
     // ベースクエリ
     let query = supabase
       .from('quiz_questions')
@@ -70,8 +93,17 @@ export async function GET(request: NextRequest) {
       query = query.eq('is_deleted', false)
     }
     
-    // カテゴリーフィルター
-    if (category) {
+    // アクティブなカテゴリーのみに制限
+    if (categoryControl.allowedCategories.length > 0) {
+      if (category) {
+        // 特定カテゴリーが指定されている場合（既にチェック済み）
+        query = query.eq('category_id', category)
+      } else {
+        // カテゴリー指定なしの場合、アクティブなカテゴリーのみ
+        query = query.in('category_id', categoryControl.allowedCategories)
+      }
+    } else if (category) {
+      // フォールバック：指定されたカテゴリーを使用
       query = query.eq('category_id', category)
     }
     
@@ -121,6 +153,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       questions,
       total: questions.length,
+      categoryControl: {
+        allowedCategories: categoryControl.allowedCategories,
+        blocked: false,
+        warnings: categoryControl.warnings
+      },
       filters: {
         category,
         subcategory,

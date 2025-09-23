@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase-admin'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log('🔍 カテゴリーとサブカテゴリーの整合性をチェックします...')
 

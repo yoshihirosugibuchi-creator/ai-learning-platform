@@ -70,6 +70,14 @@ interface SubcategoriesModalProps {
   onSuccess?: () => void
 }
 
+// アイコン選択肢を定義
+const iconOptions = [
+  '📚', '📖', '📝', '💡', '🧠', '💬', '🎯', '💰', '📈', '👥',
+  '🤖', '📋', '🔄', '🛡️', '🎩', '🖥️', '🌐', '🏦', '🏭', '💻',
+  '🏥', '🛍️', '🏗️', '⚡', '🎬', '🚛', '🏛️', '📊', '🔧', '🔍',
+  '🎨', '🌟', '🚀', '📱', '💼', '🎓', '🔬', '🎪', '🚩', '⭐'
+]
+
 function SortableSubcategoryItem({ subcategory, onEdit, onDelete }: { 
   subcategory: Subcategory
   onEdit: (subcategory: Subcategory) => void
@@ -454,13 +462,29 @@ export default function SubcategoriesModal({ isOpen, category, onClose, onSucces
                       />
                     </div>
                     <div>
-                      <Label htmlFor="icon">アイコン</Label>
-                      <Input
-                        id="icon"
-                        value={formData.icon}
-                        onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
-                        placeholder="📚"
-                      />
+                      <Label>アイコン</Label>
+                      <div className="grid grid-cols-6 gap-2 mt-2">
+                        {iconOptions.map((icon) => (
+                          <Button
+                            key={icon}
+                            type="button"
+                            variant={formData.icon === icon ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setFormData(prev => ({ ...prev, icon }))}
+                            className="h-10 text-lg"
+                          >
+                            {icon}
+                          </Button>
+                        ))}
+                      </div>
+                      <div className="mt-2">
+                        <Input
+                          value={formData.icon}
+                          onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
+                          placeholder="または手動入力: 📚"
+                          className="text-center"
+                        />
+                      </div>
                     </div>
                   </div>
                   <div>

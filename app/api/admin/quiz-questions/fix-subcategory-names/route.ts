@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase-admin'
 
 // quiz_questionsで使用されている誤ったサブカテゴリー名を正しい名称にマッピング
@@ -28,7 +28,7 @@ const quizSubcategoryNameMapping: Record<string, string> = {
   "category_level": "経営戦略・事業戦略" // 一般的な戦略質問として
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log('🔄 quiz_questionsテーブルのサブカテゴリー名の修正を開始します...')
 

@@ -1,7 +1,7 @@
 # 本番リリース前チェックリスト
 
-**最終更新**: 2025-09-20
-**プロジェクト状況**: TypeScript修正完了、カテゴリーDB移行進行中
+**最終更新**: 2025-09-22
+**プロジェクト状況**: プロフィール編集機能実装完了、コース学習整合性完了、カテゴリー制御機能完成、デプロイメント自動化完成
 
 ## ❗ 重要：セキュリティ設定
 
@@ -71,9 +71,15 @@ ALTER TABLE skill_levels DISABLE ROW LEVEL SECURITY;
 #### 3. 既存12テーブルのセキュリティポリシー設定（本番前必須）
 
 ```sql
--- users テーブルのポリシー
+-- users テーブルのポリシー（プロフィール編集機能対応）
 CREATE POLICY "Users can manage own profile" ON users
   FOR ALL USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+
+-- プロフィール編集のデータ検証・制限
+-- 注意: updateUserProfile関数でのバリデーション確認
+-- - 名前・表示名: 100文字以内、HTML/SQLインジェクション対策
+-- - 業界名: 許可されたカテゴリーのみ（input sanitization）
+-- - 経験年数: 0-100年の範囲制限
 
 -- quiz_results のポリシー
 CREATE POLICY "Users can manage own quiz results" ON quiz_results
@@ -125,6 +131,7 @@ CREATE POLICY "Users can manage own wisdom cards" ON wisdom_card_collection
 1. 上記SQLを実行
 2. **基本機能の動作確認**：
    - [ ] ユーザー登録・ログイン・ログアウト
+   - [ ] プロフィール編集機能（名前・呼び名・業界・経験年数）
    - [ ] クイズ実行・結果保存
    - [ ] カード収集機能
    - [ ] コース学習・バッジ獲得
@@ -271,6 +278,23 @@ ORDER BY tablename;
   - 新機能：有効・無効制御、管理者UI、業界カテゴリー段階的追加
   - 進捗：Phase 1 (DB設計) 完了、Phase 2 (データ移行) 進行中
 
+### デプロイメント自動化システム
+
+- [x] **フォールバックデータ同期スクリプト** ✅ **完了 (2025-09-21)**
+  - `scripts/deploy-sync-fallback-data.ts`: 本番デプロイ前のデータ同期
+  - 静的JSONファイルとDBの同期確保
+  - フォールバック機能の動作確認
+  
+- [x] **データ整合性チェック自動化** ✅ **完了 (2025-09-21)**
+  - `scripts/check-course-master-consistency-static.ts`: コース学習整合性
+  - `scripts/analyze-data-reflection-status.ts`: データ反映状況分析
+  - 0エラー・0警告の整合性確保
+  
+- [x] **ワンライン実行システム** ✅ **完了 (2025-09-21)**
+  - `npm run deploy:pre`: デプロイ前完全チェック
+  - 同期 → ビルド → Lint → 整合性チェックの自動実行
+  - デプロイ可否の自動判定
+
 ### その他の改善項目
 
 - [ ] 管理者ダッシュボード
@@ -278,6 +302,33 @@ ORDER BY tablename;
 - [ ] SNS共有機能
 - [ ] 通知システム
 - [ ] モバイルアプリ対応
+
+---
+
+## 🚀 本番デプロイ実行手順
+
+### Step 1: 事前チェック
+```bash
+# データ整合性確認
+npm run check:course-consistency-static
+
+# データ反映状況確認
+npm run analyze:data-reflection
+
+# デプロイ前完全チェック
+npm run deploy:pre
+```
+
+### Step 2: セキュリティ設定
+- [ ] RLS有効化（上記SQLを実行）
+- [ ] 環境変数の本番用更新
+- [ ] Supabaseダッシュボードでテーブル確認
+
+### Step 3: 最終確認
+- [ ] ビルドエラー: 0件
+- [ ] TypeScriptエラー: 0件
+- [ ] データ整合性: 0エラー
+- [ ] 環境変数: 本番用設定済み
 
 ---
 

@@ -7,7 +7,17 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "migrate:questions": "tsx scripts/migrate-questions-to-db.ts"
+    "typecheck": "tsc --noEmit",
+    "migrate:questions": "tsx scripts/migrate-questions-to-db.ts",
+    "check:course-consistency": "tsx scripts/check-course-master-consistency.ts",
+    "check:course-consistency-static": "tsx scripts/check-course-master-consistency-static.ts",
+    "sync:quiz-json": "tsx scripts/sync-quiz-data-to-json.ts",
+    "analyze:data-reflection": "tsx scripts/analyze-data-reflection-status.ts",
+    "deploy:sync": "tsx scripts/deploy-sync-fallback-data.ts",
+    "deploy:check": "npm run deploy:sync && npm run build && npm run lint",
+    "deploy:pre": "npm run deploy:check && echo 'デプロイ前チェック完了 - git commit/push可能です'",
+    "deploy:complete": "tsx scripts/deploy-complete.ts",
+    "deploy:full": "npm run deploy:complete"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

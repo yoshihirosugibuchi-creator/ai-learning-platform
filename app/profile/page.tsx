@@ -43,10 +43,11 @@ import { UserBadge } from '@/lib/types/learning'
 import { updateUserProfile } from '@/lib/supabase-user'
 import { mainCategories, industryCategories } from '@/lib/categories'
 import { getUserLevelSystem, LevelSystem } from '@/lib/xp-level-system'
+import ProfileEditModal from '@/components/profile/ProfileEditModal'
 
 export default function ProfilePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, refreshProfile } = useAuth()
   const [activeTab, setActiveTab] = useState('basic')
   
   // データ状態
@@ -68,16 +69,19 @@ export default function ProfilePage() {
   const [skpFilter, setSkpFilter] = useState<'all' | 'earned' | 'spent'>('all')
   
   // プロフィール編集状態
-  const [editMode, setEditMode] = useState(false)
   const [profileData, setProfileData] = useState({
     name: '',
     displayName: '',
     industry: '',
-    experienceYears: '',
+    jobTitle: '',
+    positionLevel: '',
+    learningLevel: '',
+    experienceYears: 0,
     interestedIndustries: [] as string[],
     learningGoals: [] as string[],
     selectedCategories: [] as string[],
-    selectedIndustryCategories: [] as string[]
+    selectedIndustryCategories: [] as string[],
+    weeklyGoal: ''
   })
 
   // データ取得
@@ -121,18 +125,57 @@ export default function ProfilePage() {
       
       // プロフィールデータを初期化
       const profileRecord = profile as unknown as Record<string, unknown>
+      console.log('Setting profile data from:', profileRecord)
       setProfileData({
         name: profile.name || '',
         displayName: (profileRecord.display_name as string) || '',
         industry: (profileRecord.industry as string) || '',
-        experienceYears: (profileRecord.experience_years as number)?.toString() || '',
+        jobTitle: (profileRecord.job_title as string) || '',
+        positionLevel: (profileRecord.position_level as string) || '',
+        learningLevel: (profileRecord.learning_level as string) || '',
+        experienceYears: (profileRecord.experience_years as number) || 0, // Keep as number
         interestedIndustries: (profileRecord.interested_industries as string[]) || [],
         learningGoals: (profileRecord.learning_goals as string[]) || [],
         selectedCategories: (profileRecord.selected_categories as string[]) || [],
-        selectedIndustryCategories: (profileRecord.selected_industry_categories as string[]) || []
+        selectedIndustryCategories: (profileRecord.selected_industry_categories as string[]) || [],
+        weeklyGoal: (profileRecord.weekly_goal as string) || ''
       })
     }
   }, [user, profile])
+
+  // Profile edit handler for new modal
+  const handleSaveProfile = async (updatedData: Partial<typeof profileData>) => {
+    if (!user) return
+    
+    try {
+      const updateData = {
+        name: updatedData.name,
+        display_name: updatedData.displayName,
+        industry: updatedData.industry,
+        job_title: updatedData.jobTitle,
+        position_level: updatedData.positionLevel,
+        learning_level: updatedData.learningLevel,
+        experience_years: updatedData.experienceYears,
+        interested_industries: updatedData.interestedIndustries,
+        learning_goals: updatedData.learningGoals,
+        selected_categories: updatedData.selectedCategories,
+        selected_industry_categories: updatedData.selectedIndustryCategories,
+        weekly_goal: updatedData.weeklyGoal
+      }
+      
+      await updateUserProfile(user.id, updateData)
+      
+      // Refresh the profile in AuthProvider to get the latest data
+      await refreshProfile()
+      
+      console.log('Profile updated successfully')
+      alert('プロフィールが正常に更新されました！')
+    } catch (error) {
+      console.error('Failed to update profile:', error)
+      alert(`プロフィールの更新に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`)
+      throw error // Re-throw to let modal handle the error state
+    }
+  }
 
   // 認証ガード
   if (loading) {
@@ -232,204 +275,215 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* 編集可能項目 */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold text-gray-800">基本プロフィール</h4>
-                    {!editMode && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditMode(true)}
-                        className="text-xs"
-                      >
-                        編集
-                      </Button>
-                    )}
-                  </div>
-                  
-                  {editMode ? (
-                    <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                {/* プロフィール詳細 */}
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">プロフィール詳細</h3>
+                  <ProfileEditModal
+                    initialData={profileData}
+                    onSave={handleSaveProfile}
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-sm"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      編集
+                    </Button>
+                  </ProfileEditModal>
+                </div>
+                
+                <div className="grid gap-6">
+                  {/* 基本プロフィールカード */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base font-medium flex items-center space-x-2">
+                        <User className="h-5 w-5 text-blue-500" />
+                        <span>基本プロフィール</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium text-gray-700">名前</label>
-                          <input
-                            type="text"
-                            value={profileData.name}
-                            onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            placeholder="名前を入力"
-                          />
+                          <p className="text-sm text-gray-600 mt-1">
+                            {profileData.name || '未設定'}
+                          </p>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-gray-700">呼び名</label>
-                          <input
-                            type="text"
-                            value={profileData.displayName}
-                            onChange={(e) => setProfileData({...profileData, displayName: e.target.value})}
-                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            placeholder="呼び名を入力"
-                          />
+                          <p className="text-sm text-gray-600 mt-1">
+                            {profileData.displayName || '未設定'}
+                          </p>
                         </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* キャリアカード */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base font-medium flex items-center space-x-2">
+                        <Briefcase className="h-5 w-5 text-green-500" />
+                        <span>キャリア</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium text-gray-700">所属業界</label>
-                          <input
-                            type="text"
-                            value={profileData.industry}
-                            onChange={(e) => setProfileData({...profileData, industry: e.target.value})}
-                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            placeholder="所属業界を入力"
-                          />
+                          <p className="text-sm text-gray-600 mt-1">
+                            {(() => {
+                              if (profileData.industry === 'other') return 'その他'
+                              const industry = industryCategories.find(ind => ind.id === profileData.industry)
+                              return industry ? industry.name : (profileData.industry || '未設定')
+                            })()}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">職種</label>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {profileData.jobTitle || '未設定'}
+                          </p>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-gray-700">経験年数</label>
-                          <input
-                            type="number"
-                            value={profileData.experienceYears}
-                            onChange={(e) => setProfileData({...profileData, experienceYears: e.target.value})}
-                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                            placeholder="経験年数"
-                          />
+                          <p className="text-sm text-gray-600 mt-1">
+                            {(() => {
+                              const years = profileData.experienceYears
+                              if (years === 0) return '1年未満'
+                              if (years === 2) return '1-3年'
+                              if (years === 5) return '4-7年'
+                              if (years === 10) return '8-15年'
+                              if (years === 16) return '16年以上'
+                              return years ? `${years}年` : '未設定'
+                            })()}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">職位レベル</label>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {(() => {
+                              const levelLabels = {
+                                'entry': '新入社員・エントリーレベル',
+                                'junior': 'ジュニア・アシスタント',
+                                'mid': 'ミドル・シニア',
+                                'senior': 'シニア・エキスパート',
+                                'lead': 'リーダー・マネージャー',
+                                'director': 'ディレクター・部長',
+                                'executive': '役員・エグゼクティブ'
+                              }
+                              return levelLabels[profileData.positionLevel as keyof typeof levelLabels] || profileData.positionLevel || '未設定'
+                            })()}
+                          </p>
                         </div>
                       </div>
-                      <div className="flex space-x-2 pt-2">
-                        <Button size="sm" onClick={() => setEditMode(false)}>
-                          保存
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => setEditMode(false)}>
-                          キャンセル
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">名前</label>
-                        <p className="text-sm text-gray-600 bg-white p-2 rounded border">
-                          {profileData.name || '未設定'}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">呼び名</label>
-                        <p className="text-sm text-gray-600 bg-white p-2 rounded border">
-                          {profileData.displayName || '未設定'}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">所属業界</label>
-                        <p className="text-sm text-gray-600 bg-white p-2 rounded border">
-                          {profileData.industry || '未設定'}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">経験年数</label>
-                        <p className="text-sm text-gray-600 bg-white p-2 rounded border">
-                          {profileData.experienceYears ? `${profileData.experienceYears}年` : '未設定'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    </CardContent>
+                  </Card>
 
-                {/* 興味・目的（簡易版編集可能） */}
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-800 mb-3">興味・学習目的</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">興味のある業界</label>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {profileData.interestedIndustries.length > 0 ? (
-                          profileData.interestedIndustries.map((industry) => (
-                            <Badge key={industry} variant="secondary">{industry}</Badge>
-                          ))
-                        ) : (
-                          <p className="text-sm text-gray-500">未設定</p>
-                        )}
-                        <Button variant="outline" size="sm" className="text-xs">
-                          編集
-                        </Button>
+                  {/* 学習設定カード */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base font-medium flex items-center space-x-2">
+                        <Target className="h-5 w-5 text-purple-500" />
+                        <span>学習設定</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">自分の業界以外で興味ある業界（複数選択可）</label>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {profileData.interestedIndustries.length > 0 ? (
+                              profileData.interestedIndustries.map((industryId) => {
+                                const industry = industryCategories.find(ind => ind.id === industryId)
+                                return (
+                                  <Badge key={industryId} variant="secondary" className="flex items-center space-x-1">
+                                    <span>{industry?.icon}</span>
+                                    <span>{industry?.name || industryId}</span>
+                                  </Badge>
+                                )
+                              })
+                            ) : (
+                              <p className="text-sm text-gray-500">未設定</p>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">重点的に学習したいメインカテゴリー（複数選択可）</label>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {profileData.selectedCategories.length > 0 ? (
+                              profileData.selectedCategories.map((categoryId) => {
+                                const category = mainCategories.find(cat => cat.id === categoryId)
+                                return (
+                                  <Badge key={categoryId} variant="secondary" className="flex items-center space-x-1">
+                                    <span>{category?.icon}</span>
+                                    <span>{category?.name || categoryId}</span>
+                                  </Badge>
+                                )
+                              })
+                            ) : (
+                              <p className="text-sm text-gray-500">未設定</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">学習レベル</label>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {(() => {
+                                const levelLabels = {
+                                  'beginner': '初心者',
+                                  'intermediate': '中級者',
+                                  'advanced': '上級者',
+                                  'expert': 'エキスパート'
+                                }
+                                return levelLabels[profileData.learningLevel as keyof typeof levelLabels] || profileData.learningLevel || '未設定'
+                              })()}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">週間学習目標</label>
+                            <div className="mt-1">
+                              {profileData.weeklyGoal ? (
+                                <Badge variant="outline" className="flex items-center space-x-2 w-fit">
+                                  <Clock className="h-3 w-3" />
+                                  <span>
+                                    {(() => {
+                                      const goalLabels = {
+                                        'light': 'ライト（週2-3回、1回10分程度）',
+                                        'medium': 'ミディアム（週4-5回、1回15分程度）',
+                                        'heavy': 'ヘビー（毎日、1回20分以上）'
+                                      }
+                                      return goalLabels[profileData.weeklyGoal as keyof typeof goalLabels] || profileData.weeklyGoal
+                                    })()}
+                                  </span>
+                                </Badge>
+                              ) : (
+                                <p className="text-sm text-gray-500">未設定</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">学習目標（複数選択可）</label>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {profileData.learningGoals.length > 0 ? (
+                              profileData.learningGoals.map((goal) => (
+                                <Badge key={goal} variant="outline">{goal}</Badge>
+                              ))
+                            ) : (
+                              <p className="text-sm text-gray-500">未設定</p>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">学習目的</label>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {profileData.learningGoals.length > 0 ? (
-                          profileData.learningGoals.map((goal) => (
-                            <Badge key={goal} variant="outline">{goal}</Badge>
-                          ))
-                        ) : (
-                          <p className="text-sm text-gray-500">未設定</p>
-                        )}
-                        <Button variant="outline" size="sm" className="text-xs">
-                          編集
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </CardContent>
             </Card>
 
-            {/* 選択学習分野 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BookOpen className="h-5 w-5" />
-                  <span>選択学習分野</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-700">重点メインカテゴリー</label>
-                    <Button variant="outline" size="sm" className="text-xs">
-                      選択・編集
-                    </Button>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {profileData.selectedCategories.length > 0 ? (
-                      profileData.selectedCategories.map((categoryId) => {
-                        const category = mainCategories.find(cat => cat.id === categoryId)
-                        return category ? (
-                          <Badge key={categoryId} className="flex items-center space-x-1">
-                            <span>{category.icon}</span>
-                            <span>{category.name}</span>
-                          </Badge>
-                        ) : null
-                      })
-                    ) : (
-                      <p className="text-sm text-gray-500">重点的に学習したいメインカテゴリーを選択してください</p>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-700">業界カテゴリー</label>
-                    <Button variant="outline" size="sm" className="text-xs">
-                      選択・編集
-                    </Button>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {profileData.selectedIndustryCategories.length > 0 ? (
-                      profileData.selectedIndustryCategories.map((categoryId) => {
-                        const category = industryCategories.find(cat => cat.id === categoryId)
-                        return category ? (
-                          <Badge key={categoryId} variant="outline" className="flex items-center space-x-1">
-                            <span>{category.icon}</span>
-                            <span>{category.name}</span>
-                          </Badge>
-                        ) : null
-                      })
-                    ) : (
-                      <p className="text-sm text-gray-500">関心のある業界カテゴリーを選択してください</p>
-                    )}
-                  </div>
-                </div>
-                <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded">
-                  💡 選択した分野は、スキル評価タブでの業界スキルレベル表示や、おすすめ学習コンテンツの提案に使用されます。
-                </div>
-              </CardContent>
-            </Card>
 
             {/* アカウント管理（準備中） */}
             <Card className="border-blue-200 bg-blue-50/50">

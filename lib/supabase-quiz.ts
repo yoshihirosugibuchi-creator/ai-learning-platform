@@ -53,7 +53,7 @@ export async function saveQuizResult(result: Omit<QuizResult, 'id' | 'created_at
     console.log('✅ Quiz result saved successfully:', data)
     return data
   } catch (saveError) {
-    console.error('❌ Quiz save exception:', saveError.message)
+    console.error('❌ Quiz save exception:', (saveError as Error)?.message || saveError)
     throw saveError
   }
 }

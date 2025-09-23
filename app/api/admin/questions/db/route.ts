@@ -145,7 +145,6 @@ export async function POST(request: NextRequest) {
     }))
     
     let insertedCount = 0
-    const updatedCount = 0
     const errors: string[] = []
     
     // 最適化されたバッチ処理（50件ずつで高速化）

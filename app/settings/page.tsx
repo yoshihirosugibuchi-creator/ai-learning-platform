@@ -43,15 +43,6 @@ export default function SettingsPage() {
       available: true
     },
     {
-      id: 'subcategories-admin',
-      title: 'サブカテゴリー管理',
-      description: 'サブカテゴリーの追加・編集・並び順管理',
-      icon: <Users className="h-5 w-5" />,
-      href: '/admin/subcategories',
-      category: '管理者機能',
-      available: true
-    },
-    {
       id: 'account',
       title: 'アカウント設定',
       description: 'プロフィール・パスワード変更',

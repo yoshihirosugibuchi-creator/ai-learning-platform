@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') // 'main', 'industry', or null (all)
     const activeOnly = searchParams.get('active_only') === 'true'
-    const includeInactive = searchParams.get('include_inactive') === 'true'
+    // const includeInactive = searchParams.get('include_inactive') === 'true' // 未実装
 
     // 管理者向けのクエリ（全カテゴリー、統計情報付き）
     let query = supabaseAdmin
@@ -59,12 +59,20 @@ export async function GET(request: Request) {
           .eq('parent_category_id', category.category_id)
           .eq('is_visible', true)
 
+        if (subError) {
+          console.warn('Warning: Failed to count subcategories for category', category.category_id, subError.message)
+        }
+
         // クイズ数を取得（サブカテゴリー経由）
         const { count: quizCount, error: quizError } = await supabaseAdmin
           .from('quiz_questions')
           .select('*', { count: 'exact', head: true })
           .eq('category', category.category_id)
           .neq('is_deleted', true)
+
+        if (quizError) {
+          console.warn('Warning: Failed to count quiz questions for category', category.category_id, quizError.message)
+        }
 
         return {
           ...category,

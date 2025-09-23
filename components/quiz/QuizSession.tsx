@@ -19,7 +19,7 @@ import type { User } from '@supabase/supabase-js'
 import { getRandomWisdomCard, WisdomCard as WisdomCardType } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
 import { getCategoryDisplayName } from '@/lib/category-mapping'
-import { isValidCategoryId } from '@/lib/categories'
+import { isValidCategoryId, getDifficultyDisplayName } from '@/lib/categories'
 import { addWisdomCardToCollection } from '@/lib/supabase-cards'
 import { saveSKPTransaction, saveDetailedQuizData, updateCategoryProgress } from '@/lib/supabase-learning'
 import { updateProgressAfterQuiz, calculateChallengeQuizRewards, saveChallengeQuizProgressToDatabase } from '@/lib/xp-level-system'
@@ -159,11 +159,14 @@ export default function QuizSession({
       filteredQuestions = filteredQuestions.filter(q => q.category === category)
     }
     
-    // 難易度でフィルタリング（複数選択対応）
+    // 難易度でフィルタリング（複数選択対応・英語/日本語両対応）
     if (difficulties && difficulties.length > 0) {
-      filteredQuestions = filteredQuestions.filter(q => 
-        difficulties.includes(q.difficulty)
-      )
+      filteredQuestions = filteredQuestions.filter(q => {
+        const questionDifficultyDisplay = getDifficultyDisplayName(q.difficulty)
+        return difficulties.some(selectedDiff => 
+          getDifficultyDisplayName(selectedDiff) === questionDifficultyDisplay
+        )
+      })
       console.log(`📊 Selected difficulties: ${difficulties.join(', ')} (${filteredQuestions.length} questions)`)
       
       // 選択した難易度で問題が不足している場合は他の難易度も含める
@@ -175,9 +178,12 @@ export default function QuizSession({
         }
         
         // 選択した難易度を優先しつつ、他の難易度も追加
-        const remainingQuestions = allCategoryQuestions.filter(q => 
-          !difficulties.includes(q.difficulty)
-        )
+        const remainingQuestions = allCategoryQuestions.filter(q => {
+          const questionDifficultyDisplay = getDifficultyDisplayName(q.difficulty)
+          return !difficulties.some(selectedDiff => 
+            getDifficultyDisplayName(selectedDiff) === questionDifficultyDisplay
+          )
+        })
         filteredQuestions = [...filteredQuestions, ...remainingQuestions]
       }
     }

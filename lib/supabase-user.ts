@@ -149,19 +149,44 @@ export async function createUserProfile(user: SupabaseUser): Promise<UserProfile
 }
 
 // ユーザープロファイルを更新
-export async function updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile | null> {
+export async function updateUserProfile(userId: string, updates: Record<string, unknown>): Promise<UserProfile | null> {
+  console.log('Updating user profile with data:', { userId, updates })
+  
+  // Create the update object with proper field mapping
+  const updateData: Record<string, unknown> = {}
+  
+  // Map the fields from the form to database column names
+  if (updates.name !== undefined) updateData.name = updates.name
+  if (updates.display_name !== undefined) updateData.display_name = updates.display_name
+  if (updates.industry !== undefined) updateData.industry = updates.industry
+  if (updates.job_title !== undefined) updateData.job_title = updates.job_title
+  if (updates.position_level !== undefined) updateData.position_level = updates.position_level
+  if (updates.learning_level !== undefined) updateData.learning_level = updates.learning_level
+  if (updates.experience_years !== undefined) updateData.experience_years = parseInt(updates.experience_years) || 0
+  if (updates.interested_industries !== undefined) updateData.interested_industries = updates.interested_industries
+  if (updates.learning_goals !== undefined) updateData.learning_goals = updates.learning_goals
+  if (updates.selected_categories !== undefined) updateData.selected_categories = updates.selected_categories
+  if (updates.selected_industry_categories !== undefined) updateData.selected_industry_categories = updates.selected_industry_categories
+  if (updates.weekly_goal !== undefined) updateData.weekly_goal = updates.weekly_goal
+  
+  // Always update timestamp
+  updateData.updated_at = new Date().toISOString()
+  
+  console.log('Final update data:', updateData)
+  
   const { data, error } = await supabase
     .from('users')
-    .update({ ...updates, updated_at: new Date().toISOString() })
+    .update(updateData)
     .eq('id', userId)
     .select()
     .single()
 
   if (error) {
     console.error('Error updating user profile:', error)
-    return null
+    throw new Error(`Failed to update user profile: ${error.message || 'Unknown error'}`)
   }
 
+  console.log('Profile updated successfully:', data)
   return data
 }
 

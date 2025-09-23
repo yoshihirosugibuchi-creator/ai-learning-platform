@@ -44,7 +44,7 @@ export default function AdminPage() {
       const data = await getAllQuestions()
       setQuestions(data)
       setMessage({ type: 'success', text: `${data.length}問のクイズ問題を読み込みました` })
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'クイズ問題の読み込みに失敗しました' })
     }
     setLoading(false)
@@ -98,7 +98,7 @@ export default function AdminPage() {
       document.body.removeChild(link)
 
       setMessage({ type: 'success', text: `${questions.length}問をCSVファイルに出力しました` })
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'CSV出力に失敗しました' })
     }
   }
@@ -217,7 +217,7 @@ export default function AdminPage() {
 
           parsedQuestions.push(question)
 
-        } catch (error) {
+        } catch {
           errors.push(`行${i + 1}: パースエラー`)
         }
       }
@@ -251,7 +251,7 @@ export default function AdminPage() {
         text: `${parsedQuestions.length}問を解析しました。プレビューを確認してください。` 
       })
 
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'CSVファイルの解析に失敗しました' })
     }
   }
@@ -315,7 +315,7 @@ export default function AdminPage() {
       } else {
         throw new Error('インポートAPIエラー')
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'インポートに失敗しました' })
     }
     setLoading(false)

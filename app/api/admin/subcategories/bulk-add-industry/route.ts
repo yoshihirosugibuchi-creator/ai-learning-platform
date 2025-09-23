@@ -466,7 +466,7 @@ const industrySubcategories = [
   }
 ]
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log('🔄 業界別カテゴリーのサブカテゴリー一括追加を開始します...')
 

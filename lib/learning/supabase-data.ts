@@ -196,7 +196,7 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
   const cached = globalCache.get(cacheKey)
   if (cached) {
     console.log('🚀 DB Course details loaded from cache:', courseId)
-    return cached
+    return cached as LearningCourse
   }
   
   try {
@@ -307,7 +307,7 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
           title: genre.title,
           description: genre.description,
           categoryId: genre.category_id,
-          subcategoryId: genre.subcategory_id,
+          subcategoryId: genre.subcategory_id || undefined,
           estimatedDays: genre.estimated_days,
           displayOrder: genre.display_order,
           badge: genre.badge_data,

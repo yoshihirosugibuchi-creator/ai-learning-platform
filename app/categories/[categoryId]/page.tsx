@@ -14,7 +14,8 @@ import {
   mainCategories, 
   industryCategories, 
   getSubcategoriesByParent,
-  skillLevels 
+  skillLevels,
+  getDifficultyDisplayName 
 } from '@/lib/categories'
 import { SkillLevel } from '@/lib/types/category'
 import { Question } from '@/lib/types'
@@ -79,13 +80,33 @@ export default function CategoryDetailPage() {
   const subcategories = getSubcategoriesByParent(categoryId)
 
   // Calculate real stats based on actual data
-  const categoryQuestions = questions.filter(q => q.category === categoryId)
-  const questionsByDifficulty = {
-    '基礎': categoryQuestions.filter(q => q.difficulty === '基礎').length,
-    '中級': categoryQuestions.filter(q => q.difficulty === '中級').length,
-    '上級': categoryQuestions.filter(q => q.difficulty === '上級').length,
-    'エキスパート': categoryQuestions.filter(q => q.difficulty === 'エキスパート').length
-  }
+  // カテゴリーIDでマッチング（メインのマッチング条件）
+  const categoryQuestions = questions.filter(q => {
+    const matchesId = q.category === categoryId
+    const matchesName = category && q.category === category.name
+    const matchesCategoryId = category && q.category === category.id
+    return matchesId || matchesName || matchesCategoryId
+  })
+  
+  console.log(`🔍 Category Debug:`)
+  console.log(`  - URL categoryId: ${categoryId}`)
+  console.log(`  - Category object:`, category)
+  console.log(`  - Questions found: ${categoryQuestions.length}`)
+  console.log(`  - Total questions: ${questions.length}`)
+  console.log(`📊 Sample questions:`, categoryQuestions.slice(0, 3).map(q => ({ category: q.category, difficulty: q.difficulty })))
+  
+  // All unique categories in questions for debugging
+  const allCategories = [...new Set(questions.map(q => q.category))]
+  console.log(`📂 All categories in data:`, allCategories)
+  
+  // 実際のデータから難易度を取得して日本語表示名で集計
+  const questionsByDifficulty: Record<string, number> = {}
+  categoryQuestions.forEach(q => {
+    const displayName = getDifficultyDisplayName(q.difficulty)
+    questionsByDifficulty[displayName] = (questionsByDifficulty[displayName] || 0) + 1
+  })
+  
+  console.log(`📊 Difficulty distribution:`, questionsByDifficulty)
   
   // Get user's category progress
   const userCategoryProgress = user?.categoryProgress?.find(cp => cp.categoryId === categoryId)
@@ -226,13 +247,8 @@ export default function CategoryDetailPage() {
                         <div className="text-sm font-medium text-muted-foreground">難易度選択（複数選択可）</div>
                         <div className="grid grid-cols-2 gap-2">
                           {skillLevels.map((level) => {
-                            const difficultyMapping = {
-                              'basic': '基礎',
-                              'intermediate': '中級', 
-                              'advanced': '上級',
-                              'expert': 'エキスパート'
-                            }
-                            const difficulty = difficultyMapping[level.id as keyof typeof difficultyMapping]
+                            // スキルレベルマスタから日本語名を取得
+                            const difficulty = level.name // '基礎', '中級', '上級', 'エキスパート'
                             const count = questionsByDifficulty[difficulty] || 0
                             const isSelected = selectedDifficulties.includes(difficulty)
                             

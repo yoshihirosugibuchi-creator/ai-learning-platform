@@ -58,7 +58,7 @@ export default function AdminCategoriesPage() {
         const adminData = await response.json()
         
         // 管理者データを直接使用
-        const categoriesWithStats = (adminData.categories || []).map((category: any) => ({
+        const categoriesWithStats = (adminData.categories || []).map((category: Record<string, unknown>) => ({
           category_id: category.category_id,
           name: category.name,
           description: category.description || '',
@@ -75,7 +75,7 @@ export default function AdminCategoriesPage() {
         }))
         
         setCategories(categoriesWithStats)
-        setMessage({ type: 'success', text: `${categoriesWithStats.length}個のカテゴリーを読み込みました（有効: ${categoriesWithStats.filter(c => c.is_active).length}個、無効: ${categoriesWithStats.filter(c => !c.is_active).length}個）` })
+        setMessage({ type: 'success', text: `${categoriesWithStats.length}個のカテゴリーを読み込みました（有効: ${categoriesWithStats.filter((c: unknown) => (c as any).is_active).length}個、無効: ${categoriesWithStats.filter((c: unknown) => !(c as any).is_active).length}個）` })
       } else {
         // フォールバック: 基本カテゴリー取得
         const allCategories = await getCategories({ activeOnly: false })
@@ -84,8 +84,8 @@ export default function AdminCategoriesPage() {
           name: category.name,
           description: category.description || '',
           type: category.type,
-          icon: category.icon,
-          color: category.color,
+          icon: category.icon || '📚',
+          color: category.color || '#6B7280',
           display_order: category.displayOrder,
           is_active: true, // デフォルトはアクティブ
           is_visible: true,

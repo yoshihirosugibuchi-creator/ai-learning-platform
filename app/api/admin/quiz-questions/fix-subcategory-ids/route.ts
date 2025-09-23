@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase-admin'
 
 // quiz_questionsで使用されている誤ったIDを正しいIDにマッピング
@@ -67,7 +67,7 @@ const quizSubcategoryIdMapping: Record<string, string> = {
   "category_level": "business_strategy" // 一般的な戦略レベルの質問として
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log('🔄 quiz_questionsテーブルのsubcategory_idの修正を開始します...')
 

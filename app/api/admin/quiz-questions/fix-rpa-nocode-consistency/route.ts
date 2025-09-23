@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase-admin'
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log('🔄 RPAとノーコード問題の修正及び整合性修正を開始します...')
 

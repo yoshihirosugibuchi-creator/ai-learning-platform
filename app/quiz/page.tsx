@@ -13,7 +13,7 @@ import LoadingScreen from '@/components/layout/LoadingScreen'
 import { Question } from '@/lib/types'
 import { MainCategory, IndustryCategory } from '@/lib/types/category'
 import { getAllQuestions, getCategories } from '@/lib/questions'
-import { getCategories as getDbCategories } from '@/lib/categories'
+import { getCategories as getDbCategories, getDifficultyDisplayName } from '@/lib/categories'
 import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function QuizPage() {
@@ -183,13 +183,16 @@ export default function QuizPage() {
               })
               .map((dbCategory) => {
               const categoryQuestions = questions.filter(q => q.category === dbCategory.name || q.category === dbCategory.id)
-              const difficultyCount = {
-                基礎: categoryQuestions.filter(q => q.difficulty === '基礎').length,
-                初級: categoryQuestions.filter(q => q.difficulty === '初級').length,
-                中級: categoryQuestions.filter(q => q.difficulty === '中級').length,
-                上級: categoryQuestions.filter(q => q.difficulty === '上級').length,
-                エキスパート: categoryQuestions.filter(q => q.difficulty === 'エキスパート').length,
-              }
+              
+              // 実際のデータから難易度を取得して日本語表示名で集計
+              const difficultyCount: Record<string, number> = {}
+              categoryQuestions.forEach(q => {
+                const displayName = getDifficultyDisplayName(q.difficulty)
+                difficultyCount[displayName] = (difficultyCount[displayName] || 0) + 1
+              })
+              
+              // 表示順序を定義（スキルレベルマスタの順序に従う）
+              const orderedDifficulties = ['基礎', '中級', '上級', 'エキスパート']
 
               return (
                 <Card key={dbCategory.id} className="hover:shadow-lg transition-shadow">
@@ -209,31 +212,38 @@ export default function QuizPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex flex-wrap gap-1">
-                      {difficultyCount.基礎 > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          基礎 {difficultyCount.基礎}
-                        </Badge>
-                      )}
-                      {difficultyCount.初級 > 0 && (
-                        <Badge variant="default" className="text-xs">
-                          初級 {difficultyCount.初級}
-                        </Badge>
-                      )}
-                      {difficultyCount.中級 > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          中級 {difficultyCount.中級}
-                        </Badge>
-                      )}
-                      {difficultyCount.上級 > 0 && (
-                        <Badge variant="destructive" className="text-xs">
-                          上級 {difficultyCount.上級}
-                        </Badge>
-                      )}
-                      {difficultyCount.エキスパート > 0 && (
-                        <Badge variant="destructive" className="text-xs bg-purple-600 border-purple-600">
-                          エキスパート {difficultyCount.エキスパート}
-                        </Badge>
-                      )}
+                      {orderedDifficulties.map(difficulty => {
+                        const count = difficultyCount[difficulty]
+                        if (!count || count === 0) return null
+                        
+                        // 難易度に応じたバッジスタイルを定義
+                        const getBadgeVariant = (diff: string) => {
+                          switch (diff) {
+                            case '基礎': return 'outline'
+                            case '中級': return 'secondary'
+                            case '上級': return 'destructive'
+                            case 'エキスパート': return 'destructive'
+                            default: return 'default'
+                          }
+                        }
+                        
+                        const getBadgeClassName = (diff: string) => {
+                          switch (diff) {
+                            case 'エキスパート': return 'text-xs bg-purple-600 border-purple-600'
+                            default: return 'text-xs'
+                          }
+                        }
+                        
+                        return (
+                          <Badge 
+                            key={difficulty}
+                            variant={getBadgeVariant(difficulty)} 
+                            className={getBadgeClassName(difficulty)}
+                          >
+                            {difficulty} {count}
+                          </Badge>
+                        )
+                      })}
                     </div>
                     
                     <div className="flex items-center justify-center space-x-4 text-xs text-muted-foreground">

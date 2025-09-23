@@ -200,7 +200,8 @@ const staticMainCategories: MainCategory[] = [
     "displayOrder": 7,
     "subcategories": [
       "AI・機械学習活用",
-      "プロンプトエンジニアリング",
+      "AI基礎・業務活用",
+      "プロンプトエンジニアリング", 
       "DX戦略・デジタル変革",
       "データドリブン経営",
       "IoT・自動化技術"
@@ -649,6 +650,59 @@ export async function getAllCategories(): Promise<(MainCategory | IndustryCatego
 }
 
 /**
+ * 英語の難易度IDを日本語の表示名に変換
+ */
+export function getDifficultyDisplayName(difficultyId: string): string {
+  // 既に日本語の場合はそのまま返す
+  if (['基礎', '中級', '上級', 'エキスパート'].includes(difficultyId)) {
+    return difficultyId
+  }
+  
+  // 英語IDを日本語名に変換
+  const skillLevel = staticSkillLevels.find(level => level.id === difficultyId)
+  if (skillLevel) {
+    return skillLevel.name
+  }
+  
+  // フォールバック: 英語のままでも判別可能な場合
+  const fallbackMap: Record<string, string> = {
+    'basic': '基礎',
+    'beginner': '基礎', // 旧システム互換
+    'intermediate': '中級',
+    'advanced': '上級',
+    'expert': 'エキスパート'
+  }
+  
+  return fallbackMap[difficultyId.toLowerCase()] || difficultyId
+}
+
+/**
+ * 日本語の難易度表示名を英語IDに変換
+ */
+export function getDifficultyId(displayName: string): string {
+  // 既に英語IDの場合はそのまま返す
+  if (['basic', 'intermediate', 'advanced', 'expert'].includes(displayName.toLowerCase())) {
+    return displayName.toLowerCase()
+  }
+  
+  // 日本語名を英語IDに変換
+  const skillLevel = staticSkillLevels.find(level => level.name === displayName)
+  if (skillLevel) {
+    return skillLevel.id
+  }
+  
+  // フォールバック
+  const fallbackMap: Record<string, string> = {
+    '基礎': 'basic',
+    '中級': 'intermediate',
+    '上級': 'advanced',
+    'エキスパート': 'expert'
+  }
+  
+  return fallbackMap[displayName] || displayName
+}
+
+/**
  * 同期版：既存コードとの互換性のため
  */
 export function getAllCategoriesSync(): (MainCategory | IndustryCategory)[] {
@@ -739,6 +793,7 @@ export const subcategoryNameToIdMap: Record<string, string> = {
   
   // 追加のサブカテゴリー（DBから同期）
   'AI・機械学習活用': 'ai_機械学習活用',
+  'AI基礎・業務活用': 'ai_基礎_業務活用',
   'プロンプトエンジニアリング': 'プロンプトエンジニアリング',
   'DX戦略・デジタル変革': 'dx戦略_デジタル変革',
   'データドリブン経営': 'データドリブン経営',

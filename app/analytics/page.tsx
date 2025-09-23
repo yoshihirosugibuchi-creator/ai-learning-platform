@@ -27,9 +27,9 @@ import MobileNav from '@/components/layout/MobileNav'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { getLearningAnalytics, LearningAnalytics } from '@/lib/supabase-analytics'
 import { aiAnalytics, LearningPattern, OptimalLearningTime, PersonalizedHints } from '@/lib/ai-analytics'
-import { industryAnalytics, IndustrySkillProfile, RadarChartData } from '@/lib/industry-analytics'
+import { industryAnalytics, IndustrySkillProfile } from '@/lib/industry-analytics'
 import { SimpleSelect, SimpleSelectItem } from '@/components/ui/select'
-import { useDebounce, globalCache, useResourceMonitor } from '@/lib/performance-optimizer'
+import { globalCache, useResourceMonitor } from '@/lib/performance-optimizer'
 
 // レーダーチャートコンポーネントを遅延読み込み
 const SkillRadarChart = lazy(() => import('@/components/analytics/SkillRadarChart'))
@@ -48,10 +48,10 @@ export default function AnalyticsPage() {
   // パフォーマンス監視（開発環境のみ）
   useResourceMonitor()
 
-  // 業界選択のデバウンス
-  const debouncedIndustryChange = useDebounce((industry: string) => {
-    setSelectedIndustry(industry)
-  }, 300)
+  // 業界選択のデバウンス（将来実装予定）
+  // const debouncedIndustryChange = useDebounce((industry: string) => {
+  //   setSelectedIndustry(industry)
+  // }, 300)
 
   // 分析データの読み込み
   useEffect(() => {
@@ -64,11 +64,11 @@ export default function AnalyticsPage() {
           // キャッシュから取得を試行
           const cachedData = globalCache.get(cacheKey)
           if (cachedData) {
-            setAnalytics(cachedData.analytics)
-            setAiPatterns(cachedData.aiPatterns)
-            setOptimalTime(cachedData.optimalTime)
-            setHints(cachedData.hints)
-            setIndustryProfile(cachedData.industryProfile)
+            setAnalytics((cachedData as any).analytics)
+            setAiPatterns((cachedData as any).aiPatterns)
+            setOptimalTime((cachedData as any).optimalTime)
+            setHints((cachedData as any).hints)
+            setIndustryProfile((cachedData as any).industryProfile)
             setIsLoading(false)
             return
           }
@@ -92,7 +92,7 @@ export default function AnalyticsPage() {
           // Load industry profile if patterns exist
           let industryData = null
           if (patterns && patterns.learningFrequency.activeDays > 0) {
-            const progressData = [] // We'll need to extract this from the patterns
+            const progressData: any[] = [] // We'll need to extract this from the patterns
             industryData = await industryAnalytics.analyzeIndustrySkills(
               user.id, 
               selectedIndustry, 
@@ -145,7 +145,7 @@ export default function AnalyticsPage() {
 
         // 業界プロファイルも更新
         if (patterns && patterns.learningFrequency.activeDays > 0) {
-          const progressData = []
+          const progressData: any[] = []
           const industryData = await industryAnalytics.analyzeIndustrySkills(
             user.id, 
             selectedIndustry, 

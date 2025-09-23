@@ -16,6 +16,7 @@
 | `RELEASE_HISTORY.md` | 変更履歴 | リリース・機能完成時 | 時系列変更記録 |
 | `PRODUCTION_CHECKLIST.md` | 本番リリース手順 | セキュリティ・テーブル・設定変更時 | 本番移行作業項目 |
 | `DEPLOY_DEBUG_CHECKLIST.md` | デプロイ・デバッグ手順 | デプロイ時・問題発生時 | デプロイ作業・トラブルシューティング |
+| `TYPESCRIPT_ERROR_INVESTIGATION.md` | TypeScript問題調査記録 | TypeScript関連問題発生・解決時 | エラー調査・修正計画・進捗管理 |
 
 ### **🟡 プロジェクトドキュメント (定期更新)**
 

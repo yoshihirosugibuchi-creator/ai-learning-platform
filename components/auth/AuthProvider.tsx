@@ -12,6 +12,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ error: unknown }>
   signUp: (email: string, password: string) => Promise<{ error: unknown }>
   signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => ({ error: null }),
   signUp: async () => ({ error: null }),
   signOut: async () => {},
+  refreshProfile: async () => {},
 })
 
 export const useAuth = () => {
@@ -345,6 +347,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
   }
 
+  const refreshProfile = async () => {
+    if (user) {
+      console.log('🔄 Refreshing user profile...')
+      await loadUserProfile(user)
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -354,6 +363,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signUp,
         signOut,
+        refreshProfile,
       }}
     >
       {children}

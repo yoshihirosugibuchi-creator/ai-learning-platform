@@ -149,6 +149,10 @@ export async function GET(
       .eq('parent_category_id', category_id)
       .eq('is_visible', true)
 
+    if (subError) {
+      console.warn('Warning: Failed to fetch subcategories:', subError.message)
+    }
+
     const response = {
       category,
       subcategories: subcategories || [],
