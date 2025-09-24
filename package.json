@@ -22,7 +22,10 @@
     "deploy:check": "npm run deploy:sync && npm run build && npm run lint",
     "deploy:pre": "npm run deploy:validate && echo 'デプロイ前完全検証完了 - git commit/push可能です'",
     "deploy:complete": "tsx scripts/deploy-complete.ts",
-    "deploy:full": "npm run deploy:complete"
+    "deploy:full": "npm run deploy:complete",
+    "deploy:safe": "tsx scripts/ensure-static-data.ts && tsx scripts/deploy-safe-mode.ts",
+    "deploy:safe-build": "npm run deploy:safe && npm run build",
+    "ensure:static-data": "tsx scripts/ensure-static-data.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

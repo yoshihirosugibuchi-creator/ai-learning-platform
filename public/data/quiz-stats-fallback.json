@@ -1,0 +1,21 @@
+{
+  "totalQuestions": 2,
+  "categories": [
+    {
+      "id": "data_analysis",
+      "name": "データ分析・統計",
+      "questionCount": 1,
+      "averageDifficulty": "basic",
+      "completionRate": 0
+    },
+    {
+      "id": "business_strategy",
+      "name": "戦略・企画",
+      "questionCount": 1,
+      "averageDifficulty": "basic",
+      "completionRate": 0
+    }
+  ],
+  "lastUpdated": "2025-09-24T01:52:22.111Z",
+  "generatedBy": "static-data-ensurer"
+}
