@@ -20,14 +20,14 @@ export async function getLearningCourses(): Promise<{
   title: string
   description: string
   estimatedDays: number
-  difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert'
+  difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
   icon: string
   color: string
   displayOrder: number
   genreCount: number
   themeCount: number
   status: 'available' | 'coming_soon' | 'draft'
-  genres?: Record<string, unknown>[]
+  genres?: unknown[]
 }[]> {
   const cacheKey = 'learning_courses_db'
   
@@ -35,7 +35,20 @@ export async function getLearningCourses(): Promise<{
   const cached = globalCache.get(cacheKey)
   if (cached) {
     console.log('🚀 Learning courses loaded from cache')
-    return cached
+    return cached as {
+      id: string
+      title: string
+      description: string
+      estimatedDays: number
+      difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+      icon: string
+      color: string
+      displayOrder: number
+      genreCount: number
+      themeCount: number
+      status: 'available' | 'coming_soon' | 'draft'
+      genres?: unknown[]
+    }[]
   }
 
   if (USE_DATABASE) {
@@ -63,7 +76,20 @@ export async function getLearningCourses(): Promise<{
 }
 
 // JSONファイルからの学習コース読み込み（フォールバック用）
-async function loadLearningCoursesFromJSON(): Promise<Record<string, unknown>[]> {
+async function loadLearningCoursesFromJSON(): Promise<{
+  id: string
+  title: string
+  description: string
+  estimatedDays: number
+  difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+  icon: string
+  color: string
+  displayOrder: number
+  genreCount: number
+  themeCount: number
+  status: 'available' | 'coming_soon' | 'draft'
+  genres?: unknown[]
+}[]> {
   try {
     console.log('📄 Loading learning courses from JSON fallback')
     
@@ -76,12 +102,25 @@ async function loadLearningCoursesFromJSON(): Promise<Record<string, unknown>[]>
     
     // 各コースについて詳細データからジャンル情報を取得
     const coursesWithGenres = await Promise.all(
-      data.courses.map(async (course: Record<string, unknown>) => {
+      data.courses.map(async (course: {
+        id: string
+        title: string
+        description: string
+        estimatedDays: number
+        difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+        icon: string
+        color: string
+        displayOrder: number
+        genreCount: number
+        themeCount: number
+        status: 'available' | 'coming_soon' | 'draft'
+        genres?: unknown[]
+      }) => {
         if (course.status === 'available') {
           try {
             const detailResponse = await fetch(`/learning-data/${course.id}.json`)
             if (detailResponse.ok) {
-              const detailData = await detailResponse.json()
+              const detailData = await detailResponse.json() as { genres: unknown[] }
               return {
                 ...course,
                 genres: detailData.genres
@@ -112,7 +151,7 @@ export async function getLearningCourseDetails(courseId: string): Promise<Learni
   const cached = globalCache.get(cacheKey)
   if (cached) {
     console.log('🚀 Course details loaded from cache:', courseId)
-    return cached
+    return cached as LearningCourse
   }
 
   if (USE_DATABASE) {
@@ -163,7 +202,20 @@ async function loadCourseDetailsFromJSON(courseId: string): Promise<LearningCour
 
 
 // 利用可能なコースのみを取得 - DB API使用版 with JSONフォールバック
-export async function getAvailableLearningCourses() {
+export async function getAvailableLearningCourses(): Promise<{
+  id: string
+  title: string
+  description: string
+  estimatedDays: number
+  difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+  icon: string
+  color: string
+  displayOrder: number
+  genreCount: number
+  themeCount: number
+  status: 'available' | 'coming_soon' | 'draft'
+  genres?: unknown[]
+}[]> {
   if (USE_DATABASE) {
     try {
       console.log('📡 Fetching available courses from DB API')
@@ -189,7 +241,7 @@ export async function getAvailableLearningCourses() {
 // 学習進捗の取得・保存（Supabase使用）
 import { getLearningProgressSupabase, saveLearningProgressSupabase } from '@/lib/supabase-learning'
 
-export async function getLearningProgress(userId: string) {
+export async function getLearningProgress(userId: string): Promise<Record<string, unknown>> {
   try {
     const progress = await getLearningProgressSupabase(userId)
     return progress
@@ -199,7 +251,7 @@ export async function getLearningProgress(userId: string) {
   }
 }
 
-export async function saveLearningProgress(userId: string, courseId: string, genreId: string, themeId: string, sessionId: string, completed: boolean) {
+export async function saveLearningProgress(userId: string, courseId: string, genreId: string, themeId: string, sessionId: string, completed: boolean): Promise<boolean> {
   try {
     const success = await saveLearningProgressSupabase(userId, courseId, genreId, themeId, sessionId, completed)
     if (!success) {
@@ -213,9 +265,17 @@ export async function saveLearningProgress(userId: string, courseId: string, gen
 }
 
 // 学習統計の計算
-export async function calculateLearningStats(userId: string) {
+export async function calculateLearningStats(userId: string): Promise<{
+  totalSessionsCompleted: number
+  totalAvailableSessions: number
+  totalTimeSpent: number
+  currentStreak: number
+  lastLearningDate: Date | null
+}> {
   const progress = await getLearningProgress(userId)
-  const completedSessions = Object.values(progress).filter((p: Record<string, unknown>) => p.completed)
+  const completedSessions = Object.values(progress).filter((p: unknown): p is { completed: boolean; completedAt?: string } => 
+    typeof p === 'object' && p !== null && 'completed' in p && (p as { completed: boolean }).completed
+  )
   const totalAvailableSessions = await getTotalAvailableSessions()
   
   return {
@@ -224,7 +284,7 @@ export async function calculateLearningStats(userId: string) {
     totalTimeSpent: completedSessions.length * 3, // 概算（セッション1つ=3分）
     currentStreak: await calculateLearningStreak(userId),
     lastLearningDate: completedSessions.length > 0 ? 
-      new Date(Math.max(...completedSessions.map((p: Record<string, unknown>) => new Date((p.completedAt as string)).getTime()))) : null
+      new Date(Math.max(...completedSessions.filter(p => p.completedAt).map(p => new Date(p.completedAt!).getTime()))) : null
   }
 }
 
@@ -236,9 +296,12 @@ export async function getTotalAvailableSessions(): Promise<number> {
     
     for (const course of courses) {
       if (course.status === 'available' && course.genres) {
-        for (const genre of course.genres) {
-          for (const theme of genre.themes) {
-            totalSessions += theme.sessions ? theme.sessions.length : 0
+        for (const genre of course.genres as unknown[]) {
+          const genreObj = genre as { themes?: { sessions?: unknown[] }[] }
+          if (genreObj.themes) {
+            for (const theme of genreObj.themes) {
+              totalSessions += theme.sessions ? theme.sessions.length : 0
+            }
           }
         }
       }
@@ -254,8 +317,11 @@ export async function getTotalAvailableSessions(): Promise<number> {
 async function calculateLearningStreak(userId: string): Promise<number> {
   const progress = await getLearningProgress(userId)
   const completedSessions = Object.values(progress)
-    .filter((p: Record<string, unknown>) => p.completed)
-    .sort((a: Record<string, unknown>, b: Record<string, unknown>) => new Date((b.completedAt as string)).getTime() - new Date((a.completedAt as string)).getTime())
+    .filter((p: unknown): p is { completed: boolean; completedAt: string } => 
+      typeof p === 'object' && p !== null && 'completed' in p && 
+      (p as { completed: boolean }).completed && 'completedAt' in p
+    )
+    .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
   
   if (completedSessions.length === 0) return 0
   
@@ -264,7 +330,7 @@ async function calculateLearningStreak(userId: string): Promise<number> {
   currentDate.setHours(0, 0, 0, 0)
   
   for (const session of completedSessions) {
-    const sessionDate = new Date((session as Record<string, unknown>).completedAt as string)
+    const sessionDate = new Date(session.completedAt)
     sessionDate.setHours(0, 0, 0, 0)
     
     const diffDays = (currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24)

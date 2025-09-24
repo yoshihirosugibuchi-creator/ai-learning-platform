@@ -153,7 +153,7 @@ export async function POST() {
         
         try {
           // 1. 新しいIDでレコードを作成
-          const { data: newSubcategory, error: insertError } = await supabase
+          const { error: insertError } = await supabase
             .from('subcategories')
             .insert({
               subcategory_id: correctId,

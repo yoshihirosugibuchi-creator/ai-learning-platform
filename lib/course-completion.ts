@@ -1,7 +1,7 @@
 import { getLearningProgress } from './learning/data'
 import { getLearningCourseDetails } from './learning/data'
 import { awardCourseBadge, testUserBadgesTableAccess, getUserBadges } from './supabase-badges'
-import { LearningBadge } from './types/learning'
+import { LearningBadge, LearningCourse } from './types/learning'
 
 // コース完了を検知してバッジを授与
 export async function checkAndAwardCourseBadge(
@@ -38,7 +38,7 @@ export async function checkAndAwardCourseBadge(
     
     // 完了済みセッションを確認
     const completedSessions = allSessions.filter(sessionKey => {
-      const progressData = progress[sessionKey]
+      const progressData = progress[sessionKey] as { completed?: boolean } | undefined
       return progressData && progressData.completed
     })
 
@@ -101,15 +101,16 @@ export async function checkAndAwardCourseBadge(
       }
       
       // コースのバッジ情報を取得（コースデータから）
-      const courseBadge: LearningBadge = courseDetails.badge ? {
-        id: courseDetails.badge.id,
-        title: courseDetails.badge.title,
-        description: courseDetails.badge.description,
-        icon: courseDetails.badge.icon,
-        color: courseDetails.badge.color,
-        badgeImageUrl: courseDetails.badge.badgeImageUrl,
+      const courseWithBadge = courseDetails as LearningCourse & { badge?: any }
+      const courseBadge: LearningBadge = courseWithBadge.badge ? {
+        id: courseWithBadge.badge.id,
+        title: courseWithBadge.badge.title,
+        description: courseWithBadge.badge.description,
+        icon: courseWithBadge.badge.icon,
+        color: courseWithBadge.badge.color,
+        badgeImageUrl: courseWithBadge.badge.badgeImageUrl,
         difficulty: courseDetails.difficulty,
-        validityPeriodMonths: courseDetails.badge.validityPeriodMonths
+        validityPeriodMonths: courseWithBadge.badge.validityPeriodMonths
       } : {
         // フォールバック（古いコースデータ用）
         id: `badge_${courseId}`,
@@ -154,28 +155,34 @@ export async function checkAndAwardCourseBadge(
 }
 
 // 難易度別の色を取得
-function getCourseColor(difficulty: 'beginner' | 'intermediate' | 'advanced'): string {
+function getCourseColor(difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert' | 'beginner'): string {
   switch (difficulty) {
-    case 'beginner':
+    case 'basic':
+    case 'beginner': // 互換性のため
       return '#10B981' // green
     case 'intermediate':
       return '#F59E0B' // amber
     case 'advanced':
       return '#EF4444' // red
+    case 'expert':
+      return '#8B5CF6' // purple
     default:
       return '#6B7280' // gray
   }
 }
 
 // 難易度別の有効期限を取得（暫定実装）
-function getValidityPeriod(difficulty: 'beginner' | 'intermediate' | 'advanced'): number | undefined {
+function getValidityPeriod(difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert' | 'beginner'): number | undefined {
   switch (difficulty) {
-    case 'beginner':
+    case 'basic':
+    case 'beginner': // 互換性のため
       return undefined // 永続
     case 'intermediate':
       return 24 // 2年
     case 'advanced':
       return 12 // 1年（資格のように）
+    case 'expert':
+      return 6 // 6ヶ月（高度な資格）
     default:
       return undefined
   }
@@ -210,7 +217,7 @@ export async function checkGenreCompletion(
 
     // 完了済みセッション
     const completedSessions = genreSessions.filter(sessionKey => {
-      const progressData = progress[sessionKey]
+      const progressData = progress[sessionKey] as { completed?: boolean } | undefined
       return progressData && progressData.completed
     })
 
@@ -253,7 +260,7 @@ export async function checkThemeCompletion(
 
     // 完了済みセッション
     const completedSessions = themeSessions.filter(sessionKey => {
-      const progressData = progress[sessionKey]
+      const progressData = progress[sessionKey] as { completed?: boolean } | undefined
       return progressData && progressData.completed
     })
 

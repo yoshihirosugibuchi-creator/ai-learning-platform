@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -11,7 +10,6 @@ import {
   Trophy, 
   Sparkles, 
   Filter,
-  Search,
   Star,
   Crown,
   Gem,
@@ -33,8 +31,6 @@ import {
   getWisdomCardCount,
   getUserKnowledgeCards,
   getKnowledgeCardStats,
-  hasKnowledgeCard,
-  getKnowledgeCardCount,
   getCardNumericId,
   WisdomCardCollection,
   KnowledgeCardCollection
@@ -42,8 +38,11 @@ import {
 import { 
   KnowledgeCard as KnowledgeCardType
 } from '@/lib/knowledge-cards'
-import { getUserBadges, getBadgeStats } from '@/lib/supabase-badges'
+import { getUserBadges } from '@/lib/supabase-badges'
 import { UserBadge } from '@/lib/types/learning'
+
+// Define constants outside component to avoid re-creation
+const RARITIES = ['コモン', 'レア', 'エピック', 'レジェンダリー']
 
 export default function CollectionPage() {
   // すべてのState Hooksを最初に宣言
@@ -53,7 +52,7 @@ export default function CollectionPage() {
   const [selectedKnowledgeCategory, setSelectedKnowledgeCategory] = useState<string>('all')
   const [selectedBadgeStatus, setSelectedBadgeStatus] = useState<string>('all')
   const [activeTab, setActiveTab] = useState('wisdom')
-  const { user, loading } = useAuth()
+  const { user } = useAuth()
 
   // 格言カード（従来のカード）データ - Supabase版
   const [wisdomCollectionData, setWisdomCollectionData] = useState<{
@@ -193,7 +192,7 @@ export default function CollectionPage() {
                   try {
                     const parsed = JSON.parse(cardData)
                     console.log(`💾 LocalStorage card: ${key} →`, parsed)
-                  } catch (e) {
+                  } catch {
                     console.error(`❌ Failed to parse localStorage card: ${key}`)
                   }
                 }
@@ -724,7 +723,7 @@ export default function CollectionPage() {
       stats: knowledgeCollectionData.stats,
       cardsWithStatus: knowledgeCards
     }
-  }, [user, knowledgeCollectionData])
+  }, [knowledgeCollectionData])
 
   // 格言カード用フィルタリング
   const filteredWisdomCards = useMemo(() => {
@@ -790,10 +789,9 @@ export default function CollectionPage() {
     'マーケティング・営業',
     'ファイナンス・会計'
   ]
-  const rarities = ['コモン', 'レア', 'エピック', 'レジェンダリー']
 
   const rarityStats = useMemo(() => {
-    return rarities.map(rarity => {
+    return RARITIES.map(rarity => {
       const totalInRarity = wisdomCards.filter(card => card.rarity === rarity).length
       const obtainedInRarity = wisdomCollectionData.cardsWithStatus
         .filter(card => card.rarity === rarity && card.obtained).length
@@ -985,7 +983,7 @@ export default function CollectionPage() {
                       className="w-full px-3 py-2 border border-input rounded-md bg-background"
                     >
                       <option value="all">全てのレア度</option>
-                      {rarities.map(rarity => (
+                      {RARITIES.map(rarity => (
                         <option key={rarity} value={rarity}>{rarity}</option>
                       ))}
                     </select>

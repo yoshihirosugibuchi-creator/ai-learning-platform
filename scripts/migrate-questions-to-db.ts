@@ -79,19 +79,19 @@ async function migrateQuestions() {
   const dbQuestions: DBQuestion[] = questions.map(q => ({
     legacy_id: q.id,
     category_id: q.category,
-    subcategory: q.subcategory || null,
-    subcategory_id: q.subcategory_id || null,
+    subcategory: q.subcategory || undefined,
+    subcategory_id: q.subcategory_id || undefined,
     question: q.question,
     option1: q.options[0] || '',
     option2: q.options[1] || '',
     option3: q.options[2] || '',
     option4: q.options[3] || '',
     correct_answer: q.correct,
-    explanation: q.explanation || null,
+    explanation: q.explanation || undefined,
     difficulty: q.difficulty || '中級',
     time_limit: q.timeLimit || 45,
     related_topics: q.relatedTopics || [],
-    source: q.source || null,
+    source: q.source || undefined,
     is_deleted: q.deleted || false
   }))
   

@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '@/lib/supabase'
-import { LearningCourse } from '@/lib/types/learning'
+import { LearningCourse, LearningGenre } from '@/lib/types/learning'
 import { globalCache } from '@/lib/performance-optimizer'
 
 // ===== 型定義 =====
@@ -96,7 +96,20 @@ export async function getCoursesFromDB(): Promise<{
   const cached = globalCache.get(cacheKey)
   if (cached) {
     console.log('🚀 DB Courses loaded from cache')
-    return cached
+    return cached as {
+      id: string
+      title: string
+      description: string
+      estimatedDays: number
+      difficulty: 'beginner' | 'intermediate' | 'advanced'
+      icon: string
+      color: string
+      displayOrder: number
+      genreCount: number
+      themeCount: number
+      status: 'available' | 'coming_soon' | 'draft'
+      genres?: unknown[]
+    }[]
   }
   
   try {
@@ -180,7 +193,20 @@ export async function getCoursesFromDB(): Promise<{
     globalCache.set(cacheKey, coursesWithCounts, 5 * 60 * 1000)
     console.log('✅ DB Courses loaded and cached, count:', coursesWithCounts.length)
     
-    return coursesWithCounts
+    return coursesWithCounts as {
+      id: string
+      title: string
+      description: string
+      estimatedDays: number
+      difficulty: 'beginner' | 'intermediate' | 'advanced'
+      icon: string
+      color: string
+      displayOrder: number
+      genreCount: number
+      themeCount: number
+      status: 'available' | 'coming_soon' | 'draft'
+      genres?: unknown[]
+    }[]
     
   } catch (error) {
     console.error('❌ Error loading courses from DB:', error)
@@ -326,7 +352,7 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
       icon: courseData.icon,
       color: courseData.color,
       displayOrder: courseData.display_order,
-      genres
+      genres: genres as LearningGenre[]
     }
     
     // キャッシュに保存（10分間）

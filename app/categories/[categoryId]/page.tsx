@@ -5,11 +5,9 @@ import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
-import CategorySelector from '@/components/categories/CategorySelector'
 import { 
   mainCategories, 
   industryCategories, 
@@ -17,18 +15,13 @@ import {
   skillLevels,
   getDifficultyDisplayName 
 } from '@/lib/categories'
-import { SkillLevel } from '@/lib/types/category'
 import { Question } from '@/lib/types'
 import { getAllQuestions } from '@/lib/questions'
 import { useUserContext } from '@/contexts/UserContext'
 import { getUserCardCollection } from '@/lib/storage'
 import { 
-  ArrowLeft, 
   BookOpen, 
-  Trophy, 
-  Clock, 
   Target,
-  TrendingUp,
   Users,
   CheckCircle,
   Play
@@ -40,7 +33,7 @@ export default function CategoryDetailPage() {
   const { user } = useUserContext()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [questions, setQuestions] = useState<Question[]>([])
-  const [loading, setLoading] = useState(true)
+  const [, setLoading] = useState(true)
   const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>([])
 
   const categoryId = params.categoryId as string
@@ -118,7 +111,7 @@ export default function CategoryDetailPage() {
     : 0
   
   // Get user's card collection for this category using the new categoryId field
-  const userCards = getUserCardCollection().filter(userCard => {
+  const userCards = getUserCardCollection().filter(() => {
     // Find the actual card data to check its categoryId
     // TODO: Replace with proper import when cards module is properly typed
     return false // Temporarily disabled due to typing issues

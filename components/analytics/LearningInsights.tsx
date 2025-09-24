@@ -231,7 +231,7 @@ export default function LearningInsights({ quizResults, user }: LearningInsights
           <CardContent>
             {insights.strengths.length > 0 ? (
               <div className="space-y-3">
-                {insights.strengths.map((category, index) => (
+                {insights.strengths.map((category) => (
                   <div key={category} className="flex items-center justify-between">
                     <span className="font-medium">{getCategoryDisplayName(category)}</span>
                     <Badge variant="default">得意分野</Badge>
@@ -259,7 +259,7 @@ export default function LearningInsights({ quizResults, user }: LearningInsights
           <CardContent>
             {insights.improvementAreas.length > 0 ? (
               <div className="space-y-3">
-                {insights.improvementAreas.map((category, index) => (
+                {insights.improvementAreas.map((category) => (
                   <div key={category} className="flex items-center justify-between">
                     <span className="font-medium">{getCategoryDisplayName(category)}</span>
                     <Badge variant="secondary">要強化</Badge>

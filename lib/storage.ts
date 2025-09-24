@@ -510,35 +510,41 @@ export function markOnboardingComplete(userId: string): boolean {
 // 既存ユーザーデータのマイグレーション
 export function migrateUserData(userData: unknown): StorageUser {
   const user = userData as Record<string, unknown>
-  // 既存のユーザーデータに新しいフィールドがない場合、追加する
-  if (!user.auth) {
-    user.auth = {
+  
+  // 型安全な構造でStorageUserを構築
+  const migratedUser: StorageUser = {
+    id: (user.id as string) || 'guest_' + Date.now(),
+    name: (user.name as string) || 'Anonymous User',
+    email: user.email as string | undefined,
+    auth: (user.auth as AuthInfo) || {
       isGuest: false,
       isOnboarded: true // 既存ユーザーはオンボーディング済みとみなす
-    }
+    },
+    profile: user.profile || {},
+    progress: (user.progress as any) || {
+      currentLevel: 1,
+      totalXP: 0,
+      streak: 0,
+      completedQuestions: [],
+      correctAnswers: 0,
+      totalAnswers: 0
+    },
+    categoryProgress: (user.categoryProgress as any[]) || [],
+    skpBalance: (user.skpBalance as number) || 0,
+    skpTotalEarned: (user.skpTotalEarned as number) || (user.skpBalance as number) || 0,
+    skpTransactions: (user.skpTransactions as SkpTransaction[]) || [],
+    createdAt: (user.createdAt as string) || new Date().toISOString(),
+    lastActiveAt: (user.lastActiveAt as string) || new Date().toISOString()
   }
   
-  if (!user.profile) {
-    user.profile = {}
-  }
-  
-  // SKPポイント履歴関連のマイグレーション
-  if (user.skpTotalEarned === undefined) {
-    user.skpTotalEarned = user.skpBalance || 0
-  }
-  
-  if (!user.skpTransactions) {
-    user.skpTransactions = []
-  }
-  
-  // カテゴリー別進捗のマイグレーション
-  if (!user.categoryProgress) {
-    user.categoryProgress = []
+  // プロフィールフィールドの補完
+  if (!migratedUser.profile) {
+    migratedUser.profile = {}
   }
   
   // マイグレーション後のデータを保存
-  saveUserData(user)
-  return user
+  saveUserData(migratedUser)
+  return migratedUser
 }
 
 export function updateUserProgress(
@@ -1176,16 +1182,19 @@ export function initializeUserSpecificData(userId: string): void {
     const saveUserQuizConfig = () => Promise.resolve()
     
     // Use async initialization
-    getUserQuizConfig().then((config: unknown) => {
+    const quizConfig = getUserQuizConfig()
+    if (quizConfig !== null) {
+      Promise.resolve(quizConfig).then((config: unknown) => {
       if (!config) {
         const defaultConfig = createDefaultQuizConfig()
         saveUserQuizConfig().then(() => {
           console.log('📝 Created default quiz personalization config')
         })
       }
-    }).catch((error: unknown) => {
-      console.error('Error initializing personalization:', error)
-    })
+      }).catch((error: unknown) => {
+        console.error('Error initializing personalization:', error)
+      })
+    }
     
     console.log('✅ User-specific data management initialized successfully')
   } catch (error) {

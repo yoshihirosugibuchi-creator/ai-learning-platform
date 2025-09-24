@@ -29,7 +29,8 @@ export const learningCourses: LearningCourse[] = [
           title: '論理思考マスター',
           description: '構造化思考と論理的思考の基礎を習得',
           icon: '🧩',
-          color: '#8B5CF6'
+          color: '#8B5CF6',
+          difficulty: 'basic'
         },
         themes: [
           {
@@ -488,7 +489,8 @@ export const learningCourses: LearningCourse[] = [
           title: 'フレームワークマスター',
           description: '主要な戦略フレームワークを習得し実践応用できる',
           icon: '🎯',
-          color: '#10B981'
+          color: '#10B981',
+          difficulty: 'basic'
         },
         themes: [
           {
@@ -668,7 +670,8 @@ export const learningCourses: LearningCourse[] = [
           title: '財務分析スペシャリスト',
           description: '財務諸表を読み解き企業の実力を見抜くスキル',
           icon: '💹',
-          color: '#F59E0B'
+          color: '#F59E0B',
+          difficulty: 'intermediate'
         },
         themes: [
           // ROE・ROA、貸借対照表、損益計算書、キャッシュフロー分析の各テーマ
@@ -687,7 +690,8 @@ export const learningCourses: LearningCourse[] = [
           title: '投資判断エキスパート',
           description: '定量的分析に基づく投資意思決定ができる',
           icon: '💰',
-          color: '#059669'
+          color: '#059669',
+          difficulty: 'intermediate'
         },
         themes: [
           // NPV・IRR、リスク評価、投資回収期間の各テーマ
@@ -765,7 +769,8 @@ export const learningCourses: LearningCourse[] = [
           title: 'AI理解マスター',
           description: 'AIの基礎知識とビジネス活用の全体像を習得',
           icon: '🧠',
-          color: '#7C3AED'
+          color: '#7C3AED',
+          difficulty: 'basic'
         },
         themes: [
           {
@@ -945,7 +950,8 @@ export const learningCourses: LearningCourse[] = [
           title: 'プロンプトマスター',
           description: '効果的なプロンプト設計で生成AIを最大限活用',
           icon: '💬',
-          color: '#059669'
+          color: '#059669',
+          difficulty: 'basic'
         },
         themes: [
           {
@@ -1125,7 +1131,8 @@ export const learningCourses: LearningCourse[] = [
           title: 'AI活用実践者',
           description: 'ビジネス現場でAIを効果的に活用し成果を出すスキル',
           icon: '🎯',
-          color: '#DC2626'
+          color: '#DC2626',
+          difficulty: 'basic'
         },
         themes: [
           {
@@ -1305,7 +1312,8 @@ export const learningCourses: LearningCourse[] = [
           title: '責任あるAI実践者',
           description: 'AI活用の効果を適切に評価し、倫理的配慮を持って活用するスキル',
           icon: '⚖️',
-          color: '#7C2D12'
+          color: '#7C2D12',
+          difficulty: 'basic'
         },
         themes: [
           {

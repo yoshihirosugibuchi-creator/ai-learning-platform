@@ -37,6 +37,12 @@ export default function SessionPage() {
 
   useEffect(() => {
     const loadSessionData = async () => {
+      // Authentication check
+      if (!user) {
+        router.push('/login')
+        return
+      }
+      
       try {
         const courseData = await getLearningCourseDetails(courseId)
         if (!courseData) {
@@ -85,7 +91,7 @@ export default function SessionPage() {
     }
 
     loadSessionData()
-  }, [courseId, genreId, themeId, sessionId])
+  }, [user, router, courseId, genreId, themeId, sessionId])
 
   const handleSessionComplete = (completedSessionId: string) => {
     console.log(`Session ${completedSessionId} completed`)

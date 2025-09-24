@@ -116,7 +116,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   } catch (error) {
     console.error('❌ カテゴリー更新API 例外エラー:', error)
     return NextResponse.json(
-      { error: 'サーバーエラーが発生しました', details: (error as any)?.message || 'Unknown error' },
+      { error: 'サーバーエラーが発生しました', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

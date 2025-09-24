@@ -65,7 +65,8 @@ export default function LoginPage() {
       
       if (error) {
         console.error('❌ Login error:', error)
-        const errorMessage = error.message || 'メールアドレスまたはパスワードが正しくありません'
+        const errorObj = error as { message?: string }
+        const errorMessage = errorObj.message || 'メールアドレスまたはパスワードが正しくありません'
         setError(errorMessage)
       } else {
         console.log('✅ Login successful, redirecting to home')
@@ -105,7 +106,8 @@ export default function LoginPage() {
       const { error } = await signUp(registerForm.email, registerForm.password)
       
       if (error) {
-        if (error.message.includes('already registered')) {
+        const errorObj = error as { message?: string }
+        if (errorObj.message && errorObj.message.includes('already registered')) {
           setError('このメールアドレスは既に登録されています')
         } else {
           setError('登録中にエラーが発生しました')
@@ -114,6 +116,7 @@ export default function LoginPage() {
         setSuccess('確認メールを送信しました。メールをチェックしてアカウントを有効化してください。')
       }
     } catch (err) {
+      console.error('Registration error:', err)
       setError('登録中にエラーが発生しました')
     } finally {
       setIsLoading(false)

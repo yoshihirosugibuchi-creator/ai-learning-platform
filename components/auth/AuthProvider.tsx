@@ -1,9 +1,9 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
+import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import { UserProfile, getOrCreateUserProfile, debugDatabaseAccess } from '@/lib/supabase-user'
+import { UserProfile, getOrCreateUserProfile } from '@/lib/supabase-user'
 
 type AuthContextType = {
   user: User | null
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isHydrated, setIsHydrated] = useState(false)
+  const [, setIsHydrated] = useState(false)
 
   const loadUserProfile = async (user: User | null) => {
     if (user) {
@@ -145,10 +145,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const { data: refreshData, error: refreshError } = await Promise.race([
                 refreshPromise,
                 timeoutPromise
-              ]) as { data: { session: unknown }, error: unknown }
+              ]) as { data: { session: Session | null }, error: { message?: string } | null }
               
               if (refreshError || !refreshData.session) {
-                console.error('❌ Session refresh failed, redirecting to login:', refreshError?.message)
+                const errorMessage = refreshError && typeof refreshError === 'object' && 'message' in refreshError 
+                  ? (refreshError as { message: string }).message 
+                  : 'Unknown error'
+                console.error('❌ Session refresh failed, redirecting to login:', errorMessage)
                 setUser(null)
                 setProfile(null)
                 setLoading(false)
@@ -159,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
               
               console.log('✅ Session refreshed successfully')
-              currentSession = refreshData.session
+              currentSession = refreshData.session as Session
             } catch (refreshErr) {
               console.error('❌ Session refresh exception, redirecting to login:', refreshErr)
               setUser(null)
@@ -243,14 +246,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session }, error } = await Promise.race([
           sessionPromise,
           timeoutPromise
-        ]) as { data: { session: unknown }, error: unknown }
+        ]) as { data: { session: Session | null }, error: { message?: string } | null }
         
         if (error) {
           console.error('⚠️ Session health check failed:', error)
           return
         }
         
-        if (session && session.expires_at) {
+        if (session && 'expires_at' in session && typeof session.expires_at === 'number') {
           const now = Math.floor(Date.now() / 1000)
           const expiresAt = session.expires_at
           const timeUntilExpiry = expiresAt - now
@@ -299,7 +302,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       
       console.log('⏳ AuthProvider: Sending login request to Supabase...')
-      const { error } = await Promise.race([signInPromise, timeoutPromise])
+      const { error } = await Promise.race([signInPromise, timeoutPromise]) as { error: { message: string; status?: number } | null }
       
       console.log('📨 AuthProvider: Login response received')
       

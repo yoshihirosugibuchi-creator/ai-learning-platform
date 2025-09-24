@@ -15,7 +15,6 @@ import {
   FileText, 
   AlertTriangle,
   CheckCircle,
-  ArrowLeft,
   Database,
   Info
 } from 'lucide-react'
@@ -132,7 +131,7 @@ export default function QuizCSVPage() {
       document.body.removeChild(link)
 
       setMessage({ type: 'success', text: `${questions.length}問をCSVファイルに出力しました` })
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'CSV出力に失敗しました' })
     }
   }
@@ -237,7 +236,7 @@ export default function QuizCSVPage() {
 
           parsedQuestions.push(question)
 
-        } catch (error) {
+        } catch {
           errors.push(`行${i + 1}: パースエラー`)
         }
       }
@@ -270,7 +269,7 @@ export default function QuizCSVPage() {
         text: `${parsedQuestions.length}問を解析しました。プレビューを確認してください。` 
       })
 
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'CSVファイルの解析に失敗しました' })
     }
   }

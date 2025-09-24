@@ -17,14 +17,14 @@ interface CourseCardProps {
     title: string
     description: string
     estimatedDays: number
-    difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert'
+    difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
     icon: string
     color: string
     displayOrder: number
     genreCount: number
     themeCount: number
     status: 'available' | 'coming_soon' | 'draft'
-    genres?: unknown[]
+    genres?: { categoryId: string; subcategoryId?: string }[]
   }
   progress?: {
     completedThemes: number
@@ -71,7 +71,7 @@ export default function CourseCard({ course, progress, onStartCourse }: CourseCa
   }
 
   // カテゴリー情報を取得
-  const categoryInfo = course.genres ? getCategoryInfoForCourse(course) : null
+  const categoryInfo = course.genres ? getCategoryInfoForCourse(course as any) : null
 
   // スキルレベルのラベルと色を取得（DB優先、フォールバック付き）
   const getDifficultyDisplay = () => {
@@ -80,14 +80,15 @@ export default function CourseCard({ course, progress, onStartCourse }: CourseCa
     if (dbSkillLevel) {
       return {
         label: dbSkillLevel.name,
-        color: DifficultyColors[course.difficulty] || '#6B7280'
+        color: (DifficultyColors as Record<string, string>)[course.difficulty] || '#6B7280'
       }
     }
     
     // フォールバック: 静的データを使用
+    const difficultyKey = course.difficulty === 'beginner' ? 'basic' : course.difficulty
     return {
-      label: DifficultyLabels[course.difficulty] || course.difficulty,
-      color: DifficultyColors[course.difficulty] || '#6B7280'
+      label: (DifficultyLabels as Record<string, string>)[difficultyKey] || course.difficulty,
+      color: (DifficultyColors as Record<string, string>)[difficultyKey] || '#6B7280'
     }
   }
 
@@ -136,7 +137,10 @@ export default function CourseCard({ course, progress, onStartCourse }: CourseCa
         {categoryInfo && categoryInfo.uniqueMainCategories.length > 0 && (
           <div className="mt-3 space-y-1">
             <div className="flex flex-wrap gap-1">
-              {categoryInfo.categories.map((cat: unknown, index: number) => (
+              {(categoryInfo.categories as Array<{
+                mainCategory?: { color: string; name: string; icon?: string }
+                subcategory?: string
+              }>).map((cat, index: number) => (
                 cat.mainCategory && (
                   <Badge 
                     key={index}

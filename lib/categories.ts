@@ -2,6 +2,7 @@ import {
   MainCategory, 
   IndustryCategory, 
   Subcategory,
+  SkillLevel,
   SkillLevelDefinition, 
   MainCategoryId,
   IndustryCategoryId 
@@ -513,18 +514,20 @@ export async function getCategories(options?: {
  * DBから取得したカテゴリーデータを内部形式に変換
  */
 function transformDBCategoryToLocal(dbCategory: DBCategory, subcategories: string[] = []): MainCategory | IndustryCategory {
-  return {
+  const baseCategory = {
     id: dbCategory.category_id as MainCategoryId | IndustryCategoryId,
     name: dbCategory.name,
     description: dbCategory.description || '',
     type: dbCategory.type,
     displayOrder: dbCategory.display_order || 1,
-    subcategories: subcategories, // 実際のサブカテゴリー情報を設定
+    subcategories: subcategories,
     icon: dbCategory.icon || '📚',
     color: dbCategory.color || '#6B7280',
     isActive: dbCategory.is_active ?? true,
     isVisible: dbCategory.is_visible ?? true
-  }
+  } as const
+  
+  return baseCategory as MainCategory | IndustryCategory
 }
 
 /**
@@ -580,7 +583,7 @@ export async function getSkillLevels(): Promise<SkillLevelDefinition[]> {
  */
 function transformDBSkillLevelToLocal(dbSkillLevel: DBSkillLevel): SkillLevelDefinition {
   return {
-    id: dbSkillLevel.id,
+    id: dbSkillLevel.id as SkillLevel,
     name: dbSkillLevel.name,
     description: dbSkillLevel.description || '',
     targetExperience: dbSkillLevel.target_experience || '',
@@ -623,9 +626,9 @@ function transformDBSubcategoryToLocal(dbSubcategory: DBSubcategory): Subcategor
     id: dbSubcategory.subcategory_id,
     name: dbSubcategory.name,
     description: dbSubcategory.description || '',
-    parentCategoryId: dbSubcategory.parent_category_id,
-    displayOrder: dbSubcategory.display_order || 1,
-    icon: dbSubcategory.icon || '📚'
+    type: 'subcategory' as const,
+    parentId: dbSubcategory.parent_category_id,
+    displayOrder: dbSubcategory.display_order || 1
   }
 }
 
@@ -906,9 +909,9 @@ export function getSubcategoriesByParent(parentId: string): Subcategory[] {
     id: subName.toLowerCase().replace(/[・・]/g, '_').replace(/\s+/g, '_'),
     name: subName,
     description: `${subName}に関する専門知識とスキル`,
-    parentCategoryId: parentId,
-    displayOrder: index + 1,
-    icon: getSubcategoryIcon(subName)
+    type: 'subcategory' as const,
+    parentId: parentId,
+    displayOrder: index + 1
   }))
 }
 
@@ -997,25 +1000,25 @@ export const subcategories: Subcategory[] = [
     id: 'presentation',
     name: 'プレゼンテーション',
     description: '効果的なプレゼンテーションスキル',
-    parentCategoryId: 'communication_presentation',
-    displayOrder: 1,
-    icon: '🎤'
+    type: 'subcategory',
+    parentId: 'communication_presentation',
+    displayOrder: 1
   },
   {
     id: 'sales_marketing',
     name: 'セールス・マーケティング',
     description: 'セールスとマーケティングの実践スキル',
-    parentCategoryId: 'communication_presentation',
-    displayOrder: 2,
-    icon: '📈'
+    type: 'subcategory',
+    parentId: 'communication_presentation',
+    displayOrder: 2
   },
   {
     id: 'negotiation_coordination',
     name: '交渉・調整',
     description: '交渉術と利害関係者の調整スキル',
-    parentCategoryId: 'communication_presentation',
-    displayOrder: 3,
-    icon: '🤝'
+    type: 'subcategory',
+    parentId: 'communication_presentation',
+    displayOrder: 3
   },
 
   // 分析的問題解決
@@ -1023,25 +1026,25 @@ export const subcategories: Subcategory[] = [
     id: 'logical_thinking_analysis',
     name: '論理的思考・分析',
     description: '論理的思考と分析的問題解決',
-    parentCategoryId: 'analytical_problem_solving',
-    displayOrder: 1,
-    icon: '🧠'
+    type: 'subcategory',
+    parentId: 'analytical_problem_solving',
+    displayOrder: 1
   },
   {
     id: 'financial_accounting_analysis',
     name: '財務・会計分析',
     description: '財務データの分析と解釈',
-    parentCategoryId: 'analytical_problem_solving',
-    displayOrder: 2,
-    icon: '💰'
+    type: 'subcategory',
+    parentId: 'analytical_problem_solving',
+    displayOrder: 2
   },
   {
     id: 'data_analysis_interpretation',
     name: 'データ分析・解釈',
     description: 'データを活用した洞察の獲得',
-    parentCategoryId: 'analytical_problem_solving',
-    displayOrder: 3,
-    icon: '📊'
+    type: 'subcategory',
+    parentId: 'analytical_problem_solving',
+    displayOrder: 3
   },
 
   // リーダーシップ・マネジメント
@@ -1049,25 +1052,25 @@ export const subcategories: Subcategory[] = [
     id: 'team_management_development',
     name: 'チーム運営・人材育成',
     description: 'チームマネジメントと人材開発',
-    parentCategoryId: 'leadership_management',
-    displayOrder: 1,
-    icon: '👥'
+    type: 'subcategory',
+    parentId: 'leadership_management',
+    displayOrder: 1
   },
   {
     id: 'project_management',
     name: 'プロジェクトマネジメント',
     description: 'プロジェクトの計画・実行・管理',
-    parentCategoryId: 'leadership_management',
-    displayOrder: 2,
-    icon: '📋'
+    type: 'subcategory',
+    parentId: 'leadership_management',
+    displayOrder: 2
   },
   {
     id: 'organizational_development_transformation',
     name: '組織開発・変革',
     description: '組織の成長と変革の推進',
-    parentCategoryId: 'leadership_management',
-    displayOrder: 3,
-    icon: '🔄'
+    type: 'subcategory',
+    parentId: 'leadership_management',
+    displayOrder: 3
   },
 
   // ビジネス戦略・企画
@@ -1075,24 +1078,24 @@ export const subcategories: Subcategory[] = [
     id: 'business_strategy_planning',
     name: '事業戦略・企画',
     description: '事業戦略の立案と企画',
-    parentCategoryId: 'business_strategy',
-    displayOrder: 1,
-    icon: '🎯'
+    type: 'subcategory',
+    parentId: 'business_strategy',
+    displayOrder: 1
   },
   {
     id: 'operations_improvement',
     name: 'オペレーション・業務改善',
     description: '業務効率化とオペレーション改善',
-    parentCategoryId: 'business_strategy',
-    displayOrder: 2,
-    icon: '⚙️'
+    type: 'subcategory',
+    parentId: 'business_strategy',
+    displayOrder: 2
   },
   {
     id: 'market_competitive_analysis',
     name: '市場分析・競合調査',
     description: '市場動向分析と競合戦略',
-    parentCategoryId: 'business_strategy',
-    displayOrder: 3,
-    icon: '🔍'
+    type: 'subcategory',
+    parentId: 'business_strategy',
+    displayOrder: 3
   }
 ]

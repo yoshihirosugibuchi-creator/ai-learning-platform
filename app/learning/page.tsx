@@ -18,10 +18,29 @@ import { getBadgeStats } from '@/lib/supabase-badges'
 export default function LearningPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const [courses, setCourses] = useState<Array<Record<string, unknown>>>([])
+  const [courses, setCourses] = useState<Array<{
+    id: string
+    title: string
+    description: string
+    estimatedDays: number
+    difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+    icon: string
+    color: string
+    displayOrder: number
+    genreCount: number
+    themeCount: number
+    status: 'available' | 'coming_soon' | 'draft'
+    genres?: { categoryId: string; subcategoryId?: string }[]
+  }>>([])
   const [loading, setLoading] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [learningStats, setLearningStats] = useState({
+  const [learningStats, setLearningStats] = useState<{
+    totalSessionsCompleted: number
+    totalAvailableSessions: number
+    totalTimeSpent: number
+    currentStreak: number
+    lastLearningDate: Date | null
+  }>({
     totalSessionsCompleted: 0,
     totalAvailableSessions: 0,
     totalTimeSpent: 0,
@@ -102,7 +121,20 @@ export default function LearningPage() {
         
         if (cachedCourses) {
           console.log('🎯 Using cached courses data')
-          setCourses(cachedCourses as Record<string, unknown>[])
+          setCourses(cachedCourses as Array<{
+            id: string
+            title: string
+            description: string
+            estimatedDays: number
+            difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+            icon: string
+            color: string
+            displayOrder: number
+            genreCount: number
+            themeCount: number
+            status: 'available' | 'coming_soon' | 'draft'
+            genres?: { categoryId: string; subcategoryId?: string }[]
+          }>)
           setLoading(false) // キャッシュデータがあれば即座に表示
           clearTimeout(dataTimeout)
         }
@@ -115,9 +147,35 @@ export default function LearningPage() {
         )
         
         try {
-          const coursesData = await Promise.race([coursesPromise, coursesTimeout])
+          const coursesData = await Promise.race([coursesPromise, coursesTimeout]) as {
+            id: string
+            title: string
+            description: string
+            estimatedDays: number
+            difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+            icon: string
+            color: string
+            displayOrder: number
+            genreCount: number
+            themeCount: number
+            status: 'available' | 'coming_soon' | 'draft'
+            genres?: unknown[]
+          }[]
           console.log('✅ Fresh courses loaded:', coursesData.length)
-          setCourses(coursesData as Record<string, unknown>[])
+          setCourses(coursesData as Array<{
+            id: string
+            title: string
+            description: string
+            estimatedDays: number
+            difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+            icon: string
+            color: string
+            displayOrder: number
+            genreCount: number
+            themeCount: number
+            status: 'available' | 'coming_soon' | 'draft'
+            genres?: { categoryId: string; subcategoryId?: string }[]
+          }>)
           globalCache.set(cacheKey, coursesData, 5 * 60 * 1000) // 5分キャッシュ
           clearTimeout(dataTimeout)
         } catch (coursesError) {
@@ -142,7 +200,21 @@ export default function LearningPage() {
               setTimeout(() => reject(new Error('Stats timeout')), 10000)
             )
             
-            const [stats, badges] = await Promise.race([statsPromise, statsTimeout]) as [unknown, unknown]
+            const [stats, badges] = await Promise.race([statsPromise, statsTimeout]) as [
+              {
+                totalSessionsCompleted: number
+                totalAvailableSessions: number
+                totalTimeSpent: number
+                currentStreak: number
+                lastLearningDate: Date | null
+              },
+              {
+                total: number
+                active: number
+                expired: number
+                expiringSoon: number
+              }
+            ]
             console.log('✅ Statistics loaded:', { stats, badges })
             setLearningStats(stats)
             setBadgeStats(badges)
@@ -166,7 +238,7 @@ export default function LearningPage() {
     }
 
     loadData()
-  }, [user?.id, authLoading])
+  }, [user?.id, authLoading, router])
 
   const handleStartCourse = async (courseId: string) => {
     console.log('🚀 Starting course navigation to:', courseId)
@@ -308,8 +380,21 @@ export default function LearningPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {availableCourses.map((course) => (
                   <CourseCard
-                    key={course.id}
-                    course={course}
+                    key={course.id as string}
+                    course={course as {
+                      id: string
+                      title: string
+                      description: string
+                      estimatedDays: number
+                      difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+                      icon: string
+                      color: string
+                      displayOrder: number
+                      genreCount: number
+                      themeCount: number
+                      status: 'available' | 'coming_soon' | 'draft'
+                      genres?: { categoryId: string; subcategoryId?: string }[]
+                    }}
                     onStartCourse={handleStartCourse}
                   />
                 ))}
@@ -330,8 +415,21 @@ export default function LearningPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {comingSoonCourses.map((course) => (
                   <CourseCard
-                    key={course.id}
-                    course={course}
+                    key={course.id as string}
+                    course={course as {
+                      id: string
+                      title: string
+                      description: string
+                      estimatedDays: number
+                      difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+                      icon: string
+                      color: string
+                      displayOrder: number
+                      genreCount: number
+                      themeCount: number
+                      status: 'available' | 'coming_soon' | 'draft'
+                      genres?: { categoryId: string; subcategoryId?: string }[]
+                    }}
                     onStartCourse={handleStartCourse}
                   />
                 ))}

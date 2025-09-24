@@ -12,7 +12,7 @@ import {
   Clock,
   Star
 } from 'lucide-react'
-import { KnowledgeCard, getDifficultyColor } from '@/lib/knowledge-cards'
+import { type KnowledgeCard, getDifficultyColor } from '@/lib/knowledge-cards'
 import { reviewKnowledgeCard } from '@/lib/supabase-cards'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -47,7 +47,7 @@ export default function KnowledgeCard({
     
     // 学習セッションにナビゲート
     if (card.source) {
-      const { courseId, genreId, themeId } = card.source
+      const { courseId, genreId: _genreId, themeId: _themeId } = card.source
       // テーマの最初のセッションに移動。実際のセッションIDはコースデータから取得する必要がある
       // 今は簡易的にコースページに移動
       router.push(`/learning/${courseId}`)

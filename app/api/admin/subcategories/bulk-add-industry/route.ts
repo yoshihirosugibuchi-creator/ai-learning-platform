@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase-admin'
 
 // 業界別カテゴリーのサブカテゴリー定義
@@ -485,7 +485,7 @@ export async function POST() {
       try {
         console.log(`🔄 追加中: ${subcategory.name} (${subcategory.subcategory_id})`)
         
-        const { data: newSubcategory, error: createError } = await supabase
+        const { error: createError } = await supabase
           .from('subcategories')
           .insert({
             subcategory_id: subcategory.subcategory_id,

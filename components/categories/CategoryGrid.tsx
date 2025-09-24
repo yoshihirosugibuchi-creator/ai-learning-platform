@@ -4,11 +4,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import CategoryCard from './CategoryCard'
 import { mainCategories, industryCategories, skillLevels, getCategories, getSkillLevels } from '@/lib/categories'
-import { MainCategory, IndustryCategory, SkillLevel } from '@/lib/types/category'
+import { MainCategory, IndustryCategory, SkillLevel, SkillLevelDefinition } from '@/lib/types/category'
 import { Search, Filter, Users, Building2, TrendingUp, BookOpen } from 'lucide-react'
 import { useUserContext } from '@/contexts/UserContext'
 import { getUserQuizResults } from '@/lib/storage'
@@ -42,7 +41,7 @@ export default function CategoryGrid({
   const { user } = useUserContext()
   const [allQuestions, setAllQuestions] = useState<any[]>([])
   const [dbCategories, setDbCategories] = useState<(MainCategory | IndustryCategory)[]>([])
-  const [dbSkillLevels, setDbSkillLevels] = useState<SkillLevel[]>([])
+  const [dbSkillLevels, setDbSkillLevels] = useState<SkillLevelDefinition[]>([])
   const [loading, setLoading] = useState(true)
   
   // Load all questions and DB data on component mount
@@ -56,12 +55,12 @@ export default function CategoryGrid({
         ])
         setAllQuestions(questions)
         setDbCategories(categories)
-        setDbSkillLevels(skillLevels as SkillLevel[])
+        setDbSkillLevels(skillLevels)
       } catch (error) {
         console.error('Error loading data:', error)
         setAllQuestions([])
         setDbCategories([...mainCategories, ...industryCategories]) // Fallback to static
-        setDbSkillLevels(skillLevels as SkillLevel[]) // Fallback to static
+        setDbSkillLevels(skillLevels) // Fallback to static
       } finally {
         setLoading(false)
       }
@@ -298,7 +297,12 @@ export default function CategoryGrid({
                 <TrendingUp className="h-5 w-5 text-purple-500" />
                 <div className="text-2xl font-bold">
                   {(() => {
-                    const validStats = Object.values(statsToUse).filter(stat => stat && stat.totalContents > 0)
+                    const validStats = Object.values(statsToUse).filter((stat): stat is {
+                      totalContents: number
+                      completedContents: number
+                      averageScore: number
+                      learningTime: number
+                    } => stat && typeof stat === 'object' && 'totalContents' in stat && (stat as any).totalContents > 0)
                     if (validStats.length === 0) return '0'
                     
                     const totalProgress = validStats.reduce((acc, stat) => {
@@ -341,7 +345,12 @@ export default function CategoryGrid({
                 <CategoryCard
                   key={category.id}
                   category={category}
-                  stats={statsToUse[category.id]}
+                  stats={statsToUse[category.id] as {
+                    totalContents: number
+                    completedContents: number
+                    averageScore: number
+                    learningTime: number
+                  } | undefined}
                   showProgress={showStats}
                   onClick={() => onCategoryClick?.(category.id)}
                 />
@@ -362,7 +371,12 @@ export default function CategoryGrid({
                 <CategoryCard
                   key={category.id}
                   category={category}
-                  stats={statsToUse[category.id]}
+                  stats={statsToUse[category.id] as {
+                    totalContents: number
+                    completedContents: number
+                    averageScore: number
+                    learningTime: number
+                  } | undefined}
                   showProgress={showStats}
                   onClick={() => onCategoryClick?.(category.id)}
                 />

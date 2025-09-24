@@ -14,7 +14,7 @@ import {
   saveQuizResult as saveQuizResultSupabase,
   updateUserProgress
 } from '@/lib/supabase-quiz'
-import { UserProfile } from '@/lib/supabase-user'
+import { UserProfile, UserProfileWithProgress } from '@/lib/supabase-user'
 import type { User } from '@supabase/supabase-js'
 import { getRandomWisdomCard, WisdomCard as WisdomCardType } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
@@ -205,14 +205,14 @@ export default function QuizSession({
   }, [questions, category, level, difficulties, user.id, profile])
 
   // 学習履歴に基づく問題最適化関数
-  const optimizeQuestionsForUser = (questions: Question[], userId: string, userProfile: UserProfile | null): Question[] => {
+  const optimizeQuestionsForUser = (questions: Question[], userId: string, userProfile: UserProfileWithProgress | null): Question[] => {
     if (!userProfile || questions.length === 0) {
       return getRandomQuestions(questions, 10)
     }
 
     // ユーザーのカテゴリー別正答率を取得
     const categoryProgress = userProfile.categoryProgress || []
-    const categoryStats = categoryProgress.find(cp => cp.categoryId === category)
+    const categoryStats = categoryProgress.find((cp: any) => cp.category_id === category)
     
     if (!categoryStats) {
       // 初回の場合は基礎から中級中心
@@ -237,7 +237,7 @@ export default function QuizSession({
     }
     
     // 正答率に基づく難易度調整
-    const accuracy = categoryStats.correctAnswers / Math.max(categoryStats.totalAnswers, 1)
+    const accuracy = categoryStats.correct_answers / Math.max(categoryStats.total_answers, 1)
     console.log(`📈 User accuracy for ${category}: ${(accuracy * 100).toFixed(1)}%`)
     
     let difficultyDistribution: Record<string, number>
@@ -292,7 +292,7 @@ export default function QuizSession({
     
     // Store detailed question answer data
     const questionAnswer: QuestionAnswer = {
-      questionId: currentQuestion.id,
+      questionId: currentQuestion.id.toString(),
       questionText: currentQuestion.question,
       selectedAnswer: currentQuestion.options[option],
       correctAnswer: currentQuestion.options[currentQuestion.correct],
@@ -439,10 +439,10 @@ export default function QuizSession({
               console.log('🚀 Calling saveQuizResultSupabase...')
               quizResult = await saveQuizResultSupabase({
                 user_id: user.id,
-                category_id: quizCategory,
-                subcategory_id: null,
-                questions: sessionQuestions,
-                answers: questionAnswers,
+                category_id: quizCategory || category || '',
+                subcategory_id: undefined,
+                questions: sessionQuestions as unknown as Record<string, unknown>[],
+                answers: questionAnswers as unknown as Record<string, unknown>[],
                 score: finalResults.score,
                 total_questions: finalResults.totalQuestions,
                 time_taken: finalResults.timeSpent,
@@ -451,10 +451,11 @@ export default function QuizSession({
               console.log('✅ Quiz result saved successfully:', quizResult?.id)
               
             } catch (quizSaveError) {
+              const error = quizSaveError as Error
               console.error('❌ Quiz save error details:', {
                 error: quizSaveError,
-                stack: quizSaveError.stack,
-                message: quizSaveError.message
+                stack: error.stack,
+                message: error.message
               })
               quizResult = { id: 'error-fallback-' + Date.now() }
             }
@@ -483,10 +484,11 @@ export default function QuizSession({
                 console.log('✅ Detailed quiz data saved successfully')
                 
               } catch (detailSaveError) {
+                const error = detailSaveError as Error
                 console.error('❌ Detail save error:', {
                   error: detailSaveError,
-                  stack: detailSaveError.stack,
-                  message: detailSaveError.message
+                  stack: error.stack,
+                  message: error.message
                 })
               }
             }

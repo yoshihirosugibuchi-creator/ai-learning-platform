@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 既存のサブカテゴリーIDとの重複チェック
-    const { data: existingSubcategory, error: duplicateError } = await supabase
+    const { data: existingSubcategory } = await supabase
       .from('subcategories')
       .select('subcategory_id')
       .eq('subcategory_id', subcategory_id)

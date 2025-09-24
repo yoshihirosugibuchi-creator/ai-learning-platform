@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { filterQuizzesByActiveCategories, generateCategoryNotificationMessage } from '@/lib/category-control'
+import { filterQuizzesByActiveCategories } from '@/lib/category-control'
 
 // Question型定義（レスポンス用）
 interface APIQuestion {

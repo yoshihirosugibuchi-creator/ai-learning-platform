@@ -40,10 +40,12 @@ export function useUser() {
 
   const updateUser = (updates: Partial<StorageUser> | StorageUser) => {
     // 完全なユーザーオブジェクトが渡された場合はそれを使用
-    const updatedUser = 'id' in updates ? updates as StorageUser : { ...user, ...updates }
+    const updatedUser: StorageUser = 'id' in updates && typeof updates.id === 'string' && typeof updates.name === 'string' && updates.auth
+      ? updates as StorageUser 
+      : { ...user!, ...updates } as StorageUser
     
     // 新しいユーザーの場合、ユーザー別データ管理を初期化
-    if ('id' in updates && updatedUser.id !== user?.id) {
+    if ('id' in updates && updatedUser.id && updatedUser.id !== user?.id) {
       console.log(`🚀 Initializing user-specific data for new user: ${updatedUser.id}`)
       initializeUserSpecificData(updatedUser.id)
     }

@@ -660,7 +660,7 @@ export async function saveChallengeQuizProgressToDatabase(
         updatedCategories.push(categoryId)
         console.log(`✅ DB updated for category: ${categoryId} (${result.stats.correct}/${result.stats.total}, +${result.xpResult.xpGained}XP)`)
       } catch (error) {
-        const errorMsg = `Category ${categoryId}: ${error.message}`
+        const errorMsg = `Category ${categoryId}: ${error instanceof Error ? error.message : String(error)}`
         errors.push(errorMsg)
         console.error(`❌ DB update failed for ${categoryId}:`, error)
       }
@@ -678,7 +678,7 @@ export async function saveChallengeQuizProgressToDatabase(
           })
           console.log(`✅ SKP transaction saved for ${categoryId}`)
         } catch (error) {
-          const errorMsg = `SKP transaction for ${categoryId}: ${error.message}`
+          const errorMsg = `SKP transaction for ${categoryId}: ${error instanceof Error ? error.message : String(error)}`
           errors.push(errorMsg)
           console.error(`❌ SKP transaction failed for ${categoryId}:`, error)
         }
@@ -690,7 +690,7 @@ export async function saveChallengeQuizProgressToDatabase(
       await updateOverallXP(userId)
       console.log('✅ Overall XP updated in background')
     } catch (error) {
-      errors.push(`Overall XP update: ${error.message}`)
+      errors.push(`Overall XP update: ${error instanceof Error ? error.message : String(error)}`)
       console.error('❌ Overall XP update failed:', error)
     }
     
@@ -700,6 +700,6 @@ export async function saveChallengeQuizProgressToDatabase(
     return { success, errors, updatedCategories }
   } catch (error) {
     console.error('❌ Critical error in background DB updates:', error)
-    return { success: false, errors: [`Critical error: ${error.message}`], updatedCategories }
+    return { success: false, errors: [`Critical error: ${error instanceof Error ? error.message : String(error)}`], updatedCategories }
   }
 }

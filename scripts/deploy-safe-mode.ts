@@ -60,7 +60,7 @@ class SafeModeDeployment {
       this.generateFinalAssessment()
       
     } catch (error) {
-      this.report.errors.push(`予期しないエラー: ${error.message}`)
+      this.report.errors.push(`予期しないエラー: ${error instanceof Error ? error.message : String(error)}`)
       console.error('❌ セーフモードデプロイメントでエラーが発生:', error)
     }
     
@@ -127,8 +127,8 @@ class SafeModeDeployment {
       }
       
     } catch (error) {
-      this.report.errors.push(`データファイル検証エラー: ${error.message}`)
-      console.error('  ❌ データファイル検証でエラー:', error.message)
+      this.report.errors.push(`データファイル検証エラー: ${error instanceof Error ? error.message : String(error)}`)
+      console.error('  ❌ データファイル検証でエラー:', error instanceof Error ? error.message : String(error))
     }
   }
 
@@ -167,8 +167,8 @@ class SafeModeDeployment {
       }
       
     } catch (error) {
-      this.report.errors.push(`TypeScript整合性確認エラー: ${error.message}`)
-      console.error('  ❌ TypeScript整合性確認でエラー:', error.message)
+      this.report.errors.push(`TypeScript整合性確認エラー: ${error instanceof Error ? error.message : String(error)}`)
+      console.error('  ❌ TypeScript整合性確認でエラー:', error instanceof Error ? error.message : String(error))
     }
   }
 
@@ -201,7 +201,7 @@ class SafeModeDeployment {
       }
       
     } catch (error) {
-      this.report.errors.push(`フォールバック確認エラー: ${error.message}`)
+      this.report.errors.push(`フォールバック確認エラー: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -234,7 +234,7 @@ class SafeModeDeployment {
       console.log('  ✅ ビルド前準備完了')
       
     } catch (error) {
-      this.report.errors.push(`ビルド前準備エラー: ${error.message}`)
+      this.report.errors.push(`ビルド前準備エラー: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 

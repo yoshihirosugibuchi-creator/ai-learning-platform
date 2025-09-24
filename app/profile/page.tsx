@@ -11,13 +11,11 @@ import {
   Flame, 
   Trophy, 
   TrendingUp, 
-  History, 
   BarChart3,
   Crown,
   Calendar,
   Coins,
   Building2,
-  BookOpen,
   Settings,
   Award,
   Zap,
@@ -26,11 +24,9 @@ import {
   Target,
   Clock,
   Edit,
-  Mail,
   Plus,
   Minus,
   Filter,
-  MapPin,
   Sparkles
 } from 'lucide-react'
 import Header from '@/components/layout/Header'
@@ -61,7 +57,7 @@ export default function ProfilePage() {
   })
   const [skpBalance, setSkpBalance] = useState(0)
   const [allTransactions, setAllTransactions] = useState<SKPTransaction[]>([]) // 全トランザクション（統計用）
-  const [recentTransactions, setRecentTransactions] = useState<SKPTransaction[]>([]) // 表示用履歴
+  const [, setRecentTransactions] = useState<SKPTransaction[]>([]) // 表示用履歴
   const [userBadges, setUserBadges] = useState<UserBadge[]>([])
   const [levelSystem, setLevelSystem] = useState<LevelSystem | null>(null)
   

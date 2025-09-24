@@ -71,8 +71,8 @@ async function testCategoriesClient() {
         const firstSub = subcategories[0]
         console.log(`   ID: ${firstSub.id}`)
         console.log(`   名前: ${firstSub.name}`)
-        console.log(`   親カテゴリー: ${firstSub.parentCategoryId}`)
-        console.log(`   アイコン: ${firstSub.icon}`)
+        console.log(`   親カテゴリー: ${firstSub.parentId}`)
+        console.log(`   アイコン: ${(firstSub as any).icon || 'なし'}`)
       }
     }
     

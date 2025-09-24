@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
+import type { CategoryProgress } from './supabase-learning'
 
 // デバッグ用: データベース接続とテーブル存在確認
 export async function debugDatabaseAccess(): Promise<void> {
@@ -58,6 +59,12 @@ export interface UserProfile {
   created_at?: string
   updated_at?: string
 }
+
+// 関連データを含む拡張プロファイル（QuizSession等で使用）
+export interface UserProfileWithProgress extends UserProfile {
+  categoryProgress?: CategoryProgress[]
+}
+
 
 // ユーザープロファイルを取得
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
@@ -162,7 +169,7 @@ export async function updateUserProfile(userId: string, updates: Record<string, 
   if (updates.job_title !== undefined) updateData.job_title = updates.job_title
   if (updates.position_level !== undefined) updateData.position_level = updates.position_level
   if (updates.learning_level !== undefined) updateData.learning_level = updates.learning_level
-  if (updates.experience_years !== undefined) updateData.experience_years = parseInt(updates.experience_years) || 0
+  if (updates.experience_years !== undefined) updateData.experience_years = parseInt(String(updates.experience_years)) || 0
   if (updates.interested_industries !== undefined) updateData.interested_industries = updates.interested_industries
   if (updates.learning_goals !== undefined) updateData.learning_goals = updates.learning_goals
   if (updates.selected_categories !== undefined) updateData.selected_categories = updates.selected_categories

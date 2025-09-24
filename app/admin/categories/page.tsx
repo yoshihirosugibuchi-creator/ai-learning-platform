@@ -75,7 +75,7 @@ export default function AdminCategoriesPage() {
         }))
         
         setCategories(categoriesWithStats)
-        setMessage({ type: 'success', text: `${categoriesWithStats.length}個のカテゴリーを読み込みました（有効: ${categoriesWithStats.filter((c: unknown) => (c as any).is_active).length}個、無効: ${categoriesWithStats.filter((c: unknown) => !(c as any).is_active).length}個）` })
+        setMessage({ type: 'success', text: `${categoriesWithStats.length}個のカテゴリーを読み込みました（有効: ${categoriesWithStats.filter((c: CategoryWithStats) => c.is_active).length}個、無効: ${categoriesWithStats.filter((c: CategoryWithStats) => !c.is_active).length}個）` })
       } else {
         // フォールバック: 基本カテゴリー取得
         const allCategories = await getCategories({ activeOnly: false })

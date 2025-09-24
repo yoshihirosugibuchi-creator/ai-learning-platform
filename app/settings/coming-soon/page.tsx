@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge'
 import { 
   Settings, 
   Clock, 
-  ArrowLeft,
   Sparkles,
   Bell,
   CheckCircle

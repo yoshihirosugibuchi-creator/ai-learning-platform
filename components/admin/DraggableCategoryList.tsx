@@ -23,7 +23,6 @@ import { CSS } from '@dnd-kit/utilities'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
   GripVertical, 
@@ -68,7 +67,7 @@ interface DraggableCategoryListProps {
 
 function SortableItem({ 
   category, 
-  onStatusToggle,
+  onStatusToggle: _onStatusToggle,
   onEdit,
   onSubcategories
 }: { 
@@ -220,7 +219,7 @@ export default function DraggableCategoryList({
   onEdit,
   onSubcategories,
   title,
-  type
+  type: _type
 }: DraggableCategoryListProps) {
   const [items, setItems] = useState<CategoryWithStats[]>([])
   const [hasChanges, setHasChanges] = useState(false)

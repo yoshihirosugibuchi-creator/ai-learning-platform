@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import React from 'react'
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -9,6 +9,7 @@ import {
   Filler,
   Tooltip,
   Legend,
+  TooltipItem,
 } from 'chart.js'
 import { Radar } from 'react-chartjs-2'
 import { RadarChartData } from '@/lib/industry-analytics'
@@ -51,7 +52,7 @@ export default function SkillRadarChart({ data, title }: SkillRadarChartProps) {
         cornerRadius: 6,
         displayColors: true,
         callbacks: {
-          label: function(context: unknown) {
+          label: function(context: TooltipItem<'radar'>) {
             return `${context.dataset.label}: ${context.parsed.r}点`
           }
         }

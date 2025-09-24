@@ -163,7 +163,7 @@ class DataReflectionAnalyzer {
       const staticCategoryIds = staticCategories.map(cat => cat.id)
       
       for (const categoryId of this.report.quizJsonStatus.categoriesUsed) {
-        if (!staticCategoryIds.includes(categoryId)) {
+        if (!staticCategoryIds.includes(categoryId as any)) {
           this.report.consistencyIssues.push({
             type: 'warning',
             category: 'Data Consistency',

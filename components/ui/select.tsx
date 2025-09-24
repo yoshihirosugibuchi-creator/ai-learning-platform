@@ -98,7 +98,7 @@ const SimpleSelect = ({
 }) => {
   const options = React.Children.toArray(children).filter(
     child => React.isValidElement(child) && child.type === SimpleSelectItem
-  ) as React.ReactElement[]
+  ) as React.ReactElement<{ value: string; children: React.ReactNode }>[]
 
   return (
     <select

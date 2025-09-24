@@ -135,7 +135,7 @@ class AILearningAnalytics {
     if (this.analysisCache.has(cacheKey)) {
       const cached = this.analysisCache.get(cacheKey)!
       if (Date.now() - cached.timestamp < this.cacheTimeout) {
-        return cached.data
+        return cached.data as LearningPattern
       }
     }
 
@@ -186,18 +186,18 @@ class AILearningAnalytics {
       if (detailedData && detailedData.length > 0) {
         console.log(`[Analytics] Using detailed quiz data: ${detailedData.length} records`)
         
-        detailedData.forEach((record: unknown) => {
+        detailedData.forEach((record: any) => {
           // 詳細データからメインカテゴリーを特定
-          const mainCategory = this.mapToMainCategory(record.category)
+          const mainCategory = this.mapToMainCategory(record.category as string)
           if (mainCategory) {
             progressData.push({
               userId,
-              questionId: record.question_id,
+              questionId: record.question_id as string,
               category: mainCategory,
-              difficulty: record.difficulty || 'medium',
-              isCorrect: record.is_correct,
-              timeSpent: record.response_time,
-              timestamp: record.created_at
+              difficulty: (record.difficulty as string) || 'medium',
+              isCorrect: record.is_correct as boolean,
+              timeSpent: record.response_time as number,
+              timestamp: record.created_at as string
             })
           } else {
             console.warn(`[Analytics] Unable to map category to main category: ${record.category}`)
@@ -214,9 +214,9 @@ class AILearningAnalytics {
           .order('created_at', { ascending: false })
 
         if (sessions) {
-          sessions.forEach((session: unknown) => {
+          sessions.forEach((session: any) => {
             // course_idからメインカテゴリーを推定（不正確だが一時的対応）
-            const mainCategory = this.inferMainCategoryFromCourse(session.course_id)
+            const mainCategory = this.inferMainCategoryFromCourse(session.course_id as string)
             if (mainCategory) {
               // Simulate question data from session
               for (let i = 0; i < (session.quiz_score ? 5 : 0); i++) {
@@ -227,7 +227,7 @@ class AILearningAnalytics {
                   difficulty: this.inferDifficulty(session),
                   isCorrect: Math.random() < (session.quiz_score / 100),
                   timeSpent: (session.duration || 300000) / 5,
-                  timestamp: session.created_at
+                  timestamp: session.created_at as string
                 })
               }
             } else {
@@ -249,8 +249,8 @@ class AILearningAnalytics {
     }
   }
 
-  private inferDifficulty(session: unknown): string {
-    const score = session.quiz_score || 80
+  private inferDifficulty(session: any): string {
+    const score = (session.quiz_score as number) || 80
     if (score >= 90) return 'easy'
     if (score >= 70) return 'medium'
     return 'hard'
@@ -724,7 +724,7 @@ class AILearningAnalytics {
     }
   }
 
-  private getTopItems(map: Map<unknown, number>, count: number) {
+  private getTopItems(map: Map<any, number>, count: number) {
     return Array.from(map.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, count)
@@ -800,12 +800,18 @@ class AILearningAnalytics {
     const current = this.assessCurrentLevel(progression)
     
     switch (current) {
-      case 'novice':
-        return progression.find(p => p.difficulty === 'easy')?.accuracy >= 75 || false
-      case 'beginner':
-        return progression.find(p => p.difficulty === 'medium')?.accuracy >= 75 || false
-      case 'intermediate':
-        return progression.find(p => p.difficulty === 'hard')?.accuracy >= 75 || false
+      case 'novice': {
+        const easyLevel = progression.find(p => p.difficulty === 'easy')
+        return easyLevel ? easyLevel.accuracy >= 75 : false
+      }
+      case 'beginner': {
+        const mediumLevel = progression.find(p => p.difficulty === 'medium')
+        return mediumLevel ? mediumLevel.accuracy >= 75 : false
+      }
+      case 'intermediate': {
+        const hardLevel = progression.find(p => p.difficulty === 'hard')
+        return hardLevel ? hardLevel.accuracy >= 75 : false
+      }
       default:
         return false
     }

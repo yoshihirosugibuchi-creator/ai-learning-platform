@@ -14,8 +14,7 @@ import {
   Bell, 
   Palette,
   ChevronRight,
-  Cog,
-  Users
+  Cog
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 

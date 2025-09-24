@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { ArrowLeft, Play, Clock, BookOpen, CheckCircle, Circle, Award, Star, Tag } from 'lucide-react'
+import { ArrowLeft, Play, Clock, CheckCircle, Circle, Award, Star, Tag } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
@@ -14,6 +14,18 @@ import { getLearningCourseDetails, getLearningProgress } from '@/lib/learning/da
 import { LearningCourse, DifficultyLabels, SessionTypeLabels } from '@/lib/types/learning'
 import { getCategoryInfoForCourse, getCategoryInfoForGenre } from '@/lib/learning/category-integration'
 import { useAuth } from '@/components/auth/AuthProvider'
+
+// Type definitions for category information
+interface MainCategoryInfo {
+  color?: string
+  name?: string  
+  icon?: string
+}
+
+interface CategoryData {
+  mainCategory: MainCategoryInfo
+  subcategory?: string
+}
 
 export default function CourseDetailPage() {
   const router = useRouter()
@@ -74,25 +86,26 @@ export default function CourseDetailPage() {
 
   const isSessionCompleted = (genreId: string, themeId: string, sessionId: string) => {
     const key = `${courseId}_${genreId}_${themeId}_${sessionId}`
-    const isCompleted = userProgress[key]?.completed || false
+    const progressItem = userProgress[key] as { completed?: boolean } | undefined
+    const isCompleted = progressItem?.completed || false
     console.log(`🔍 Checking session completion: ${key} -> ${isCompleted}`)
     return isCompleted
   }
 
-  const getThemeProgress = (genreId: string, themeId: string, sessions: Record<string, unknown>[]) => {
+  const getThemeProgress = (genreId: string, themeId: string, sessions: { id: string }[]) => {
     const completed = sessions.filter(session => 
       isSessionCompleted(genreId, themeId, session.id)
     ).length
     return { completed, total: sessions.length }
   }
 
-  const getGenreProgress = (genre: Record<string, unknown>) => {
+  const getGenreProgress = (genre: { id: string; themes: { id: string; sessions: { id: string }[] }[] }) => {
     let totalSessions = 0
     let completedSessions = 0
     
-    genre.themes.forEach((theme: Record<string, unknown>) => {
+    genre.themes.forEach((theme) => {
       totalSessions += theme.sessions.length
-      theme.sessions.forEach((session: Record<string, unknown>) => {
+      theme.sessions.forEach((session) => {
         if (isSessionCompleted(genre.id, theme.id, session.id)) {
           completedSessions++
         }
@@ -172,28 +185,29 @@ export default function CourseDetailPage() {
               </p>
               
               {/* カテゴリー情報 */}
-              {categoryInfo && categoryInfo.uniqueMainCategories.length > 0 && (
+              {categoryInfo && (categoryInfo.uniqueMainCategories as unknown[])?.length > 0 && (
                 <div className="mt-4 space-y-2">
                   <div className="text-sm font-medium text-muted-foreground flex items-center space-x-1">
                     <Tag className="h-4 w-4" />
                     <span>関連カテゴリー</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {(categoryInfo.categories as Record<string, unknown>[]).map((cat: Record<string, unknown>, index: number) => (
-                      cat.mainCategory && (
+                    {(categoryInfo.categories as CategoryData[]).map((cat: CategoryData, index: number) => {
+                      const mainCategory = cat.mainCategory
+                      return mainCategory && (
                         <Badge 
                           key={index}
                           variant="outline" 
                           className="text-xs"
                           style={{ 
-                            borderColor: cat.mainCategory.color,
-                            color: cat.mainCategory.color 
+                            borderColor: mainCategory.color,
+                            color: mainCategory.color 
                           }}
                         >
-                          {cat.mainCategory.icon} {cat.subcategory || cat.mainCategory.name}
+                          {mainCategory.icon} {cat.subcategory || mainCategory.name}
                         </Badge>
                       )
-                    ))}
+                    })}
                   </div>
                 </div>
               )}
@@ -203,7 +217,7 @@ export default function CourseDetailPage() {
           {/* Course Content */}
           <div className="space-y-6">
             {course.genres.map((genre) => {
-              const genreProgress = getGenreProgress(genre)
+              const genreProgress = getGenreProgress(genre as { id: string; themes: { id: string; sessions: { id: string }[] }[] })
               const genreProgressPercentage = genreProgress.total > 0 
                 ? Math.round((genreProgress.completed / genreProgress.total) * 100) 
                 : 0
@@ -268,7 +282,7 @@ export default function CourseDetailPage() {
                   <CardContent className="p-0">
                     <div className="space-y-0">
                       {genre.themes.map((theme) => {
-                        const themeProgress = getThemeProgress(genre.id, theme.id, theme.sessions)
+                        const themeProgress = getThemeProgress(genre.id, theme.id, theme.sessions as { id: string }[])
                         const themeProgressPercentage = themeProgress.total > 0 
                           ? Math.round((themeProgress.completed / themeProgress.total) * 100) 
                           : 0

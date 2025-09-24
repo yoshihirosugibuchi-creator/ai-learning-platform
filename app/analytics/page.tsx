@@ -34,6 +34,14 @@ import { globalCache, useResourceMonitor } from '@/lib/performance-optimizer'
 // レーダーチャートコンポーネントを遅延読み込み
 const SkillRadarChart = lazy(() => import('@/components/analytics/SkillRadarChart'))
 
+interface CachedAnalyticsData {
+  analytics: LearningAnalytics | null
+  aiPatterns: LearningPattern | null  
+  optimalTime: OptimalLearningTime | null
+  hints: PersonalizedHints | null
+  industryProfile: IndustrySkillProfile | null
+}
+
 export default function AnalyticsPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [analytics, setAnalytics] = useState<LearningAnalytics | null>(null)
@@ -62,13 +70,13 @@ export default function AnalyticsPage() {
           const cacheKey = `analytics_${user.id}_${selectedIndustry}`
           
           // キャッシュから取得を試行
-          const cachedData = globalCache.get(cacheKey)
+          const cachedData = globalCache.get(cacheKey) as CachedAnalyticsData | undefined
           if (cachedData) {
-            setAnalytics((cachedData as any).analytics)
-            setAiPatterns((cachedData as any).aiPatterns)
-            setOptimalTime((cachedData as any).optimalTime)
-            setHints((cachedData as any).hints)
-            setIndustryProfile((cachedData as any).industryProfile)
+            setAnalytics(cachedData.analytics)
+            setAiPatterns(cachedData.aiPatterns)
+            setOptimalTime(cachedData.optimalTime)
+            setHints(cachedData.hints)
+            setIndustryProfile(cachedData.industryProfile)
             setIsLoading(false)
             return
           }
@@ -92,7 +100,7 @@ export default function AnalyticsPage() {
           // Load industry profile if patterns exist
           let industryData = null
           if (patterns && patterns.learningFrequency.activeDays > 0) {
-            const progressData: any[] = [] // We'll need to extract this from the patterns
+            const progressData: unknown[] = [] // We'll need to extract this from the patterns
             industryData = await industryAnalytics.analyzeIndustrySkills(
               user.id, 
               selectedIndustry, 
@@ -145,7 +153,7 @@ export default function AnalyticsPage() {
 
         // 業界プロファイルも更新
         if (patterns && patterns.learningFrequency.activeDays > 0) {
-          const progressData: any[] = []
+          const progressData: unknown[] = []
           const industryData = await industryAnalytics.analyzeIndustrySkills(
             user.id, 
             selectedIndustry, 

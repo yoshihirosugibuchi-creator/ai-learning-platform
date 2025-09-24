@@ -149,10 +149,10 @@ class IndustryAnalytics {
     const skillAreas: SkillArea[] = []
 
     mainCategories.forEach(category => {
-      const categoryProgress = progressData.filter(p => 
-        p.category === category.id || 
-        p.courseId === category.id
-      )
+      const categoryProgress = progressData.filter(p => {
+        const progress = p as { category?: string; courseId?: string; isCorrect?: boolean }
+        return progress.category === category.id || progress.courseId === category.id
+      })
 
       const score = this.calculateCategoryScore(categoryProgress)
       const currentLevel = this.assessSkillLevel(score)
@@ -164,7 +164,7 @@ class IndustryAnalytics {
         currentLevel,
         targetLevel: this.getTargetLevel(importance),
         score,
-        progress: categoryProgress.length > 0 ? (categoryProgress.filter((p: unknown) => p.isCorrect).length / categoryProgress.length) * 100 : 0,
+        progress: categoryProgress.length > 0 ? (categoryProgress.filter(p => (p as { isCorrect?: boolean }).isCorrect).length / categoryProgress.length) * 100 : 0,
         importance
       })
     })
@@ -175,7 +175,7 @@ class IndustryAnalytics {
   private calculateCategoryScore(categoryProgress: unknown[]): number {
     if (categoryProgress.length === 0) return 0
     
-    const correctAnswers = categoryProgress.filter(p => p.isCorrect).length
+    const correctAnswers = categoryProgress.filter(p => (p as { isCorrect?: boolean }).isCorrect).length
     const accuracy = correctAnswers / categoryProgress.length
     const volumeBonus = Math.min(categoryProgress.length / 20, 1) // Bonus for more practice
     
@@ -426,8 +426,8 @@ class IndustryAnalytics {
     skills: string[]
     milestones: string[]
   }> {
-    const highPriorityGaps = criticalGaps.filter(gap => gap.priority === 'high')
-    const mediumPriorityGaps = criticalGaps.filter(gap => gap.priority === 'medium')
+    const highPriorityGaps = criticalGaps.filter(gap => (gap as { priority?: string }).priority === 'high')
+    const mediumPriorityGaps = criticalGaps.filter(gap => (gap as { priority?: string }).priority === 'medium')
     
     const path = []
 
@@ -435,7 +435,7 @@ class IndustryAnalytics {
       path.push({
         phase: 1,
         duration: '3ヶ月',
-        skills: highPriorityGaps.slice(0, 2).map(gap => gap.skill),
+        skills: highPriorityGaps.slice(0, 2).map(gap => (gap as { skill: string }).skill),
         milestones: [
           '基礎概念の理解と実践',
           '実際の業務での応用',
@@ -449,8 +449,8 @@ class IndustryAnalytics {
         phase: 2,
         duration: '6ヶ月',
         skills: [
-          ...highPriorityGaps.slice(2).map(gap => gap.skill),
-          ...mediumPriorityGaps.slice(0, 2).map(gap => gap.skill)
+          ...highPriorityGaps.slice(2).map(gap => (gap as { skill: string }).skill),
+          ...mediumPriorityGaps.slice(0, 2).map(gap => (gap as { skill: string }).skill)
         ],
         milestones: [
           '応用スキルの開発',

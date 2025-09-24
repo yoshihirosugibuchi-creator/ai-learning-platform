@@ -56,7 +56,7 @@ export const mainCategories: MainCategory[] = [
     color: '#3B82F6'
   },
   {
-    id: 'analytical_problem_solving',
+    id: 'logical_thinking_problem_solving',
     name: '分析的問題解決',
     description: '論理的思考力と問題解決能力を活用した分析スキル',
     type: 'main',
@@ -70,7 +70,7 @@ export const mainCategories: MainCategory[] = [
     color: '#8B5CF6'
   },
   {
-    id: 'leadership_management',
+    id: 'leadership_hr',
     name: 'リーダーシップ・マネジメント',
     description: 'チームを率い、組織を発展させる統率力',
     type: 'main',
@@ -84,7 +84,7 @@ export const mainCategories: MainCategory[] = [
     color: '#10B981'
   },
   {
-    id: 'business_strategy',
+    id: 'strategy_management',
     name: 'ビジネス戦略・企画',
     description: '戦略的思考による事業の方向性決定',
     type: 'main',

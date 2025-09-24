@@ -14,7 +14,7 @@ import {
   BarElement,
   RadialLinearScale,
 } from 'chart.js'
-import { Line, Doughnut, Bar, Radar } from 'react-chartjs-2'
+import { Line, Doughnut, Radar } from 'react-chartjs-2'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { QuizResult } from '@/lib/storage'
 import { getCategoryDisplayName, mapToMainCategoryId } from '@/lib/category-mapping'

@@ -12,7 +12,7 @@ import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import { Question } from '@/lib/types'
 import { MainCategory, IndustryCategory } from '@/lib/types/category'
-import { getAllQuestions, getCategories } from '@/lib/questions'
+import { getAllQuestions } from '@/lib/questions'
 import { getCategories as getDbCategories, getDifficultyDisplayName } from '@/lib/categories'
 import { useAuth } from '@/components/auth/AuthProvider'
 
@@ -22,8 +22,8 @@ export default function QuizPage() {
   const { user, profile, loading: authLoading } = useAuth()
   const mode = searchParams.get('mode')
   const categoryParam = searchParams.get('category')
-  const levelParam = searchParams.get('level')
-  const difficultiesParam = searchParams.get('difficulties')
+  // const levelParam = searchParams.get('level')
+  // const difficultiesParam = searchParams.get('difficulties')
   const returnToParam = searchParams.get('returnTo')
   
   const [questions, setQuestions] = useState<Question[]>([])
@@ -31,7 +31,7 @@ export default function QuizPage() {
   const [inactiveCategories, setInactiveCategories] = useState<(MainCategory | IndustryCategory)[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam)
-  const [returnTo, setReturnTo] = useState<string | null>(returnToParam)
+  const [returnTo] = useState<string | null>(returnToParam)
   const [isQuizActive, setIsQuizActive] = useState(mode === 'random' || !!categoryParam)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 

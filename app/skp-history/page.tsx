@@ -18,14 +18,14 @@ import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useRouter } from 'next/navigation'
-import { getUserSKPTransactions, getUserSKPBalance } from '@/lib/supabase-learning'
+import { getUserSKPTransactions, getUserSKPBalance, SKPTransaction } from '@/lib/supabase-learning'
 
 type FilterType = 'all' | 'earned' | 'spent'
 
 export default function SkpHistoryPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [filter, setFilter] = useState<FilterType>('all')
-  const [transactions, setTransactions] = useState<Array<Record<string, unknown>>>([])
+  const [transactions, setTransactions] = useState<SKPTransaction[]>([])
   const [currentBalance, setCurrentBalance] = useState(0)
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()

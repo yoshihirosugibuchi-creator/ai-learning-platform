@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
+import { getLearningCourseDetails } from '@/lib/learning/data'
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -14,8 +15,7 @@ import {
   Star,
   Clock,
   BookOpen,
-  Award,
-  ChevronRight
+  Award
 } from 'lucide-react'
 import { LearningSession as LearningSessionType, SessionTypeLabels } from '@/lib/types/learning'
 import { saveLearningProgressSupabase, saveLearningSession as saveLearningSessionSupabase, updateLearningSession, LearningSession as LearningSessionData } from '@/lib/supabase-learning'
@@ -66,13 +66,43 @@ export default function LearningSession({
   const [showQuizResult, setShowQuizResult] = useState(false)
   const [sessionCompleted, setSessionCompleted] = useState(false)
   const [cardAcquired, setCardAcquired] = useState(false)
-  const [badgeAwarded, setBadgeAwarded] = useState<Record<string, unknown> | null>(null)
+  const [badgeAwarded, setBadgeAwarded] = useState<{
+    id: string
+    badge: {
+      id: string
+      title: string
+      description: string
+      icon: string
+      color: string
+    }
+    earnedAt: Date
+    expiresAt?: Date
+    isExpired: boolean
+    courseId: string
+    courseName: string
+  } | null>(null)
   const [startTime] = useState(new Date())
   const [currentSessionData, setCurrentSessionData] = useState<LearningSessionData | null>(null)
   const [isCompletingSession, setIsCompletingSession] = useState(false)
+  const [courseName, setCourseName] = useState<string>('Learning Course')
 
   const hasQuiz = session.quiz && session.quiz.length > 0
   const isLastSession = currentSessionIndex === totalSessions - 1
+  
+  // Fetch course name
+  useEffect(() => {
+    const fetchCourseName = async () => {
+      try {
+        const courseDetails = await getLearningCourseDetails(courseId)
+        if (courseDetails) {
+          setCourseName(courseDetails.title)
+        }
+      } catch (error) {
+        console.error('Error fetching course details:', error)
+      }
+    }
+    fetchCourseName()
+  }, [courseId])
   
   // Initialize learning session tracking on component mount
   useEffect(() => {
@@ -255,13 +285,21 @@ export default function LearningSession({
         
         if (badgeResult.completed && badgeResult.badge) {
           console.log('🎉 Course completed! Badge awarded:', badgeResult.badge)
-          setBadgeAwarded(badgeResult.badge as {
-            earnedAt: string;
-            expiresAt?: string;
+          const badgeData = badgeResult.badge as any
+          setBadgeAwarded({
+            id: badgeData.id || `badge_${Date.now()}`,
             badge: {
-              title: string;
-              description: string;
-            };
+              id: badgeData.badge?.id || badgeData.id || `badge_${Date.now()}`,
+              title: badgeData.badge?.title || 'Course Completed',
+              description: badgeData.badge?.description || 'Course completion badge',
+              icon: badgeData.badge?.icon || '🏆',
+              color: badgeData.badge?.color || '#FFD700'
+            },
+            earnedAt: new Date(badgeData.earnedAt || Date.now()),
+            expiresAt: badgeData.expiresAt ? new Date(badgeData.expiresAt) : undefined,
+            isExpired: false,
+            courseId: courseId,
+            courseName: courseName
           })
         }
       } else {
@@ -350,17 +388,19 @@ export default function LearningSession({
         <CardContent className="space-y-6 overflow-y-auto max-h-[70vh]">
           <div className="prose max-w-none space-y-6">
             {session.content && session.content.length > 0 ? (
-              session.content.map((contentItem: unknown, index: number) => (
-                <div key={contentItem.id || index} className="space-y-3">
-                  {contentItem.title && (
+              session.content.map((contentItem: any, index: number) => {
+                const item = contentItem as { id?: string; title?: string; type?: string; content?: string }
+                return (
+                <div key={item.id || index} className="space-y-3">
+                  {item.title && (
                     <h3 className="text-lg font-semibold text-primary">
-                      {contentItem.title}
+                      {item.title}
                     </h3>
                   )}
                   
-                  {contentItem.type === 'text' && (
+                  {item.type === 'text' && item.content && (
                     <div className="space-y-3">
-                      {contentItem.content.split('\n').map((paragraph: string, pIndex: number) => (
+                      {item.content.split('\n').map((paragraph: string, pIndex: number) => (
                         paragraph.trim() && (
                           <p key={pIndex} className="leading-relaxed text-gray-700">
                             {paragraph.trim()}
@@ -370,10 +410,10 @@ export default function LearningSession({
                     </div>
                   )}
                   
-                  {contentItem.type === 'key_points' && (
+                  {item.type === 'key_points' && item.content && (
                     <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
                       <div className="space-y-2">
-                        {contentItem.content.split('\n').map((point: string, pIndex: number) => (
+                        {item.content.split('\n').map((point: string, pIndex: number) => (
                           point.trim() && (
                             <div key={pIndex} className="flex items-start space-x-2">
                               <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
@@ -385,10 +425,10 @@ export default function LearningSession({
                     </div>
                   )}
                   
-                  {contentItem.type === 'example' && (
+                  {item.type === 'example' && item.content && (
                     <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
                       <div className="space-y-2">
-                        {contentItem.content.split('\n').map((line: string, pIndex: number) => (
+                        {item.content.split('\n').map((line: string, pIndex: number) => (
                           line.trim() && (
                             <p key={pIndex} className="text-sm text-green-800 leading-relaxed">
                               {line.trim()}
@@ -399,7 +439,8 @@ export default function LearningSession({
                     </div>
                   )}
                 </div>
-              ))
+                )
+              })
             ) : (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">コンテンツを読み込んでいます...</p>
