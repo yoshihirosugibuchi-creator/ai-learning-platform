@@ -7,7 +7,7 @@ import { LearningCourse, LearningGenre } from '@/lib/types/learning'
 import { MainCategory } from '@/lib/types/category'
 
 // ジャンルからカテゴリー情報を取得
-export function getCategoryInfoForGenre(genre: LearningGenre): {
+export function getCategoryInfoForGenre(genre: { categoryId: string; subcategoryId?: string }): {
   mainCategory: MainCategory | null
   subcategory: string | null
 } {
@@ -20,8 +20,16 @@ export function getCategoryInfoForGenre(genre: LearningGenre): {
   }
 }
 
+// 共通のカテゴリー参照型
+interface CategoryReference {
+  categoryId: string
+  subcategoryId?: string
+  id?: string
+  title?: string
+}
+
 // コースのすべてのジャンルのカテゴリー情報を取得
-export function getCategoryInfoForCourse(course: LearningCourse): {
+export function getCategoryInfoForCourse<T extends { genres?: CategoryReference[] }>(course: T): {
   categories: Array<{
     genreId: string
     genreTitle: string
@@ -30,10 +38,17 @@ export function getCategoryInfoForCourse(course: LearningCourse): {
   }>
   uniqueMainCategories: MainCategory[]
 } {
+  if (!course.genres) {
+    return { categories: [], uniqueMainCategories: [] }
+  }
+  
   const categories = course.genres.map(genre => ({
-    genreId: genre.id,
-    genreTitle: genre.title,
-    ...getCategoryInfoForGenre(genre)
+    genreId: genre.id || genre.categoryId,
+    genreTitle: genre.title || genre.categoryId,
+    ...getCategoryInfoForGenre({
+      categoryId: genre.categoryId,
+      subcategoryId: genre.subcategoryId
+    })
   }))
   
   const uniqueMainCategories = Array.from(
@@ -82,8 +97,8 @@ export function findLearningContentByCategory(
 
 // カテゴリー別学習進捗の集計（将来の統計機能用）
 export function aggregateLearningProgressByCategory(
-  progressData: unknown[], // 実際の進捗データ型に応じて後で更新
-  courses: LearningCourse[]
+  _progressData: unknown[], // 実際の進捗データ型に応じて後で更新
+  _courses: LearningCourse[]
 ): Record<string, {
   categoryName: string
   totalSessions: number

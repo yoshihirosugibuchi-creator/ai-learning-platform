@@ -96,7 +96,7 @@ export async function addWisdomCardToCollection(userId: string, cardId: number):
     return { count: data.count, isNew: false }
   } else {
     // Add new card
-    const { data, error } = await supabase
+    const { data: _data, error } = await supabase
       .from('wisdom_card_collection')
       .insert([{
         user_id: userId,
@@ -357,7 +357,7 @@ export async function hasWisdomCard(userId: string, cardId: number): Promise<boo
     }
 
     return !!data
-  } catch (error) {
+  } catch (_error) {
     // ネットワークエラーやその他の例外は静かに処理
     return false
   }
@@ -394,7 +394,7 @@ export async function getWisdomCardCount(userId: string, cardId: number): Promis
     }
 
     return data?.count || 0
-  } catch (error) {
+  } catch (_error) {
     // ネットワークエラーやその他の例外は静かに処理
     return 0
   }

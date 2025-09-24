@@ -8,7 +8,7 @@ export async function debugDatabaseAccess(): Promise<void> {
   
   try {
     // Check if we can access the users table
-    const { data: tableInfo, error: tableError } = await supabase
+    const { data: _tableInfo, error: tableError } = await supabase
       .from('users')
       .select('count(*)')
       .limit(0)

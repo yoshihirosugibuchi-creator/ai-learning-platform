@@ -238,7 +238,7 @@ export default function LearningPage() {
     }
 
     loadData()
-  }, [user?.id, authLoading, router])
+  }, [user?.id, user?.email, authLoading, router, user])
 
   const handleStartCourse = async (courseId: string) => {
     console.log('🚀 Starting course navigation to:', courseId)

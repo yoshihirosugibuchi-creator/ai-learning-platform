@@ -6,6 +6,22 @@ import { supabase } from './supabase'
 import { isValidCategoryId } from './categories'
 
 // Analytics data interfaces
+interface QuizDetailRecord {
+  question_id: string
+  category: string
+  difficulty: string
+  is_correct: boolean
+  response_time: number
+  created_at: string
+}
+
+interface LearningSession {
+  course_id: string
+  quiz_score?: number
+  created_at: string
+  duration?: number
+}
+
 export interface LearningPattern {
   learningFrequency: LearningFrequency
   timeOfDayPatterns: TimeOfDayPatterns
@@ -186,7 +202,7 @@ class AILearningAnalytics {
       if (detailedData && detailedData.length > 0) {
         console.log(`[Analytics] Using detailed quiz data: ${detailedData.length} records`)
         
-        detailedData.forEach((record: any) => {
+        detailedData.forEach((record: QuizDetailRecord) => {
           // 詳細データからメインカテゴリーを特定
           const mainCategory = this.mapToMainCategory(record.category as string)
           if (mainCategory) {
@@ -214,7 +230,7 @@ class AILearningAnalytics {
           .order('created_at', { ascending: false })
 
         if (sessions) {
-          sessions.forEach((session: any) => {
+          sessions.forEach((session: LearningSession) => {
             // course_idからメインカテゴリーを推定（不正確だが一時的対応）
             const mainCategory = this.inferMainCategoryFromCourse(session.course_id as string)
             if (mainCategory) {
@@ -249,7 +265,7 @@ class AILearningAnalytics {
     }
   }
 
-  private inferDifficulty(session: any): string {
+  private inferDifficulty(session: LearningSession): string {
     const score = (session.quiz_score as number) || 80
     if (score >= 90) return 'easy'
     if (score >= 70) return 'medium'
@@ -370,7 +386,7 @@ class AILearningAnalytics {
     const progressData: QuestionProgress[] = []
     const progressKeys = Object.keys(localStorage).filter(key => key.startsWith('lp_'))
     
-    progressKeys.forEach((key, index) => {
+    progressKeys.forEach((key) => {
       try {
         const data = JSON.parse(localStorage.getItem(key) || '{}')
         if (data.completed) {
@@ -724,7 +740,7 @@ class AILearningAnalytics {
     }
   }
 
-  private getTopItems(map: Map<any, number>, count: number) {
+  private getTopItems<T>(map: Map<T, number>, count: number) {
     return Array.from(map.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, count)
@@ -817,7 +833,7 @@ class AILearningAnalytics {
     }
   }
 
-  private calculateStreaks(dates: string[]) {
+  private calculateStreaks(_dates: string[]) {
     // Simplified streak calculation
     return {
       current: Math.floor(Math.random() * 7) + 1,
@@ -914,7 +930,7 @@ class AILearningAnalytics {
     return advice.length > 0 ? advice : ['定期的な学習を続けることが重要です']
   }
 
-  private async getQuestionSpecificHints(userId: string, questionId: string): Promise<string[]> {
+  private async getQuestionSpecificHints(_userId: string, _questionId: string): Promise<string[]> {
     return [
       'この類の問題では、キーワードに注目することが重要です',
       '時間をかけて選択肢を比較してみましょう'

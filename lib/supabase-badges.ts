@@ -15,7 +15,7 @@ export async function testDatabaseConnection(): Promise<void> {
   
   // Test existing table first
   try {
-    const { data: progressData, error: progressError } = await supabase
+    const { data: _progressData, error: progressError } = await supabase
       .from('learning_progress')
       .select('id')
       .limit(1)
@@ -31,7 +31,7 @@ export async function testDatabaseConnection(): Promise<void> {
   
   // Test user_badges table
   try {
-    const { data: badgesData, error: badgesError } = await supabase
+    const { data: _badgesData, error: badgesError } = await supabase
       .from('user_badges')
       .select('id')
       .limit(1)
@@ -55,7 +55,7 @@ export async function testDatabaseConnection(): Promise<void> {
 // デバッグ用：user_badgesテーブルの存在確認
 export async function testUserBadgesTableAccess(): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    const { data: _data, error } = await supabase
       .from('user_badges')
       .select('id')
       .limit(1)

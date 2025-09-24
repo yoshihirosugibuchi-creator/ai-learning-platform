@@ -54,7 +54,7 @@ export default function CoursePage() {
   }
 
   // Mock data for course progress
-  const getCourseProgress = (_subcategoryId: string) => {  // eslint-disable-line @typescript-eslint/no-unused-vars
+  const getCourseProgress = (_subcategoryId: string) => {
     // TODO: Implement actual progress calculation using subcategoryId
     return Math.floor(Math.random() * 100)
   }

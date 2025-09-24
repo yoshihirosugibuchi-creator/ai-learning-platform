@@ -521,7 +521,15 @@ export function migrateUserData(userData: unknown): StorageUser {
       isOnboarded: true // 既存ユーザーはオンボーディング済みとみなす
     },
     profile: user.profile || {},
-    progress: (user.progress as any) || {
+    progress: (user.progress as {
+      currentLevel: number
+      totalXP: number
+      streak: number
+      completedQuestions: number[]
+      correctAnswers: number
+      totalAnswers: number
+      lastLearningDate?: string
+    }) || {
       currentLevel: 1,
       totalXP: 0,
       streak: 0,
@@ -529,7 +537,7 @@ export function migrateUserData(userData: unknown): StorageUser {
       correctAnswers: 0,
       totalAnswers: 0
     },
-    categoryProgress: (user.categoryProgress as any[]) || [],
+    categoryProgress: (user.categoryProgress as CategoryProgress[]) || [],
     skpBalance: (user.skpBalance as number) || 0,
     skpTotalEarned: (user.skpTotalEarned as number) || (user.skpBalance as number) || 0,
     skpTransactions: (user.skpTransactions as SkpTransaction[]) || [],
@@ -1186,7 +1194,7 @@ export function initializeUserSpecificData(userId: string): void {
     if (quizConfig !== null) {
       Promise.resolve(quizConfig).then((config: unknown) => {
       if (!config) {
-        const defaultConfig = createDefaultQuizConfig()
+        const _defaultConfig = createDefaultQuizConfig()
         saveUserQuizConfig().then(() => {
           console.log('📝 Created default quiz personalization config')
         })

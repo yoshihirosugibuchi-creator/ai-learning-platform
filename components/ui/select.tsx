@@ -46,7 +46,7 @@ const Select = ({ value, onValueChange, children }: SelectProps) => {
 const SelectTrigger = React.forwardRef<
   HTMLDivElement,
   SelectTriggerProps & { value?: string; onValueChange?: (value: string) => void }
->(({ className, children, value, onValueChange, ...props }, ref) => (
+>(({ className, children, value: _value, onValueChange: _onValueChange, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
@@ -71,7 +71,7 @@ const SelectContent = ({ children }: SelectContentProps) => {
   )
 }
 
-const SelectItem = ({ value, children, onClick }: SelectItemProps) => (
+const SelectItem = ({ value: _value, children, onClick }: SelectItemProps) => (
   <div
     className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
     onClick={onClick}
@@ -118,7 +118,7 @@ const SimpleSelect = ({
   )
 }
 
-const SimpleSelectItem = ({ value, children }: { value: string; children: React.ReactNode }) => (
+const SimpleSelectItem = ({ value: _value, children }: { value: string; children: React.ReactNode }) => (
   <>{children}</>
 )
 

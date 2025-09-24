@@ -47,7 +47,7 @@ export default function KnowledgeCard({
     
     // 学習セッションにナビゲート
     if (card.source) {
-      const { courseId, genreId: _genreId, themeId: _themeId } = card.source
+      const { courseId } = card.source
       // テーマの最初のセッションに移動。実際のセッションIDはコースデータから取得する必要がある
       // 今は簡易的にコースページに移動
       router.push(`/learning/${courseId}`)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,10 +9,9 @@ import { Trophy, Target, Clock, BarChart3, Zap } from 'lucide-react'
 import QuizCard from './QuizCard'
 import { Question } from '@/lib/types'
 import { getRandomQuestions } from '@/lib/questions'
-import { useAuth } from '@/components/auth/AuthProvider'
+// import { useAuth } from '@/components/auth/AuthProvider'
 import { 
-  saveQuizResult as saveQuizResultSupabase,
-  updateUserProgress
+  saveQuizResult as saveQuizResultSupabase
 } from '@/lib/supabase-quiz'
 import { UserProfile, UserProfileWithProgress } from '@/lib/supabase-user'
 import type { User } from '@supabase/supabase-js'
@@ -21,9 +20,9 @@ import WisdomCard from '@/components/cards/WisdomCard'
 import { getCategoryDisplayName } from '@/lib/category-mapping'
 import { isValidCategoryId, getDifficultyDisplayName } from '@/lib/categories'
 import { addWisdomCardToCollection } from '@/lib/supabase-cards'
-import { saveSKPTransaction, saveDetailedQuizData, updateCategoryProgress } from '@/lib/supabase-learning'
-import { updateProgressAfterQuiz, calculateChallengeQuizRewards, saveChallengeQuizProgressToDatabase } from '@/lib/xp-level-system'
-import { getSubcategoryId } from '@/lib/categories'
+import { saveDetailedQuizData } from '@/lib/supabase-learning'
+// import { updateProgressAfterQuiz, calculateChallengeQuizRewards, saveChallengeQuizProgressToDatabase } from '@/lib/xp-level-system'
+// import { getSubcategoryId } from '@/lib/categories'
 
 interface QuizSessionProps {
   questions: Question[]
@@ -34,6 +33,12 @@ interface QuizSessionProps {
   profile: UserProfile | null
   onComplete: (results: QuizResults) => void
   onExit: () => void
+}
+
+interface CategoryProgress {
+  category_id: string
+  correct_answers: number
+  total_answers: number
 }
 
 interface QuizResults {
@@ -78,7 +83,7 @@ export default function QuizSession({
   onComplete,
   onExit
 }: QuizSessionProps) {
-  const router = useRouter()
+  const _router = useRouter()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
   const [showResult, setShowResult] = useState(false)
@@ -97,9 +102,9 @@ export default function QuizSession({
   const [currentConfidence, setCurrentConfidence] = useState<number | null>(null)
   const [showConfidenceInput, setShowConfidenceInput] = useState(false)
   const [skpGained, setSkpGained] = useState(0)
-  const [isCompleting, setIsCompleting] = useState(false)
+  const [, setIsCompleting] = useState(false)
   const completionInProgress = useRef(false)
-  const [challengeQuizUpdateData, setChallengeQuizUpdateData] = useState<{
+  const [, setChallengeQuizUpdateData] = useState<{
     userId: string;
     categoryResults: Record<string, unknown>;
   } | null>(null)
@@ -202,17 +207,17 @@ export default function QuizSession({
       ...prev,
       totalQuestions: selectedQuestions.length
     }))
-  }, [questions, category, level, difficulties, user.id, profile])
+  }, [questions, category, level, difficulties, user.id, profile, optimizeQuestionsForUser])
 
   // 学習履歴に基づく問題最適化関数
-  const optimizeQuestionsForUser = (questions: Question[], userId: string, userProfile: UserProfileWithProgress | null): Question[] => {
+  const optimizeQuestionsForUser = useCallback((questions: Question[], userId: string, userProfile: UserProfileWithProgress | null): Question[] => {
     if (!userProfile || questions.length === 0) {
       return getRandomQuestions(questions, 10)
     }
 
     // ユーザーのカテゴリー別正答率を取得
     const categoryProgress = userProfile.categoryProgress || []
-    const categoryStats = categoryProgress.find((cp: any) => cp.category_id === category)
+    const categoryStats = categoryProgress.find((cp: CategoryProgress) => cp.category_id === category)
     
     if (!categoryStats) {
       // 初回の場合は基礎から中級中心
@@ -271,7 +276,7 @@ export default function QuizSession({
       Object.entries(difficultyDistribution).map(([d, c]) => `${d}:${c}`).join(', '))
     
     return optimized.slice(0, 10)
-  }
+  }, [category])
 
   const currentQuestion = sessionQuestions[currentQuestionIndex]
   
@@ -371,7 +376,7 @@ export default function QuizSession({
       }
       
       // Create enhanced session data
-      const sessionData: QuizSession = {
+      const _sessionData: QuizSession = {
         sessionId: crypto.randomUUID(),
         startTime: new Date(startTime).toISOString(),
         endTime: new Date(endTime).toISOString(),

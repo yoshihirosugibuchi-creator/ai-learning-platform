@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import CategoryCard from './CategoryCard'
 import { mainCategories, industryCategories, skillLevels, getCategories, getSkillLevels } from '@/lib/categories'
 import { MainCategory, IndustryCategory, SkillLevel, SkillLevelDefinition } from '@/lib/types/category'
+import { Question } from '@/lib/types'
 import { Search, Filter, Users, Building2, TrendingUp, BookOpen } from 'lucide-react'
 import { useUserContext } from '@/contexts/UserContext'
 import { getUserQuizResults } from '@/lib/storage'
@@ -39,7 +40,7 @@ export default function CategoryGrid({
   categoryStats
 }: CategoryGridProps) {
   const { user } = useUserContext()
-  const [allQuestions, setAllQuestions] = useState<any[]>([])
+  const [allQuestions, setAllQuestions] = useState<Question[]>([])
   const [dbCategories, setDbCategories] = useState<(MainCategory | IndustryCategory)[]>([])
   const [dbSkillLevels, setDbSkillLevels] = useState<SkillLevelDefinition[]>([])
   const [loading, setLoading] = useState(true)
@@ -73,7 +74,7 @@ export default function CategoryGrid({
   const [activeTab, setActiveTab] = useState<'main' | 'industry'>('main')
 
   // Filter categories based on search and skill level
-  const filterCategories = (categories: (MainCategory | IndustryCategory)[]) => {
+  const filterCategories = useCallback((categories: (MainCategory | IndustryCategory)[]) => {
     return categories.filter(category => {
       const matchesSearch = category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            category.description?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -85,14 +86,21 @@ export default function CategoryGrid({
       // In real implementation, this would filter based on available content for that skill level
       return matchesSearch && isVisible
     })
-  }
+  }, [searchTerm])
 
   // Split DB categories by type
   const dbMainCategories = dbCategories.filter(cat => cat.type === 'main')
   const dbIndustryCategories = dbCategories.filter(cat => cat.type === 'industry')
   
-  const filteredMainCategories = filterCategories(dbMainCategories.length > 0 ? dbMainCategories : mainCategories)
-  const filteredIndustryCategories = filterCategories(dbIndustryCategories.length > 0 ? dbIndustryCategories : industryCategories)
+  const filteredMainCategories = useMemo(() => 
+    filterCategories(dbMainCategories.length > 0 ? dbMainCategories : mainCategories),
+    [dbMainCategories, filterCategories]
+  )
+  
+  const filteredIndustryCategories = useMemo(() => 
+    filterCategories(dbIndustryCategories.length > 0 ? dbIndustryCategories : industryCategories),
+    [dbIndustryCategories, filterCategories]
+  )
 
   // Calculate real category stats based on user's quiz results and available questions
   const realStats = useMemo(() => {
@@ -109,7 +117,7 @@ export default function CategoryGrid({
       }
       acc[question.category].push(question)
       return acc
-    }, {} as Record<string, Array<Record<string, unknown>>>)
+    }, {} as Record<string, Question[]>)
     
     // Calculate stats for each category
     const categoryStats: Record<string, Record<string, unknown>> = {}
@@ -176,7 +184,7 @@ export default function CategoryGrid({
     })
     
     return categoryStats
-  }, [user, allQuestions])
+  }, [user, allQuestions, filteredMainCategories, filteredIndustryCategories])
   
   const statsToUse = categoryStats || realStats
 
@@ -302,7 +310,11 @@ export default function CategoryGrid({
                       completedContents: number
                       averageScore: number
                       learningTime: number
-                    } => stat && typeof stat === 'object' && 'totalContents' in stat && (stat as any).totalContents > 0)
+                    } => {
+                      if (!stat || typeof stat !== 'object') return false
+                      const obj = stat as Record<string, unknown>
+                      return 'totalContents' in obj && typeof obj.totalContents === 'number' && obj.totalContents > 0
+                    })
                     if (validStats.length === 0) return '0'
                     
                     const totalProgress = validStats.reduce((acc, stat) => {

@@ -1,16 +1,16 @@
 import { getLearningProgress } from './learning/data'
 import { getLearningCourseDetails } from './learning/data'
 import { awardCourseBadge, testUserBadgesTableAccess, getUserBadges } from './supabase-badges'
-import { LearningBadge, LearningCourse } from './types/learning'
+import { LearningBadge, LearningCourse, UserBadge } from './types/learning'
 
 // コース完了を検知してバッジを授与
 export async function checkAndAwardCourseBadge(
   userId: string,
   courseId: string,
-  genreId: string,
-  themeId: string,
-  sessionId: string
-): Promise<{ completed: boolean; badge?: unknown }> {
+  _genreId: string,
+  _themeId: string,
+  _sessionId: string
+): Promise<{ completed: boolean; badge?: UserBadge }> {
   try {
     console.log('🏆 Checking course completion for badge award...', { courseId, userId })
     
@@ -101,7 +101,17 @@ export async function checkAndAwardCourseBadge(
       }
       
       // コースのバッジ情報を取得（コースデータから）
-      const courseWithBadge = courseDetails as LearningCourse & { badge?: any }
+      const courseWithBadge = courseDetails as LearningCourse & { 
+        badge?: {
+          id: string
+          title: string
+          description: string
+          icon: string
+          color: string
+          badgeImageUrl?: string
+          validityPeriodMonths?: number
+        }
+      }
       const courseBadge: LearningBadge = courseWithBadge.badge ? {
         id: courseWithBadge.badge.id,
         title: courseWithBadge.badge.title,

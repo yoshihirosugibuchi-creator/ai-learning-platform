@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -189,9 +189,9 @@ export default function SubcategoriesModal({ isOpen, category, onClose, onSucces
     if (isOpen && category) {
       loadSubcategories()
     }
-  }, [isOpen, category])
+  }, [isOpen, category, loadSubcategories])
 
-  const loadSubcategories = async () => {
+  const loadSubcategories = useCallback(async () => {
     if (!category) return
     
     setLoading(true)
@@ -208,7 +208,7 @@ export default function SubcategoriesModal({ isOpen, category, onClose, onSucces
       setMessage({ type: 'error', text: 'サブカテゴリーの読み込みに失敗しました' })
     }
     setLoading(false)
-  }
+  }, [category])
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event

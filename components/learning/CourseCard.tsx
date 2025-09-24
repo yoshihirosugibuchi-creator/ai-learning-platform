@@ -65,13 +65,13 @@ export default function CourseCard({ course, progress, onStartCourse }: CourseCa
       const { getLearningCourseDetails } = await import('@/lib/learning/data')
       // バックグラウンドでプリフェッチ（エラーは無視）
       getLearningCourseDetails(course.id).catch(() => {})
-    } catch (error) {
+    } catch {
       // プリフェッチエラーは無視
     }
   }
 
   // カテゴリー情報を取得
-  const categoryInfo = course.genres ? getCategoryInfoForCourse(course as any) : null
+  const categoryInfo = course.genres ? getCategoryInfoForCourse(course) : null
 
   // スキルレベルのラベルと色を取得（DB優先、フォールバック付き）
   const getDifficultyDisplay = () => {

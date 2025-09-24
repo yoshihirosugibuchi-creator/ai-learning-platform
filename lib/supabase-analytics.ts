@@ -73,7 +73,7 @@ export async function getLearningAnalytics(userId: string): Promise<LearningAnal
 // データベースから分析データを計算
 function calculateAnalytics(sessions: Array<Record<string, unknown>>, progressData: Array<Record<string, unknown>>): LearningAnalytics {
   const now = new Date()
-  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const _oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   
   // 基本統計
   const totalSessions = sessions.length
@@ -150,7 +150,7 @@ function calculateStreak(sessions: Array<Record<string, unknown>>): number {
 }
 
 // カテゴリー別進捗を計算
-function calculateCategoryProgress(sessions: Array<Record<string, unknown>>, progressData: Array<Record<string, unknown>>): CategoryProgress[] {
+function calculateCategoryProgress(sessions: Array<Record<string, unknown>>, _progressData: Array<Record<string, unknown>>): CategoryProgress[] {
   const categoryMap = new Map<string, Record<string, unknown>>()
 
   sessions.forEach(session => {
@@ -265,7 +265,7 @@ function calculateWeeklyProgress(sessions: Array<Record<string, unknown>>): Week
 }
 
 // localStorage フォールバック
-function getAnalyticsFromLocalStorage(userId: string): LearningAnalytics {
+function getAnalyticsFromLocalStorage(_userId: string): LearningAnalytics {
   if (typeof window === 'undefined') {
     return getDefaultAnalytics()
   }
@@ -273,7 +273,7 @@ function getAnalyticsFromLocalStorage(userId: string): LearningAnalytics {
   try {
     // localStorage から学習データを集計
     const progressKeys = Object.keys(localStorage).filter(key => key.startsWith('lp_'))
-    const cardKeys = Object.keys(localStorage).filter(key => key.startsWith('knowledge_card_'))
+    const _cardKeys = Object.keys(localStorage).filter(key => key.startsWith('knowledge_card_'))
     
     const totalSessions = progressKeys.length
     const completedSessions = progressKeys.filter(key => {

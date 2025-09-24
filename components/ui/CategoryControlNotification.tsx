@@ -150,7 +150,7 @@ interface CategoryControlStatusProps {
 }
 
 export function CategoryControlStatus({
-  categoryId,
+  categoryId: _categoryId,
   isBlocked,
   isLoading = false,
   className = ''

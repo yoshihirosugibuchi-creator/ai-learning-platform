@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Brain, Menu, ArrowLeft, User, Bookmark, Bell, Flame, Zap, Home, BookOpen, GraduationCap, LogOut, Settings } from 'lucide-react'
@@ -30,30 +30,30 @@ export default function Header({
   const { user, loading, signOut } = useAuth()
   const [displaySKP, setDisplaySKP] = useState(0)
   const [learningStreak, setLearningStreak] = useState(0)
-  const [dataLoading, setDataLoading] = useState(false)
+  const loadingRef = useRef(false)
 
   // ユーザーデータ取得
-  useEffect(() => {
-    const loadUserData = async () => {
-      if (user?.id && !dataLoading) {
-        setDataLoading(true)
-        try {
-          const [skpBalance, streak] = await Promise.all([
-            getUserSKPBalance(user.id),
-            getUserLearningStreak(user.id)
-          ])
-          setDisplaySKP(skpBalance)
-          setLearningStreak(streak)
-        } catch (error) {
-          console.error('Error loading user data:', error)
-        } finally {
-          setDataLoading(false)
-        }
+  const loadUserData = useCallback(async () => {
+    if (user?.id && !loadingRef.current) {
+      loadingRef.current = true
+      try {
+        const [skpBalance, streak] = await Promise.all([
+          getUserSKPBalance(user.id),
+          getUserLearningStreak(user.id)
+        ])
+        setDisplaySKP(skpBalance)
+        setLearningStreak(streak)
+      } catch (error) {
+        console.error('Error loading user data:', error)
+      } finally {
+        loadingRef.current = false
       }
     }
-
-    loadUserData()
   }, [user?.id])
+
+  useEffect(() => {
+    loadUserData()
+  }, [loadUserData])
 
   const handleLogout = async () => {
     await signOut()

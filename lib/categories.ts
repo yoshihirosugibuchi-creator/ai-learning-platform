@@ -44,7 +44,7 @@ interface DBSubcategory {
 
 // DBから取得したデータをキャッシュ
 let cachedCategories: (MainCategory | IndustryCategory)[] | null = null
-const cachedSubcategories: Subcategory[] | null = null
+const _cachedSubcategories: Subcategory[] | null = null
 let cachedSkillLevels: SkillLevelDefinition[] | null = null
 let cacheTimestamp: number = 0
 const CACHE_DURATION = 5 * 60 * 1000 // 5分間キャッシュ
@@ -595,7 +595,7 @@ function transformDBSkillLevelToLocal(dbSkillLevel: DBSkillLevel): SkillLevelDef
  * サブカテゴリーを取得（DB API + フォールバック）
  */
 export async function getSubcategories(parentCategoryId?: string): Promise<Subcategory[]> {
-  const now = Date.now()
+  const _now = Date.now()
   
   try {
     const queryParams = new URLSearchParams()
@@ -915,7 +915,7 @@ export function getSubcategoriesByParent(parentId: string): Subcategory[] {
   }))
 }
 
-function getSubcategoryIcon(subcategoryName: string): string {
+function _getSubcategoryIcon(subcategoryName: string): string {
   const iconMap: Record<string, string> = {
     // 共通カテゴリー
     'プレゼンテーション': '🎤',

@@ -52,7 +52,6 @@ export default function CategoryCard({
   // Check category status based on isActive and isVisible
   const isActive = category.isActive === true
   const isComingSoon = category.isActive === false && category.isVisible !== false
-  const isSuspended = category.isActive === false && category.isVisible === false
   const isClickable = isActive
 
   return (

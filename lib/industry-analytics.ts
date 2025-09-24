@@ -1,7 +1,7 @@
 // Industry-Specific Skill Analysis
 // Provides industry-focused analytics and skill assessment
 
-import { mainCategories, industryCategories, skillLevels } from './categories-backup'
+import { mainCategories, industryCategories, skillLevels as _skillLevels } from './categories-backup'
 
 export interface IndustrySkillProfile {
   industryId: string
@@ -409,7 +409,7 @@ class IndustryAnalytics {
     return 'low'
   }
 
-  private getAdvantageDescription(skill: string, score: number): string {
+  private getAdvantageDescription(skill: string, _score: number): string {
     const advantages: Record<string, string> = {
       'コミュニケーション・プレゼン': '優れた説得力と影響力を持ち、チームや顧客との関係構築に長けています',
       '分析的問題解決': '複雑な課題を論理的に分解し、効果的な解決策を導き出すことができます',

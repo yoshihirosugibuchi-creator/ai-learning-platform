@@ -12,10 +12,7 @@ import {
   User, 
   Target, 
   CheckCircle,
-  Briefcase,
-  Award,
-  Clock,
-  BookOpen
+  Briefcase
 } from 'lucide-react'
 import { industryCategories, mainCategories } from '@/lib/categories'
 import { 

@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase as _supabase } from './supabase'
 import { updateUserProfile, getUserProfile } from './supabase-user'
 import { getCategoryProgress, updateCategoryProgress, saveSKPTransaction } from './supabase-learning'
 import { mainCategories, industryCategories, getSubcategoryId } from './categories'

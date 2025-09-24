@@ -3,7 +3,7 @@
 **目的**: プログラミング時のエラー・ワーニングチェック手順  
 **対象**: 開発者・コード修正作業者  
 **最終更新**: 2025年9月24日  
-**達成状況**: TypeScript 199→0エラー、ESLint 151→78警告（51%改善）
+**達成状況**: TypeScript 199→0エラー、ESLint 151→0警告（100%達成！）
 
 ---
 
@@ -133,6 +133,7 @@ import { Button, Card } from '@/components/ui'
 
 ### **Pattern 2: 未使用変数処理**
 
+#### **🔹 即座に削除可能な場合**
 ```typescript
 // ❌ 修正前
 const [data, setData] = useState()
@@ -141,6 +142,50 @@ const [loading, setLoading] = useState(false)  // setLoading未使用
 // ✅ 修正後
 const [data, setData] = useState()
 const [, setLoading] = useState(false)  // または完全削除
+```
+
+#### **🔸 将来使用予定の場合（underscore prefix）**
+```typescript
+// ❌ 修正前
+function processData(userId: string, categoryId: string, metadata: object) {
+  // userId, metadataは将来の実装で使用予定だが現在未使用
+  return getData(categoryId)
+}
+
+// ✅ 修正後（将来使用予定を明示）
+function processData(_userId: string, categoryId: string, _metadata: object) {
+  // _userId, _metadataは将来の実装で使用予定
+  return getData(categoryId)
+}
+```
+
+#### **🔄 underscore prefixの運用ルール**
+
+**付与基準**:
+- 将来の機能拡張で使用予定
+- API仕様上必要だが現在の実装では未使用
+- テスト・デバッグ用途で一時的に無効化
+
+**除去タイミング**:
+```typescript
+// ✅ 実際に使用するようになったら _ を除去
+function processData(userId: string, categoryId: string, _metadata: object) {
+  const user = await getUser(userId)  // userIdを実際に使用
+  // _userId → userId に変更
+  return processUserData(user, categoryId)
+}
+```
+
+**ESLint設定**:
+```javascript
+// eslint.config.mjs で自動無視設定済み
+"@typescript-eslint/no-unused-vars": [
+  "warn", {
+    "argsIgnorePattern": "^_",
+    "varsIgnorePattern": "^_", 
+    "caughtErrorsIgnorePattern": "^_"
+  }
+]
 ```
 
 ### **Pattern 3: any型解決**
@@ -163,6 +208,7 @@ const handleSubmit = (data: FormData) => {
 
 ### **Pattern 4: React Hook依存関係（慎重）**
 
+#### **🔹 基本的な依存関係追加**
 ```typescript
 // ⚠️ 修正前（慎重に対応）
 useEffect(() => {
@@ -176,7 +222,60 @@ useEffect(() => {
   if (user) {
     loadUserData()
   }
-}, [user])  // または useCallback使用
+}, [user])
+```
+
+#### **🔸 関数依存の場合（useCallback使用）**
+```typescript
+// ⚠️ 修正前
+const loadSubcategories = async () => {
+  // API呼び出し
+}
+
+useEffect(() => {
+  loadSubcategories()
+}, [isOpen])  // ワーニング: 'loadSubcategories' missing dependency
+
+// ✅ 修正後
+const loadSubcategories = useCallback(async () => {
+  // API呼び出し
+}, [category])  // categoryに依存する場合
+
+useEffect(() => {
+  loadSubcategories()
+}, [isOpen, loadSubcategories])
+```
+
+#### **🔺 複雑なケース（useRefとuseCallback組み合わせ）**
+```typescript
+// ⚠️ 修正前（無限ループリスク）
+const [dataLoading, setDataLoading] = useState(false)
+
+useEffect(() => {
+  const loadData = async () => {
+    if (user?.id && !dataLoading) {
+      setDataLoading(true)
+      // データ読み込み
+      setDataLoading(false)
+    }
+  }
+  loadData()
+}, [user?.id])  // dataLoadingが依存関係にない
+
+// ✅ 修正後（useRefで状態管理）
+const loadingRef = useRef(false)
+
+const loadData = useCallback(async () => {
+  if (user?.id && !loadingRef.current) {
+    loadingRef.current = true
+    // データ読み込み
+    loadingRef.current = false
+  }
+}, [user?.id])
+
+useEffect(() => {
+  loadData()
+}, [loadData])
 ```
 
 ---
@@ -227,20 +326,18 @@ echo "Build:" && npm run build > /dev/null && echo "成功" || echo "失敗"
 
 ## 🎯 **目標管理**
 
-### **短期目標（1-2週間）**
-- [ ] ESLintワーニング 78個 → 50個以下
-- [ ] 新規TypeScriptエラー 0個維持
-- [ ] ビルド成功率 100%維持
+### **🎉 達成済み目標**
+- [x] ESLintワーニング 78個 → 0個 **完全達成！**
+- [x] any型警告 完全解決
+- [x] React Hooks依存関係警告 完全解決
+- [x] TypeScriptエラー 0個維持
+- [x] 完全な型安全性確立
 
-### **中期目標（1ヶ月）**
-- [ ] ESLintワーニング 50個 → 20個以下
+### **次期目標（継続改善）**
 - [ ] コード品質チェック自動化
 - [ ] pre-commitフック導入
-
-### **長期目標（2-3ヶ月）**  
-- [ ] ESLintワーニング 20個 → 0個
-- [ ] 完全な型安全性確立
 - [ ] 自動品質監視システム
+- [ ] 新規コード品質基準100%維持
 
 ---
 

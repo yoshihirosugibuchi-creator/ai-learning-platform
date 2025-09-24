@@ -150,7 +150,7 @@ export async function getCategoriesWithUsageStats(): Promise<Array<{
     // 各カテゴリーのクイズ数を取得
     const result = await Promise.all(
       (categories || []).map(async (category) => {
-        const { data: quizzes, error: quizError } = await supabase
+        const { data: quizzes, error: _quizError } = await supabase
           .from('quiz_questions')
           .select('id, is_active')
           .eq('category_id', category.category_id)

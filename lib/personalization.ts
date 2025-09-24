@@ -369,7 +369,7 @@ export function updateLearningEfficiencyMetrics(
   sessionDuration: number,
   questionsAnswered: number,
   accuracy: number,
-  timeOfDay: string
+  _timeOfDay: string
 ): void {
   const metrics = getLearningEfficiencyMetrics(userId)
   

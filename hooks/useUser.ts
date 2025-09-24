@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { StorageUser, getUserData, saveUserData, createDefaultUser, updateUserProgress, migrateUserData, logoutUser, initializeUserSpecificData } from '@/lib/storage'
+import { StorageUser, getUserData, saveUserData, updateUserProgress, migrateUserData, logoutUser, initializeUserSpecificData } from '@/lib/storage'
 
 export function useUser() {
   const [user, setUser] = useState<StorageUser | null>(null)

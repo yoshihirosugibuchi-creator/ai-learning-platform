@@ -17,7 +17,7 @@ import {
   BookOpen,
   Award
 } from 'lucide-react'
-import { LearningSession as LearningSessionType, SessionTypeLabels } from '@/lib/types/learning'
+import { LearningSession as LearningSessionType, SessionTypeLabels, UserBadge } from '@/lib/types/learning'
 import { saveLearningProgressSupabase, saveLearningSession as saveLearningSessionSupabase, updateLearningSession, LearningSession as LearningSessionData } from '@/lib/supabase-learning'
 import { addKnowledgeCardToCollection } from '@/lib/supabase-cards'
 import { useAuth } from '@/components/auth/AuthProvider'
@@ -54,10 +54,10 @@ export default function LearningSession({
   themeRewardCard,
   onComplete,
   onNext,
-  onPrevious,
+  onPrevious: _onPrevious,
   onExit
 }: LearningSessionProps) {
-  const router = useRouter()
+  const _router = useRouter()
   const { user } = useAuth()
   const [viewState, setViewState] = useState<ViewState>('content')
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0)
@@ -66,25 +66,11 @@ export default function LearningSession({
   const [showQuizResult, setShowQuizResult] = useState(false)
   const [sessionCompleted, setSessionCompleted] = useState(false)
   const [cardAcquired, setCardAcquired] = useState(false)
-  const [badgeAwarded, setBadgeAwarded] = useState<{
-    id: string
-    badge: {
-      id: string
-      title: string
-      description: string
-      icon: string
-      color: string
-    }
-    earnedAt: Date
-    expiresAt?: Date
-    isExpired: boolean
-    courseId: string
-    courseName: string
-  } | null>(null)
+  const [badgeAwarded, setBadgeAwarded] = useState<UserBadge | null>(null)
   const [startTime] = useState(new Date())
   const [currentSessionData, setCurrentSessionData] = useState<LearningSessionData | null>(null)
   const [isCompletingSession, setIsCompletingSession] = useState(false)
-  const [courseName, setCourseName] = useState<string>('Learning Course')
+  const [_courseName, setCourseName] = useState<string>('Learning Course')
 
   const hasQuiz = session.quiz && session.quiz.length > 0
   const isLastSession = currentSessionIndex === totalSessions - 1
@@ -285,22 +271,8 @@ export default function LearningSession({
         
         if (badgeResult.completed && badgeResult.badge) {
           console.log('🎉 Course completed! Badge awarded:', badgeResult.badge)
-          const badgeData = badgeResult.badge as any
-          setBadgeAwarded({
-            id: badgeData.id || `badge_${Date.now()}`,
-            badge: {
-              id: badgeData.badge?.id || badgeData.id || `badge_${Date.now()}`,
-              title: badgeData.badge?.title || 'Course Completed',
-              description: badgeData.badge?.description || 'Course completion badge',
-              icon: badgeData.badge?.icon || '🏆',
-              color: badgeData.badge?.color || '#FFD700'
-            },
-            earnedAt: new Date(badgeData.earnedAt || Date.now()),
-            expiresAt: badgeData.expiresAt ? new Date(badgeData.expiresAt) : undefined,
-            isExpired: false,
-            courseId: courseId,
-            courseName: courseName
-          })
+          const badgeData = badgeResult.badge
+          setBadgeAwarded(badgeData)
         }
       } else {
         console.log('📚 Review mode - skipping badge award check')
@@ -381,15 +353,15 @@ export default function LearningSession({
               </Badge>
             </div>
             <div className="text-right">
-              <div className="text-2xl">{(session as any).icon || '📚'}</div>
+              <div className="text-2xl">{(session as { icon?: string }).icon || '📚'}</div>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6 overflow-y-auto max-h-[70vh]">
           <div className="prose max-w-none space-y-6">
             {session.content && session.content.length > 0 ? (
-              session.content.map((contentItem: any, index: number) => {
-                const item = contentItem as { id?: string; title?: string; type?: string; content?: string }
+              session.content.map((contentItem: { id?: string; title?: string; type?: string; content?: string }, index: number) => {
+                const item = contentItem
                 return (
                 <div key={item.id || index} className="space-y-3">
                   {item.title && (
