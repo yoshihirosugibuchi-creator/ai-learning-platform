@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (userProfile) {
           console.log('✅ Actual user profile loaded successfully, updating...')
-          setProfile(userProfile)
+          setProfile(userProfile as UserProfile)
         } else {
           console.log('⚠️ No actual profile returned, keeping fallback')
         }

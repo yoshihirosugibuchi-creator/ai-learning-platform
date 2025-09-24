@@ -1316,8 +1316,8 @@ export default function CollectionPage() {
                             <div className="text-4xl mb-2">🏆</div>
                             <CardTitle className="text-lg">{badge.badge.title}</CardTitle>
                             <div className="flex items-center justify-center space-x-2">
-                              <Badge variant={badge.badge.difficulty === 'beginner' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
-                                {badge.badge.difficulty === 'beginner' ? '初級' : badge.badge.difficulty === 'intermediate' ? '中級' : '上級'}
+                              <Badge variant={badge.badge.difficulty === 'basic' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
+                                {badge.badge.difficulty === 'basic' ? '初級' : badge.badge.difficulty === 'intermediate' ? '中級' : '上級'}
                               </Badge>
                               {badge.isExpired && (
                                 <Badge variant="outline" className="text-red-600 border-red-600">
@@ -1365,8 +1365,8 @@ export default function CollectionPage() {
                           <CardHeader className="text-center pb-3">
                             <div className="text-4xl mb-2">🏆</div>
                             <CardTitle className="text-lg">{badge.badge.title}</CardTitle>
-                            <Badge variant={badge.badge.difficulty === 'beginner' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
-                              {badge.badge.difficulty === 'beginner' ? '初級' : badge.badge.difficulty === 'intermediate' ? '中級' : '上級'}
+                            <Badge variant={badge.badge.difficulty === 'basic' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
+                              {badge.badge.difficulty === 'basic' ? '初級' : badge.badge.difficulty === 'intermediate' ? '中級' : '上級'}
                             </Badge>
                           </CardHeader>
                           <CardContent className="text-center space-y-2">
@@ -1400,8 +1400,8 @@ export default function CollectionPage() {
                             <div className="text-4xl mb-2">🏆</div>
                             <CardTitle className="text-lg">{badge.badge.title}</CardTitle>
                             <div className="flex items-center justify-center space-x-2">
-                              <Badge variant={badge.badge.difficulty === 'beginner' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
-                                {badge.badge.difficulty === 'beginner' ? '初級' : badge.badge.difficulty === 'intermediate' ? '中級' : '上級'}
+                              <Badge variant={badge.badge.difficulty === 'basic' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
+                                {badge.badge.difficulty === 'basic' ? '初級' : badge.badge.difficulty === 'intermediate' ? '中級' : '上級'}
                               </Badge>
                               <Badge variant="outline" className="text-red-600 border-red-600">
                                 期限切れ

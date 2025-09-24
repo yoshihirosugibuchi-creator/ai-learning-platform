@@ -18,7 +18,7 @@ export async function GET() {
     if (error) {
       console.error('❌ Database query error:', error)
       return NextResponse.json(
-        { error: 'Database query failed', details: error.message },
+        { error: 'Database query failed', details: (error as Error)?.message || 'Unknown error' },
         { status: 500 }
       )
     }
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
           })
         
         if (error) {
-          errors.push(`Batch ${batchNum}: ${error.message}`)
+          errors.push(`Batch ${batchNum}: ${(error as Error)?.message || 'Unknown error'}`)
           console.error(`❌ Batch ${batchNum} error:`, error)
           // エラーがあっても処理を継続
         } else {
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
         }
         
       } catch (batchError) {
-        errors.push(`Batch ${batchNum}: ${batchError.message}`)
+        errors.push(`Batch ${batchNum}: ${(batchError as Error)?.message || 'Unknown error'}`)
         console.error(`❌ Batch ${batchNum} exception:`, batchError)
         // 継続処理
       }
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('❌ Admin bulk upsert error:', error)
     return NextResponse.json(
-      { error: 'Failed to update questions', details: error.message },
+      { error: 'Failed to update questions', details: (error as Error)?.message || 'Unknown error' },
       { status: 500 }
     )
   }
@@ -279,7 +279,7 @@ export async function PUT() {
   } catch (error) {
     console.error('❌ Admin questions sync error:', error)
     return NextResponse.json(
-      { error: 'Failed to sync questions', details: error.message },
+      { error: 'Failed to sync questions', details: (error as Error)?.message || 'Unknown error' },
       { status: 500 }
     )
   }
@@ -315,7 +315,7 @@ export async function DELETE(request: NextRequest) {
     if (error) {
       console.error('❌ Delete operation error:', error)
       return NextResponse.json(
-        { error: 'Delete operation failed', details: error.message },
+        { error: 'Delete operation failed', details: (error as Error)?.message || 'Unknown error' },
         { status: 500 }
       )
     }

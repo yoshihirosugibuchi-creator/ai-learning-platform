@@ -26,7 +26,7 @@ export async function GET() {
     if (errors.length > 0) {
       console.error('❌ Database query errors:', errors)
       return NextResponse.json(
-        { error: 'Database query failed', details: errors.map(e => e.message) },
+        { error: 'Database query failed', details: errors.map(e => e?.message || 'Unknown error') },
         { status: 500 }
       )
     }
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
       updateResults.push({ file: 'courses.json', status: 'updated', items: courses.length })
       console.log(`✅ Updated courses.json with ${courses.length} courses`)
     } catch (error) {
-      updateResults.push({ file: 'courses.json', status: 'error', error: error.message })
+      updateResults.push({ file: 'courses.json', status: 'error', error: (error as Error)?.message || 'Unknown error' })
       console.error('❌ Failed to update courses.json:', error)
     }
     
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
         })
         console.log(`✅ Updated ${course.id}.json`)
       } catch (error) {
-        updateResults.push({ file: `${course.id}.json`, status: 'error', error: error.message })
+        updateResults.push({ file: `${course.id}.json`, status: 'error', error: (error as Error)?.message || 'Unknown error' })
         console.error(`❌ Failed to update ${course.id}.json:`, error)
       }
     }
@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('❌ Admin learning content sync error:', error)
     return NextResponse.json(
-      { error: 'Failed to sync learning content', details: error.message },
+      { error: 'Failed to sync learning content', details: (error as Error)?.message || 'Unknown error' },
       { status: 500 }
     )
   }

@@ -1,135 +1,22 @@
-app/admin/page.tsx(163,28): error TS2367: This comparison appears to be unintentional because the types 'string' and 'boolean' have no overlap.
-app/admin/page.tsx(184,15): error TS2365: Operator '<' cannot be applied to types 'string' and 'number'.
-app/admin/page.tsx(184,43): error TS2365: Operator '>' cannot be applied to types 'string' and 'number'.
-app/admin/page.tsx(204,13): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
-  Type 'undefined' is not assignable to type 'number'.
-app/admin/page.tsx(209,21): error TS2367: This comparison appears to be unintentional because the types 'string' and 'boolean' have no overlap.
-app/analytics/page.tsx(52,47): error TS2345: Argument of type '(industry: string) => void' is not assignable to parameter of type '(...args: unknown[]) => unknown'.
-  Types of parameters 'industry' and 'args' are incompatible.
-    Type 'unknown' is not assignable to type 'string'.
-app/analytics/page.tsx(67,37): error TS2339: Property 'analytics' does not exist on type '{}'.
-app/analytics/page.tsx(68,38): error TS2339: Property 'aiPatterns' does not exist on type '{}'.
-app/analytics/page.tsx(69,39): error TS2339: Property 'optimalTime' does not exist on type '{}'.
-app/analytics/page.tsx(70,33): error TS2339: Property 'hints' does not exist on type '{}'.
-app/analytics/page.tsx(71,43): error TS2339: Property 'industryProfile' does not exist on type '{}'.
-app/analytics/page.tsx(95,19): error TS7034: Variable 'progressData' implicitly has type 'any[]' in some locations where its type cannot be determined.
-app/analytics/page.tsx(99,15): error TS7005: Variable 'progressData' implicitly has an 'any[]' type.
-app/analytics/page.tsx(148,17): error TS7034: Variable 'progressData' implicitly has type 'any[]' in some locations where its type cannot be determined.
-app/analytics/page.tsx(152,13): error TS7005: Variable 'progressData' implicitly has an 'any[]' type.
+
+> ai-learning-platform-next@0.1.0 typecheck
+> tsc --noEmit
+
 app/api/admin/learning/db/route.ts(29,68): error TS18047: 'e' is possibly 'null'.
 app/api/admin/learning/db/route.ts(118,74): error TS18046: 'error' is of type 'unknown'.
 app/api/admin/learning/db/route.ts(197,81): error TS18046: 'error' is of type 'unknown'.
 app/api/admin/learning/db/route.ts(218,60): error TS18046: 'error' is of type 'unknown'.
-app/api/admin/questions/db/route.ts(187,43): error TS18046: 'batchError' is of type 'unknown'.
-app/api/admin/questions/db/route.ts(216,55): error TS18046: 'error' is of type 'unknown'.
-app/api/admin/questions/db/route.ts(283,53): error TS18046: 'error' is of type 'unknown'.
-app/api/questions/route.ts(25,5): error TS2322: Type 'unknown' is not assignable to type 'number'.
-app/api/questions/route.ts(26,5): error TS2322: Type 'unknown' is not assignable to type 'string'.
-app/api/questions/route.ts(27,5): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
-app/api/questions/route.ts(28,5): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
-app/api/questions/route.ts(29,5): error TS2322: Type 'unknown' is not assignable to type 'string'.
-app/api/questions/route.ts(30,15): error TS2322: Type 'unknown' is not assignable to type 'string'.
-app/api/questions/route.ts(30,30): error TS2322: Type 'unknown' is not assignable to type 'string'.
-app/api/questions/route.ts(30,45): error TS2322: Type 'unknown' is not assignable to type 'string'.
-app/api/questions/route.ts(30,60): error TS2322: Type 'unknown' is not assignable to type 'string'.
-app/api/questions/route.ts(31,5): error TS2322: Type 'unknown' is not assignable to type 'number'.
-app/api/questions/route.ts(32,5): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
-app/api/questions/route.ts(33,5): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
-app/api/questions/route.ts(34,5): error TS2322: Type 'unknown' is not assignable to type 'number | undefined'.
-app/api/questions/route.ts(35,5): error TS2740: Type '{}' is missing the following properties from type 'string[]': length, pop, push, concat, and 35 more.
-app/api/questions/route.ts(36,5): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
-app/api/questions/route.ts(37,5): error TS2322: Type 'unknown' is not assignable to type 'boolean | undefined'.
-app/categories/[categoryId]/page.tsx(236,43): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ 基礎: number; 中級: number; 上級: number; エキスパート: number; }'.
-  No index signature with a parameter of type 'string' was found on type '{ 基礎: number; 中級: number; 上級: number; エキスパート: number; }'.
-app/categories/[categoryId]/page.tsx(263,86): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ 基礎: number; 中級: number; 上級: number; エキスパート: number; }'.
-  No index signature with a parameter of type 'string' was found on type '{ 基礎: number; 中級: number; 上級: number; エキスパート: number; }'.
-app/categories/[categoryId]/page.tsx(288,100): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ 基礎: number; 中級: number; 上級: number; エキスパート: number; }'.
-  No index signature with a parameter of type 'string' was found on type '{ 基礎: number; 中級: number; 上級: number; エキスパート: number; }'.
-app/collection/page.tsx(89,35): error TS2345: Argument of type '(prev: { collection: never[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: { obtained: boolean; count: number; id: number; author: string; quote: string; categoryId: string; subcategoryId?: string | undefined; rarity: "コモン" | ... 2 more ... | "レジェンダリー"; context: string...' is not assignable to parameter of type 'SetStateAction<{ collection: never[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: { obtained: boolean; count: number; id: number; author: string; quote: string; categoryId: string; subcategoryId?: string | undefined; rarity: "コモン" | ... 2 more ... | "レジェンダリー"; context...'.
-  Type '(prev: { collection: never[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: { obtained: boolean; count: number; id: number; author: string; quote: string; categoryId: string; subcategoryId?: string | undefined; rarity: "コモン" | ... 2 more ... | "レジェンダリー"; context: string...' is not assignable to type '(prevState: { collection: never[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: { obtained: boolean; count: number; id: number; author: string; quote: string; categoryId: string; subcategoryId?: string | undefined; rarity: "コモン" | ... 2 more ... | "レジェンダリー"; context: s...'.
-    Call signature return types '{ collection: WisdomCardCollection[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: { obtained: boolean; count: number; id: number; ... 6 more ...; applicationArea: string; }[]; }' and '{ collection: never[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: { obtained: boolean; count: number; id: number; author: string; quote: string; categoryId: string; subcategoryId?: string | undefined; rarity: "コモン" | ... 2 more ... | "レジェンダリー"; context: string; appli...' are incompatible.
-      The types of 'collection' are incompatible between these types.
-        Type 'WisdomCardCollection[]' is not assignable to type 'never[]'.
-          Type 'WisdomCardCollection' is not assignable to type 'never'.
-app/collection/page.tsx(113,13): error TS2322: Type 'WisdomCardCollection[]' is not assignable to type 'never[]'.
-  Type 'WisdomCardCollection' is not assignable to type 'never'.
-app/collection/page.tsx(194,38): error TS2345: Argument of type '(prev: { collection: never[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: never[]; }) => { collection: KnowledgeCardCollection[]; stats: { ...; }; cardsWithStatus: never[]; }' is not assignable to parameter of type 'SetStateAction<{ collection: never[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: never[]; }>'.
-  Type '(prev: { collection: never[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: never[]; }) => { collection: KnowledgeCardCollection[]; stats: { ...; }; cardsWithStatus: never[]; }' is not assignable to type '(prevState: { collection: never[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: never[]; }) => { collection: never[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: never[]; }'.
-    Call signature return types '{ collection: KnowledgeCardCollection[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: never[]; }' and '{ collection: never[]; stats: { totalObtained: number; totalCards: number; uniqueCards: number; }; cardsWithStatus: never[]; }' are incompatible.
-      The types of 'collection' are incompatible between these types.
-        Type 'KnowledgeCardCollection[]' is not assignable to type 'never[]'.
-          Type 'KnowledgeCardCollection' is not assignable to type 'never'.
-app/collection/page.tsx(231,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(232,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(232,124): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(252,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(253,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(253,121): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(273,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(274,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(274,115): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(294,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(295,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(295,120): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(315,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(316,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(316,127): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(336,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(337,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(337,119): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(357,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(358,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(358,123): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(378,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(379,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(379,119): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(399,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(400,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(400,128): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(420,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(421,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(421,130): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(441,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(442,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(442,126): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(462,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(463,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(463,126): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(484,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(485,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(485,124): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(505,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(506,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(506,115): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(526,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(527,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(527,120): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(547,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(548,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(548,125): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(568,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(569,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(569,120): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(590,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(591,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(591,125): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(611,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(612,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(612,132): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(632,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(633,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(633,129): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(653,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(654,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(654,121): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(674,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(675,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(675,128): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(695,66): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(696,68): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(696,121): error TS2339: Property 'obtained_at' does not exist on type 'never'.
-app/collection/page.tsx(708,73): error TS2339: Property 'card_id' does not exist on type 'never'.
-app/collection/page.tsx(1108,55): error TS2339: Property 'totalReviews' does not exist on type '{ totalObtained: number; totalCards: number; uniqueCards: number; }'.
+app/api/admin/questions/db/route.ts(186,43): error TS18046: 'batchError' is of type 'unknown'.
+app/api/admin/questions/db/route.ts(215,55): error TS18046: 'error' is of type 'unknown'.
+app/api/admin/questions/db/route.ts(282,53): error TS18046: 'error' is of type 'unknown'.
+app/api/questions/route.ts(45,38): error TS2552: Cannot find name 'request'. Did you mean 'Request'?
+app/api/questions/route.ts(65,67): error TS2345: Argument of type 'null' is not assignable to parameter of type 'Record<string, unknown>'.
+app/collection/page.tsx(1319,47): error TS2367: This comparison appears to be unintentional because the types '"basic" | "intermediate" | "advanced" | "expert"' and '"beginner"' have no overlap.
+app/collection/page.tsx(1320,34): error TS2367: This comparison appears to be unintentional because the types '"basic" | "intermediate" | "advanced" | "expert"' and '"beginner"' have no overlap.
+app/collection/page.tsx(1368,45): error TS2367: This comparison appears to be unintentional because the types '"basic" | "intermediate" | "advanced" | "expert"' and '"beginner"' have no overlap.
+app/collection/page.tsx(1369,32): error TS2367: This comparison appears to be unintentional because the types '"basic" | "intermediate" | "advanced" | "expert"' and '"beginner"' have no overlap.
+app/collection/page.tsx(1403,47): error TS2367: This comparison appears to be unintentional because the types '"basic" | "intermediate" | "advanced" | "expert"' and '"beginner"' have no overlap.
+app/collection/page.tsx(1404,34): error TS2367: This comparison appears to be unintentional because the types '"basic" | "intermediate" | "advanced" | "expert"' and '"beginner"' have no overlap.
 app/learning/[courseId]/page.tsx(77,44): error TS2339: Property 'completed' does not exist on type '{}'.
 app/learning/[courseId]/page.tsx(84,44): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
 app/learning/[courseId]/page.tsx(93,5): error TS18046: 'genre.themes' is of type 'unknown'.
@@ -153,93 +40,21 @@ app/learning/[courseId]/page.tsx(206,54): error TS2345: Argument of type 'Learni
 app/learning/[courseId]/page.tsx(271,84): error TS2345: Argument of type 'LearningSession[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
   Type 'LearningSession' is not assignable to type 'Record<string, unknown>'.
     Index signature for type 'string' is missing in type 'LearningSession'.
-app/learning/page.tsx(75,22): error TS2345: Argument of type '{}' is not assignable to parameter of type 'SetStateAction<Record<string, unknown>[]>'.
-app/learning/page.tsx(95,30): error TS2345: Argument of type '{ totalSessionsCompleted: number; totalAvailableSessions: number; totalTimeSpent: number; currentStreak: number; lastLearningDate: Date | null; }' is not assignable to parameter of type 'SetStateAction<{ totalSessionsCompleted: number; totalAvailableSessions: number; totalTimeSpent: number; currentStreak: number; lastLearningDate: null; }>'.
-  Type '{ totalSessionsCompleted: number; totalAvailableSessions: number; totalTimeSpent: number; currentStreak: number; lastLearningDate: Date | null; }' is not assignable to type '{ totalSessionsCompleted: number; totalAvailableSessions: number; totalTimeSpent: number; currentStreak: number; lastLearningDate: null; }'.
-    Types of property 'lastLearningDate' are incompatible.
-      Type 'Date | null' is not assignable to type 'null'.
-        Type 'Date' is not assignable to type 'null'.
-app/learning/page.tsx(259,21): error TS2322: Type 'unknown' is not assignable to type 'Key | null | undefined'.
-app/learning/page.tsx(260,21): error TS2740: Type 'Record<string, unknown>' is missing the following properties from type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: unknown[] | undefined; }': id, title, description, estimatedDays, and 7 more.
-app/learning/page.tsx(281,21): error TS2322: Type 'unknown' is not assignable to type 'Key | null | undefined'.
-app/learning/page.tsx(282,21): error TS2740: Type 'Record<string, unknown>' is missing the following properties from type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: unknown[] | undefined; }': id, title, description, estimatedDays, and 7 more.
-app/login/page.tsx(86,19): error TS2339: Property 'message' does not exist on type '{}'.
+app/learning/page.tsx(105,22): error TS2345: Argument of type '{}' is not assignable to parameter of type 'SetStateAction<Record<string, unknown>[]>'.
+app/learning/page.tsx(119,50): error TS18046: 'coursesData' is of type 'unknown'.
+app/learning/page.tsx(120,22): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<Record<string, unknown>[]>'.
+app/learning/page.tsx(145,19): error TS2488: Type 'unknown' must have a '[Symbol.iterator]()' method that returns an iterator.
+app/learning/page.tsx(311,21): error TS2322: Type 'unknown' is not assignable to type 'Key | null | undefined'.
+app/learning/page.tsx(312,21): error TS2740: Type 'Record<string, unknown>' is missing the following properties from type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "basic" | "intermediate" | "advanced" | "expert"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "coming_soon" | ... 1 more ... | "draft"; genres?: unknown[] | undefined; }': id, title, description, estimatedDays, and 7 more.
+app/learning/page.tsx(333,21): error TS2322: Type 'unknown' is not assignable to type 'Key | null | undefined'.
+app/learning/page.tsx(334,21): error TS2740: Type 'Record<string, unknown>' is missing the following properties from type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "basic" | "intermediate" | "advanced" | "expert"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "coming_soon" | ... 1 more ... | "draft"; genres?: unknown[] | undefined; }': id, title, description, estimatedDays, and 7 more.
+app/login/page.tsx(68,36): error TS2339: Property 'message' does not exist on type '{}'.
+app/login/page.tsx(108,19): error TS2339: Property 'message' does not exist on type '{}'.
 app/onboarding/page.tsx(313,48): error TS2345: Argument of type '(prev: OnboardingData) => { weeklyGoal: unknown; industry?: string | undefined; jobTitle?: string | undefined; experienceYears?: number | undefined; learningGoals?: string[] | undefined; }' is not assignable to parameter of type 'SetStateAction<OnboardingData>'.
   Type '(prev: OnboardingData) => { weeklyGoal: unknown; industry?: string | undefined; jobTitle?: string | undefined; experienceYears?: number | undefined; learningGoals?: string[] | undefined; }' is not assignable to type '(prevState: OnboardingData) => OnboardingData'.
     Call signature return types '{ weeklyGoal: unknown; industry?: string | undefined; jobTitle?: string | undefined; experienceYears?: number | undefined; learningGoals?: string[] | undefined; }' and 'OnboardingData' are incompatible.
       The types of 'weeklyGoal' are incompatible between these types.
         Type 'unknown' is not assignable to type '"light" | "medium" | "heavy" | undefined'.
-app/profile/page.tsx(101,28): error TS2345: Argument of type 'SKPTransaction[]' is not assignable to parameter of type 'SetStateAction<Record<string, unknown>[]>'.
-  Type 'SKPTransaction[]' is not assignable to type 'Record<string, unknown>[]'.
-    Type 'SKPTransaction' is not assignable to type 'Record<string, unknown>'.
-      Index signature for type 'string' is missing in type 'SKPTransaction'.
-app/profile/page.tsx(102,31): error TS2345: Argument of type 'SKPTransaction[]' is not assignable to parameter of type 'SetStateAction<Record<string, unknown>[]>'.
-  Type 'SKPTransaction[]' is not assignable to type 'Record<string, unknown>[]'.
-    Type 'SKPTransaction' is not assignable to type 'Record<string, unknown>'.
-      Index signature for type 'string' is missing in type 'SKPTransaction'.
-app/profile/page.tsx(109,23): error TS2345: Argument of type 'UserBadge[]' is not assignable to parameter of type 'SetStateAction<Record<string, unknown>[]>'.
-  Type 'UserBadge[]' is not assignable to type 'Record<string, unknown>[]'.
-    Type 'UserBadge' is not assignable to type 'Record<string, unknown>'.
-      Index signature for type 'string' is missing in type 'UserBadge'.
-app/profile/page.tsx(124,30): error TS2339: Property 'display_name' does not exist on type 'UserProfile'.
-app/profile/page.tsx(125,27): error TS2339: Property 'industry' does not exist on type 'UserProfile'.
-app/profile/page.tsx(126,34): error TS2339: Property 'experience_years' does not exist on type 'UserProfile'.
-app/profile/page.tsx(127,39): error TS2339: Property 'interested_industries' does not exist on type 'UserProfile'.
-app/profile/page.tsx(128,32): error TS2339: Property 'learning_goals' does not exist on type 'UserProfile'.
-app/profile/page.tsx(129,37): error TS2339: Property 'selected_categories' does not exist on type 'UserProfile'.
-app/profile/page.tsx(130,9): error TS2322: Type 'string[]' is not assignable to type 'never[]'.
-  Type 'string' is not assignable to type 'never'.
-app/profile/page.tsx(611,28): error TS2322: Type 'unknown' is not assignable to type 'Key | null | undefined'.
-app/profile/page.tsx(615,61): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
-app/profile/page.tsx(617,37): error TS2769: No overload matches this call.
-  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
-    Argument of type 'unknown' is not assignable to parameter of type 'string | number | Date'.
-  Overload 2 of 4, '(value: string | number): Date', gave the following error.
-    Argument of type 'unknown' is not assignable to parameter of type 'string | number'.
-app/profile/page.tsx(683,102): error TS18046: 't.amount' is of type 'unknown'.
-app/profile/page.tsx(695,101): error TS18046: 't.amount' is of type 'unknown'.
-app/profile/page.tsx(764,66): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
-app/profile/page.tsx(767,49): error TS2769: No overload matches this call.
-  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
-    Argument of type 'unknown' is not assignable to parameter of type 'string | number | Date'.
-  Overload 2 of 4, '(value: string | number): Date', gave the following error.
-    Argument of type 'unknown' is not assignable to parameter of type 'string | number'.
-app/profile/page.tsx(775,35): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
-app/profile/page.tsx(783,72): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
-app/settings/quiz-csv/page.tsx(105,10): error TS2352: Conversion of type 'Question' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  Index signature for type 'string' is missing in type 'Question'.
-app/settings/quiz-csv/page.tsx(190,13): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(194,16): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(194,48): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(199,16): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(204,15): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(204,43): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(211,24): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(212,23): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(213,26): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(214,29): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(215,23): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(217,15): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(218,15): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(219,15): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(220,15): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(222,29): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(223,26): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(224,25): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(225,13): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
-  Type 'undefined' is not assignable to type 'number'.
-app/settings/quiz-csv/page.tsx(225,24): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(225,56): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(226,28): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(227,15): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(228,21): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(229,22): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(230,21): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(231,21): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(232,21): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(233,29): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(234,22): error TS18046: 'questionData' is of type 'unknown'.
-app/settings/quiz-csv/page.tsx(359,58): error TS18046: 'error' is of type 'unknown'.
 app/skp-history/page.tsx(46,27): error TS2345: Argument of type 'SKPTransaction[]' is not assignable to parameter of type 'SetStateAction<Record<string, unknown>[]>'.
   Type 'SKPTransaction[]' is not assignable to type 'Record<string, unknown>[]'.
     Type 'SKPTransaction' is not assignable to type 'Record<string, unknown>'.
@@ -266,34 +81,54 @@ app/skp-history/page.tsx(293,80): error TS2345: Argument of type 'unknown' is no
 app/skp-history/page.tsx(294,68): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
 components/analytics/SkillRadarChart.tsx(55,23): error TS18046: 'context' is of type 'unknown'.
 components/analytics/SkillRadarChart.tsx(55,49): error TS18046: 'context' is of type 'unknown'.
+components/auth/AuthProvider.tsx(78,22): error TS2345: Argument of type '{}' is not assignable to parameter of type 'SetStateAction<UserProfile | null>'.
+components/auth/AuthProvider.tsx(151,96): error TS2339: Property 'message' does not exist on type '{}'.
+components/auth/AuthProvider.tsx(162,15): error TS2739: Type '{}' is missing the following properties from type 'Session': access_token, refresh_token, expires_in, token_type, user
+components/auth/AuthProvider.tsx(253,32): error TS2339: Property 'expires_at' does not exist on type '{}'.
+components/auth/AuthProvider.tsx(255,37): error TS2339: Property 'expires_at' does not exist on type '{}'.
+components/auth/AuthProvider.tsx(302,15): error TS2339: Property 'error' does not exist on type 'unknown'.
 components/cards/KnowledgeCard.tsx(15,10): error TS2865: Import 'KnowledgeCard' conflicts with local value, so must be declared with a type-only import when 'isolatedModules' is enabled.
-components/categories/CategoryGrid.tsx(50,25): error TS2345: Argument of type 'Question[]' is not assignable to parameter of type 'SetStateAction<Record<string, unknown>[]>'.
+components/categories/CategoryGrid.tsx(57,25): error TS2345: Argument of type 'Question[]' is not assignable to parameter of type 'SetStateAction<Record<string, unknown>[]>'.
   Type 'Question[]' is not assignable to type 'Record<string, unknown>[]'.
     Type 'Question' is not assignable to type 'Record<string, unknown>'.
       Index signature for type 'string' is missing in type 'Question'.
-components/categories/CategoryGrid.tsx(87,16): error TS2538: Type 'unknown' cannot be used as an index type.
-components/categories/CategoryGrid.tsx(88,13): error TS2538: Type 'unknown' cannot be used as an index type.
-components/categories/CategoryGrid.tsx(90,11): error TS2538: Type 'unknown' cannot be used as an index type.
-components/categories/CategoryGrid.tsx(100,63): error TS2339: Property 'length' does not exist on type '{}'.
-components/categories/CategoryGrid.tsx(111,30): error TS2571: Object is of type 'unknown'.
-components/categories/CategoryGrid.tsx(265,89): error TS18046: 'stat.totalContents' is of type 'unknown'.
-components/categories/CategoryGrid.tsx(269,36): error TS18046: 'stat.totalContents' is of type 'unknown'.
-components/categories/CategoryGrid.tsx(269,62): error TS18046: 'stat.completedContents' is of type 'unknown'.
-components/categories/CategoryGrid.tsx(269,87): error TS18046: 'stat.totalContents' is of type 'unknown'.
-components/categories/CategoryGrid.tsx(308,19): error TS2322: Type 'Record<string, unknown> | { totalContents: number; completedContents: number; averageScore: number; learningTime: number; }' is not assignable to type '{ totalContents: number; completedContents: number; averageScore: number; learningTime: number; } | undefined'.
+components/categories/CategoryGrid.tsx(59,26): error TS2345: Argument of type 'SkillLevelDefinition[]' is not assignable to parameter of type 'SetStateAction<SkillLevel[]>'.
+  Type 'SkillLevelDefinition[]' is not assignable to type 'SkillLevel[]'.
+    Type 'SkillLevelDefinition' is not assignable to type 'SkillLevel'.
+components/categories/CategoryGrid.tsx(64,26): error TS2345: Argument of type 'SkillLevelDefinition[]' is not assignable to parameter of type 'SetStateAction<SkillLevel[]>'.
+  Type 'SkillLevelDefinition[]' is not assignable to type 'SkillLevel[]'.
+    Type 'SkillLevelDefinition' is not assignable to type 'SkillLevel'.
+components/categories/CategoryGrid.tsx(108,16): error TS2538: Type 'unknown' cannot be used as an index type.
+components/categories/CategoryGrid.tsx(109,13): error TS2538: Type 'unknown' cannot be used as an index type.
+components/categories/CategoryGrid.tsx(111,11): error TS2538: Type 'unknown' cannot be used as an index type.
+components/categories/CategoryGrid.tsx(121,63): error TS2339: Property 'length' does not exist on type '{}'.
+components/categories/CategoryGrid.tsx(132,30): error TS2571: Object is of type 'unknown'.
+components/categories/CategoryGrid.tsx(244,34): error TS2339: Property 'id' does not exist on type 'SkillLevel | SkillLevelDefinition'.
+  Property 'id' does not exist on type '"basic"'.
+components/categories/CategoryGrid.tsx(245,61): error TS2339: Property 'id' does not exist on type 'SkillLevel | SkillLevelDefinition'.
+  Property 'id' does not exist on type '"basic"'.
+components/categories/CategoryGrid.tsx(247,66): error TS2339: Property 'id' does not exist on type 'SkillLevel | SkillLevelDefinition'.
+  Property 'id' does not exist on type '"basic"'.
+components/categories/CategoryGrid.tsx(249,30): error TS2339: Property 'name' does not exist on type 'SkillLevel | SkillLevelDefinition'.
+  Property 'name' does not exist on type '"basic"'.
+components/categories/CategoryGrid.tsx(301,89): error TS18046: 'stat.totalContents' is of type 'unknown'.
+components/categories/CategoryGrid.tsx(305,36): error TS18046: 'stat.totalContents' is of type 'unknown'.
+components/categories/CategoryGrid.tsx(305,62): error TS18046: 'stat.completedContents' is of type 'unknown'.
+components/categories/CategoryGrid.tsx(305,87): error TS18046: 'stat.totalContents' is of type 'unknown'.
+components/categories/CategoryGrid.tsx(344,19): error TS2322: Type 'Record<string, unknown> | { totalContents: number; completedContents: number; averageScore: number; learningTime: number; }' is not assignable to type '{ totalContents: number; completedContents: number; averageScore: number; learningTime: number; } | undefined'.
   Type 'Record<string, unknown>' is missing the following properties from type '{ totalContents: number; completedContents: number; averageScore: number; learningTime: number; }': totalContents, completedContents, averageScore, learningTime
-components/categories/CategoryGrid.tsx(329,19): error TS2322: Type 'Record<string, unknown> | { totalContents: number; completedContents: number; averageScore: number; learningTime: number; }' is not assignable to type '{ totalContents: number; completedContents: number; averageScore: number; learningTime: number; } | undefined'.
+components/categories/CategoryGrid.tsx(365,19): error TS2322: Type 'Record<string, unknown> | { totalContents: number; completedContents: number; averageScore: number; learningTime: number; }' is not assignable to type '{ totalContents: number; completedContents: number; averageScore: number; learningTime: number; } | undefined'.
   Type 'Record<string, unknown>' is missing the following properties from type '{ totalContents: number; completedContents: number; averageScore: number; learningTime: number; }': totalContents, completedContents, averageScore, learningTime
-components/learning/CourseCard.tsx(56,65): error TS2345: Argument of type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: unknown[] | undefined; }' is not assignable to parameter of type 'LearningCourse'.
+components/learning/CourseCard.tsx(74,65): error TS2345: Argument of type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "basic" | "intermediate" | "advanced" | "expert"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: unknown[] | undefined; }' is not assignable to parameter of type 'LearningCourse'.
   Types of property 'genres' are incompatible.
     Type 'unknown[] | undefined' is not assignable to type 'LearningGenre[]'.
       Type 'undefined' is not assignable to type 'LearningGenre[]'.
-components/learning/CourseCard.tsx(102,17): error TS18046: 'cat' is of type 'unknown'.
-components/learning/CourseCard.tsx(108,36): error TS18046: 'cat' is of type 'unknown'.
-components/learning/CourseCard.tsx(109,30): error TS18046: 'cat' is of type 'unknown'.
-components/learning/CourseCard.tsx(110,40): error TS18046: 'cat' is of type 'unknown'.
-components/learning/CourseCard.tsx(114,22): error TS18046: 'cat' is of type 'unknown'.
-components/learning/CourseCard.tsx(114,41): error TS18046: 'cat' is of type 'unknown'.
+components/learning/CourseCard.tsx(140,17): error TS18046: 'cat' is of type 'unknown'.
+components/learning/CourseCard.tsx(146,36): error TS18046: 'cat' is of type 'unknown'.
+components/learning/CourseCard.tsx(147,30): error TS18046: 'cat' is of type 'unknown'.
+components/learning/CourseCard.tsx(148,40): error TS18046: 'cat' is of type 'unknown'.
+components/learning/CourseCard.tsx(152,22): error TS18046: 'cat' is of type 'unknown'.
+components/learning/CourseCard.tsx(152,41): error TS18046: 'cat' is of type 'unknown'.
 components/learning/LearningSession.tsx(238,46): error TS2339: Property 'completed' does not exist on type '{}'.
 components/learning/LearningSession.tsx(258,27): error TS2345: Argument of type '{}' is not assignable to parameter of type 'SetStateAction<Record<string, unknown> | null>'.
 components/learning/LearningSession.tsx(339,50): error TS2339: Property 'icon' does not exist on type 'LearningSession'.
@@ -325,22 +160,22 @@ components/learning/LearningSession.tsx(658,27): error TS2769: No overload match
     Argument of type 'unknown' is not assignable to parameter of type 'string | number | Date'.
   Overload 2 of 4, '(value: string | number): Date', gave the following error.
     Argument of type 'unknown' is not assignable to parameter of type 'string | number'.
-components/quiz/QuizSession.tsx(208,42): error TS2339: Property 'categoryProgress' does not exist on type 'UserProfile'.
-components/quiz/QuizSession.tsx(209,49): error TS7006: Parameter 'cp' implicitly has an 'any' type.
-components/quiz/QuizSession.tsx(289,7): error TS2322: Type 'number' is not assignable to type 'string'.
-components/quiz/QuizSession.tsx(436,17): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+components/quiz/QuizSession.tsx(214,42): error TS2339: Property 'categoryProgress' does not exist on type 'UserProfile'.
+components/quiz/QuizSession.tsx(215,49): error TS7006: Parameter 'cp' implicitly has an 'any' type.
+components/quiz/QuizSession.tsx(295,7): error TS2322: Type 'number' is not assignable to type 'string'.
+components/quiz/QuizSession.tsx(442,17): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
   Type 'undefined' is not assignable to type 'string'.
-components/quiz/QuizSession.tsx(437,17): error TS2322: Type 'null' is not assignable to type 'string | undefined'.
-components/quiz/QuizSession.tsx(438,17): error TS2322: Type 'Question[]' is not assignable to type 'Record<string, unknown>[]'.
+components/quiz/QuizSession.tsx(443,17): error TS2322: Type 'null' is not assignable to type 'string | undefined'.
+components/quiz/QuizSession.tsx(444,17): error TS2322: Type 'Question[]' is not assignable to type 'Record<string, unknown>[]'.
   Type 'Question' is not assignable to type 'Record<string, unknown>'.
     Index signature for type 'string' is missing in type 'Question'.
-components/quiz/QuizSession.tsx(439,17): error TS2322: Type 'QuestionAnswer[]' is not assignable to type 'Record<string, unknown>[]'.
+components/quiz/QuizSession.tsx(445,17): error TS2322: Type 'QuestionAnswer[]' is not assignable to type 'Record<string, unknown>[]'.
   Type 'QuestionAnswer' is not assignable to type 'Record<string, unknown>'.
     Index signature for type 'string' is missing in type 'QuestionAnswer'.
-components/quiz/QuizSession.tsx(450,24): error TS18046: 'quizSaveError' is of type 'unknown'.
-components/quiz/QuizSession.tsx(451,26): error TS18046: 'quizSaveError' is of type 'unknown'.
-components/quiz/QuizSession.tsx(482,26): error TS18046: 'detailSaveError' is of type 'unknown'.
-components/quiz/QuizSession.tsx(483,28): error TS18046: 'detailSaveError' is of type 'unknown'.
+components/quiz/QuizSession.tsx(456,24): error TS18046: 'quizSaveError' is of type 'unknown'.
+components/quiz/QuizSession.tsx(457,26): error TS18046: 'quizSaveError' is of type 'unknown'.
+components/quiz/QuizSession.tsx(488,26): error TS18046: 'detailSaveError' is of type 'unknown'.
+components/quiz/QuizSession.tsx(489,28): error TS18046: 'detailSaveError' is of type 'unknown'.
 components/ui/select.tsx(113,36): error TS18046: 'option.props' is of type 'unknown'.
 components/ui/select.tsx(114,12): error TS18046: 'option.props' is of type 'unknown'.
 hooks/useUser.ts(48,34): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
@@ -388,23 +223,45 @@ lib/ai-analytics.ts(808,16): error TS2532: Object is possibly 'undefined'.
 lib/categories-backup.ts(59,5): error TS2322: Type '"analytical_problem_solving"' is not assignable to type 'MainCategoryId'.
 lib/categories-backup.ts(73,5): error TS2322: Type '"leadership_management"' is not assignable to type 'MainCategoryId'.
 lib/categories-backup.ts(87,5): error TS2322: Type '"business_strategy"' is not assignable to type 'MainCategoryId'.
-lib/categories.ts(203,5): error TS2322: Type '"consulting_industry"' is not assignable to type 'IndustryCategoryId'.
-lib/categories.ts(235,5): error TS2322: Type '"si_industry"' is not assignable to type 'IndustryCategoryId'.
-lib/categories.ts(264,5): error TS2322: Type '"trading_company_industry"' is not assignable to type 'IndustryCategoryId'.
-lib/categories.ts(474,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
-lib/categories.ts(482,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
-lib/categories.ts(490,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
-lib/categories.ts(500,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
-lib/categories.ts(508,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
-lib/categories.ts(516,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
-lib/categories.ts(526,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
-lib/categories.ts(534,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
-lib/categories.ts(542,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
-lib/categories.ts(552,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
-lib/categories.ts(560,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
-lib/categories.ts(568,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
-lib/categories.ts(583,3): error TS2322: Type '{ id: string; name: string; description: string; parentCategoryId: string; displayOrder: number; icon: string; }[]' is not assignable to type 'Subcategory[]'.
+lib/categories.ts(265,5): error TS2322: Type '"consulting_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(293,5): error TS2322: Type '"si_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(318,5): error TS2322: Type '"trading_company_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(344,5): error TS2322: Type '"financial_services_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(354,5): error TS2322: Type '"manufacturing_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(364,5): error TS2322: Type '"saas_product_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(374,5): error TS2322: Type '"healthcare_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(384,5): error TS2322: Type '"retail_consumer_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(394,5): error TS2322: Type '"real_estate_construction_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(404,5): error TS2322: Type '"energy_infrastructure_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(414,5): error TS2322: Type '"education_training_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(424,5): error TS2322: Type '"media_entertainment_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(434,5): error TS2322: Type '"logistics_transportation_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(444,5): error TS2322: Type '"public_sector_industry"' is not assignable to type 'IndustryCategoryId'.
+lib/categories.ts(517,5): error TS2322: Type 'string' is not assignable to type 'MainCategoryId | IndustryCategoryId'.
+lib/categories.ts(583,5): error TS2322: Type 'string' is not assignable to type 'SkillLevel'.
+lib/categories.ts(626,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
+lib/categories.ts(803,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/categories.ts(809,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/categories.ts(827,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/categories.ts(828,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/categories.ts(829,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/categories.ts(830,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/categories.ts(850,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/categories.ts(880,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/categories.ts(916,3): error TS2322: Type '{ id: string; name: string; description: string; parentCategoryId: string; displayOrder: number; icon: string; }[]' is not assignable to type 'Subcategory[]'.
   Type '{ id: string; name: string; description: string; parentCategoryId: string; displayOrder: number; icon: string; }' is missing the following properties from type 'Subcategory': type, parentId
+lib/categories.ts(1011,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
+lib/categories.ts(1019,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
+lib/categories.ts(1027,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
+lib/categories.ts(1037,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
+lib/categories.ts(1045,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
+lib/categories.ts(1053,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
+lib/categories.ts(1063,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
+lib/categories.ts(1071,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
+lib/categories.ts(1079,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
+lib/categories.ts(1089,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
+lib/categories.ts(1097,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
+lib/categories.ts(1105,5): error TS2353: Object literal may only specify known properties, and 'parentCategoryId' does not exist in type 'Subcategory'.
 lib/course-completion.ts(42,43): error TS2339: Property 'completed' does not exist on type '{}'.
 lib/course-completion.ts(104,56): error TS2339: Property 'badge' does not exist on type 'LearningCourse'.
 lib/course-completion.ts(105,27): error TS2339: Property 'badge' does not exist on type 'LearningCourse'.
@@ -414,6 +271,10 @@ lib/course-completion.ts(108,29): error TS2339: Property 'badge' does not exist 
 lib/course-completion.ts(109,30): error TS2339: Property 'badge' does not exist on type 'LearningCourse'.
 lib/course-completion.ts(110,38): error TS2339: Property 'badge' does not exist on type 'LearningCourse'.
 lib/course-completion.ts(112,45): error TS2339: Property 'badge' does not exist on type 'LearningCourse'.
+lib/course-completion.ts(119,31): error TS2345: Argument of type '"basic" | "intermediate" | "advanced" | "expert"' is not assignable to parameter of type '"beginner" | "intermediate" | "advanced"'.
+  Type '"basic"' is not assignable to type '"beginner" | "intermediate" | "advanced"'.
+lib/course-completion.ts(122,49): error TS2345: Argument of type '"basic" | "intermediate" | "advanced" | "expert"' is not assignable to parameter of type '"beginner" | "intermediate" | "advanced"'.
+  Type '"basic"' is not assignable to type '"beginner" | "intermediate" | "advanced"'.
 lib/course-completion.ts(214,43): error TS2339: Property 'completed' does not exist on type '{}'.
 lib/course-completion.ts(257,43): error TS2339: Property 'completed' does not exist on type '{}'.
 lib/industry-analytics.ts(153,9): error TS18046: 'p' is of type 'unknown'.
@@ -433,17 +294,16 @@ lib/learning/courses.ts(763,9): error TS2741: Property 'difficulty' is missing i
 lib/learning/courses.ts(943,9): error TS2741: Property 'difficulty' is missing in type '{ id: string; title: string; description: string; icon: string; color: string; }' but required in type 'LearningBadge'.
 lib/learning/courses.ts(1123,9): error TS2741: Property 'difficulty' is missing in type '{ id: string; title: string; description: string; icon: string; color: string; }' but required in type 'LearningBadge'.
 lib/learning/courses.ts(1303,9): error TS2741: Property 'difficulty' is missing in type '{ id: string; title: string; description: string; icon: string; color: string; }' but required in type 'LearningBadge'.
-lib/learning/data.ts(38,5): error TS2740: Type '{}' is missing the following properties from type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: Record<...>[] | undefined; }[]': length, pop, push, concat, and 35 more.
-lib/learning/data.ts(50,7): error TS2322: Type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: unknown[] | undefined; }[]' is not assignable to type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: Record<...>[] | undefined; }[]'.
-  Type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: unknown[] | undefined; }' is not assignable to type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: Record<...>[] | undefined; }'.
-    Types of property 'genres' are incompatible.
-      Type 'unknown[] | undefined' is not assignable to type 'Record<string, unknown>[] | undefined'.
-        Type 'unknown[]' is not assignable to type 'Record<string, unknown>[]'.
-          Type 'unknown' is not assignable to type 'Record<string, unknown>'.
-lib/learning/data.ts(57,7): error TS2322: Type 'Record<string, unknown>[]' is not assignable to type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: Record<...>[] | undefined; }[]'.
-  Type 'Record<string, unknown>' is missing the following properties from type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: Record<...>[] | undefined; }': id, title, description, estimatedDays, and 7 more.
-lib/learning/data.ts(62,3): error TS2322: Type 'Record<string, unknown>[]' is not assignable to type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: Record<...>[] | undefined; }[]'.
-  Type 'Record<string, unknown>' is missing the following properties from type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: Record<...>[] | undefined; }': id, title, description, estimatedDays, and 7 more.
+lib/learning/data.ts(38,5): error TS2740: Type '{}' is missing the following properties from type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "basic" | "intermediate" | "advanced" | "expert"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: Record<...>[] | undefined; }[]': length, pop, push, concat, and 35 more.
+lib/learning/data.ts(50,7): error TS2322: Type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: unknown[] | undefined; }[]' is not assignable to type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "basic" | "intermediate" | "advanced" | "expert"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: Record<...>[] | undefined; }[]'.
+  Type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: unknown[] | undefined; }' is not assignable to type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "basic" | "intermediate" | "advanced" | "expert"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: Record<...>[] | undefined; }'.
+    Types of property 'difficulty' are incompatible.
+      Type '"beginner" | "intermediate" | "advanced"' is not assignable to type '"basic" | "intermediate" | "advanced" | "expert"'.
+        Type '"beginner"' is not assignable to type '"basic" | "intermediate" | "advanced" | "expert"'.
+lib/learning/data.ts(57,7): error TS2322: Type 'Record<string, unknown>[]' is not assignable to type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "basic" | "intermediate" | "advanced" | "expert"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: Record<...>[] | undefined; }[]'.
+  Type 'Record<string, unknown>' is missing the following properties from type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "basic" | "intermediate" | "advanced" | "expert"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: Record<...>[] | undefined; }': id, title, description, estimatedDays, and 7 more.
+lib/learning/data.ts(62,3): error TS2322: Type 'Record<string, unknown>[]' is not assignable to type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "basic" | "intermediate" | "advanced" | "expert"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: Record<...>[] | undefined; }[]'.
+  Type 'Record<string, unknown>' is missing the following properties from type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "basic" | "intermediate" | "advanced" | "expert"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: Record<...>[] | undefined; }': id, title, description, estimatedDays, and 7 more.
 lib/learning/data.ts(115,5): error TS2740: Type '{}' is missing the following properties from type 'LearningCourse': id, title, description, estimatedDays, and 5 more.
 lib/learning/data.ts(218,60): error TS2769: No overload matches this call.
   Overload 1 of 2, '(predicate: (value: unknown, index: number, array: unknown[]) => value is unknown, thisArg?: any): unknown[]', gave the following error.
@@ -470,43 +330,41 @@ lib/learning/data.ts(257,13): error TS2769: No overload matches this call.
 lib/learning/data.ts(258,11): error TS2345: Argument of type '(a: Record<string, unknown>, b: Record<string, unknown>) => number' is not assignable to parameter of type '(a: unknown, b: unknown) => number'.
   Types of parameters 'a' and 'a' are incompatible.
     Type 'unknown' is not assignable to type 'Record<string, unknown>'.
-lib/learning/supabase-data.ts(99,5): error TS2740: Type '{}' is missing the following properties from type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "draft" | ... 1 more ... | "coming_soon"; genres?: unknown[] | undefined; }[]': length, pop, push, concat, and 35 more.
-lib/learning/supabase-data.ts(199,5): error TS2740: Type '{}' is missing the following properties from type 'LearningCourse': id, title, description, estimatedDays, and 5 more.
-lib/learning/supabase-data.ts(329,7): error TS2322: Type '{ id: string; title: string; description: string; categoryId: string; subcategoryId: string | null; estimatedDays: number; displayOrder: number; badge: unknown; themes: { id: string; title: string; description: string; estimatedMinutes: number; displayOrder: number; rewardCard: unknown; sessions: { ...; }[]; }[]; }[]' is not assignable to type 'LearningGenre[]'.
-  Type '{ id: string; title: string; description: string; categoryId: string; subcategoryId: string | null; estimatedDays: number; displayOrder: number; badge: unknown; themes: { id: string; title: string; description: string; estimatedMinutes: number; displayOrder: number; rewardCard: unknown; sessions: { ...; }[]; }[]; }' is not assignable to type 'LearningGenre'.
-    Types of property 'subcategoryId' are incompatible.
-      Type 'string | null' is not assignable to type 'string | undefined'.
-        Type 'null' is not assignable to type 'string | undefined'.
-lib/performance-optimizer.ts(25,22): error TS2554: Expected 1 arguments, but got 0.
-lib/performance-optimizer.ts(63,25): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
-  Type 'undefined' is not assignable to type 'string'.
-lib/questions.ts(12,5): error TS2740: Type '{}' is missing the following properties from type 'Question[]': length, pop, push, concat, and 35 more.
-lib/storage.ts(513,8): error TS18046: 'userData' is of type 'unknown'.
-lib/storage.ts(514,5): error TS18046: 'userData' is of type 'unknown'.
-lib/storage.ts(520,8): error TS18046: 'userData' is of type 'unknown'.
-lib/storage.ts(521,5): error TS18046: 'userData' is of type 'unknown'.
-lib/storage.ts(525,7): error TS18046: 'userData' is of type 'unknown'.
-lib/storage.ts(526,5): error TS18046: 'userData' is of type 'unknown'.
-lib/storage.ts(526,31): error TS18046: 'userData' is of type 'unknown'.
-lib/storage.ts(529,8): error TS18046: 'userData' is of type 'unknown'.
-lib/storage.ts(530,5): error TS18046: 'userData' is of type 'unknown'.
-lib/storage.ts(534,8): error TS18046: 'userData' is of type 'unknown'.
-lib/storage.ts(535,5): error TS18046: 'userData' is of type 'unknown'.
-lib/storage.ts(1150,78): error TS2554: Expected 0 arguments, but got 1.
-lib/storage.ts(1178,5): error TS2531: Object is possibly 'null'.
-lib/storage.ts(1178,23): error TS2554: Expected 0 arguments, but got 1.
-lib/storage.ts(1180,55): error TS2554: Expected 0 arguments, but got 1.
-lib/storage.ts(1181,28): error TS2554: Expected 0 arguments, but got 1.
-lib/storage.ts(1181,48): error TS2345: Argument of type '(success: boolean) => void' is not assignable to parameter of type '(value: void) => void | PromiseLike<void>'.
-  Types of parameters 'success' and 'value' are incompatible.
-    Type 'void' is not assignable to type 'boolean'.
-lib/supabase-quiz.ts(56,45): error TS18046: 'saveError' is of type 'unknown'.
+lib/learning/supabase-data.ts(99,5): error TS2740: Type '{}' is missing the following properties from type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: unknown[] | undefined; }[]': length, pop, push, concat, and 35 more.
+lib/learning/supabase-data.ts(183,5): error TS2322: Type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "basic" | "intermediate" | "advanced" | "expert"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; }[]' is not assignable to type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: unknown[] | undefined; }[]'.
+  Type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "basic" | "intermediate" | "advanced" | "expert"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | "coming_soon" | "draft"; }' is not assignable to type '{ id: string; title: string; description: string; estimatedDays: number; difficulty: "beginner" | "intermediate" | "advanced"; icon: string; color: string; displayOrder: number; genreCount: number; themeCount: number; status: "available" | ... 1 more ... | "draft"; genres?: unknown[] | undefined; }'.
+    Types of property 'difficulty' are incompatible.
+      Type '"basic" | "intermediate" | "advanced" | "expert"' is not assignable to type '"beginner" | "intermediate" | "advanced"'.
+        Type '"basic"' is not assignable to type '"beginner" | "intermediate" | "advanced"'.
+lib/learning/supabase-data.ts(329,7): error TS2322: Type '{ id: string; title: string; description: string; categoryId: string; subcategoryId: string | undefined; estimatedDays: number; displayOrder: number; badge: unknown; themes: { id: string; title: string; ... 4 more ...; sessions: { ...; }[]; }[]; }[]' is not assignable to type 'LearningGenre[]'.
+  Type '{ id: string; title: string; description: string; categoryId: string; subcategoryId: string | undefined; estimatedDays: number; displayOrder: number; badge: unknown; themes: { id: string; title: string; ... 4 more ...; sessions: { ...; }[]; }[]; }' is not assignable to type 'LearningGenre'.
+    Types of property 'themes' are incompatible.
+      Type '{ id: string; title: string; description: string; estimatedMinutes: number; displayOrder: number; rewardCard: unknown; sessions: { id: string; title: string; estimatedMinutes: number; type: "knowledge" | "practice" | "case_study"; displayOrder: number; content: { ...; }[]; quiz: { ...; }[]; }[]; }[]' is not assignable to type 'LearningTheme[]'.
+        Type '{ id: string; title: string; description: string; estimatedMinutes: number; displayOrder: number; rewardCard: unknown; sessions: { id: string; title: string; estimatedMinutes: number; type: "knowledge" | "practice" | "case_study"; displayOrder: number; content: { ...; }[]; quiz: { ...; }[]; }[]; }' is not assignable to type 'LearningTheme'.
+          Types of property 'sessions' are incompatible.
+            Type '{ id: string; title: string; estimatedMinutes: number; type: "knowledge" | "practice" | "case_study"; displayOrder: number; content: { id: string; type: "text" | "image" | "video" | "example" | "key_points"; title: string | null; content: string; duration: number | null; displayOrder: number; }[]; quiz: { ...; }[]; ...' is not assignable to type 'LearningSession[]'.
+              Type '{ id: string; title: string; estimatedMinutes: number; type: "knowledge" | "practice" | "case_study"; displayOrder: number; content: { id: string; type: "text" | "image" | "video" | "example" | "key_points"; title: string | null; content: string; duration: number | null; displayOrder: number; }[]; quiz: { ...; }[]; }' is not assignable to type 'LearningSession'.
+                Types of property 'content' are incompatible.
+                  Type '{ id: string; type: "text" | "image" | "video" | "example" | "key_points"; title: string | null; content: string; duration: number | null; displayOrder: number; }[]' is not assignable to type 'SessionContent[]'.
+                    Type '{ id: string; type: "text" | "image" | "video" | "example" | "key_points"; title: string | null; content: string; duration: number | null; displayOrder: number; }' is not assignable to type 'SessionContent'.
+                      Types of property 'title' are incompatible.
+                        Type 'string | null' is not assignable to type 'string | undefined'.
+                          Type 'null' is not assignable to type 'string | undefined'.
+lib/storage.ts(540,16): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'StorageUser'.
+  Type 'Record<string, unknown>' is missing the following properties from type 'StorageUser': id, name, auth, progress, and 3 more.
+lib/storage.ts(541,3): error TS2740: Type 'Record<string, unknown>' is missing the following properties from type 'StorageUser': id, name, auth, progress, and 3 more.
+lib/storage.ts(1179,5): error TS2531: Object is possibly 'null'.
+lib/supabase-user.ts(165,86): error TS2345: Argument of type '{} | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.
 lib/xp-level-system.ts(663,53): error TS18046: 'error' is of type 'unknown'.
 lib/xp-level-system.ts(681,66): error TS18046: 'error' is of type 'unknown'.
 lib/xp-level-system.ts(693,41): error TS18046: 'error' is of type 'unknown'.
 lib/xp-level-system.ts(703,58): error TS18046: 'error' is of type 'unknown'.
+scripts/analyze-data-reflection-status.ts(166,41): error TS2345: Argument of type 'string' is not assignable to parameter of type 'MainCategoryId | IndustryCategoryId'.
 scripts/migrate-questions-to-db.ts(79,9): error TS2322: Type '{ legacy_id: number; category_id: string; subcategory: string | null; subcategory_id: string | null; question: string; option1: string; option2: string; option3: string; option4: string; correct_answer: number; ... 5 more ...; is_deleted: boolean; }[]' is not assignable to type 'DBQuestion[]'.
   Type '{ legacy_id: number; category_id: string; subcategory: string | null; subcategory_id: string | null; question: string; option1: string; option2: string; option3: string; option4: string; correct_answer: number; ... 5 more ...; is_deleted: boolean; }' is not assignable to type 'DBQuestion'.
     Types of property 'subcategory' are incompatible.
       Type 'string | null' is not assignable to type 'string | undefined'.
         Type 'null' is not assignable to type 'string | undefined'.
+scripts/test-categories-client.ts(74,44): error TS2339: Property 'parentCategoryId' does not exist on type 'Subcategory'.
+scripts/test-categories-client.ts(75,42): error TS2339: Property 'icon' does not exist on type 'Subcategory'.

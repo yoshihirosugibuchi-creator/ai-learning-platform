@@ -40,7 +40,7 @@ function dbRowToQuestion(row: unknown): APIQuestion {
 }
 
 // Questions API エンドポイント
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     
@@ -62,7 +62,7 @@ export async function GET() {
     })
     
     // カテゴリー制御チェック
-    const categoryControl = await filterQuizzesByActiveCategories(null, category || undefined)
+    const categoryControl = await filterQuizzesByActiveCategories({} as Record<string, unknown>, category || undefined)
     
     // カテゴリーが制限されている場合
     if (categoryControl.blockedCategories.length > 0) {

@@ -102,7 +102,7 @@ export default function LearningPage() {
         
         if (cachedCourses) {
           console.log('🎯 Using cached courses data')
-          setCourses(cachedCourses)
+          setCourses(cachedCourses as Record<string, unknown>[])
           setLoading(false) // キャッシュデータがあれば即座に表示
           clearTimeout(dataTimeout)
         }
@@ -117,7 +117,7 @@ export default function LearningPage() {
         try {
           const coursesData = await Promise.race([coursesPromise, coursesTimeout])
           console.log('✅ Fresh courses loaded:', coursesData.length)
-          setCourses(coursesData)
+          setCourses(coursesData as Record<string, unknown>[])
           globalCache.set(cacheKey, coursesData, 5 * 60 * 1000) // 5分キャッシュ
           clearTimeout(dataTimeout)
         } catch (coursesError) {
@@ -142,7 +142,7 @@ export default function LearningPage() {
               setTimeout(() => reject(new Error('Stats timeout')), 10000)
             )
             
-            const [stats, badges] = await Promise.race([statsPromise, statsTimeout])
+            const [stats, badges] = await Promise.race([statsPromise, statsTimeout]) as [unknown, unknown]
             console.log('✅ Statistics loaded:', { stats, badges })
             setLearningStats(stats)
             setBadgeStats(badges)

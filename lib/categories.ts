@@ -262,7 +262,7 @@ const staticMainCategories: MainCategory[] = [
 // Last sync: 2025-09-21T00:47:35.406Z
 const staticIndustryCategories: IndustryCategory[] = [
   {
-    "id": "consulting_industry",
+    "id": "consulting_industry" as IndustryCategoryId,
     "name": "コンサルティング業界",
     "description": "コンサルティング業界特有の知識とスキル",
     "type": "industry",
@@ -290,7 +290,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#6366F1"
   },
   {
-    "id": "si_industry",
+    "id": "si_industry" as IndustryCategoryId,
     "name": "SI（システムインテグレーション）業界",
     "description": "SI業界特有のプロジェクト管理と技術コンサルティング",
     "type": "industry",
@@ -315,7 +315,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#0EA5E9"
   },
   {
-    "id": "trading_company_industry",
+    "id": "trading_company_industry" as IndustryCategoryId,
     "name": "商社業界",
     "description": "商社特有のトレーディング・事業投資・グローバル展開スキル",
     "type": "industry",
@@ -341,7 +341,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#059669"
   },
   {
-    "id": "financial_services_industry",
+    "id": "financial_services_industry" as IndustryCategoryId,
     "name": "金融・保険業界",
     "description": "銀行、証券、保険、フィンテック企業特有の知識とスキル",
     "type": "industry",
@@ -351,7 +351,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#1E40AF"
   },
   {
-    "id": "manufacturing_industry",
+    "id": "manufacturing_industry" as IndustryCategoryId,
     "name": "製造業界",
     "description": "製造業特有の生産管理、品質管理、サプライチェーン知識とスキル",
     "type": "industry",
@@ -361,7 +361,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#DC2626"
   },
   {
-    "id": "saas_product_industry",
+    "id": "saas_product_industry" as IndustryCategoryId,
     "name": "SaaS・プロダクト業界",
     "description": "SaaS企業、プロダクト開発、テックスタートアップ特有の事業運営スキル",
     "type": "industry",
@@ -371,7 +371,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#7C3AED"
   },
   {
-    "id": "healthcare_industry",
+    "id": "healthcare_industry" as IndustryCategoryId,
     "name": "ヘルスケア・医療業界",
     "description": "医療機関、製薬、医療機器、ヘルステック企業の専門知識とスキル",
     "type": "industry",
@@ -381,7 +381,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#059669"
   },
   {
-    "id": "retail_consumer_industry",
+    "id": "retail_consumer_industry" as IndustryCategoryId,
     "name": "小売・消費財業界",
     "description": "小売、EC、消費財メーカー特有のマーケティング・販売戦略スキル",
     "type": "industry",
@@ -391,7 +391,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#EA580C"
   },
   {
-    "id": "real_estate_construction_industry",
+    "id": "real_estate_construction_industry" as IndustryCategoryId,
     "name": "不動産・建設業界",
     "description": "不動産開発、建設、不動産サービス業界の専門知識とスキル",
     "type": "industry",
@@ -401,7 +401,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#92400E"
   },
   {
-    "id": "energy_infrastructure_industry",
+    "id": "energy_infrastructure_industry" as IndustryCategoryId,
     "name": "エネルギー・インフラ業界",
     "description": "エネルギー、電力、ガス、水道、交通インフラ業界の専門知識とスキル",
     "type": "industry",
@@ -411,7 +411,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#0F766E"
   },
   {
-    "id": "education_training_industry",
+    "id": "education_training_industry" as IndustryCategoryId,
     "name": "教育・研修業界",
     "description": "教育機関、研修会社、EdTech企業の教育サービス提供スキル",
     "type": "industry",
@@ -421,7 +421,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#7C2D12"
   },
   {
-    "id": "media_entertainment_industry",
+    "id": "media_entertainment_industry" as IndustryCategoryId,
     "name": "メディア・エンタメ業界",
     "description": "メディア、広告、エンターテインメント、コンテンツ業界の専門スキル",
     "type": "industry",
@@ -431,7 +431,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#BE185D"
   },
   {
-    "id": "logistics_transportation_industry",
+    "id": "logistics_transportation_industry" as IndustryCategoryId,
     "name": "物流・運輸業界",
     "description": "物流、運送、倉庫、航空・海運業界の物流最適化とサプライチェーン管理",
     "type": "industry",
@@ -441,7 +441,7 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#365314"
   },
   {
-    "id": "public_sector_industry",
+    "id": "public_sector_industry" as IndustryCategoryId,
     "name": "公共・行政業界",
     "description": "官公庁、自治体、公共機関における行政運営と公共サービス提供スキル",
     "type": "industry",
@@ -514,7 +514,7 @@ export async function getCategories(options?: {
  */
 function transformDBCategoryToLocal(dbCategory: DBCategory, subcategories: string[] = []): MainCategory | IndustryCategory {
   return {
-    id: dbCategory.category_id,
+    id: dbCategory.category_id as MainCategoryId | IndustryCategoryId,
     name: dbCategory.name,
     description: dbCategory.description || '',
     type: dbCategory.type,
@@ -800,14 +800,8 @@ export const subcategoryNameToIdMap: Record<string, string> = {
   'IoT・自動化技術': 'iot_自動化技術',
   '業務分析・要件定義': '業務分析_要件定義',
   'プロセス設計・最適化': 'プロセス設計_最適化',
-  'サプライチェーン管理': 'サプライチェーン管理',
-  '業務システム設計': '業務システム設計',
   'BPR・業務改革': 'bpr_業務改革',
-  '結論ファースト・構造化思考': '結論ファースト_構造化思考',
-  '資料作成・可視化技術': '資料作成_可視化技術',
-  '会議運営・ファシリテーション': '会議運営_ファシリテーション',
-  '交渉・説得技術': '交渉_説得技術',
-  'ケース面接・構造化思考': 'ケース面接_構造化思考',
+  // 重複エントリを削除 - 正規版は上部で定義済み
   '仮説思考・イシューツリー': '仮説思考_イシューツリー',
   'ストーリーライン構築': 'ストーリーライン構築',
   'ステークホルダー分析': 'ステークホルダー分析',
@@ -824,10 +818,6 @@ export const subcategoryNameToIdMap: Record<string, string> = {
   '経営層プレゼン': '経営層プレゼン',
   '経営課題ヒアリング・課題設定': '経営課題ヒアリング_課題設定',
   '継続案件獲得・拡販戦略': '継続案件獲得_拡販戦略',
-  '財務分析・企業価値評価': '財務分析_企業価値評価',
-  '投資判断・リスク管理': '投資判断_リスク管理',
-  '事業計画・資金調達': '事業計画_資金調達',
-  '管理会計・KPI設計': '管理会計_kpi設計',
   'チームマネジメント・モチベーション': 'チームマネジメント_モチベーション',
   'タレントマネジメント・育成': 'タレントマネジメント_育成',
   '組織開発・変革リーダーシップ': '組織開発_変革リーダーシップ',
@@ -847,7 +837,7 @@ export const subcategoryNameToIdMap: Record<string, string> = {
   '業務効率化・時間管理': '業務効率化_時間管理',
   '企業リスク管理': '企業リスク管理',
   '危機管理・BCP': '危機管理_bcp',
-  'コンプライアンス・内部統制': 'コンプライアンス_内部統制',
+  // 重複削除: 'コンプライアンス・内部統制' は上部で定義済み
   '情報セキュリティ': '情報セキュリティ',
   'サステナビリティリスク': 'サステナビリティリスク',
   '要件定義・業務分析': '要件定義_業務分析',

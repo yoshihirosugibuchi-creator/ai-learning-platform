@@ -134,7 +134,26 @@ if (cached) {
 
 ## 📋 次回作業計画
 
-### Phase 1: 残存エラー分析（1-2時間）
+### Phase 1: デプロイプロセス改善（優先度：高）⚠️
+**今回発生した問題**:
+- 環境変数エラーが頻繁に発生（`SUPABASE_SERVICE_ROLE_KEY`等）
+- データ同期スクリプトが環境変数不足で失敗
+- デプロイ自動化が環境設定依存で不安定
+
+**改善項目**:
+```bash
+# 1. 環境変数検証スクリプト作成
+scripts/validate-env.ts  # デプロイ前の環境変数チェック
+
+# 2. デプロイプロセス強化
+npm run deploy:check-env  # 環境変数検証
+npm run deploy:validate  # 完全検証（env + build + lint）
+
+# 3. 開発環境セットアップガイド改善
+ENVIRONMENT_SETUP.md     # 環境変数設定の詳細手順
+```
+
+### Phase 2: TypeScript エラー分析（1-2時間）
 ```bash
 # エラー詳細分析
 npm run typecheck 2>&1 | tee typescript-full-errors.log
@@ -143,12 +162,12 @@ npm run typecheck 2>&1 | tee typescript-full-errors.log
 grep "error TS" typescript-full-errors.log | cut -d: -f4 | sort | uniq -c | sort -nr
 ```
 
-### Phase 2: 優先度別修正（3-5時間）
+### Phase 3: 優先度別修正（3-5時間）
 1. **High**: API routes, core components (50件程度)
 2. **Medium**: Library integrations (100件程度)  
 3. **Low**: Type utilities, edge cases (90件程度)
 
-### Phase 3: 真のTypeScript対応（最終段階）
+### Phase 4: 真のTypeScript対応（最終段階）
 ```typescript
 // next.config.ts - 最終目標
 typescript: {
@@ -206,4 +225,47 @@ npm run build
 
 ---
 
-**📌 結論**: 242件のTypeScriptエラーは隠蔽されていた既存問題。緊急修正は完了、本番環境に影響なし。段階的修正により真のTypeScript対応を目指す。
+## 🚨 **環境変数管理問題の詳細**
+
+### 今回発生した具体的問題
+1. **dotenv設定不備**: `scripts/deploy-sync-fallback-data.ts`で`.env.local`が読み込まれていない
+2. **開発用プレースホルダー**: 実際のSupabase APIにアクセスできないダミーキー使用
+3. **環境設定検証不足**: デプロイ前の環境変数チェック機能なし
+
+### 根本的課題
+```bash
+# 問題のあったエラーパターン
+❌ 環境変数が設定されていません: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+❌ Invalid API key (hint: Double check your Supabase service_role API key)
+❌ Database query failed
+```
+
+### 推奨改善策（次回優先実装）
+```typescript
+// scripts/validate-env.ts - 新規作成推奨
+const requiredEnvVars = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY', 
+  'SUPABASE_SERVICE_ROLE_KEY'
+];
+
+// 本物のAPIキー検証
+await supabase.from('categories').select('count').limit(1);
+```
+
+### 環境変数エラー対処法（頻出）⚠️
+```bash
+# .env.local の確認
+cat .env.local
+
+# dotenv設定確認  
+head -5 scripts/deploy-sync-fallback-data.ts
+
+# 手動環境変数設定
+export NEXT_PUBLIC_SUPABASE_URL="https://..."
+export SUPABASE_SERVICE_ROLE_KEY="eyJ..."
+```
+
+---
+
+**📌 結論**: 242件のTypeScriptエラーは隠蔽されていた既存問題。緊急修正は完了、本番環境に影響なし。**次回は環境変数管理改善を最優先**で、その後段階的修正により真のTypeScript対応を目指す。
