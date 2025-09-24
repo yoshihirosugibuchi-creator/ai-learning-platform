@@ -235,7 +235,7 @@ export default function LearningSession({
       try {
         const { getLearningProgress } = await import('@/lib/learning/data')
         const progress = await getLearningProgress(user.id)
-        isReviewMode = progress[sessionKey]?.completed || false
+        isReviewMode = (progress as Record<string, { completed?: boolean }>)[sessionKey]?.completed || false
         console.log(`📚 Session completion check: ${sessionKey} -> completed: ${isReviewMode}`)
       } catch (error) {
         console.warn('⚠️ Could not check session completion status:', error)
@@ -255,7 +255,14 @@ export default function LearningSession({
         
         if (badgeResult.completed && badgeResult.badge) {
           console.log('🎉 Course completed! Badge awarded:', badgeResult.badge)
-          setBadgeAwarded(badgeResult.badge)
+          setBadgeAwarded(badgeResult.badge as {
+            earnedAt: string;
+            expiresAt?: string;
+            badge: {
+              title: string;
+              description: string;
+            };
+          })
         }
       } else {
         console.log('📚 Review mode - skipping badge award check')
@@ -336,35 +343,12 @@ export default function LearningSession({
               </Badge>
             </div>
             <div className="text-right">
-              <div className="text-2xl">{session.icon}</div>
+              <div className="text-2xl">{(session as any).icon || '📚'}</div>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6 overflow-y-auto max-h-[70vh]">
           <div className="prose max-w-none space-y-6">
-            {/* Debug session content */}
-            {console.log('🔍 Session content debug:', {
-              hasContent: !!session.content,
-              contentLength: session.content?.length,
-              sessionStructure: Object.keys(session),
-              sessionId: session.id,
-              sessionTitle: session.title,
-              sessionType: session.type,
-              hasQuiz: !!session.quiz,
-              quizLength: session.quiz?.length
-            })}
-            {console.log('🔍 Full session object:', session)}
-            {console.log('🔍 Session properties in detail:', {
-              id: session.id,
-              title: session.title,
-              type: session.type,
-              estimatedMinutes: session.estimatedMinutes,
-              displayOrder: session.displayOrder,
-              icon: session.icon,
-              content: session.content,
-              quiz: session.quiz,
-              allKeys: Object.keys(session)
-            })}
             {session.content && session.content.length > 0 ? (
               session.content.map((contentItem: unknown, index: number) => (
                 <div key={contentItem.id || index} className="space-y-3">
@@ -656,9 +640,9 @@ export default function LearningSession({
               )}
               <div className="mt-3 p-3 bg-purple-100 rounded text-sm text-purple-800">
                 {new Date(badgeAwarded.earnedAt).toDateString() === new Date().toDateString() ? (
-                  <>🎉 コース完了おめでとうございます！<br/>修了証はコレクションで確認できます。</>
+                  <div>🎉 コース完了おめでとうございます！<br/>修了証はコレクションで確認できます。</div>
                 ) : (
-                  <>📋 既に修了済みのコースです。<br/>修了証はコレクションで確認できます。</>
+                  <div>📋 既に修了済みのコースです。<br/>修了証はコレクションで確認できます。</div>
                 )}
               </div>
             </CardContent>

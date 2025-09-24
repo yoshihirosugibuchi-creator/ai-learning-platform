@@ -40,7 +40,7 @@ export default function CategoryGrid({
   categoryStats
 }: CategoryGridProps) {
   const { user } = useUserContext()
-  const [allQuestions, setAllQuestions] = useState<Array<Record<string, unknown>>>([])
+  const [allQuestions, setAllQuestions] = useState<any[]>([])
   const [dbCategories, setDbCategories] = useState<(MainCategory | IndustryCategory)[]>([])
   const [dbSkillLevels, setDbSkillLevels] = useState<SkillLevel[]>([])
   const [loading, setLoading] = useState(true)
@@ -56,12 +56,12 @@ export default function CategoryGrid({
         ])
         setAllQuestions(questions)
         setDbCategories(categories)
-        setDbSkillLevels(skillLevels)
+        setDbSkillLevels(skillLevels as SkillLevel[])
       } catch (error) {
         console.error('Error loading data:', error)
         setAllQuestions([])
         setDbCategories([...mainCategories, ...industryCategories]) // Fallback to static
-        setDbSkillLevels(skillLevels) // Fallback to static
+        setDbSkillLevels(skillLevels as SkillLevel[]) // Fallback to static
       } finally {
         setLoading(false)
       }
