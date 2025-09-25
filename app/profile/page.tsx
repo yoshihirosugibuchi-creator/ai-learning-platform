@@ -38,7 +38,8 @@ import { getUserBadges } from '@/lib/supabase-badges'
 import { UserBadge } from '@/lib/types/learning'
 import { updateUserProfile } from '@/lib/supabase-user'
 import { mainCategories, industryCategories } from '@/lib/categories'
-import { getUserLevelSystem, LevelSystem } from '@/lib/xp-level-system'
+import { useXPStats } from '@/hooks/useXPStats'
+import XPStatsCard from '@/components/xp/XPStatsCard'
 import ProfileEditModal from '@/components/profile/ProfileEditModal'
 
 export default function ProfilePage() {
@@ -59,7 +60,8 @@ export default function ProfilePage() {
   const [allTransactions, setAllTransactions] = useState<SKPTransaction[]>([]) // 全トランザクション（統計用）
   const [, setRecentTransactions] = useState<SKPTransaction[]>([]) // 表示用履歴
   const [userBadges, setUserBadges] = useState<UserBadge[]>([])
-  const [levelSystem, setLevelSystem] = useState<LevelSystem | null>(null)
+  // 新しいXPシステムのフック
+  const { stats: xpStats, loading: xpLoading } = useXPStats()
   
   // SKPフィルター状態
   const [skpFilter, setSkpFilter] = useState<'all' | 'earned' | 'spent'>('all')
@@ -112,12 +114,7 @@ export default function ProfilePage() {
         console.error('Error fetching user badges:', error)
       })
       
-      // 🆕 新しいレベルシステム情報を取得
-      getUserLevelSystem(user.id).then(levels => {
-        setLevelSystem(levels)
-      }).catch(error => {
-        console.error('Error fetching level system:', error)
-      })
+      // XP統計は useXPStats フックで自動的に取得されます
       
       // プロフィールデータを初期化
       const profileRecord = profile as unknown as Record<string, unknown>
@@ -209,7 +206,8 @@ export default function ProfilePage() {
                 <div className="flex flex-wrap items-center gap-2 pt-2">
                   <Badge variant="outline" className="flex items-center space-x-1 text-xs">
                     <Trophy className="h-3 w-3" />
-                    <span className="hidden sm:inline">レベル </span><span>{profile?.current_level || 1}</span>
+                    <span className="hidden sm:inline">レベル </span>
+                    <span>{xpStats ? Math.floor(xpStats.user.total_xp / 1000) + 1 : (profile?.current_level || 1)}</span>
                   </Badge>
                   <Badge variant="outline" className="flex items-center space-x-1 text-xs">
                     <Flame className="h-3 w-3" />
@@ -225,6 +223,9 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* XP統計カード */}
+        <XPStatsCard showDetailedStats={true} className="mb-6" />
 
         {/* タブメニュー */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -541,6 +542,11 @@ export default function ProfilePage() {
           <TabsContent value="skills" className="space-y-6">
             {/* 全体スキルレベル */}
             <Card>
+              {xpLoading && (
+                <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                </div>
+              )}
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Award className="h-5 w-5" />
@@ -551,39 +557,44 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
                     <Trophy className="h-8 w-8 mx-auto text-yellow-500 mb-2" />
-                    <div className="text-2xl font-bold">{levelSystem?.overall.level || 1}</div>
+                    <div className="text-2xl font-bold">{xpStats ? Math.floor(xpStats.user.total_xp / 1000) + 1 : 1}</div>
                     <p className="text-sm text-muted-foreground">現在レベル</p>
                   </div>
                   <div className="text-center">
                     <Crown className="h-8 w-8 mx-auto text-purple-500 mb-2" />
-                    <div className="text-2xl font-bold">{levelSystem?.overall.xp || 0}</div>
+                    <div className="text-2xl font-bold">{xpStats ? xpStats.user.total_xp.toLocaleString() : 0}</div>
                     <p className="text-sm text-muted-foreground">総獲得XP</p>
                   </div>
                   <div className="text-center">
                     <TrendingUp className="h-8 w-8 mx-auto text-green-500 mb-2" />
                     <div className="text-2xl font-bold">
-                      {quizStats.totalQuestions > 0 ? `${quizStats.accuracy}%` : '-%'}
+                      {xpStats && xpStats.user.quiz_average_accuracy > 0 ? `${xpStats.user.quiz_average_accuracy.toFixed(1)}%` : (quizStats.totalQuestions > 0 ? `${quizStats.accuracy}%` : '-%')}
                     </div>
                     <p className="text-sm text-muted-foreground">全体正答率</p>
                   </div>
                   <div className="text-center">
                     <BarChart3 className="h-8 w-8 mx-auto text-blue-500 mb-2" />
-                    <div className="text-2xl font-bold">{quizStats.totalQuestions}</div>
-                    <p className="text-sm text-muted-foreground">総解答数</p>
+                    <div className="text-2xl font-bold">{xpStats ? (xpStats.user.quiz_sessions_completed + xpStats.user.course_sessions_completed) : quizStats.totalQuestions}</div>
+                    <p className="text-sm text-muted-foreground">総学習セッション</p>
                   </div>
                 </div>
                 <div className="mt-6">
                   <div className="flex items-center justify-between text-sm mb-2">
                     <span>次のレベルまで</span>
-                    <span>{levelSystem?.overall.nextLevelXP || 1000}/1000 XP</span>
+                    <span>{xpStats ? (1000 - (xpStats.user.total_xp % 1000)) : 1000}/1000 XP</span>
                   </div>
-                  <Progress value={((1000 - (levelSystem?.overall.nextLevelXP || 1000)) / 1000) * 100} />
+                  <Progress value={xpStats ? (xpStats.user.total_xp % 1000) / 10 : 0} />
                 </div>
               </CardContent>
             </Card>
 
             {/* メインカテゴリー別スキルレベル */}
-            <Card>
+            <Card className="relative">
+              {xpLoading && (
+                <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                </div>
+              )}
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Target className="h-5 w-5" />
@@ -593,8 +604,8 @@ export default function ProfilePage() {
               <CardContent>
                 <div className="grid gap-4">
                   {mainCategories.map((category) => {
-                    const categoryLevel = levelSystem?.mainCategories[category.id]
-                    console.log(`🔍 Main category ${category.id}:`, JSON.stringify(categoryLevel, null, 2))
+                    const categoryXP = xpStats?.categories[category.id]?.total_xp || 0
+                    const categoryLevel = Math.floor(categoryXP / 500) + 1 // メインカテゴリーは500XP/レベル
                     return (
                       <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center space-x-3">
@@ -605,8 +616,13 @@ export default function ProfilePage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-lg font-bold">レベル {categoryLevel?.level || 1}</div>
-                          <p className="text-sm text-muted-foreground">{categoryLevel?.xp || 0} XP</p>
+                          <div className="text-lg font-bold">レベル {categoryLevel}</div>
+                          <p className="text-sm text-muted-foreground">{categoryXP.toLocaleString()} XP</p>
+                          {xpStats?.categories[category.id] && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              クイズ{xpStats.categories[category.id].quiz_sessions_completed}回 コース{xpStats.categories[category.id].course_sessions_completed}回
+                            </div>
+                          )}
                         </div>
                       </div>
                     )
@@ -616,7 +632,12 @@ export default function ProfilePage() {
             </Card>
 
             {/* 業界スキルレベル */}
-            <Card>
+            <Card className="relative">
+              {xpLoading && (
+                <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                </div>
+              )}
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Building2 className="h-5 w-5" />
@@ -626,8 +647,8 @@ export default function ProfilePage() {
               <CardContent>
                 <div className="grid gap-4">
                   {industryCategories.map((category) => {
-                    const industryLevel = levelSystem?.industryCategories[category.id]
-                    console.log(`🔍 Industry category ${category.id}:`, industryLevel)
+                    const industryXP = xpStats?.categories[category.id]?.total_xp || 0
+                    const industryLevel = Math.floor(industryXP / 1000) + 1 // 業界カテゴリーは1000XP/レベル
                     return (
                       <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center space-x-3">
@@ -638,8 +659,13 @@ export default function ProfilePage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-lg font-bold">レベル {industryLevel?.level || 1}</div>
-                          <p className="text-sm text-muted-foreground">{industryLevel?.xp || 0} XP</p>
+                          <div className="text-lg font-bold">レベル {industryLevel}</div>
+                          <p className="text-sm text-muted-foreground">{industryXP.toLocaleString()} XP</p>
+                          {xpStats?.categories[category.id] && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              正答率{xpStats.categories[category.id].quiz_average_accuracy.toFixed(1)}%
+                            </div>
+                          )}
                         </div>
                       </div>
                     )

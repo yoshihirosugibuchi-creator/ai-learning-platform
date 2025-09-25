@@ -17,6 +17,7 @@ interface QuizDetailRecord {
 
 interface LearningSession {
   course_id: string
+  session_id?: string
   quiz_score?: number
   created_at: string
   duration?: number
@@ -233,9 +234,9 @@ class AILearningAnalytics {
           sessions.forEach((session: LearningSession) => {
             // course_idからメインカテゴリーを推定（不正確だが一時的対応）
             const mainCategory = this.inferMainCategoryFromCourse(session.course_id as string)
-            if (mainCategory) {
+            if (mainCategory && session.quiz_score != null) {
               // Simulate question data from session
-              for (let i = 0; i < (session.quiz_score ? 5 : 0); i++) {
+              for (let i = 0; i < 5; i++) {
                 progressData.push({
                   userId,
                   questionId: `${session.session_id}_q${i}`,

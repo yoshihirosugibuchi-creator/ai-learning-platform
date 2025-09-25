@@ -184,13 +184,6 @@ export default function SubcategoriesModal({ isOpen, category, onClose, onSucces
     })
   )
 
-  // Load subcategories when modal opens
-  useEffect(() => {
-    if (isOpen && category) {
-      loadSubcategories()
-    }
-  }, [isOpen, category, loadSubcategories])
-
   const loadSubcategories = useCallback(async () => {
     if (!category) return
     
@@ -209,6 +202,13 @@ export default function SubcategoriesModal({ isOpen, category, onClose, onSucces
     }
     setLoading(false)
   }, [category])
+
+  // Load subcategories when modal opens
+  useEffect(() => {
+    if (isOpen && category) {
+      loadSubcategories()
+    }
+  }, [isOpen, category, loadSubcategories])
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event

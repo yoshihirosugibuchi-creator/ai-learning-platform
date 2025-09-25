@@ -264,7 +264,7 @@ export async function saveLearningProgress(userId: string, courseId: string, gen
   }
 }
 
-// 学習統計の計算
+// 学習統計の計算（XPシステム統合版）
 export async function calculateLearningStats(userId: string): Promise<{
   totalSessionsCompleted: number
   totalAvailableSessions: number
@@ -272,41 +272,171 @@ export async function calculateLearningStats(userId: string): Promise<{
   currentStreak: number
   lastLearningDate: Date | null
 }> {
-  const progress = await getLearningProgress(userId)
-  const completedSessions = Object.values(progress).filter((p: unknown): p is { completed: boolean; completedAt?: string } => 
-    typeof p === 'object' && p !== null && 'completed' in p && (p as { completed: boolean }).completed
-  )
-  const totalAvailableSessions = await getTotalAvailableSessions()
-  
-  return {
-    totalSessionsCompleted: completedSessions.length,
-    totalAvailableSessions,
-    totalTimeSpent: completedSessions.length * 3, // 概算（セッション1つ=3分）
-    currentStreak: await calculateLearningStreak(userId),
-    lastLearningDate: completedSessions.length > 0 ? 
-      new Date(Math.max(...completedSessions.filter(p => p.completedAt).map(p => new Date(p.completedAt!).getTime()))) : null
+  // console.log('🔍 DEBUG: calculateLearningStats called for user:', userId.substring(0, 8) + '...')
+  try {
+    // Supabaseから直接XP統計を取得
+    const { supabase } = await import('@/lib/supabase')
+    let xpStats = null
+    
+    try {
+      const { data: userStats } = await supabase
+        .from('user_xp_stats')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+      
+      if (userStats) {
+        console.log('🔍 Debug: User XP stats found, fetching daily records...')
+        
+        // recent_activity も取得
+        const { data: activities, error: activitiesError } = await supabase
+          .from('daily_xp_records')
+          .select('*')
+          .eq('user_id', userId)
+          .order('date', { ascending: false })
+          .limit(30)
+        
+        if (activitiesError) {
+          console.error('🔍 Debug: Error fetching daily_xp_records:', activitiesError)
+        } else {
+          console.log('🔍 Debug: Daily XP records fetched:', activities?.length || 0, 'records')
+          if (activities && activities.length > 0) {
+            console.log('🔍 Debug: First record:', activities[0])
+          }
+        }
+        
+        xpStats = {
+          user: userStats,
+          recent_activity: activities || []
+        }
+      } else {
+        console.log('🔍 Debug: No user XP stats found')
+      }
+    } catch (xpError) {
+      console.warn('Supabase XP統計取得エラー:', xpError)
+    }
+    
+    const totalAvailableSessions = await getTotalAvailableSessions()
+    
+    // 学習進捗データから初回完了セッション数を算出（復習除く）
+    const progress = await getLearningProgress(userId)
+    const uniqueCompletedSessions = Object.values(progress).filter((p: unknown): p is { completed: boolean; completedAt?: string } => 
+      typeof p === 'object' && p !== null && 'completed' in p && (p as { completed: boolean }).completed
+    )
+    const totalSessionsCompleted = uniqueCompletedSessions.length
+    
+    // 学習時間の計算（XPシステムの実施回数を使用、復習含む）
+    const xpTotalSessions = xpStats ? 
+      (xpStats.user.quiz_sessions_completed + xpStats.user.course_sessions_completed) : 0
+    const totalTimeSpent = xpTotalSessions * 3 // 実際の実施セッション数（復習含む）× 3分
+    
+    // 連続学習日数の計算（XPシステムのlast_activity_atを使用）
+    const currentStreak = await calculateLearningStreakFromXP(userId, xpStats)
+    
+    // 最終学習日（XPシステムから）
+    const lastLearningDate = xpStats?.user.last_activity_at ? 
+      new Date(xpStats.user.last_activity_at) : null
+    
+    console.log('📊 Debug: XP統合学習統計:', {
+      userId: userId.substring(0, 8) + '...',
+      totalSessionsCompleted,
+      totalAvailableSessions,
+      totalTimeSpent,
+      currentStreak,
+      lastLearningDate: lastLearningDate?.toISOString(),
+      hasXPStats: !!xpStats,
+      xpStatsDetails: xpStats ? {
+        quizSessions: xpStats.user.quiz_sessions_completed,
+        courseSessions: xpStats.user.course_sessions_completed,
+        totalXPSessions: xpTotalSessions,
+        uniqueProgressSessions: totalSessionsCompleted,
+        recentActivities: xpStats.recent_activity?.length || 0
+      } : null,
+      xpDataSource: 'integrated'
+    })
+    
+    return {
+      totalSessionsCompleted,
+      totalAvailableSessions,
+      totalTimeSpent,
+      currentStreak,
+      lastLearningDate
+    }
+    
+  } catch (error) {
+    console.error('XP統合学習統計でエラー、フォールバック使用:', error)
+    
+    // エラー時は従来ロジックにフォールバック
+    const progress = await getLearningProgress(userId)
+    const completedSessions = Object.values(progress).filter((p: unknown): p is { completed: boolean; completedAt?: string } => 
+      typeof p === 'object' && p !== null && 'completed' in p && (p as { completed: boolean }).completed
+    )
+    const totalAvailableSessions = await getTotalAvailableSessions()
+    
+    return {
+      totalSessionsCompleted: completedSessions.length,
+      totalAvailableSessions,
+      totalTimeSpent: completedSessions.length * 3,
+      currentStreak: await calculateLearningStreak(userId),
+      lastLearningDate: completedSessions.length > 0 ? 
+        new Date(Math.max(...completedSessions.filter(p => p.completedAt).map(p => new Date(p.completedAt!).getTime()))) : null
+    }
   }
 }
 
 // 利用可能な全セッション数を計算
+// DBが提供しているコースのメタデータを使用
 export async function getTotalAvailableSessions(): Promise<number> {
   try {
     const courses = await getLearningCourses()
     let totalSessions = 0
     
+    // console.log('🔍 Debug: Starting session calculation, found courses:', courses.length)
+    
     for (const course of courses) {
-      if (course.status === 'available' && course.genres) {
-        for (const genre of course.genres as unknown[]) {
-          const genreObj = genre as { themes?: { sessions?: unknown[] }[] }
-          if (genreObj.themes) {
-            for (const theme of genreObj.themes) {
-              totalSessions += theme.sessions ? theme.sessions.length : 0
+      if (course.status === 'available') {
+        // console.log(`🔍 Debug: Processing course ${course.id} (${course.title})`)
+        
+        // コースの詳細情報から実際のセッション数を取得
+        try {
+          const courseDetails = await getLearningCourseDetails(course.id)
+          // console.log(`🔍 Debug: Course details for ${course.id}:`, courseDetails ? 'loaded' : 'null')
+          
+          if (courseDetails && courseDetails.genres) {
+            // console.log(`🔍 Debug: Course ${course.id} has ${courseDetails.genres.length} genres`)
+            
+            let courseSessionCount = 0
+            for (const genre of courseDetails.genres) {
+              // console.log(`🔍 Debug: Genre ${genre.id} has ${genre.themes.length} themes`)
+              
+              for (const theme of genre.themes) {
+                const sessionCount = theme.sessions.length
+                courseSessionCount += sessionCount
+                // console.log(`🔍 Debug: Theme ${theme.id} has ${sessionCount} sessions`)
+              }
             }
+            totalSessions += courseSessionCount
+            // console.log(`🔍 Debug: Course ${course.id} total sessions: ${courseSessionCount}`)
+          } else {
+            // console.warn(`🔍 Debug: Course details null or no genres for ${course.id}`)
+            // フォールバック: コース概算値を使用
+            const fallbackSessions = course.themeCount * 3 // テーマあたり平均3セッションと仮定
+            totalSessions += fallbackSessions
+            // console.log(`🔍 Debug: Using fallback for ${course.id}: ${fallbackSessions} sessions`)
           }
+        } catch (courseError) {
+          console.warn(`Failed to load details for course ${course.id}:`, courseError)
+          // フォールバック: コース概算値を使用
+          const fallbackSessions = course.themeCount * 3 // テーマあたり平均3セッションと仮定
+          totalSessions += fallbackSessions
+          // console.log(`🔍 Debug: Error fallback for ${course.id}: ${fallbackSessions} sessions`)
         }
+      } else {
+        // console.log(`🔍 Debug: Skipping course ${course.id} (status: ${course.status})`)
       }
     }
     
+    // console.log('🔍 Debug: Final total sessions calculated:', totalSessions)
     return totalSessions
   } catch (error) {
     console.error('Error calculating total available sessions:', error)
@@ -314,7 +444,98 @@ export async function getTotalAvailableSessions(): Promise<number> {
   }
 }
 
-async function calculateLearningStreak(userId: string): Promise<number> {
+// XPシステム統合版の連続学習日数計算
+async function calculateLearningStreakFromXP(userId: string, xpStats: { user: { last_activity_at: string }; recent_activity: { date: string; quiz_sessions: number; course_sessions: number }[] } | null): Promise<number> {
+  try {
+    // console.log('🔍 Debug: calculateLearningStreakFromXP called', {
+    //   hasXPStats: !!xpStats,
+    //   hasRecentActivity: !!(xpStats?.recent_activity),
+    //   activityLength: xpStats?.recent_activity?.length || 0
+    // })
+    
+    // XPシステムの recent_activity データを使用
+    if (xpStats && xpStats.recent_activity && xpStats.recent_activity.length > 0) {
+      const activities = xpStats.recent_activity.sort((a: { date: string }, b: { date: string }) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      )
+      
+      // 今日の日付を文字列形式で取得（タイムゾーン問題を回避）
+      const today = new Date()
+      const currentDateStr = today.getFullYear() + '-' + 
+        String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(today.getDate()).padStart(2, '0')
+      
+      let streak = 0
+      
+      // console.log('🔍 Debug: Starting streak calculation:', {
+      //   currentDateStr,
+      //   activitiesCount: activities.length
+      // })
+      
+      // Activities are already sorted by date (newest first)
+      
+      let lastActivityDay = -1 // まだ活動を見つけていない
+      
+      for (let dayOffset = 0; dayOffset < 30; dayOffset++) { // 最大30日前まで確認
+        // 該当日の活動を探す
+        const checkDate = new Date(currentDateStr)
+        checkDate.setDate(checkDate.getDate() - dayOffset)
+        const checkDateStr = checkDate.getFullYear() + '-' + 
+          String(checkDate.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(checkDate.getDate()).padStart(2, '0')
+        
+        const dayActivity = activities.find((act: { date: string; quiz_sessions: number; course_sessions: number }) => act.date === checkDateStr)
+        const hasActivity = dayActivity && (dayActivity.quiz_sessions > 0 || dayActivity.course_sessions > 0)
+        
+        // console.log('🔍 Debug: Checking day:', {
+        //   dayOffset,
+        //   checkDate: checkDateStr,
+        //   hasActivity,
+        //   quiz: dayActivity?.quiz_sessions || 0,
+        //   course: dayActivity?.course_sessions || 0
+        // })
+        
+        if (hasActivity) {
+          if (lastActivityDay === -1) {
+            // 最初の活動を発見
+            lastActivityDay = dayOffset
+            streak = 1
+            // console.log('✅ First activity found:', `day -${dayOffset}, streak = 1`)
+          } else if (dayOffset === lastActivityDay + 1) {
+            // 連続した活動
+            lastActivityDay = dayOffset
+            streak++
+            // console.log('✅ Consecutive activity:', `day -${dayOffset}, streak = ${streak}`)
+          } else {
+            // 活動はあるが連続していない
+            // console.log('❌ Gap found, stopping streak:', `expected day -${lastActivityDay + 1}, found -${dayOffset}`)
+            break
+          }
+        } else {
+          if (lastActivityDay !== -1) {
+            // 活動が見つかっていたが、この日は活動なし
+            // console.log('❌ No activity on expected day, stopping:', `day -${dayOffset}`)
+            break
+          }
+          // まだ活動が見つかっていないので続行
+        }
+      }
+      
+      console.log('📊 Debug: XP streak calculation:', { streak, activitiesCount: activities.length })
+      return streak
+    }
+    
+    // XPデータがない場合はフォールバック
+    return await calculateLearningStreakFallback(userId)
+    
+  } catch (error) {
+    console.error('XP連続日数計算エラー:', error)
+    return await calculateLearningStreakFallback(userId)
+  }
+}
+
+// フォールバック版の連続学習日数計算
+async function calculateLearningStreakFallback(userId: string): Promise<number> {
   const progress = await getLearningProgress(userId)
   const completedSessions = Object.values(progress)
     .filter((p: unknown): p is { completed: boolean; completedAt: string } => 
@@ -325,22 +546,37 @@ async function calculateLearningStreak(userId: string): Promise<number> {
   
   if (completedSessions.length === 0) return 0
   
-  let streak = 0
-  const currentDate = new Date()
-  currentDate.setHours(0, 0, 0, 0)
+  // 日付ごとにグループ化
+  const dailyActivities = new Map<string, number>()
   
   for (const session of completedSessions) {
-    const sessionDate = new Date(session.completedAt)
-    sessionDate.setHours(0, 0, 0, 0)
+    const dateKey = new Date(session.completedAt).toISOString().split('T')[0]
+    dailyActivities.set(dateKey, (dailyActivities.get(dateKey) || 0) + 1)
+  }
+  
+  // 連続日数を計算
+  const _sortedDates = Array.from(dailyActivities.keys()).sort().reverse()
+  const currentDate = new Date().toISOString().split('T')[0]
+  
+  let streak = 0
+  const currentCheckDate = new Date(currentDate)
+  
+  for (let i = 0; i < 30; i++) { // 最大30日前まで確認
+    const dateKey = currentCheckDate.toISOString().split('T')[0]
     
-    const diffDays = (currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24)
-    
-    if (diffDays === streak) {
+    if (dailyActivities.has(dateKey)) {
       streak++
-    } else if (diffDays > streak) {
-      break
+    } else if (streak > 0) {
+      break // 連続が途切れた
     }
+    
+    currentCheckDate.setDate(currentCheckDate.getDate() - 1)
   }
   
   return streak
+}
+
+// 従来版の連続学習日数計算（参照用）
+async function calculateLearningStreak(userId: string): Promise<number> {
+  return await calculateLearningStreakFallback(userId)
 }

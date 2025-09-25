@@ -8,13 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { 
   Settings, 
-  FileText, 
-  Database, 
   Shield, 
   Bell, 
   Palette,
-  ChevronRight,
-  Cog
+  ChevronRight
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
@@ -23,24 +20,6 @@ export default function SettingsPage() {
   const router = useRouter()
 
   const settingsMenuItems = [
-    {
-      id: 'quiz-csv',
-      title: 'クイズ問題API（CSV）',
-      description: 'クイズ問題のCSV出力・取込管理',
-      icon: <FileText className="h-5 w-5" />,
-      href: '/settings/quiz-csv',
-      category: 'データ管理',
-      available: true
-    },
-    {
-      id: 'categories-admin',
-      title: 'カテゴリー管理',
-      description: 'カテゴリーの追加・編集・有効化管理',
-      icon: <Cog className="h-5 w-5" />,
-      href: '/admin/categories',
-      category: '管理者機能',
-      available: true
-    },
     {
       id: 'account',
       title: 'アカウント設定',
@@ -66,15 +45,6 @@ export default function SettingsPage() {
       icon: <Palette className="h-5 w-5" />,
       href: '/settings/coming-soon',
       category: '基本設定',
-      available: false
-    },
-    {
-      id: 'data',
-      title: 'データ管理',
-      description: 'データのエクスポート・インポート',
-      icon: <Database className="h-5 w-5" />,
-      href: '/settings/coming-soon',
-      category: 'データ管理',
       available: false
     }
   ]
@@ -152,21 +122,6 @@ export default function SettingsPage() {
             </Card>
           ))}
 
-          {/* Info Card */}
-          <Card className="border-blue-200 bg-blue-50/50">
-            <CardContent className="pt-6">
-              <div className="flex items-start space-x-3">
-                <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div>
-                  <h3 className="font-medium text-blue-900 mb-1">管理者機能について</h3>
-                  <p className="text-sm text-blue-700">
-                    現在表示されている一部の機能は、将来的に管理者権限でのみアクセス可能になる予定です。
-                    詳細については管理者にお問い合わせください。
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </main>
     </div>

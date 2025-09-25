@@ -1,0 +1,65 @@
+{
+  "lastUpdated": "2025-09-24T01:41:46.721Z",
+  "source": "deploy_sync",
+  "totalCourses": 6,
+  "courses": [
+    {
+      "id": "consulting_thinking_basics",
+      "title": "コンサル思考法基礎コース",
+      "description": "論理的思考とフレームワーク活用で問題解決力を身につける",
+      "difficulty": "basic",
+      "estimatedDays": 14,
+      "genreCount": 2
+    },
+    {
+      "id": "business_numbers_mastery",
+      "title": "ビジネス数字力強化コース",
+      "description": "財務分析と数字に基づく意思決定力を身につける",
+      "difficulty": "intermediate",
+      "estimatedDays": 12,
+      "genreCount": 2
+    },
+    {
+      "id": "marketing_practice",
+      "title": "マーケティング実践コース",
+      "description": "顧客理解からブランド戦略まで実践的マーケティングスキル",
+      "difficulty": "intermediate",
+      "estimatedDays": 10,
+      "genreCount": 0
+    },
+    {
+      "id": "team_leader_basics",
+      "title": "チームリーダー基礎コース",
+      "description": "チーム運営と人材育成の基本スキルを習得",
+      "difficulty": "basic",
+      "estimatedDays": 8,
+      "genreCount": 0
+    },
+    {
+      "id": "dx_introduction",
+      "title": "DX推進入門コース",
+      "description": "デジタル変革の基礎知識とデータ活用スキル",
+      "difficulty": "basic",
+      "estimatedDays": 8,
+      "genreCount": 0
+    },
+    {
+      "id": "ai_literacy_fundamentals",
+      "title": "AI活用リテラシー基礎コース",
+      "description": "ビジネスでのAI活用、プロンプト入門から実践まで体系的に学習",
+      "difficulty": "basic",
+      "estimatedDays": 28,
+      "genreCount": 4
+    }
+  ],
+  "syncStatus": {
+    "expectedFiles": 7,
+    "existingFiles": 4,
+    "missingFiles": [
+      "business_numbers_mastery.json",
+      "team_leader_basics.json",
+      "dx_introduction.json"
+    ],
+    "extraFiles": []
+  }
+}

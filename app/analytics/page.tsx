@@ -30,6 +30,7 @@ import { aiAnalytics, LearningPattern, OptimalLearningTime, PersonalizedHints } 
 import { industryAnalytics, IndustrySkillProfile } from '@/lib/industry-analytics'
 import { SimpleSelect, SimpleSelectItem } from '@/components/ui/select'
 import { globalCache, useResourceMonitor } from '@/lib/performance-optimizer'
+import XPStatsCard from '@/components/xp/XPStatsCard'
 
 // レーダーチャートコンポーネントを遅延読み込み
 const SkillRadarChart = lazy(() => import('@/components/analytics/SkillRadarChart'))
@@ -206,6 +207,8 @@ export default function AnalyticsPage() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
+            {/* XP統計カード */}
+            <XPStatsCard showDetailedStats={true} className="mb-6" />
             {isLoading ? (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {[...Array(4)].map((_, i) => (

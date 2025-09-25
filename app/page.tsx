@@ -11,6 +11,7 @@ import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { getAppStats } from '@/lib/stats'
+import XPStatsCard from '@/components/xp/XPStatsCard'
 
 export default function Home() {
   const router = useRouter()
@@ -97,11 +98,16 @@ export default function Home() {
                         毎日継続すると不思議とスキルがレベルアップ
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-3">
                       <Link href="/quiz?mode=random" prefetch={true}>
                         <Button className="w-full">
                           <Play className="h-4 w-4 mr-2" />
-                          開始
+                          ランダムクイズ開始
+                        </Button>
+                      </Link>
+                      <Link href="/categories" prefetch={true}>
+                        <Button variant="outline" className="w-full">
+                          特定カテゴリーで挑戦
                         </Button>
                       </Link>
                     </CardContent>
@@ -150,6 +156,11 @@ export default function Home() {
                       </Link>
                     </CardContent>
                   </Card>
+                </div>
+
+                {/* XP統計カード */}
+                <div className="max-w-md mx-auto">
+                  <XPStatsCard showDetailedStats={false} />
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-6 border-t">

@@ -5,6 +5,7 @@
 import { mainCategories } from '@/lib/categories'
 import { LearningCourse, LearningGenre } from '@/lib/types/learning'
 import { MainCategory } from '@/lib/types/category'
+import { getSubcategoryDisplayNameSync } from '@/lib/category-cache-simple'
 
 // ジャンルからカテゴリー情報を取得
 export function getCategoryInfoForGenre(genre: { categoryId: string; subcategoryId?: string }): {
@@ -12,7 +13,8 @@ export function getCategoryInfoForGenre(genre: { categoryId: string; subcategory
   subcategory: string | null
 } {
   const mainCategory = mainCategories.find(cat => cat.id === genre.categoryId)
-  const subcategory = genre.subcategoryId || null
+  // subcategoryIdを日本語表示名に変換（シンプルキャッシュ使用）
+  const subcategory = genre.subcategoryId ? getSubcategoryDisplayNameSync(genre.subcategoryId) : null
   
   return {
     mainCategory: mainCategory || null,

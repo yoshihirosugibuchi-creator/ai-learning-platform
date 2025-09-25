@@ -10,9 +10,8 @@ import QuizCard from './QuizCard'
 import { Question } from '@/lib/types'
 import { getRandomQuestions } from '@/lib/questions'
 // import { useAuth } from '@/components/auth/AuthProvider'
-import { 
-  saveQuizResult as saveQuizResultSupabase
-} from '@/lib/supabase-quiz'
+// Removed old saveQuizResultSupabase - now using new XP system's saveQuizSession
+import { useXPStats } from '@/hooks/useXPStats'
 import { UserProfile, UserProfileWithProgress } from '@/lib/supabase-user'
 import type { User } from '@supabase/supabase-js'
 import { getRandomWisdomCard, WisdomCard as WisdomCardType } from '@/lib/cards'
@@ -84,6 +83,8 @@ export default function QuizSession({
   onExit
 }: QuizSessionProps) {
   const _router = useRouter()
+  // New XP System Hook
+  const { saveQuizSession } = useXPStats()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
   const [showResult, setShowResult] = useState(false)
@@ -143,71 +144,6 @@ export default function QuizSession({
   //     setTimeout(executeDBUpdates, 100);
   //   }
   // }, [isFinished, challengeQuizUpdateData, category]);
-
-  useEffect(() => {
-    // クイズ開始時の状態リセット
-    setIsFinished(false)
-    setIsCompleting(false)
-    setCurrentQuestionIndex(0)
-    setSelectedOption(null)
-    setShowResult(false)
-    setQuestionAnswers([])
-    setCurrentConfidence(null)
-    setShowConfidenceInput(false)
-    completionInProgress.current = false
-    setChallengeQuizUpdateData(null)
-    
-    let filteredQuestions = questions
-    
-    // カテゴリーでフィルタリング
-    if (category) {
-      filteredQuestions = filteredQuestions.filter(q => q.category === category)
-    }
-    
-    // 難易度でフィルタリング（複数選択対応・英語/日本語両対応）
-    if (difficulties && difficulties.length > 0) {
-      filteredQuestions = filteredQuestions.filter(q => {
-        const questionDifficultyDisplay = getDifficultyDisplayName(q.difficulty)
-        return difficulties.some(selectedDiff => 
-          getDifficultyDisplayName(selectedDiff) === questionDifficultyDisplay
-        )
-      })
-      console.log(`📊 Selected difficulties: ${difficulties.join(', ')} (${filteredQuestions.length} questions)`)
-      
-      // 選択した難易度で問題が不足している場合は他の難易度も含める
-      if (filteredQuestions.length < 10) {
-        console.log('⚠️ Not enough questions for selected difficulties, including all difficulties')
-        let allCategoryQuestions = questions
-        if (category) {
-          allCategoryQuestions = allCategoryQuestions.filter(q => q.category === category)
-        }
-        
-        // 選択した難易度を優先しつつ、他の難易度も追加
-        const remainingQuestions = allCategoryQuestions.filter(q => {
-          const questionDifficultyDisplay = getDifficultyDisplayName(q.difficulty)
-          return !difficulties.some(selectedDiff => 
-            getDifficultyDisplayName(selectedDiff) === questionDifficultyDisplay
-          )
-        })
-        filteredQuestions = [...filteredQuestions, ...remainingQuestions]
-      }
-    }
-    
-    // 学習履歴に基づく最適化（難易度選択なしの場合）
-    let selectedQuestions: Question[]
-    if (!difficulties || difficulties.length === 0) {
-      selectedQuestions = optimizeQuestionsForUser(filteredQuestions, user.id, profile)
-    } else {
-      selectedQuestions = getRandomQuestions(filteredQuestions, 10)
-    }
-    
-    setSessionQuestions(selectedQuestions)
-    
-    setResults(prev => ({
-      ...prev,
-      totalQuestions: selectedQuestions.length
-    }))
-  }, [questions, category, level, difficulties, user.id, profile, optimizeQuestionsForUser])
 
   // 学習履歴に基づく問題最適化関数
   const optimizeQuestionsForUser = useCallback((questions: Question[], userId: string, userProfile: UserProfileWithProgress | null): Question[] => {
@@ -277,6 +213,71 @@ export default function QuizSession({
     
     return optimized.slice(0, 10)
   }, [category])
+
+  useEffect(() => {
+    // クイズ開始時の状態リセット
+    setIsFinished(false)
+    setIsCompleting(false)
+    setCurrentQuestionIndex(0)
+    setSelectedOption(null)
+    setShowResult(false)
+    setQuestionAnswers([])
+    setCurrentConfidence(null)
+    setShowConfidenceInput(false)
+    completionInProgress.current = false
+    setChallengeQuizUpdateData(null)
+    
+    let filteredQuestions = questions
+    
+    // カテゴリーでフィルタリング
+    if (category) {
+      filteredQuestions = filteredQuestions.filter(q => q.category === category)
+    }
+    
+    // 難易度でフィルタリング（複数選択対応・英語/日本語両対応）
+    if (difficulties && difficulties.length > 0) {
+      filteredQuestions = filteredQuestions.filter(q => {
+        const questionDifficultyDisplay = getDifficultyDisplayName(q.difficulty)
+        return difficulties.some(selectedDiff => 
+          getDifficultyDisplayName(selectedDiff) === questionDifficultyDisplay
+        )
+      })
+      console.log(`📊 Selected difficulties: ${difficulties.join(', ')} (${filteredQuestions.length} questions)`)
+      
+      // 選択した難易度で問題が不足している場合は他の難易度も含める
+      if (filteredQuestions.length < 10) {
+        console.log('⚠️ Not enough questions for selected difficulties, including all difficulties')
+        let allCategoryQuestions = questions
+        if (category) {
+          allCategoryQuestions = allCategoryQuestions.filter(q => q.category === category)
+        }
+        
+        // 選択した難易度を優先しつつ、他の難易度も追加
+        const remainingQuestions = allCategoryQuestions.filter(q => {
+          const questionDifficultyDisplay = getDifficultyDisplayName(q.difficulty)
+          return !difficulties.some(selectedDiff => 
+            getDifficultyDisplayName(selectedDiff) === questionDifficultyDisplay
+          )
+        })
+        filteredQuestions = [...filteredQuestions, ...remainingQuestions]
+      }
+    }
+    
+    // 学習履歴に基づく最適化（難易度選択なしの場合）
+    let selectedQuestions: Question[]
+    if (!difficulties || difficulties.length === 0) {
+      selectedQuestions = optimizeQuestionsForUser(filteredQuestions, user.id, profile)
+    } else {
+      selectedQuestions = getRandomQuestions(filteredQuestions, 10)
+    }
+    
+    setSessionQuestions(selectedQuestions)
+    
+    setResults(prev => ({
+      ...prev,
+      totalQuestions: selectedQuestions.length
+    }))
+  }, [questions, category, level, difficulties, user.id, profile, optimizeQuestionsForUser])
 
   const currentQuestion = sessionQuestions[currentQuestionIndex]
   
@@ -441,18 +442,30 @@ export default function QuizSession({
                 completed_at: new Date().toISOString()
               })
               
-              console.log('🚀 Calling saveQuizResultSupabase...')
-              quizResult = await saveQuizResultSupabase({
-                user_id: user.id,
-                category_id: quizCategory || category || '',
-                subcategory_id: undefined,
-                questions: sessionQuestions as unknown as Record<string, unknown>[],
-                answers: questionAnswers as unknown as Record<string, unknown>[],
-                score: finalResults.score,
+              console.log('🚀 Calling saveQuizSession (new XP system)...')
+              const quizSessionData = {
+                session_start_time: new Date(startTime).toISOString(),
+                session_end_time: new Date().toISOString(),
                 total_questions: finalResults.totalQuestions,
-                time_taken: finalResults.timeSpent,
-                completed_at: new Date().toISOString()
-              })
+                correct_answers: finalResults.correctAnswers,
+                accuracy_rate: finalResults.correctAnswers / finalResults.totalQuestions,
+                answers: questionAnswers.map(qa => ({
+                  question_id: qa.questionId,
+                  user_answer: null, // We don't store the answer index in the new format
+                  is_correct: qa.isCorrect,
+                  time_spent: qa.responseTime,
+                  is_timeout: false, // We don't track timeouts in current system
+                  category_id: qa.category || quizCategory || category || 'logical_thinking_problem_solving',
+                  subcategory_id: '', // Not used in current system
+                  difficulty: qa.difficulty
+                }))
+              }
+              
+              const saveResult = await saveQuizSession(quizSessionData)
+              quizResult = {
+                id: saveResult.session_id || 'new-system-' + Date.now(),
+                success: saveResult.success
+              }
               console.log('✅ Quiz result saved successfully:', quizResult?.id)
               
             } catch (quizSaveError) {

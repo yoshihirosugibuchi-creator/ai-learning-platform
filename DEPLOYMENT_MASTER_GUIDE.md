@@ -6,6 +6,10 @@
 
 **⚡ このファイルだけでデプロイの全工程が完了できます**
 
+## 📂 **関連専用ガイド**
+- **カテゴリー・サブカテゴリー管理**: `DEPLOYMENT_CATEGORY_CHECKLIST.md` - DB変更時の自動同期手順
+- **コード品質管理**: `CODE_QUALITY_WORKFLOW.md` - TypeScript/ESLint品質管理
+
 ---
 
 ## 📋 **デプロイ手順概要**
@@ -68,6 +72,20 @@ cat .env.local | grep -E "SUPABASE|SITE_URL"
 - [ ] `NEXT_PUBLIC_SUPABASE_URL` 設定済み
 - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` 設定済み
 - [ ] `.env.local` ファイル存在
+
+### 1.3 カテゴリー・サブカテゴリーDB同期確認
+```bash
+# DB変更チェック（カテゴリー・サブカテゴリー変更がある場合）
+npm run generate:category-mapping
+
+# 差分確認（「既存ファイルと一致しています」が理想）
+```
+
+**✅ チェックポイント:**
+- [ ] DB変更なし（「既存ファイルと一致しています」表示）
+- [ ] または差分ありの場合は `DEPLOYMENT_CATEGORY_CHECKLIST.md` に従って更新済み
+
+⚠️ **カテゴリー・サブカテゴリー変更時**: 必ず `DEPLOYMENT_CATEGORY_CHECKLIST.md` を参照
 
 ---
 
@@ -362,7 +380,7 @@ npm run deploy:complete
 - **ESLint警告完全解決**: 78 → 0個（100%達成、2時間セッション）
 - **any型警告完全解決**: 全て型安全コードに変換
 - **React Hook警告完全解決**: 依存関係最適化完了
-- **TypeScriptエラー削減**: 206 → 192個（-14個、1セッション）
+- **TypeScriptエラー大幅削減**: 206 → 6個（-200個、97%改善、複数セッション）
 - **連続デプロイ成功**: 2/2回（100%成功率）
 - **エラー回復時間**: 5分（セーフモード使用）
 - **環境変数エラー**: 完全解決
@@ -413,9 +431,9 @@ npm run validate:env
 - [x] ESLint警告完全解決 ✅完了
 - [x] any型警告完全解決 ✅完了
 - [x] React Hook警告完全解決 ✅完了
-- [ ] TypeScriptエラー <180個達成
-- [ ] セーフモードシステム完全定着
-- [ ] 既存静的データファイル最新化
+- [x] TypeScriptエラー <180個達成 ✅完了（6個まで削減、97%改善）
+- [x] セーフモードシステム完全定着 ✅完了
+- [x] 既存静的データファイル最新化 ✅ほぼ完了（questions.json要更新）
 
 ### 中期（1ヶ月以内）
 - [ ] 自動デプロイパイプライン構築

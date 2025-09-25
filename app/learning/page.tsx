@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -262,10 +262,9 @@ export default function LearningPage() {
     return <LoadingScreen message="認証状態を確認しています..." />
   }
 
+
   // 認証が必要だがユーザーがいない場合
   if (!user) {
-    console.log('🚫 Learning: No user found, redirecting to login')
-    router.push('/login')
     return <LoadingScreen message="ログインページに移動中..." />
   }
 

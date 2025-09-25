@@ -21,12 +21,15 @@ import { LearningSession as LearningSessionType, SessionTypeLabels, UserBadge } 
 import { saveLearningProgressSupabase, saveLearningSession as saveLearningSessionSupabase, updateLearningSession, LearningSession as LearningSessionData } from '@/lib/supabase-learning'
 import { addKnowledgeCardToCollection } from '@/lib/supabase-cards'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { useXPStats } from '@/hooks/useXPStats'
 import { checkAndAwardCourseBadge } from '@/lib/course-completion'
 
 interface LearningSessionProps {
   courseId: string
   genreId: string
   themeId: string
+  categoryId: string
+  subcategoryId: string
   session: LearningSessionType
   totalSessions: number
   currentSessionIndex: number
@@ -48,6 +51,8 @@ export default function LearningSession({
   courseId,
   genreId,
   themeId,
+  categoryId,
+  subcategoryId,
   session,
   totalSessions,
   currentSessionIndex,
@@ -59,6 +64,7 @@ export default function LearningSession({
 }: LearningSessionProps) {
   const _router = useRouter()
   const { user } = useAuth()
+  const { saveCourseSession } = useXPStats()
   const [viewState, setViewState] = useState<ViewState>('content')
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0)
   const [quizAnswers, setQuizAnswers] = useState<{ [key: number]: string }>({})
@@ -276,6 +282,39 @@ export default function LearningSession({
         }
       } else {
         console.log('📚 Review mode - skipping badge award check')
+      }
+
+      // XP system integration: Save course session data
+      if (!isReviewMode) {
+        console.log('💾 Saving course session to XP system...')
+        try {
+          const courseSessionData = {
+            session_id: session.id,
+            course_id: courseId,
+            theme_id: themeId,
+            genre_id: genreId,
+            category_id: categoryId,
+            subcategory_id: subcategoryId,
+            session_quiz_correct: hasQuiz ? getQuizScore() === 100 : true, // Perfect score or no quiz means correct
+            is_first_completion: true
+          }
+          
+          const xpResult = await saveCourseSession(courseSessionData)
+          
+          if (xpResult.success) {
+            console.log('✅ Course session XP saved:', {
+              earned_xp: xpResult.earned_xp,
+              session_id: xpResult.session_id
+            })
+          } else {
+            console.error('❌ Course session XP save failed:', xpResult.error)
+          }
+        } catch (xpError) {
+          console.error('❌ XP system integration error:', xpError)
+          // Continue with session completion even if XP save fails
+        }
+      } else {
+        console.log('📚 Review mode - skipping XP system integration')
       }
 
       setSessionCompleted(true)

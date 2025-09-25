@@ -41,6 +41,70 @@ export default function LoginPage() {
     confirmPassword: ''
   })
 
+  // Supabaseログインエラーを日本語メッセージに変換
+  const translateAuthError = (error: { message?: string }): string => {
+    if (!error?.message) return 'ログインに失敗しました'
+    
+    const message = error.message.toLowerCase()
+    
+    // よくあるSupabaseのエラーパターンをチェック
+    if (message.includes('invalid login credentials') || 
+        message.includes('invalid credentials') ||
+        message.includes('email not confirmed') ||
+        message.includes('invalid email or password')) {
+      return 'メールアドレスまたはパスワードが正しくありません'
+    }
+    
+    if (message.includes('email not confirmed')) {
+      return 'メールアドレスの確認が完了していません。確認メールをご確認ください'
+    }
+    
+    if (message.includes('too many requests')) {
+      return 'ログイン試行回数が上限に達しました。しばらくしてから再度お試しください'
+    }
+    
+    if (message.includes('network') || message.includes('fetch')) {
+      return 'ネットワークエラーが発生しました。接続を確認して再度お試しください'
+    }
+    
+    // その他のエラーは一般的なメッセージを表示
+    return 'ログインに失敗しました。入力内容をご確認ください'
+  }
+
+  // Supabase登録エラーを日本語メッセージに変換
+  const translateRegistrationError = (error: { message?: string }): string => {
+    if (!error?.message) return '登録中にエラーが発生しました'
+    
+    const message = error.message.toLowerCase()
+    
+    if (message.includes('already registered') || 
+        message.includes('user already registered')) {
+      return 'このメールアドレスは既に登録されています'
+    }
+    
+    if (message.includes('invalid email')) {
+      return 'メールアドレスの形式が正しくありません'
+    }
+    
+    if (message.includes('password')) {
+      if (message.includes('weak') || message.includes('short')) {
+        return 'パスワードが弱すぎます。より強力なパスワードを設定してください'
+      }
+      return 'パスワードの形式が正しくありません'
+    }
+    
+    if (message.includes('too many requests')) {
+      return '登録試行回数が上限に達しました。しばらくしてから再度お試しください'
+    }
+    
+    if (message.includes('network') || message.includes('fetch')) {
+      return 'ネットワークエラーが発生しました。接続を確認して再度お試しください'
+    }
+    
+    // その他のエラーは一般的なメッセージを表示
+    return '登録中にエラーが発生しました。入力内容をご確認ください'
+  }
+
   // ログイン処理
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,9 +129,8 @@ export default function LoginPage() {
       
       if (error) {
         console.error('❌ Login error:', error)
-        const errorObj = error as { message?: string }
-        const errorMessage = errorObj.message || 'メールアドレスまたはパスワードが正しくありません'
-        setError(errorMessage)
+        const userFriendlyMessage = translateAuthError(error)
+        setError(userFriendlyMessage)
       } else {
         console.log('✅ Login successful, redirecting to home')
         router.push('/')
@@ -106,12 +169,8 @@ export default function LoginPage() {
       const { error } = await signUp(registerForm.email, registerForm.password)
       
       if (error) {
-        const errorObj = error as { message?: string }
-        if (errorObj.message && errorObj.message.includes('already registered')) {
-          setError('このメールアドレスは既に登録されています')
-        } else {
-          setError('登録中にエラーが発生しました')
-        }
+        const userFriendlyMessage = translateRegistrationError(error)
+        setError(userFriendlyMessage)
       } else {
         setSuccess('確認メールを送信しました。メールをチェックしてアカウントを有効化してください。')
       }

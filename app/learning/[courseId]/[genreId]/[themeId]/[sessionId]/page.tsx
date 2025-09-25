@@ -22,13 +22,15 @@ export default function SessionPage() {
     totalSessions: number
     currentIndex: number
     sessions: LearningSessionType[]
+    categoryId: string
+    subcategoryId: string
     themeRewardCard?: {
       id: string
       title: string
       description?: string
       icon?: string
     }
-  }>({ totalSessions: 0, currentIndex: 0, sessions: [] })
+  }>({ totalSessions: 0, currentIndex: 0, sessions: [], categoryId: '', subcategoryId: '' })
 
   const courseId = params.courseId as string
   const genreId = params.genreId as string
@@ -80,6 +82,8 @@ export default function SessionPage() {
           totalSessions: theme.sessions.length,
           currentIndex,
           sessions: theme.sessions,
+          categoryId: genre.categoryId,
+          subcategoryId: genre.subcategoryId || '',
           themeRewardCard: theme.rewardCard
         })
 
@@ -154,6 +158,8 @@ export default function SessionPage() {
           courseId={courseId}
           genreId={genreId}
           themeId={themeId}
+          categoryId={sessionData.categoryId}
+          subcategoryId={sessionData.subcategoryId}
           session={currentSession}
           totalSessions={sessionData.totalSessions}
           currentSessionIndex={sessionData.currentIndex}
