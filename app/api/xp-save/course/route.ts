@@ -354,30 +354,43 @@ export async function POST(request: Request) {
         }
         
         // カテゴリー統計の更新
-        const { data: existingCategoryStats } = await supabase
+        console.log('🔍 Fetching existing category stats for:', { userId: userId.substring(0, 8), categoryId: body.category_id })
+        const { data: existingCategoryStats, error: categoryFetchError } = await supabase
           .from('user_category_xp_stats_v2')
           .select('*')
           .eq('user_id', userId)
           .eq('category_id', body.category_id)
-          .single()
+          .maybeSingle()
+        
+        console.log('🔍 Category stats fetch result:', { 
+          found: !!existingCategoryStats, 
+          error: categoryFetchError?.message,
+          data: existingCategoryStats 
+        })
 
         const categoryStatsData = {
           user_id: userId,
           category_id: body.category_id,
-          total_questions_answered: (existingCategoryStats?.total_questions_answered || 0) + 1,
-          total_questions_correct: (existingCategoryStats?.total_questions_correct || 0) + (body.session_quiz_correct ? 1 : 0),
+          quiz_questions_answered: (existingCategoryStats?.quiz_questions_answered || 0) + 1,
+          quiz_questions_correct: (existingCategoryStats?.quiz_questions_correct || 0) + (body.session_quiz_correct ? 1 : 0),
           total_xp: (existingCategoryStats?.total_xp || 0) + earnedXP,
           course_sessions_completed: (existingCategoryStats?.course_sessions_completed || 0) + 1,
           quiz_sessions_completed: existingCategoryStats?.quiz_sessions_completed || 0,
-          last_activity_at: new Date().toISOString(),
+          quiz_average_accuracy: 0, // 後で計算
           updated_at: new Date().toISOString()
         }
 
-        // average_accuracy列は削除（データベーススキーマに存在しないため）
+        // quiz_average_accuracy の正答率計算
+        if (categoryStatsData.quiz_questions_answered > 0) {
+          categoryStatsData.quiz_average_accuracy = Math.round((categoryStatsData.quiz_questions_correct / categoryStatsData.quiz_questions_answered) * 100 * 100) / 100
+        }
 
         const { error: categoryStatsError } = await supabase
           .from('user_category_xp_stats_v2')
-          .upsert(categoryStatsData)
+          .upsert(categoryStatsData, { 
+            onConflict: 'user_id,category_id',
+            ignoreDuplicates: false 
+          })
 
         if (categoryStatsError) {
           console.error('❌ Course category stats update error:', categoryStatsError)
@@ -392,32 +405,49 @@ export async function POST(request: Request) {
         // サブカテゴリー統計の更新（subcategory_idが有効な場合のみ）
         if (body.subcategory_id && body.subcategory_id.trim() !== '') {
           console.log('📊 Updating subcategory stats...')
-          const { data: existingSubcategoryStats } = await supabase
+          console.log('🔍 Fetching existing subcategory stats for:', { 
+            userId: userId.substring(0, 8), 
+            categoryId: body.category_id, 
+            subcategoryId: body.subcategory_id 
+          })
+          const { data: existingSubcategoryStats, error: subcategoryFetchError } = await supabase
           .from('user_subcategory_xp_stats_v2')
           .select('*')
           .eq('user_id', userId)
           .eq('category_id', body.category_id)
           .eq('subcategory_id', body.subcategory_id)
-          .single()
+          .maybeSingle()
+          
+          console.log('🔍 Subcategory stats fetch result:', { 
+            found: !!existingSubcategoryStats, 
+            error: subcategoryFetchError?.message,
+            data: existingSubcategoryStats 
+          })
 
         const subcategoryStatsData = {
           user_id: userId,
           category_id: body.category_id,
           subcategory_id: body.subcategory_id,
-          total_questions_answered: (existingSubcategoryStats?.total_questions_answered || 0) + 1,
-          total_questions_correct: (existingSubcategoryStats?.total_questions_correct || 0) + (body.session_quiz_correct ? 1 : 0),
+          quiz_questions_answered: (existingSubcategoryStats?.quiz_questions_answered || 0) + 1,
+          quiz_questions_correct: (existingSubcategoryStats?.quiz_questions_correct || 0) + (body.session_quiz_correct ? 1 : 0),
           total_xp: (existingSubcategoryStats?.total_xp || 0) + earnedXP,
           course_sessions_completed: (existingSubcategoryStats?.course_sessions_completed || 0) + 1,
           quiz_sessions_completed: existingSubcategoryStats?.quiz_sessions_completed || 0,
-          last_activity_at: new Date().toISOString(),
+          quiz_average_accuracy: 0, // 後で計算
           updated_at: new Date().toISOString()
         }
 
-        // average_accuracy列は削除（データベーススキーマに存在しないため）
+        // quiz_average_accuracy の正答率計算
+        if (subcategoryStatsData.quiz_questions_answered > 0) {
+          subcategoryStatsData.quiz_average_accuracy = Math.round((subcategoryStatsData.quiz_questions_correct / subcategoryStatsData.quiz_questions_answered) * 100 * 100) / 100
+        }
 
         const { error: subcategoryStatsError } = await supabase
           .from('user_subcategory_xp_stats_v2')
-          .upsert(subcategoryStatsData)
+          .upsert(subcategoryStatsData, { 
+            onConflict: 'user_id,category_id,subcategory_id',
+            ignoreDuplicates: false 
+          })
 
         if (subcategoryStatsError) {
           console.error('❌ Course subcategory stats update error:', subcategoryStatsError)

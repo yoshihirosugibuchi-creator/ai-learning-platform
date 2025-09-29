@@ -128,7 +128,14 @@ export default function LoginPage() {
       clearTimeout(loginTimeout)
       
       if (error) {
-        console.error('❌ Login error:', error)
+        // ユーザー入力エラーは静かに処理（Supabaseエラーアイコン回避）
+        if ((error as any).message?.includes('Invalid login credentials') || 
+            (error as any).message?.includes('invalid credentials') ||
+            (error as any).message?.includes('invalid email or password')) {
+          console.debug('Login failed: Invalid credentials')
+        } else {
+          console.error('❌ Login error:', error)
+        }
         const userFriendlyMessage = translateAuthError(error)
         setError(userFriendlyMessage)
       } else {

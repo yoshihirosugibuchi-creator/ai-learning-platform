@@ -3,8 +3,11 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-console.log('Supabase URL:', supabaseUrl)
-console.log('Supabase Key (first 10 chars):', supabaseAnonKey.substring(0, 10))
+// 開発環境でのみSupabaseログを表示
+if (process.env.NODE_ENV === 'development') {
+  console.log('Supabase URL:', supabaseUrl)
+  console.log('Supabase Key (first 10 chars):', supabaseAnonKey.substring(0, 10))
+}
 
 // 認証設定でリダイレクトURLを設定
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -13,6 +16,17 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true,
     flowType: 'pkce'
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'supabase-js'
+    }
+  },
+  // リアルタイム接続のログを無効化
+  realtime: {
+    params: {
+      log_level: 'silent'
+    }
   }
 })
 
