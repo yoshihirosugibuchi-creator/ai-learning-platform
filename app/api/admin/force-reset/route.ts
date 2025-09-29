@@ -2,19 +2,36 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 // Service role keyを使用してRLSをバイパス
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
+function createAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Missing required Supabase environment variables')
+  }
+  
+  return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
     }
-  }
-)
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // 環境変数チェック
+    let supabaseAdmin
+    try {
+      supabaseAdmin = createAdminClient()
+    } catch (envError) {
+      console.error('❌ Environment error:', envError)
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      )
+    }
+
     const { userId } = await request.json()
 
     if (!userId) {

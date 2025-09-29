@@ -3,23 +3,35 @@ import { createClient } from '@supabase/supabase-js'
 
 // 管理者用のSupabaseクライアント（SERVICE_ROLE_KEY使用）
 function getAdminSupabaseClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Missing required Supabase environment variables')
+  }
+  
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
     }
-  )
+  })
 }
 
 export async function POST() {
   try {
     console.log('🔧 Disabling XP-related PostgreSQL triggers...')
     
-    const supabase = getAdminSupabaseClient()
+    let supabase
+    try {
+      supabase = getAdminSupabaseClient()
+    } catch (envError) {
+      console.error('❌ Environment error:', envError)
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      )
+    }
     
     // XP統計テーブル関連のトリガーを無効化
     const disableTriggerQueries = [
