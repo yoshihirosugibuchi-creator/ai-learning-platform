@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/components/auth/AuthProvider'
-import { getUserSKPBalance, getUserLearningStreak } from '@/lib/supabase-learning'
+import { getUserSKPBalance } from '@/lib/supabase-learning'
 import { useXPStats } from '@/hooks/useXPStats'
 
 interface HeaderProps {
@@ -30,21 +30,16 @@ export default function Header({
   const router = useRouter()
   const { user, loading, signOut } = useAuth()
   const [displaySKP, setDisplaySKP] = useState(0)
-  const [learningStreak, setLearningStreak] = useState(0)
   const loadingRef = useRef(false)
   const { stats: xpStats } = useXPStats()
 
-  // ユーザーデータ取得
+  // ユーザーデータ取得（SKPのみ）
   const loadUserData = useCallback(async () => {
     if (user?.id && !loadingRef.current) {
       loadingRef.current = true
       try {
-        const [skpBalance, streak] = await Promise.all([
-          getUserSKPBalance(user.id),
-          getUserLearningStreak(user.id)
-        ])
+        const skpBalance = await getUserSKPBalance(user.id)
         setDisplaySKP(skpBalance)
-        setLearningStreak(streak)
       } catch (error) {
         console.error('Error loading user data:', error)
       } finally {
@@ -62,8 +57,9 @@ export default function Header({
     router.push('/login')
   }
 
-  // DBから直接レベルを取得
+  // DBから直接レベルと連続学習日数を取得
   const currentLevel = xpStats?.user.current_level || 1
+  const learningStreak = xpStats?.user.learning_streak || 0
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 md:px-6">

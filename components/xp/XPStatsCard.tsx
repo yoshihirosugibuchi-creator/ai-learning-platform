@@ -6,11 +6,11 @@ import { Progress } from '@/components/ui/progress'
 import { 
   Zap, 
   Target, 
-  Award,
   TrendingUp,
   Calendar,
   Sparkles,
-  BookOpen
+  BookOpen,
+  Star
 } from 'lucide-react'
 import { useXPStats } from '@/hooks/useXPStats'
 import { loadXPSettings } from '@/lib/xp-settings'
@@ -45,7 +45,7 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5" />
-            XP統計
+            学習統計
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -65,7 +65,7 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5" />
-            XP統計
+            学習統計
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -87,7 +87,7 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5" />
-            XP統計
+            学習統計
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -116,7 +116,7 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-yellow-500" />
-            XP統計
+            学習統計
           </div>
           <Badge variant="outline" className="text-xs">
             総合レベル {currentLevel}
@@ -130,14 +130,24 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
             <div className="text-2xl font-bold text-yellow-600">{user.total_xp.toLocaleString()}</div>
             <div className="text-xs text-gray-600">総合XP</div>
           </div>
-          <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{user.quiz_sessions_completed + user.course_sessions_completed}</div>
-            <div className="text-xs text-gray-600">学習セッション</div>
+          <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg">
+            <div className="text-2xl font-bold text-purple-600">{user.total_skp.toLocaleString()}</div>
+            <div className="text-xs text-gray-600">総合SKP</div>
           </div>
+        </div>
+        
+        {/* セッション数 */}
+        <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
+          <div className="text-2xl font-bold text-blue-600">{user.quiz_sessions_completed + user.course_sessions_completed}</div>
+          <div className="text-xs text-gray-600">学習セッション</div>
         </div>
 
         {/* XP内訳 */}
         <div className="space-y-2">
+          <h4 className="font-medium text-sm flex items-center gap-2">
+            <Zap className="h-4 w-4 text-yellow-500" />
+            XP内訳
+          </h4>
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-green-500" />
@@ -161,6 +171,42 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
           </div>
         </div>
 
+        {/* SKP内訳 */}
+        <div className="space-y-2">
+          <h4 className="font-medium text-sm flex items-center gap-2">
+            <Star className="h-4 w-4 text-purple-500" />
+            SKP内訳
+          </h4>
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-green-500" />
+              クイズSKP
+            </div>
+            <span className="font-medium">{user.quiz_skp.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-blue-500" />
+              コース学習SKP
+            </div>
+            <span className="font-medium">{user.course_skp.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-purple-500" />
+              ボーナスSKP
+            </div>
+            <span className="font-medium">{user.bonus_skp.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-orange-500" />
+              継続SKP
+            </div>
+            <span className="font-medium">{user.streak_skp.toLocaleString()}</span>
+          </div>
+        </div>
+
         {/* 詳細統計 */}
         {showDetailedStats && (
           <>
@@ -175,40 +221,20 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
                   <div className="font-medium">{user.quiz_average_accuracy.toFixed(1)}%</div>
                 </div>
                 <div>
-                  <div className="text-gray-600">活動カテゴリー</div>
+                  <div className="text-gray-600">学習実施カテゴリー</div>
                   <div className="font-medium">{categoryCount}種類</div>
                 </div>
                 <div>
-                  <div className="text-gray-600">学習分野</div>
+                  <div className="text-gray-600">学習実施サブカテゴリー</div>
                   <div className="font-medium">{subcategoryCount}分野</div>
                 </div>
                 <div>
-                  <div className="text-gray-600">活動日数</div>
+                  <div className="text-gray-600">直近30日の学習日数</div>
                   <div className="font-medium">{recentActivityDays}日</div>
                 </div>
               </div>
             </div>
 
-            <div className="border-t pt-4">
-              <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
-                <Award className="h-4 w-4" />
-                獲得アイテム
-              </h4>
-              <div className="grid grid-cols-3 gap-3 text-sm">
-                <div className="text-center">
-                  <div className="text-lg font-bold text-yellow-600">{user.wisdom_cards_total}</div>
-                  <div className="text-gray-600">格言カード</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-green-600">{user.knowledge_cards_total}</div>
-                  <div className="text-gray-600">知識カード</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-purple-600">{user.badges_total}</div>
-                  <div className="text-gray-600">バッジ</div>
-                </div>
-              </div>
-            </div>
 
             {/* 最新活動 */}
             {stats.recent_activity.length > 0 && (

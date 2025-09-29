@@ -181,7 +181,7 @@ export async function GET(request: Request) {
 
       // 4. ユーザー統計
       supabase
-        .from('user_xp_stats')
+        .from('user_xp_stats_v2')
         .select('*')
         .eq('user_id', userId)
         .single(),

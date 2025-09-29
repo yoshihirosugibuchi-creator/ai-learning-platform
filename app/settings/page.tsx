@@ -23,11 +23,16 @@ export default function SettingsPage() {
     {
       id: 'account',
       title: 'アカウント設定',
-      description: 'プロフィール・パスワード変更',
+      description: 'プロフィール・パスワード変更・アカウント管理',
       icon: <Shield className="h-5 w-5" />,
       href: '/settings/coming-soon',
       category: '基本設定',
-      available: false
+      available: false,
+      features: [
+        'パスワード変更・二段階認証',
+        'ログインセッション管理', 
+        'セキュリティ設定管理'
+      ]
     },
     {
       id: 'notifications',
@@ -37,6 +42,20 @@ export default function SettingsPage() {
       href: '/settings/coming-soon',
       category: '基本設定',
       available: false
+    },
+    {
+      id: 'privacy',
+      title: 'プライバシー・データ管理',
+      description: 'データエクスポート・アカウント削除',
+      icon: <Shield className="h-5 w-5" />,
+      href: '/settings/coming-soon',
+      category: 'プライバシー',
+      available: false,
+      features: [
+        'プライバシー・通知設定',
+        '学習データエクスポート',
+        'アカウント削除・一時停止'
+      ]
     },
     {
       id: 'appearance',

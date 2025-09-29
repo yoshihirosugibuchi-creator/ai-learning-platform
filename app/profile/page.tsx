@@ -16,7 +16,6 @@ import {
   Calendar,
   Coins,
   Building2,
-  Settings,
   Award,
   Zap,
   Users,
@@ -26,8 +25,7 @@ import {
   Edit,
   Plus,
   Minus,
-  Filter,
-  Sparkles
+  Filter
 } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
@@ -39,7 +37,6 @@ import { UserBadge } from '@/lib/types/learning'
 import { updateUserProfile } from '@/lib/supabase-user'
 import { mainCategories, industryCategories } from '@/lib/categories'
 import { useXPStats } from '@/hooks/useXPStats'
-import XPStatsCard from '@/components/xp/XPStatsCard'
 import ProfileEditModal from '@/components/profile/ProfileEditModal'
 
 export default function ProfilePage() {
@@ -59,7 +56,7 @@ export default function ProfilePage() {
   const [skpBalance, setSkpBalance] = useState(0)
   const [allTransactions, setAllTransactions] = useState<SKPTransaction[]>([]) // 全トランザクション（統計用）
   const [, setRecentTransactions] = useState<SKPTransaction[]>([]) // 表示用履歴
-  const [userBadges, setUserBadges] = useState<UserBadge[]>([])
+  const [_userBadges, _setUserBadges] = useState<UserBadge[]>([])
   // 新しいXPシステムのフック
   const { stats: xpStats, loading: xpLoading } = useXPStats()
   
@@ -109,10 +106,12 @@ export default function ProfilePage() {
       
       // ユーザーバッジを取得
       getUserBadges(user.id).then(badges => {
-        setUserBadges(badges)
+        _setUserBadges(badges)
       }).catch(error => {
         console.error('Error fetching user badges:', error)
       })
+      
+      // 学習連続日数はXPStatsから取得するため削除
       
       // XP統計は useXPStats フックで自動的に取得されます
       
@@ -179,6 +178,9 @@ export default function ProfilePage() {
     return <div className="min-h-screen bg-background flex items-center justify-center">ログインが必要です</div>
   }
 
+  // XPStatsから連続学習日数を取得
+  const learningStreak = xpStats?.user.learning_streak || 0
+
   return (
     <div className="min-h-screen bg-background">
       <Header onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)} />
@@ -199,7 +201,7 @@ export default function ProfilePage() {
                 {profileData.industry && (
                   <p className="text-gray-600 flex items-center">
                     <Building2 className="h-4 w-4 mr-2" />
-                    {profileData.industry}
+                    {industryCategories.find(cat => cat.id === profileData.industry)?.name || profileData.industry}
                     {profileData.experienceYears && ` (${profileData.experienceYears}年)`}
                   </p>
                 )}
@@ -211,8 +213,8 @@ export default function ProfilePage() {
                   </Badge>
                   <Badge variant="outline" className="flex items-center space-x-1 text-xs">
                     <Flame className="h-3 w-3" />
-                    <span className="hidden sm:inline">{profile?.streak || 0}日連続</span>
-                    <span className="sm:hidden">{profile?.streak || 0}日</span>
+                    <span className="hidden sm:inline">{learningStreak}日連続</span>
+                    <span className="sm:hidden">{learningStreak}日</span>
                   </Badge>
                   <Badge variant="outline" className="flex items-center space-x-1 text-yellow-600 text-xs">
                     <Coins className="h-3 w-3" />
@@ -224,8 +226,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* XP統計カード */}
-        <XPStatsCard showDetailedStats={true} className="mb-6" />
 
         {/* タブメニュー */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -481,41 +481,6 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-
-            {/* アカウント管理（準備中） */}
-            <Card className="border-blue-200 bg-blue-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Settings className="h-5 w-5" />
-                  <span>アカウント管理</span>
-                  <Badge variant="secondary" className="text-xs">準備中</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-blue-700">
-                  <p className="mb-3">以下の機能を準備中です：</p>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    <div>
-                      <p className="font-medium text-xs mb-1">セキュリティ</p>
-                      <ul className="space-y-1 text-xs list-disc list-inside">
-                        <li>パスワード変更・二段階認証</li>
-                        <li>ログインセッション管理</li>
-                        <li>セキュリティ設定管理</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <p className="font-medium text-xs mb-1">プライバシー・データ管理</p>
-                      <ul className="space-y-1 text-xs list-disc list-inside">
-                        <li>プライバシー・通知設定</li>
-                        <li>学習データエクスポート</li>
-                        <li>アカウント削除・一時停止</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* 企業情報（準備中） */}
             <Card className="border-orange-200 bg-orange-50/50">
               <CardHeader>
@@ -674,48 +639,12 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {/* 獲得バッジ */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Sparkles className="h-5 w-5" />
-                  <span>獲得バッジ</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {userBadges.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {userBadges.map((badge) => {
-                      const badgeData = badge as unknown as Record<string, unknown>
-                      return (
-                        <div key={badgeData.id as string} className="text-center p-4 border rounded-lg">
-                          <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
-                            <Trophy className="h-8 w-8 text-white" />
-                          </div>
-                          <h4 className="font-medium text-sm">{badgeData.badge_name as string}</h4>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(badgeData.earned_at as string).toLocaleDateString('ja-JP')}
-                          </p>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>まだバッジを獲得していません</p>
-                    <p className="text-sm">コース学習を完了してバッジを獲得しましょう！</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* 獲得称号（準備中） */}
+            {/* ALE認定資格制度（準備中） */}
             <Card className="border-purple-200 bg-purple-50/50">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Crown className="h-5 w-5" />
-                  <span>ALE認定称号</span>
+                  <span>ALE認定資格制度</span>
                   <Badge variant="secondary" className="text-xs">準備中</Badge>
                 </CardTitle>
               </CardHeader>
@@ -744,51 +673,32 @@ export default function ProfilePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* 統計カード */}
+                {/* 統計情報 */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Card>
-                    <CardContent className="pt-6 text-center">
-                      <div className="flex flex-col items-center space-y-2">
-                        <Coins className="h-8 w-8 text-yellow-500" />
-                        <div className="text-2xl font-bold text-yellow-600">{skpBalance}</div>
-                        <div className="text-xs text-muted-foreground">現在残高</div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6 text-center">
-                      <div className="flex flex-col items-center space-y-2">
-                        <Plus className="h-8 w-8 text-green-500" />
-                        <div className="text-2xl font-bold text-green-600">
-                          {allTransactions.filter(t => t.type === 'earned').reduce((sum, t) => sum + (t.amount as number), 0)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">累計獲得</div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6 text-center">
-                      <div className="flex flex-col items-center space-y-2">
-                        <Minus className="h-8 w-8 text-red-500" />
-                        <div className="text-2xl font-bold text-red-600">
-                          {allTransactions.filter(t => t.type === 'spent').reduce((sum, t) => sum + (t.amount as number), 0)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">累計使用</div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6 text-center">
-                      <div className="flex flex-col items-center space-y-2">
-                        <TrendingUp className="h-8 w-8 text-blue-500" />
-                        <div className="text-2xl font-bold text-blue-600">{allTransactions.length}</div>
-                        <div className="text-xs text-muted-foreground">取引回数</div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <div className="text-center">
+                    <Coins className="h-8 w-8 mx-auto text-yellow-500 mb-2" />
+                    <div className="text-2xl font-bold">{skpBalance}</div>
+                    <p className="text-sm text-muted-foreground">現在残高</p>
+                  </div>
+                  <div className="text-center">
+                    <Plus className="h-8 w-8 mx-auto text-green-500 mb-2" />
+                    <div className="text-2xl font-bold">
+                      {allTransactions.filter(t => t.type === 'earned').reduce((sum, t) => sum + (t.amount as number), 0)}
+                    </div>
+                    <p className="text-sm text-muted-foreground">累計獲得</p>
+                  </div>
+                  <div className="text-center">
+                    <Minus className="h-8 w-8 mx-auto text-red-500 mb-2" />
+                    <div className="text-2xl font-bold">
+                      {allTransactions.filter(t => t.type === 'spent').reduce((sum, t) => sum + (t.amount as number), 0)}
+                    </div>
+                    <p className="text-sm text-muted-foreground">累計使用</p>
+                  </div>
+                  <div className="text-center">
+                    <TrendingUp className="h-8 w-8 mx-auto text-blue-500 mb-2" />
+                    <div className="text-2xl font-bold">{allTransactions.length}</div>
+                    <p className="text-sm text-muted-foreground">取引回数</p>
+                  </div>
                 </div>
 
                 {/* フィルター機能 */}
@@ -842,7 +752,22 @@ export default function ProfilePage() {
                               )}
                             </div>
                             <div>
-                              <p className="text-sm font-medium">{transaction.description as string}</p>
+                              <p className="text-sm font-medium">
+                                {(() => {
+                                  const desc = transaction.description as string
+                                  // 正答率の修正: 10/10 correct (1% accuracy) -> 10/10 correct (100% accuracy)
+                                  if (desc.includes('correct (') && desc.includes('% accuracy)')) {
+                                    const match = desc.match(/(\d+)\/(\d+)\s+correct/)
+                                    if (match) {
+                                      const correct = parseInt(match[1])
+                                      const total = parseInt(match[2])
+                                      const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0
+                                      return desc.replace(/\(\d+%\s+accuracy\)/, `(${accuracy}% accuracy)`)
+                                    }
+                                  }
+                                  return desc
+                                })()}
+                              </p>
                               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                                 <Calendar className="h-3 w-3" />
                                 <span>{new Date(transaction.timestamp as string).toLocaleDateString('ja-JP', {
@@ -853,7 +778,18 @@ export default function ProfilePage() {
                                   minute: '2-digit'
                                 })}</span>
                                 <Badge variant="outline" className="text-xs">
-                                  {transaction.source as string}
+                                  {(() => {
+                                    const source = transaction.source as string
+                                    // セッションIDを隠してわかりやすい表示に変更
+                                    if (source.startsWith('quiz_session_')) {
+                                      return 'クイズセッション'
+                                    } else if (source.startsWith('course_session_')) {
+                                      return 'コース学習'
+                                    } else if (source.includes('bonus')) {
+                                      return '継続ボーナス'
+                                    }
+                                    return source
+                                  })()}
                                 </Badge>
                               </div>
                             </div>

@@ -35,6 +35,13 @@ interface XPStats {
     quiz_xp: number
     course_xp: number
     bonus_xp: number
+    // SKP fields
+    total_skp: number
+    quiz_skp: number
+    course_skp: number
+    bonus_skp: number
+    streak_skp: number
+    // existing fields
     quiz_sessions_completed: number
     course_sessions_completed: number
     quiz_average_accuracy: number
@@ -42,6 +49,8 @@ interface XPStats {
     knowledge_cards_total: number
     badges_total: number
     last_activity_at?: string
+    // streak calculation
+    learning_streak: number
   }
   categories: {
     [categoryId: string]: {
@@ -104,7 +113,7 @@ export async function GET(request: Request) {
 
     // 1. ユーザー全体統計取得（RLSで自動的に現在のユーザーのみ取得）
     const { data: userStats, error: userStatsError } = await supabase
-      .from('user_xp_stats')
+      .from('user_xp_stats_v2')
       .select('*')
       .single()
 
@@ -112,9 +121,9 @@ export async function GET(request: Request) {
       throw new Error(`User stats error: ${userStatsError.message}`)
     }
 
-    // 2. カテゴリー別統計取得（RLSで自動的に現在のユーザーのみ取得）
+    // 2. カテゴリー別統計取得（v2テーブル使用・RLSで自動的に現在のユーザーのみ取得）
     const { data: categoryStats, error: categoryStatsError } = await supabase
-      .from('user_category_xp_stats')
+      .from('user_category_xp_stats_v2')
       .select('*')
       .order('total_xp', { ascending: false })
 
@@ -122,9 +131,9 @@ export async function GET(request: Request) {
       throw new Error(`Category stats error: ${categoryStatsError.message}`)
     }
 
-    // 3. サブカテゴリー別統計取得（RLSで自動的に現在のユーザーのみ取得）
+    // 3. サブカテゴリー別統計取得（v2テーブル使用・RLSで自動的に現在のユーザーのみ取得）
     const { data: subcategoryStats, error: subcategoryStatsError } = await supabase
-      .from('user_subcategory_xp_stats')
+      .from('user_subcategory_xp_stats_v2')
       .select('*')
       .order('total_xp', { ascending: false })
 
@@ -145,6 +154,9 @@ export async function GET(request: Request) {
       throw new Error(`Activity records error: ${activityError.message}`)
     }
 
+    // 5. 学習ストリーク計算
+    const learningStreak = calculateLearningStreak(recentActivity || [])
+
     // データ整形
     const response: XPStats = {
       user: userStats ? {
@@ -153,13 +165,21 @@ export async function GET(request: Request) {
         quiz_xp: userStats.quiz_xp || 0,
         course_xp: userStats.course_xp || 0,
         bonus_xp: userStats.bonus_xp || 0,
+        // SKP fields
+        total_skp: userStats.total_skp || 0,
+        quiz_skp: userStats.quiz_skp || 0,
+        course_skp: userStats.course_skp || 0,
+        bonus_skp: userStats.bonus_skp || 0,
+        streak_skp: userStats.streak_skp || 0,
+        // existing fields
         quiz_sessions_completed: userStats.quiz_sessions_completed || 0,
         course_sessions_completed: userStats.course_sessions_completed || 0,
         quiz_average_accuracy: userStats.quiz_average_accuracy || 0,
         wisdom_cards_total: userStats.wisdom_cards_total || 0,
         knowledge_cards_total: userStats.knowledge_cards_total || 0,
         badges_total: userStats.badges_total || 0,
-        last_activity_at: userStats.last_activity_at || undefined
+        last_activity_at: userStats.last_activity_at || undefined,
+        learning_streak: learningStreak
       } : {
         // 新規ユーザー用のデフォルト値
         total_xp: 0,
@@ -167,12 +187,18 @@ export async function GET(request: Request) {
         quiz_xp: 0,
         course_xp: 0,
         bonus_xp: 0,
+        total_skp: 0,
+        quiz_skp: 0,
+        course_skp: 0,
+        bonus_skp: 0,
+        streak_skp: 0,
         quiz_sessions_completed: 0,
         course_sessions_completed: 0,
         quiz_average_accuracy: 0,
         wisdom_cards_total: 0,
         knowledge_cards_total: 0,
-        badges_total: 0
+        badges_total: 0,
+        learning_streak: 0
       },
       categories: {},
       subcategories: {},
@@ -241,4 +267,55 @@ export async function GET(request: Request) {
       { status: 500 }
     )
   }
+}
+
+// 学習ストリーク計算関数
+function calculateLearningStreak(activities: Array<{date: string, quiz_sessions?: number, course_sessions?: number}>): number {
+  if (!activities || activities.length === 0) {
+    return 0
+  }
+  
+  // 今日の日付を文字列形式で取得（タイムゾーン問題を回避）
+  const today = new Date()
+  const currentDateStr = today.getFullYear() + '-' + 
+    String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+    String(today.getDate()).padStart(2, '0')
+  
+  let streak = 0
+  let lastActivityDay = -1 // まだ活動を見つけていない
+  
+  for (let dayOffset = 0; dayOffset < 30; dayOffset++) { // 最大30日前まで確認
+    // 該当日の活動を探す
+    const checkDate = new Date(currentDateStr)
+    checkDate.setDate(checkDate.getDate() - dayOffset)
+    const checkDateStr = checkDate.getFullYear() + '-' + 
+      String(checkDate.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(checkDate.getDate()).padStart(2, '0')
+    
+    const dayActivity = activities.find(act => act.date === checkDateStr)
+    const hasActivity = dayActivity && ((dayActivity.quiz_sessions || 0) > 0 || (dayActivity.course_sessions || 0) > 0)
+    
+    if (hasActivity) {
+      if (lastActivityDay === -1) {
+        // 最初の活動を発見
+        lastActivityDay = dayOffset
+        streak = 1
+      } else if (dayOffset === lastActivityDay + 1) {
+        // 連続した活動
+        lastActivityDay = dayOffset
+        streak++
+      } else {
+        // 活動はあるが連続していない
+        break
+      }
+    } else {
+      if (lastActivityDay !== -1) {
+        // 活動が見つかっていたが、この日は活動なし
+        break
+      }
+      // まだ活動が見つかっていないので続行
+    }
+  }
+  
+  return streak
 }

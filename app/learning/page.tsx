@@ -10,10 +10,9 @@ import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import CourseCard from '@/components/learning/CourseCard'
-import { getLearningCourses, calculateLearningStats } from '@/lib/learning/data'
+import { getLearningCourses } from '@/lib/learning/data'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { globalCache, useResourceMonitor } from '@/lib/performance-optimizer'
-import { getBadgeStats } from '@/lib/supabase-badges'
 
 export default function LearningPage() {
   const router = useRouter()
@@ -34,25 +33,6 @@ export default function LearningPage() {
   }>>([])
   const [loading, setLoading] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [learningStats, setLearningStats] = useState<{
-    totalSessionsCompleted: number
-    totalAvailableSessions: number
-    totalTimeSpent: number
-    currentStreak: number
-    lastLearningDate: Date | null
-  }>({
-    totalSessionsCompleted: 0,
-    totalAvailableSessions: 0,
-    totalTimeSpent: 0,
-    currentStreak: 0,
-    lastLearningDate: null
-  })
-  const [badgeStats, setBadgeStats] = useState({
-    total: 0,
-    active: 0,
-    expired: 0,
-    expiringSoon: 0
-  })
 
   // パフォーマンス監視
   useResourceMonitor()
@@ -188,43 +168,6 @@ export default function LearningPage() {
           }
         }
 
-        // ユーザーの学習統計を計算（タイムアウト付き）
-        if (user?.id) {
-          console.log('📊 Loading user statistics...')
-          try {
-            const statsPromise = Promise.all([
-              calculateLearningStats(user.id),
-              getBadgeStats(user.id)
-            ])
-            const statsTimeout = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Stats timeout')), 10000)
-            )
-            
-            const [stats, badges] = await Promise.race([statsPromise, statsTimeout]) as [
-              {
-                totalSessionsCompleted: number
-                totalAvailableSessions: number
-                totalTimeSpent: number
-                currentStreak: number
-                lastLearningDate: Date | null
-              },
-              {
-                total: number
-                active: number
-                expired: number
-                expiringSoon: number
-              }
-            ]
-            console.log('✅ Statistics loaded:', { stats, badges })
-            setLearningStats(stats)
-            setBadgeStats(badges)
-          } catch (statsError) {
-            console.error('❌ Error loading statistics:', statsError)
-            // 統計読み込みエラーでも画面は表示する
-          }
-        } else {
-          console.log('ℹ️ No user logged in, skipping statistics')
-        }
         
         console.log('🎉 Learning page data loading completed')
       } catch (error) {
@@ -323,48 +266,6 @@ export default function LearningPage() {
             </p>
           </div>
 
-          {/* Learning Stats */}
-          {(learningStats.totalSessionsCompleted > 0 || learningStats.totalAvailableSessions > 0) && (
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5 text-blue-600" />
-                  <span>あなたの学習状況</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {learningStats.totalSessionsCompleted}/{learningStats.totalAvailableSessions}
-                    </div>
-                    <div className="text-sm text-muted-foreground">セッション進捗</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {learningStats.totalTimeSpent}
-                    </div>
-                    <div className="text-sm text-muted-foreground">学習時間(分)</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {learningStats.currentStreak}
-                    </div>
-                    <div className="text-sm text-muted-foreground">連続学習日数</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-1">
-                      <Star className="h-5 w-5 text-yellow-500" />
-                      <span className="text-2xl font-bold text-yellow-600">
-                        {badgeStats.active}
-                      </span>
-                    </div>
-                    <div className="text-sm text-muted-foreground">修了証</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Available Courses */}
           {availableCourses.length > 0 && (

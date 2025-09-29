@@ -598,42 +598,148 @@ export async function getPersonalizationSettings(userId: string, settingKey?: st
   return settings
 }
 
-// ユーザーの学習ストリーク（連続学習日数）を計算
+// ユーザーの学習ストリーク（連続学習日数）を計算 - XPシステム統合版
 export async function getUserLearningStreak(userId: string): Promise<number> {
   try {
-    const sessions = await getUserLearningSessions(userId)
+    // XPシステムのdaily_xp_recordsテーブルから連続日数を計算
+    const { supabase } = await import('@/lib/supabase')
     
-    if (sessions.length === 0) return 0
-
-    // 学習した日付のリストを作成（重複除去してソート）
-    const learningDates = sessions
-      .map(session => new Date(session.start_time).toDateString())
-      .filter((date, index, arr) => arr.indexOf(date) === index)
-      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
-
-    if (learningDates.length === 0) return 0
-
-    // 今日から連続で学習している日数を計算
+    // XP統計とdaily_xp_recordsを取得
+    const { data: userStats } = await supabase
+      .from('user_xp_stats_v2')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+    
+    if (!userStats) {
+      console.log('No XP stats found for user, returning 0 streak')
+      return 0
+    }
+    
+    // recent_activityを取得
+    const { data: activities } = await supabase
+      .from('daily_xp_records')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+      .limit(30)
+    
+    if (!activities || activities.length === 0) {
+      console.log('No daily XP records found for user, returning 0 streak')
+      return 0
+    }
+    
+    // 今日の日付を文字列形式で取得（タイムゾーン問題を回避）
     const today = new Date()
+    const currentDateStr = today.getFullYear() + '-' + 
+      String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(today.getDate()).padStart(2, '0')
+    
     let streak = 0
-    let currentDate = new Date(today)
+    let lastActivityDay = -1 // まだ活動を見つけていない
+    
+    console.log('🔍 Debug: Starting streak calculation for user:', userId.substring(0, 8) + '...')
+    console.log('🔍 Debug: Current date string:', currentDateStr)
+    console.log('🔍 Debug: Available activities count:', activities.length)
+    
+    // まず全ての活動をデバッグ出力
+    activities.forEach(act => {
+      console.log('🔍 Debug: Activity record:', {
+        date: act.date,
+        quiz_sessions: act.quiz_sessions,
+        course_sessions: act.course_sessions,
+        total_activity: (act.quiz_sessions || 0) + (act.course_sessions || 0)
+      })
+    })
 
-    for (const dateStr of learningDates) {
-      const sessionDate = new Date(dateStr)
-      const diffDays = Math.floor((currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24))
+    for (let dayOffset = 0; dayOffset < 30; dayOffset++) { // 最大30日前まで確認
+      // 該当日の活動を探す
+      const checkDate = new Date(currentDateStr)
+      checkDate.setDate(checkDate.getDate() - dayOffset)
+      const checkDateStr = checkDate.getFullYear() + '-' + 
+        String(checkDate.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(checkDate.getDate()).padStart(2, '0')
       
-      if (diffDays === streak) {
-        streak++
-        currentDate = sessionDate
+      const dayActivity = activities.find(act => act.date === checkDateStr)
+      const hasActivity = dayActivity && ((dayActivity.quiz_sessions || 0) > 0 || (dayActivity.course_sessions || 0) > 0)
+      
+      console.log(`🔍 Debug: Checking day -${dayOffset} (${checkDateStr}):`, {
+        found: !!dayActivity,
+        hasActivity,
+        quizSessions: dayActivity?.quiz_sessions || 0,
+        courseSessions: dayActivity?.course_sessions || 0,
+        currentStreak: streak
+      })
+      
+      if (hasActivity) {
+        if (lastActivityDay === -1) {
+          // 最初の活動を発見
+          lastActivityDay = dayOffset
+          streak = 1
+          console.log(`✅ Debug: First activity found on day -${dayOffset}, streak = 1`)
+        } else if (dayOffset === lastActivityDay + 1) {
+          // 連続した活動
+          lastActivityDay = dayOffset
+          streak++
+          console.log(`✅ Debug: Consecutive activity on day -${dayOffset}, streak = ${streak}`)
+        } else {
+          // 活動はあるが連続していない
+          console.log(`❌ Debug: Gap found! Expected day -${lastActivityDay + 1}, found -${dayOffset}`)
+          break
+        }
       } else {
-        break
+        if (lastActivityDay !== -1) {
+          // 活動が見つかっていたが、この日は活動なし
+          console.log(`❌ Debug: No activity on day -${dayOffset}, stopping streak at ${streak}`)
+          break
+        }
+        // まだ活動が見つかっていないので続行
+        console.log(`⏭️ Debug: No activity on day -${dayOffset}, continuing search...`)
       }
     }
-
+    
+    console.log('📊 XP-based learning streak calculated:', streak)
     return streak
+    
   } catch (error) {
-    console.error('Error calculating learning streak:', error)
-    return 0
+    console.error('Error calculating XP-based learning streak:', error)
+    
+    // フォールバック: 古いロジック
+    try {
+      const sessions = await getUserLearningSessions(userId)
+      
+      if (sessions.length === 0) return 0
+
+      // 学習した日付のリストを作成（重複除去してソート）
+      const learningDates = sessions
+        .map(session => new Date(session.start_time).toDateString())
+        .filter((date, index, arr) => arr.indexOf(date) === index)
+        .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+
+      if (learningDates.length === 0) return 0
+
+      // 今日から連続で学習している日数を計算
+      const today = new Date()
+      let streak = 0
+      let currentDate = new Date(today)
+
+      for (const dateStr of learningDates) {
+        const sessionDate = new Date(dateStr)
+        const diffDays = Math.floor((currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24))
+        
+        if (diffDays === streak) {
+          streak++
+          currentDate = sessionDate
+        } else {
+          break
+        }
+      }
+
+      return streak
+    } catch (fallbackError) {
+      console.error('Error in fallback learning streak calculation:', fallbackError)
+      return 0
+    }
   }
 }
 

@@ -11,7 +11,6 @@ import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { getAppStats } from '@/lib/stats'
-import XPStatsCard from '@/components/xp/XPStatsCard'
 
 export default function Home() {
   const router = useRouter()
@@ -158,10 +157,6 @@ export default function Home() {
                   </Card>
                 </div>
 
-                {/* XP統計カード */}
-                <div className="max-w-md mx-auto">
-                  <XPStatsCard showDetailedStats={false} />
-                </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-6 border-t">
                   <div className="text-center">

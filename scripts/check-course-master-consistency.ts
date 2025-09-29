@@ -109,7 +109,7 @@ class CourseMasterConsistencyChecker {
     const { data: skillLevelsData, error: skillLevelsError } = await supabase
       .from('skill_levels')
       .select('*')
-      .order('level_order')
+      .order('display_order')
     
     if (skillLevelsError) throw skillLevelsError
     this.skillLevels = skillLevelsData || []

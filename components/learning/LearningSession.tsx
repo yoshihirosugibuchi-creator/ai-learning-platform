@@ -23,6 +23,7 @@ import { addKnowledgeCardToCollection } from '@/lib/supabase-cards'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useXPStats } from '@/hooks/useXPStats'
 import { checkAndAwardCourseBadge } from '@/lib/course-completion'
+import { supabase } from '@/lib/supabase'
 
 interface LearningSessionProps {
   courseId: string
@@ -77,6 +78,8 @@ export default function LearningSession({
   const [currentSessionData, setCurrentSessionData] = useState<LearningSessionData | null>(null)
   const [isCompletingSession, setIsCompletingSession] = useState(false)
   const [_courseName, setCourseName] = useState<string>('Learning Course')
+  const [isFirstCompletion, setIsFirstCompletion] = useState<boolean | null>(null)
+  const [isThemeCompleted, setIsThemeCompleted] = useState<boolean>(false)
 
   const hasQuiz = session.quiz && session.quiz.length > 0
   const isLastSession = currentSessionIndex === totalSessions - 1
@@ -96,6 +99,100 @@ export default function LearningSession({
     fetchCourseName()
   }, [courseId])
   
+  // Pre-determine if this is a first completion (before any user_settings updates)
+  useEffect(() => {
+    const checkFirstCompletion = async () => {
+      if (!user?.id) return
+      
+      try {
+        const progressKey = `${courseId}_${genreId}_${themeId}_${session.id}`
+        const { data: settingData } = await supabase
+          .from('user_settings')
+          .select('setting_value')
+          .eq('user_id', user.id)
+          .eq('setting_key', `lp_${progressKey}`)
+          .single()
+        
+        const progressData = settingData?.setting_value as { completed?: boolean } | null
+        const isFirst = !progressData?.completed
+        setIsFirstCompletion(isFirst)
+        console.log(`🔍 Pre-determined completion status: isFirstCompletion=${isFirst}`, {
+          progressKey: `lp_${progressKey}`,
+          progressData
+        })
+      } catch (error) {
+        // エラー = 記録なし = 初回完了
+        setIsFirstCompletion(true)
+        console.log(`🔍 Pre-determined completion status: isFirstCompletion=true (no record)`, error)
+      }
+    }
+    
+    checkFirstCompletion()
+  }, [user?.id, courseId, genreId, themeId, session.id])
+
+  // Check if all sessions in the theme are completed
+  const checkThemeCompletion = async () => {
+    if (!user?.id) return false
+    
+    try {
+      // Get all sessions in the current theme
+      const { data: courseData, error: courseError } = await supabase
+        .from('learning_courses')
+        .select(`
+          genres:learning_genres!inner(
+            themes:learning_themes!inner(
+              sessions:learning_sessions(id)
+            )
+          )
+        `)
+        .eq('id', courseId)
+        .eq('genres.themes.id', themeId)
+        .single()
+
+      if (courseError || !courseData) {
+        console.error('❌ Error fetching theme sessions:', courseError)
+        return false
+      }
+
+      // Extract all session IDs in this theme
+      const themeSessions = courseData.genres?.[0]?.themes?.[0]?.sessions || []
+      const sessionIds = themeSessions.map((s: { id: string }) => s.id)
+      
+      if (sessionIds.length === 0) {
+        console.warn('⚠️ No sessions found in theme')
+        return false
+      }
+
+      console.log(`🔍 Theme ${themeId} has ${sessionIds.length} sessions:`, sessionIds)
+
+      // Check completion status for all sessions in the theme
+      const completionChecks = await Promise.all(
+        sessionIds.map(async (sessionId: string) => {
+          const progressKey = `${courseId}_${genreId}_${themeId}_${sessionId}`
+          const { data: settingData } = await supabase
+            .from('user_settings')
+            .select('setting_value')
+            .eq('user_id', user.id)
+            .eq('setting_key', `lp_${progressKey}`)
+            .single()
+          
+          const progressData = settingData?.setting_value as { completed?: boolean } | null
+          const isCompleted = !!progressData?.completed
+          console.log(`  Session ${sessionId}: completed=${isCompleted}`)
+          return isCompleted
+        })
+      )
+
+      const allCompleted = completionChecks.every(completed => completed)
+      console.log(`🎯 Theme completion check: ${completionChecks.filter(c => c).length}/${sessionIds.length} sessions completed (all completed: ${allCompleted})`)
+      
+      return allCompleted
+    } catch (error) {
+      console.error('❌ Error checking theme completion:', error)
+      return false
+    }
+  }
+
   // Initialize learning session tracking on component mount
   useEffect(() => {
     if (user?.id && !currentSessionData) {
@@ -123,6 +220,12 @@ export default function LearningSession({
   }, [user?.id, courseId, genreId, themeId, session.id, startTime, currentSessionData])
 
   const handleStartQuiz = async () => {
+    // 初回完了判定が完了するまで待機
+    if (isFirstCompletion === null) {
+      console.log('⏳ Waiting for first completion determination...')
+      return
+    }
+    
     // Prevent scroll jump by not changing focus
     if (hasQuiz) {
       setViewState('quiz')
@@ -174,7 +277,45 @@ export default function LearningSession({
       const endTime = new Date()
       const duration = endTime.getTime() - startTime.getTime()
       
-      // Save learning progress
+      // XP system integration: Save course session data FIRST (初回・復習問わず記録）
+      console.log(`💾 Saving course session to XP system... (clientSideFirstCompletion: ${isFirstCompletion})`)
+      try {
+        const courseSessionData = {
+          session_id: session.id,
+          course_id: courseId,
+          theme_id: themeId,
+          genre_id: genreId,
+          category_id: categoryId,
+          subcategory_id: subcategoryId,
+          session_quiz_correct: hasQuiz ? getQuizScore() === 100 : true, // Perfect score or no quiz means correct
+          is_first_completion: isFirstCompletion ?? false // 事前判定した結果を使用（nullの場合はfalse）
+        }
+        
+        const xpResult = await saveCourseSession(courseSessionData)
+        
+        if (xpResult.success) {
+          console.log('✅ Course session saved:', {
+            earned_xp: xpResult.earned_xp,
+            session_id: xpResult.session_id,
+            is_first_completion: isFirstCompletion
+          })
+        } else {
+          console.error('❌ Course session save failed:', xpResult.error)
+          console.error('🚨 XP保存失敗のため、セッション完了処理を中断します')
+          setIsCompletingSession(false)
+          alert('セッション完了の保存に失敗しました。もう一度お試しください。')
+          return
+        }
+      } catch (xpError) {
+        console.error('❌ XP system integration error:', xpError)
+        // XP保存失敗時は学習進捗保存も停止して整合性を保つ
+        console.error('🚨 XP保存失敗のため、セッション完了処理を中断します')
+        setIsCompletingSession(false)
+        alert('セッション完了の保存に失敗しました。もう一度お試しください。')
+        return
+      }
+
+      // Save learning progress AFTER XP calculation
       console.log('📝 Saving learning progress...', { userId: user.id, courseId, genreId, themeId, sessionId: session.id })
       const progressSaved = await saveLearningProgressSupabase(user.id, courseId, genreId, themeId, session.id, true)
       console.log('📝 Progress save result:', progressSaved)
@@ -193,15 +334,21 @@ export default function LearningSession({
         console.warn('⚠️ No current session data found, skipping session update')
       }
       
-      // Award knowledge card if this is the last session
+      // Award knowledge card if this theme is actually completed AND this is first completion
       console.log('Session completion debug:', {
         isLastSession,
         themeRewardCard,
         sessionCompleted,
-        userId: user.id
+        userId: user.id,
+        isFirstCompletion
       })
       
-      if (isLastSession && themeRewardCard) {
+      // Check if the theme is actually completed (all sessions done)
+      const themeCompleted = await checkThemeCompletion()
+      setIsThemeCompleted(themeCompleted && (isFirstCompletion ?? false)) // Only show on first completion
+      console.log(`🎯 Theme completion status: ${themeCompleted}, showing rewards: ${themeCompleted && isFirstCompletion}`)
+      
+      if (themeCompleted && themeRewardCard && isFirstCompletion) {
         console.log('🎉 ATTEMPTING TO ACQUIRE CARD:', themeRewardCard.id, 'for user:', user.id)
         console.log('Card details:', themeRewardCard)
         
@@ -249,23 +396,31 @@ export default function LearningSession({
         })
       }
       
-      // 復習時は修了証表示をスキップ
-      const sessionKey = `${courseId}_${genreId}_${themeId}_${session.id}`
-      
-      // セッション完了状態を確認（簡易版）
+      // 修正: user_settingsベースの復習判定（UI表示と統一）
       let isReviewMode = false
       try {
-        const { getLearningProgress } = await import('@/lib/learning/data')
-        const progress = await getLearningProgress(user.id)
-        isReviewMode = (progress as Record<string, { completed?: boolean }>)[sessionKey]?.completed || false
-        console.log(`📚 Session completion check: ${sessionKey} -> completed: ${isReviewMode}`)
+        // user_settingsから現在の進捗状態を取得
+        const progressKey = `${courseId}_${genreId}_${themeId}_${session.id}`
+        const { data: settingData } = await supabase
+          .from('user_settings')
+          .select('setting_value')
+          .eq('user_id', user.id)
+          .eq('setting_key', `lp_${progressKey}`)
+          .single()
+        
+        // 既存の完了記録があれば復習モード
+        const progressData = settingData?.setting_value as { completed?: boolean } | null
+        isReviewMode = !!progressData?.completed
+        console.log(`📚 Session mode: isReviewMode=${isReviewMode} (user_settings基準・UI表示と統一)`, { 
+          progressKey: `lp_${progressKey}`, 
+          progressData 
+        })
       } catch (error) {
-        console.warn('⚠️ Could not check session completion status:', error)
-        isReviewMode = false // エラー時は新規として扱う
+        console.log(`📚 Session mode: isReviewMode=${isReviewMode} (初回実行・user_settings記録なし)`, error)
       }
       
-      if (!isReviewMode) {
-        // 初回完了時のみコース完了チェック＆バッジ授与
+      // 初回完了時のみコース完了チェック＆バッジ授与（現在のセッションが初回完了の場合）
+      if (isFirstCompletion) {
         console.log('🏆 Checking for course completion and badge award...')
         const badgeResult = await checkAndAwardCourseBadge(
           user.id,
@@ -284,38 +439,6 @@ export default function LearningSession({
         console.log('📚 Review mode - skipping badge award check')
       }
 
-      // XP system integration: Save course session data
-      if (!isReviewMode) {
-        console.log('💾 Saving course session to XP system...')
-        try {
-          const courseSessionData = {
-            session_id: session.id,
-            course_id: courseId,
-            theme_id: themeId,
-            genre_id: genreId,
-            category_id: categoryId,
-            subcategory_id: subcategoryId,
-            session_quiz_correct: hasQuiz ? getQuizScore() === 100 : true, // Perfect score or no quiz means correct
-            is_first_completion: true
-          }
-          
-          const xpResult = await saveCourseSession(courseSessionData)
-          
-          if (xpResult.success) {
-            console.log('✅ Course session XP saved:', {
-              earned_xp: xpResult.earned_xp,
-              session_id: xpResult.session_id
-            })
-          } else {
-            console.error('❌ Course session XP save failed:', xpResult.error)
-          }
-        } catch (xpError) {
-          console.error('❌ XP system integration error:', xpError)
-          // Continue with session completion even if XP save fails
-        }
-      } else {
-        console.log('📚 Review mode - skipping XP system integration')
-      }
 
       setSessionCompleted(true)
       setViewState('completed')
@@ -636,7 +759,7 @@ export default function LearningSession({
         )}
 
         {/* Reward Card */}
-        {isLastSession && themeRewardCard && (
+        {isThemeCompleted && themeRewardCard && (
           <Card className="max-w-md mx-auto bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200">
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center space-x-2">
@@ -715,7 +838,7 @@ export default function LearningSession({
           </Button>
         </div>
 
-        {isLastSession && (
+        {isThemeCompleted && (
           <div className="text-center space-y-4">
             <div className="p-4 bg-green-50 rounded-lg">
               <div className="text-green-800 font-semibold mb-2">

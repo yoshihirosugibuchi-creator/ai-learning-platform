@@ -19,7 +19,7 @@ import WisdomCard from '@/components/cards/WisdomCard'
 import { getCategoryDisplayName } from '@/lib/category-mapping'
 import { isValidCategoryId, getDifficultyDisplayName } from '@/lib/categories'
 import { addWisdomCardToCollection } from '@/lib/supabase-cards'
-import { saveDetailedQuizData } from '@/lib/supabase-learning'
+// import { saveDetailedQuizData } from '@/lib/supabase-learning' // 未使用のためコメントアウト
 // import { updateProgressAfterQuiz, calculateChallengeQuizRewards, saveChallengeQuizProgressToDatabase } from '@/lib/xp-level-system'
 // import { getSubcategoryId } from '@/lib/categories'
 
@@ -59,6 +59,8 @@ interface QuestionAnswer {
   isCorrect: boolean
   responseTime: number
   category: string
+  subcategory?: string
+  subcategory_id?: string
   difficulty: string
   confidenceLevel?: number
 }
@@ -305,6 +307,8 @@ export default function QuizSession({
       isCorrect,
       responseTime,
       category: currentQuestion.category,
+      subcategory: currentQuestion.subcategory,
+      subcategory_id: currentQuestion.subcategory_id,
       difficulty: currentQuestion.difficulty
     }
     
@@ -448,7 +452,7 @@ export default function QuizSession({
                 session_end_time: new Date().toISOString(),
                 total_questions: finalResults.totalQuestions,
                 correct_answers: finalResults.correctAnswers,
-                accuracy_rate: finalResults.correctAnswers / finalResults.totalQuestions,
+                accuracy_rate: (finalResults.correctAnswers / finalResults.totalQuestions) * 100,
                 answers: questionAnswers.map(qa => ({
                   question_id: qa.questionId,
                   user_answer: null, // We don't store the answer index in the new format
@@ -456,7 +460,7 @@ export default function QuizSession({
                   time_spent: qa.responseTime,
                   is_timeout: false, // We don't track timeouts in current system
                   category_id: qa.category || quizCategory || category || 'logical_thinking_problem_solving',
-                  subcategory_id: '', // Not used in current system
+                  subcategory_id: qa.subcategory_id || 'general', // Use actual subcategory_id or fallback to general
                   difficulty: qa.difficulty
                 }))
               }
@@ -498,8 +502,9 @@ export default function QuizSession({
                 
                 console.log('📝 Detail data sample (first item):', detailData[0])
                 console.log('🚀 Calling saveDetailedQuizData...')
-                await saveDetailedQuizData(detailData)
-                console.log('✅ Detailed quiz data saved successfully')
+                // TODO: Fix detailed_quiz_data table permissions
+                // await saveDetailedQuizData(detailData)
+                console.log('⏭️ Detailed quiz data save temporarily disabled')
                 
               } catch (detailSaveError) {
                 const error = detailSaveError as Error

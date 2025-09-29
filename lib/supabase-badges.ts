@@ -77,6 +77,13 @@ export async function testUserBadgesTableAccess(): Promise<boolean> {
 export async function awardCourseBadge(data: BadgeAwardData): Promise<UserBadge | null> {
   try {
     console.log('🏆 Awarding badge:', data.badge.title, 'for course:', data.courseId)
+    
+    // テーブル存在確認
+    const tableExists = await testUserBadgesTableAccess()
+    if (!tableExists) {
+      console.warn('⚠️ user_badges table not accessible, skipping badge award')
+      return null
+    }
 
     const now = new Date()
     let expiresAt: Date | null = null
@@ -127,7 +134,13 @@ export async function awardCourseBadge(data: BadgeAwardData): Promise<UserBadge 
       .single()
 
     if (error) {
-      console.error('❌ Error awarding badge:', error)
+      console.error('❌ Error awarding badge:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        data: badgeData
+      })
       return null
     }
 
@@ -143,7 +156,12 @@ export async function awardCourseBadge(data: BadgeAwardData): Promise<UserBadge 
       courseName: result.course_name
     }
   } catch (error) {
-    console.error('Exception in awardCourseBadge:', error)
+    console.error('Exception in awardCourseBadge:', {
+      error: error,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      errorStack: error instanceof Error ? error.stack : 'No stack',
+      badgeData: data
+    })
     return null
   }
 }

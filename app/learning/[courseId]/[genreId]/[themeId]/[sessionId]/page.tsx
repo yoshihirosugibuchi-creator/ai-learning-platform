@@ -8,12 +8,12 @@ import LoadingScreen from '@/components/layout/LoadingScreen'
 import LearningSession from '@/components/learning/LearningSession'
 import { getLearningCourseDetails } from '@/lib/learning/data'
 import { LearningCourse, LearningSession as LearningSessionType } from '@/lib/types/learning'
-import { useUserContext } from '@/contexts/UserContext'
+import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function SessionPage() {
   const router = useRouter()
   const params = useParams()
-  const { user } = useUserContext()
+  const { user } = useAuth()
   const [course, setCourse] = useState<LearningCourse | null>(null)
   const [currentSession, setCurrentSession] = useState<LearningSessionType | null>(null)
   const [loading, setLoading] = useState(true)

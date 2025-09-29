@@ -180,7 +180,7 @@ class FallbackDataSyncer {
       const { data: dbSkillLevels, error } = await supabase
         .from('skill_levels')
         .select('*')
-        .order('level_order')
+        .order('display_order')
       
       if (error) throw error
       
@@ -223,7 +223,6 @@ class FallbackDataSyncer {
       const { data: quizData, error } = await supabase
         .from('quiz_questions')
         .select('*')
-        .eq('is_active', true)
         .order('legacy_id')
       
       if (error) throw error
@@ -257,7 +256,7 @@ class FallbackDataSyncer {
         timeLimit: row.time_limit,
         relatedTopics: row.related_topics || [],
         source: row.source,
-        is_active: row.is_active,
+        // is_active: row.is_active, // DB列不存在のためコメントアウト
         created_at: row.created_at,
         updated_at: row.updated_at
       }))
@@ -268,7 +267,7 @@ class FallbackDataSyncer {
         metadata: {
           lastUpdated: new Date().toISOString(),
           totalQuestions: processedQuestions.length,
-          activeQuestions: processedQuestions.filter(q => q.is_active !== false).length,
+          activeQuestions: processedQuestions.length, // 全問題をアクティブとして扱う
           source: 'database_deploy_sync',
           syncedAt: new Date().toISOString(),
           categories: [...new Set(processedQuestions.map(q => q.category))].length,

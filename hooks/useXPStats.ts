@@ -8,6 +8,13 @@ interface XPStats {
     quiz_xp: number
     course_xp: number
     bonus_xp: number
+    // SKP fields
+    total_skp: number
+    quiz_skp: number
+    course_skp: number
+    bonus_skp: number
+    streak_skp: number
+    // existing fields
     quiz_sessions_completed: number
     course_sessions_completed: number
     quiz_average_accuracy: number
@@ -15,6 +22,8 @@ interface XPStats {
     knowledge_cards_total: number
     badges_total: number
     last_activity_at?: string
+    // streak calculation
+    learning_streak: number
   }
   categories: {
     [categoryId: string]: {
@@ -163,6 +172,7 @@ export function useXPStats(): UseXPStatsReturn {
       setStats(data)
       console.log('✅ XP stats loaded:', {
         totalXP: data.user.total_xp,
+        totalSKP: data.user.total_skp,
         categories: Object.keys(data.categories).length,
         subcategories: Object.keys(data.subcategories).length
       })
