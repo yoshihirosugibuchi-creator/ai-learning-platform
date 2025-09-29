@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { loadXPSettings, calculateCourseXP, calculateBonusXP } from '@/lib/xp-settings'
-import type { LearningGenre, LearningTheme } from '@/lib/types/learning'
+// import type { LearningGenre, LearningTheme } from '@/lib/types/learning' // 未使用のためコメントアウト
 // import { calculateStreakBonus } from '@/lib/xp-settings' // 未使用のためコメントアウト
 // import { getUserLearningStreak } from '@/lib/supabase-learning' // 未使用のためコメントアウト
 
@@ -417,247 +417,137 @@ export async function POST(request: Request) {
       }
     }
 
-    // 10. コース完了チェックとボーナスXP付与（初回完了のみ）
-    let courseCompletionBonus = 0
+    // 10. コース完了チェックとボーナスXP付与（初回完了のみ）- 非同期で実行
+    const courseCompletionBonus = 0
     if (isFirstCompletion) {
-      try {
-        // コースの全セッション数を取得
-        const { data: courseData, error: courseError } = await supabase
-          .from('learning_courses')
-          .select(`
-            *,
-            genres:learning_genres(
-              *,
-              themes:learning_themes(
-                *,
-                sessions:learning_sessions(id)
-              )
-            )
-          `)
-          .eq('id', body.course_id)
-          .single()
-
-        if (!courseError && courseData) {
-          // コースの全セッション数を計算
-          const totalSessions = courseData.genres?.reduce((total: number, genre: LearningGenre) => {
-            return total + (genre.themes?.reduce((themeTotal: number, theme: LearningTheme) => {
-              return themeTotal + (theme.sessions?.length || 0)
-            }, 0) || 0)
-          }, 0) || 0
-
-          console.log(`🔍 Course ${body.course_id} has ${totalSessions} total sessions`)
-
-          // 完了したセッション数を取得（ユニークセッション数で正しく判定）
-          const { data: completedSessions, error: completedError } = await supabase
-            .from('course_session_completions')
-            .select('session_id')
-            .eq('user_id', userId)
-            .eq('course_id', body.course_id)
-            .eq('is_first_completion', true)
-
-          if (!completedError && completedSessions) {
-            // 重複セッション除去：ユニークなセッションIDのみカウント
-            const uniqueSessionIds = new Set(completedSessions.map(s => s.session_id))
-            const completedCount = uniqueSessionIds.size
-            console.log(`👤 User has completed ${completedCount}/${totalSessions} unique sessions (${completedSessions.length} total first completion records)`)
-            console.log(`📋 Completed sessions: ${Array.from(uniqueSessionIds).sort()}`)
-
-            // 全セッション完了時にボーナスXP・SKP付与
-            if (completedCount >= totalSessions && totalSessions > 0) {
-              courseCompletionBonus = calculateBonusXP('course_completion', xpSettings)
-              const courseCompletionSKPBonus = xpSettings.skp.course_complete_bonus
-              
-              console.log(`🎉 Course completion bonus! ${courseCompletionBonus}XP + ${courseCompletionSKPBonus}SKP`)
-
-              // ユーザー統計にボーナスXP・SKPを追加（ユーザー全体統計のみ）
-              const { data: currentStats } = await supabase
-                .from('user_xp_stats_v2')
-                .select('*')
-                .eq('user_id', userId)
-                .single()
-
-              if (currentStats) {
-                const newTotalXP = currentStats.total_xp + courseCompletionBonus
-                const newTotalSKP = (currentStats.total_skp || 0) + courseCompletionSKPBonus
-                const newLevel = Math.floor(newTotalXP / 1000) + 1
-
-                const { error: bonusUpdateError } = await supabase
-                  .from('user_xp_stats_v2')
-                  .update({
-                    total_xp: newTotalXP,
-                    bonus_xp: (currentStats.bonus_xp || 0) + courseCompletionBonus,
-                    total_skp: newTotalSKP,
-                    bonus_skp: (currentStats.bonus_skp || 0) + courseCompletionSKPBonus,
-                    current_level: newLevel,
-                    updated_at: new Date().toISOString()
-                  })
-                  .eq('user_id', userId)
-
-                if (bonusUpdateError) {
-                  console.error('❌ Course completion bonus update error:', bonusUpdateError)
-                } else {
-                  console.log('✅ Course completion bonus added to user stats:', {
-                    bonusXP: courseCompletionBonus,
-                    bonusSKP: courseCompletionSKPBonus,
-                    newTotalXP,
-                    newTotalSKP,
-                    newLevel
-                  })
-                }
-
-                // SKP取引記録を追加
-                if (courseCompletionSKPBonus > 0) {
-                  const { error: skpTransactionError } = await supabase
-                    .from('skp_transactions')
-                    .insert({
-                      user_id: userId,
-                      type: 'earned',
-                      amount: courseCompletionSKPBonus,
-                      source: `course_completion_${body.course_id}`,
-                      description: `Course completion bonus: ${body.course_id}`,
-                      created_at: new Date().toISOString()
-                    })
-
-                  if (skpTransactionError) {
-                    console.warn('⚠️ Course completion SKP transaction recording error:', skpTransactionError)
-                  } else {
-                    console.log('💰 Course completion SKP transaction recorded:', {
-                      amount: courseCompletionSKPBonus,
-                      source: `course_completion_${body.course_id}`
-                    })
-                  }
-                }
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.warn('⚠️ Course completion check error:', error)
-      }
-    }
-
-    // 11. 作成されたセッション完了記録取得
-    const { data: _completionRecord, error: fetchError } = await supabase
-      .from('course_session_completions')
-      .select('*')
-      .eq('session_id', body.session_id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-
-    if (fetchError) {
-      throw new Error(`Completion record fetch error: ${fetchError.message}`)
-    }
-
-    // 12. 継続学習ボーナスSKP計算・付与（自動実行）
-    let streakBonusResult = null
-    try {
-      console.log('🔥 Auto-triggering streak bonus calculation after course completion...')
-      
-      // 最新の学習継続日数を計算
-      const today = new Date()
-      const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      
-      const { data: activityRecords } = await supabase
-        .from('daily_xp_records')
-        .select('date, quiz_sessions, course_sessions')
-        .eq('user_id', userId)
-        .gte('date', ninetyDaysAgo)
-        .order('date', { ascending: false })
-
-      let currentStreak = 0
-      if (activityRecords && activityRecords.length > 0) {
-        const sortedRecords = activityRecords.sort((a, b) => b.date.localeCompare(a.date))
-        
-        // 今日から逆算して継続日数を計算
-        const checkDate = new Date(today)
-        for (const record of sortedRecords) {
-          const checkDateString = checkDate.getFullYear() + '-' + 
-            String(checkDate.getMonth() + 1).padStart(2, '0') + '-' + 
-            String(checkDate.getDate()).padStart(2, '0')
+      // 重い処理を非同期で実行してUIをブロックしない
+      Promise.resolve().then(async () => {
+        try {
+          console.log('🎯 Starting course completion check (async)')
           
-          if (record.date === checkDateString && (record.quiz_sessions > 0 || record.course_sessions > 0)) {
-            currentStreak++
-            checkDate.setDate(checkDate.getDate() - 1)
-          } else {
-            break
-          }
-        }
-      }
-
-      console.log(`📅 Current learning streak: ${currentStreak} days`)
-
-      // 継続ボーナスがある場合のみ処理
-      if (currentStreak > 0) {
-        // 既に付与された継続ボーナスを確認
-        const { data: existingStreakTransactions } = await supabase
-          .from('skp_transactions')
-          .select('amount, description')
-          .eq('user_id', userId)
-          .eq('type', 'earned')
-          .like('source', 'streak_%')
-          .order('created_at', { ascending: false })
-
-        const totalStreakBonusAlreadyPaid = existingStreakTransactions?.reduce((sum, transaction) => sum + transaction.amount, 0) || 0
-        
-        // XP設定を取得
-        const xpSettings = await loadXPSettings(supabase)
-        
-        // 新しく付与すべきボーナスを計算
-        const dailyStreakBonus = currentStreak * xpSettings.skp.daily_streak_bonus
-        const tenDayBonusCount = Math.floor(currentStreak / 10)
-        const tenDayBonus = tenDayBonusCount * xpSettings.skp.ten_day_streak_bonus
-        const totalStreakBonusShould = dailyStreakBonus + tenDayBonus
-        const newStreakBonus = Math.max(0, totalStreakBonusShould - totalStreakBonusAlreadyPaid)
-
-        if (newStreakBonus > 0) {
-          // ユーザー統計を更新
-          const { data: currentStats } = await supabase
-            .from('user_xp_stats_v2')
-            .select('*')
-            .eq('user_id', userId)
-            .single()
-
-          if (currentStats) {
-            const newTotalSKP = (currentStats.total_skp || 0) + newStreakBonus
-
-            await supabase
-              .from('user_xp_stats_v2')
-              .update({
-                total_skp: newTotalSKP,
-                streak_skp: (currentStats.streak_skp || 0) + newStreakBonus,
-                updated_at: new Date().toISOString()
-              })
+          // 簡単なカウントクエリに変更してパフォーマンス改善
+          const [courseSessionsResult, completedSessionsResult] = await Promise.all([
+            // コースの全セッション数を効率的に取得
+            supabase.rpc('count_course_sessions', { course_id: body.course_id }),
+            // 完了セッション数を取得
+            supabase
+              .from('course_session_completions')
+              .select('session_id')
               .eq('user_id', userId)
+              .eq('course_id', body.course_id)
+              .eq('is_first_completion', true)
+          ])
 
-            // SKP取引記録を追加
-            await supabase
-              .from('skp_transactions')
-              .insert({
-                user_id: userId,
-                type: 'earned',
-                amount: newStreakBonus,
-                source: `streak_${currentStreak}days`,
-                description: `Learning streak bonus: ${currentStreak} consecutive days${tenDayBonusCount > 0 ? ` (includes ${tenDayBonusCount} ten-day bonuses)` : ''}`,
-                created_at: new Date().toISOString()
-              })
+          const totalSessions = courseSessionsResult.data || 0
+          const completedSessions = completedSessionsResult.data || []
+          const uniqueSessionIds = new Set(completedSessions.map(s => s.session_id))
+          const completedCount = uniqueSessionIds.size
 
-            streakBonusResult = {
-              streak_days: currentStreak,
-              bonus_skp: newStreakBonus,
-              total_skp: newTotalSKP
+          console.log(`🔍 Course ${body.course_id}: ${completedCount}/${totalSessions} sessions completed`)
+
+          // 全セッション完了時にボーナス処理
+          if (completedCount >= totalSessions && totalSessions > 0) {
+            const courseCompletionBonus = calculateBonusXP('course_completion', xpSettings)
+            const courseCompletionSKPBonus = xpSettings.skp.course_complete_bonus
+            
+            console.log(`🎉 Course completion bonus (async)! ${courseCompletionBonus}XP + ${courseCompletionSKPBonus}SKP`)
+
+            // ボーナス処理を並列実行
+            const [statsUpdate, skpTransaction] = await Promise.all([
+              // ユーザー統計更新
+              supabase.rpc('add_course_completion_bonus', {
+                p_user_id: userId,
+                p_bonus_xp: courseCompletionBonus,
+                p_bonus_skp: courseCompletionSKPBonus
+              }),
+              // SKP取引記録
+              courseCompletionSKPBonus > 0 ? supabase
+                .from('skp_transactions')
+                .insert({
+                  user_id: userId,
+                  type: 'earned',
+                  amount: courseCompletionSKPBonus,
+                  source: `course_completion_${body.course_id}`,
+                  description: `Course completion bonus: ${body.course_id}`,
+                  created_at: new Date().toISOString()
+                }) : Promise.resolve({ error: null })
+            ])
+
+            if (statsUpdate.error) {
+              console.error('❌ Course completion bonus update error (async):', statsUpdate.error)
+            } else {
+              console.log('✅ Course completion bonus added (async)')
             }
 
-            console.log(`✅ Auto-awarded streak bonus: ${newStreakBonus} SKP for ${currentStreak} days streak`)
+            if (skpTransaction.error) {
+              console.warn('⚠️ Course completion SKP transaction error (async):', skpTransaction.error)
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ Course completion check error (async):', error)
+        }
+      }).catch(error => {
+        console.warn('⚠️ Course completion async processing failed:', error)
+      })
+    }
+
+    // 11. セッション完了記録は既に保存済みのため、追加取得は不要
+
+    // 12. 継続学習ボーナスSKP計算・付与（非同期実行でUIブロック回避）
+    const streakBonusResult = null
+    // 重い継続学習ボーナス計算を非同期で実行
+    Promise.resolve().then(async () => {
+      try {
+        console.log('🔥 Auto-triggering streak bonus calculation (async)...')
+        
+        // 効率化: 最近7日分のみチェックしてからフル計算を判断
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        
+        const { data: recentActivity } = await supabase
+          .from('daily_xp_records')
+          .select('date, quiz_sessions, course_sessions')
+          .eq('user_id', userId)
+          .gte('date', sevenDaysAgo)
+          .order('date', { ascending: false })
+          .limit(7)
+
+        let hasRecentActivity = false
+        if (recentActivity && recentActivity.length > 0) {
+          // 最近の活動があるかチェック
+          const today = new Date().toISOString().split('T')[0]
+          hasRecentActivity = recentActivity.some(record => 
+            record.date === today && (record.quiz_sessions > 0 || record.course_sessions > 0)
+          )
+        }
+
+        // 今日活動がある場合のみフル継続日数計算を実行
+        if (hasRecentActivity) {
+          console.log('📅 Recent activity detected, calculating full streak (async)')
+          
+          // フル計算は非同期で実行
+          const { data } = await supabase.rpc('calculate_learning_streak', { 
+            p_user_id: userId 
+          })
+          
+          if (data && data.current_streak > 0) {
+            const streakDays = data.current_streak
+            const newBonus = data.new_bonus_amount
+            
+            if (newBonus > 0) {
+              console.log(`✅ Auto-awarded streak bonus (async): ${newBonus} SKP for ${streakDays} days streak`)
+            } else {
+              console.log(`ℹ️ No new streak bonus needed (async). Current streak: ${streakDays} days`)
+            }
           }
         } else {
-          console.log(`ℹ️ No new streak bonus needed. Current streak: ${currentStreak} days`)
+          console.log('📅 No recent activity, skipping streak calculation (async)')
         }
+      } catch (streakError) {
+        console.warn('⚠️ Automatic streak bonus calculation failed (async):', streakError)
       }
-    } catch (streakError) {
-      console.warn('⚠️ Automatic streak bonus calculation failed:', streakError)
-      // エラーが発生してもコース保存は成功として扱う
-    }
+    }).catch(error => {
+      console.warn('⚠️ Streak bonus async processing failed:', error)
+    })
 
     const responseMessage = isFirstCompletion && body.session_quiz_correct
       ? courseCompletionBonus > 0 
