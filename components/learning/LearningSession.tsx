@@ -279,115 +279,101 @@ export default function LearningSession({
       
       // XP system integration: Save course session data FIRST (初回・復習問わず記録）
       console.log(`💾 Saving course session to XP system... (clientSideFirstCompletion: ${isFirstCompletion})`)
-      try {
-        const courseSessionData = {
-          session_id: session.id,
-          course_id: courseId,
-          theme_id: themeId,
-          genre_id: genreId,
-          category_id: categoryId,
-          subcategory_id: subcategoryId,
-          session_quiz_correct: hasQuiz ? getQuizScore() === 100 : true, // Perfect score or no quiz means correct
-          is_first_completion: isFirstCompletion ?? false // 事前判定した結果を使用（nullの場合はfalse）
-        }
-        
-        const xpResult = await saveCourseSession(courseSessionData)
-        
-        if (xpResult.success) {
-          console.log('✅ Course session saved:', {
-            earned_xp: xpResult.earned_xp,
-            session_id: xpResult.session_id,
-            is_first_completion: isFirstCompletion
-          })
-        } else {
-          console.error('❌ Course session save failed:', xpResult.error)
-          console.error('🚨 XP保存失敗のため、セッション完了処理を中断します')
-          setIsCompletingSession(false)
-          alert('セッション完了の保存に失敗しました。もう一度お試しください。')
-          return
-        }
-      } catch (xpError) {
-        console.error('❌ XP system integration error:', xpError)
-        // XP保存失敗時は学習進捗保存も停止して整合性を保つ
-        console.error('🚨 XP保存失敗のため、セッション完了処理を中断します')
+      const courseSessionData = {
+        session_id: session.id,
+        course_id: courseId,
+        theme_id: themeId,
+        genre_id: genreId,
+        category_id: categoryId,
+        subcategory_id: subcategoryId,
+        session_quiz_correct: hasQuiz ? getQuizScore() === 100 : true, // Perfect score or no quiz means correct
+        is_first_completion: isFirstCompletion ?? false // 事前判定した結果を使用（nullの場合はfalse）
+      }
+      
+      const xpResult = await saveCourseSession(courseSessionData)
+      
+      if (!xpResult.success) {
+        console.error('❌ Course session save failed:', xpResult.error)
         setIsCompletingSession(false)
         alert('セッション完了の保存に失敗しました。もう一度お試しください。')
         return
       }
 
-      // Save learning progress AFTER XP calculation
-      console.log('📝 Saving learning progress...', { userId: user.id, courseId, genreId, themeId, sessionId: session.id })
-      const progressSaved = await saveLearningProgressSupabase(user.id, courseId, genreId, themeId, session.id, true)
-      console.log('📝 Progress save result:', progressSaved)
+      console.log('✅ Course session saved:', {
+        earned_xp: xpResult.earned_xp,
+        session_id: xpResult.session_id,
+        is_first_completion: isFirstCompletion
+      })
+
+      // 並列実行でパフォーマンス改善: 学習進捗保存とセッション更新を同時実行
+      const parallelOperations = []
       
-      // Update learning session with completion data in Supabase
+      // 学習進捗保存
+      console.log('📝 Saving learning progress...', { userId: user.id, courseId, genreId, themeId, sessionId: session.id })
+      parallelOperations.push(
+        saveLearningProgressSupabase(user.id, courseId, genreId, themeId, session.id, true)
+          .then(result => {
+            console.log('📝 Progress save result:', result)
+            return { type: 'progress', result }
+          })
+      )
+      
+      // セッション更新
       if (currentSessionData?.id) {
         console.log('🔄 Updating learning session...', { sessionId: currentSessionData.id })
-        const sessionUpdated = await updateLearningSession(currentSessionData.id, {
-          end_time: endTime.toISOString(),
-          duration,
-          completed: true,
-          quiz_score: hasQuiz ? getQuizScore() : undefined
-        })
-        console.log('🔄 Session update result:', sessionUpdated)
-      } else {
-        console.warn('⚠️ No current session data found, skipping session update')
+        parallelOperations.push(
+          updateLearningSession(currentSessionData.id, {
+            end_time: endTime.toISOString(),
+            duration,
+            completed: true,
+            quiz_score: hasQuiz ? getQuizScore() : undefined
+          }).then(result => {
+            console.log('🔄 Session update result:', result)
+            return { type: 'session', result }
+          })
+        )
       }
+
+      // 並列実行
+      await Promise.all(parallelOperations)
       
-      // Award knowledge card if this theme is actually completed AND this is first completion
+      // パフォーマンス改善: テーマ完了チェックとバッジ処理を並列実行
+      const [themeCompleted] = await Promise.all([
+        checkThemeCompletion(),
+        // その他の処理があれば追加
+      ])
+      
       console.log('Session completion debug:', {
         isLastSession,
         themeRewardCard,
         sessionCompleted,
         userId: user.id,
-        isFirstCompletion
+        isFirstCompletion,
+        themeCompleted
       })
       
-      // Check if the theme is actually completed (all sessions done)
-      const themeCompleted = await checkThemeCompletion()
       setIsThemeCompleted(themeCompleted && (isFirstCompletion ?? false)) // Only show on first completion
       console.log(`🎯 Theme completion status: ${themeCompleted}, showing rewards: ${themeCompleted && isFirstCompletion}`)
       
+      // カード獲得処理も非同期で実行（UIブロックを避ける）
       if (themeCompleted && themeRewardCard && isFirstCompletion) {
         console.log('🎉 ATTEMPTING TO ACQUIRE CARD:', themeRewardCard.id, 'for user:', user.id)
-        console.log('Card details:', themeRewardCard)
         
-        try {
-          // Use the card ID directly - the addKnowledgeCardToCollection function will handle conversion
-          console.log('🎯 ATTEMPTING CARD ACQUISITION:', {
-            userId: user.id,
-            cardId: themeRewardCard.id,
-            cardTitle: themeRewardCard.title,
-            isLastSession,
-            themeId,
-            genreId,
-            courseId
+        // カード獲得処理を非同期で実行（完了を待たない）
+        addKnowledgeCardToCollection(user.id, themeRewardCard.id)
+          .then(result => {
+            setCardAcquired(result.isNew)
+            console.log('🎯 CARD ACQUISITION RESULT:', {
+              result,
+              cardId: themeRewardCard.id,
+              cardTitle: themeRewardCard.title,
+              isNew: result.isNew,
+              count: result.count
+            })
           })
-          
-          const result = await addKnowledgeCardToCollection(user.id, themeRewardCard.id)
-          setCardAcquired(result.isNew)
-          
-          console.log('🎯 CARD ACQUISITION RESULT:', {
-            result,
-            cardId: themeRewardCard.id,
-            cardTitle: themeRewardCard.title,
-            isNew: result.isNew,
-            count: result.count
+          .catch(error => {
+            console.error('❌ Error acquiring knowledge card:', error)
           })
-          
-          if (result.isNew) {
-            console.log('🎉 NEW CARD ACQUIRED! Card should appear in collection.')
-          } else {
-            console.log('♻️  Card was already in collection.')
-          }
-        } catch (error) {
-          console.error('❌ Error acquiring knowledge card:', error)
-          console.error('❌ Error details:', {
-            cardId: themeRewardCard.id,
-            userId: user.id,
-            error: error
-          })
-        }
       } else {
         console.log('⚠️ Card acquisition skipped:', {
           isLastSession,
@@ -422,19 +408,17 @@ export default function LearningSession({
       // 初回完了時のみコース完了チェック＆バッジ授与（現在のセッションが初回完了の場合）
       if (isFirstCompletion) {
         console.log('🏆 Checking for course completion and badge award...')
-        const badgeResult = await checkAndAwardCourseBadge(
-          user.id,
-          courseId,
-          genreId,
-          themeId,
-          session.id
-        )
-        
-        if (badgeResult.completed && badgeResult.badge) {
-          console.log('🎉 Course completed! Badge awarded:', badgeResult.badge)
-          const badgeData = badgeResult.badge
-          setBadgeAwarded(badgeData)
-        }
+        // バッジ処理も非同期で実行（UIブロックを避ける）
+        checkAndAwardCourseBadge(user.id, courseId, genreId, themeId, session.id)
+          .then(badgeResult => {
+            if (badgeResult.completed && badgeResult.badge) {
+              console.log('🎉 Course completed! Badge awarded:', badgeResult.badge)
+              setBadgeAwarded(badgeResult.badge)
+            }
+          })
+          .catch(error => {
+            console.error('❌ Error checking course badge:', error)
+          })
       } else {
         console.log('📚 Review mode - skipping badge award check')
       }
@@ -747,9 +731,19 @@ export default function LearningSession({
           <Card className="max-w-md mx-auto">
             <CardContent className="pt-6">
               <div className="text-center space-y-2">
-                <div className="text-3xl font-bold text-primary">
-                  {getQuizScore()}点
-                </div>
+                {session.quiz!.length === 1 ? (
+                  // 1問の場合は正解/不正解で表示
+                  <div className={`text-3xl font-bold ${
+                    Object.values(quizResults).filter(r => r).length > 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {Object.values(quizResults).filter(r => r).length > 0 ? '正解' : '不正解'}
+                  </div>
+                ) : (
+                  // 複数問の場合は点数で表示
+                  <div className="text-3xl font-bold text-primary">
+                    {getQuizScore()}点
+                  </div>
+                )}
                 <div className="text-sm text-muted-foreground">
                   {session.quiz!.length}問中 {Object.values(quizResults).filter(r => r).length}問正解
                 </div>
