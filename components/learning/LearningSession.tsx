@@ -279,6 +279,19 @@ export default function LearningSession({
       
       // XP system integration: Save course session data FIRST (初回・復習問わず記録）
       console.log(`💾 Saving course session to XP system... (clientSideFirstCompletion: ${isFirstCompletion})`)
+      
+      // デバッグ: サブカテゴリーID確認
+      console.log('🔍 Course session data debug:', {
+        courseId,
+        genreId,
+        themeId,
+        categoryId,
+        subcategoryId,
+        subcategoryIdType: typeof subcategoryId,
+        subcategoryIdLength: subcategoryId?.length || 0,
+        subcategoryIdEmpty: subcategoryId === '' || subcategoryId === null || subcategoryId === undefined
+      })
+      
       const courseSessionData = {
         session_id: session.id,
         course_id: courseId,
