@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST() {
   try {
@@ -11,7 +11,7 @@ export async function POST() {
     // 現在"ブランディング・ポジショニング"になっている問題をすべて修正
     console.log('🔄 マーケティング問題を顧客分析・セグメンテーションに修正...')
     
-    const { data: marketingQuestions, error: marketingError } = await supabase
+    const { data: marketingQuestions, error: marketingError } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, question, subcategory')
       .or('question.ilike.%マーケティング戦略%,question.ilike.%フレームワーク%,question.ilike.%ブランディング%,question.ilike.%ポジショニング%')
@@ -23,7 +23,7 @@ export async function POST() {
     console.log(`📋 マーケティング関連問題: ${marketingQuestions?.length}問見つかりました`)
     
     // まず現在のブランディング・ポジショニングカテゴリーの問題をすべて顧客分析・セグメンテーションに変更
-    const { error: updateMarketingError } = await supabase
+    const { error: updateMarketingError } = await supabaseAdmin
       .from('quiz_questions')
       .update({
         subcategory: '顧客分析・セグメンテーション',
@@ -42,7 +42,7 @@ export async function POST() {
     // 2. 事業計画・資金調達の問題で、財務分析に適した問題を特定して修正
     console.log('🔄 事業計画・資金調達の問題から財務分析相当を検索...')
     
-    const { data: financeQuestions, error: financeError } = await supabase
+    const { data: financeQuestions, error: financeError } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, question, subcategory')
       .eq('subcategory', '事業計画・資金調達')
@@ -74,7 +74,7 @@ export async function POST() {
     if (financialAnalysisQuestions.length > 0) {
       const financialAnalysisIds = financialAnalysisQuestions.map(q => q.id)
       
-      const { error: updateFinanceError } = await supabase
+      const { error: updateFinanceError } = await supabaseAdmin
         .from('quiz_questions')
         .update({
           subcategory: '財務分析・企業価値評価',
@@ -93,7 +93,7 @@ export async function POST() {
     }
 
     // 修正後の確認
-    const { data: finalCheck, error: finalCheckError } = await supabase
+    const { data: finalCheck, error: finalCheckError } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, category_id, subcategory, subcategory_id')
       .or('subcategory.eq.顧客分析・セグメンテーション,subcategory.eq.事業計画・資金調達,subcategory.eq.財務分析・企業価値評価')

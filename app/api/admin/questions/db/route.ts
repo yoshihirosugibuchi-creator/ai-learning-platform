@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import type { Question } from '@/lib/types'
+import type { Database } from '@/lib/database-types-official'
 import fs from 'fs'
 import path from 'path'
+
+type QuizQuestionRow = Database['public']['Tables']['quiz_questions']['Row']
 
 // DB対応版 - 問題データ取得
 export async function GET() {
   try {
     console.log('🔍 Admin: Fetching all questions from DB')
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('quiz_questions')
       .select('*')
       .eq('is_deleted', false)
@@ -24,20 +27,20 @@ export async function GET() {
     }
     
     // DB行をQuestion型に変換
-    const questions: Question[] = data?.map(row => ({
+    const questions: Question[] = data?.map((row: QuizQuestionRow) => ({
       id: row.legacy_id,
       category: row.category_id,
-      subcategory: row.subcategory,
-      subcategory_id: row.subcategory_id,
+      subcategory: row.subcategory || '',
+      subcategory_id: row.subcategory_id || '',
       question: row.question,
       options: [row.option1, row.option2, row.option3, row.option4],
       correct: row.correct_answer,
       explanation: row.explanation,
       difficulty: row.difficulty,
       timeLimit: row.time_limit,
-      relatedTopics: row.related_topics || [],
+      relatedTopics: Array.isArray(row.related_topics) ? row.related_topics as string[] : [],
       source: row.source,
-      deleted: row.is_deleted
+      deleted: row.is_deleted || false
     })) || []
     
     console.log(`✅ Admin: ${questions.length} questions retrieved from DB`)
@@ -158,7 +161,7 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`⏳ Processing batch ${batchNum}/${Math.ceil(dbRows.length/BATCH_SIZE)}: ${batch.length} questions`)
         
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from('quiz_questions')
           .upsert(batch, { 
             onConflict: 'legacy_id',
@@ -303,7 +306,7 @@ export async function DELETE(request: NextRequest) {
     console.log(`🗑️ Admin: Deleting question ${legacyId}`)
     
     // 論理削除（is_deleted = true）
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('quiz_questions')
       .update({ 
         is_deleted: true,

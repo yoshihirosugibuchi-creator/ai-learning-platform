@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import type { Database } from '@/lib/database-types-official'
+
+type TableName = keyof Database['public']['Tables']
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,12 +20,10 @@ export async function POST(request: NextRequest) {
     const results: Record<string, unknown> = {}
 
     // Check all relevant tables for remaining data
-    const tables = [
+    const tables: TableName[] = [
       'user_xp_stats_v2',
-      'user_xp_stats', // v1テーブルもチェック
       'user_category_xp_stats_v2',
       'user_subcategory_xp_stats_v2',
-      'category_xp_stats', // v1テーブルもチェック
       'daily_xp_records',
       'quiz_sessions',
       'skp_transactions',
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     for (const tableName of tables) {
       try {
-        const { data, error, count } = await supabase
+        const { data, error, count } = await supabaseAdmin
           .from(tableName)
           .select('*', { count: 'exact' })
           .eq('user_id', userId)

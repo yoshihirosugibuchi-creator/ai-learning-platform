@@ -51,12 +51,12 @@ async function testXPAPIs() {
     console.log('📊 1. データベース構造確認:')
     
     const tables = [
-      'xp_settings',
+      'xp_level_skp_settings',
       'quiz_sessions', 
       'quiz_answers',
-      'user_xp_stats',
-      'user_category_xp_stats',
-      'user_subcategory_xp_stats'
+      'user_xp_stats_v2',
+      'user_category_xp_stats_v2',
+      'user_subcategory_xp_stats_v2'
     ]
 
     for (const table of tables) {
@@ -78,9 +78,10 @@ async function testXPAPIs() {
     // 2. XP設定値確認
     console.log('\n⚙️ 2. XP設定値確認:')
     const { data: settings, error: settingsError } = await supabase
-      .from('xp_settings')
+      .from('xp_level_skp_settings')
       .select('*')
-      .order('setting_key')
+      .eq('is_active', true)
+      .order('setting_category, setting_key')
 
     if (settingsError) {
       console.log(`   ❌ 設定取得エラー: ${settingsError.message}`)

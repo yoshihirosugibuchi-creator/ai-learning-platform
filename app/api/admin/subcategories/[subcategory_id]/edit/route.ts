@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 interface RouteParams {
   params: Promise<{
@@ -26,7 +26,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // サブカテゴリーの存在確認
-    const { data: existingSubcategory, error: checkError } = await supabase
+    const { data: existingSubcategory, error: checkError } = await supabaseAdmin
       .from('subcategories')
       .select('subcategory_id, name')
       .eq('subcategory_id', subcategoryId)
@@ -40,7 +40,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // サブカテゴリーを更新
-    const { data: updatedSubcategory, error: updateError } = await supabase
+    const { data: updatedSubcategory, error: updateError } = await supabaseAdmin
       .from('subcategories')
       .update({
         name,

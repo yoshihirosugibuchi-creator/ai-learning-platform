@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 親カテゴリーの存在確認
-    const { data: parentCategory, error: parentError } = await supabase
+    const { data: parentCategory, error: parentError } = await supabaseAdmin
       .from('categories')
       .select('category_id')
       .eq('category_id', parent_category_id)
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 既存のサブカテゴリーIDとの重複チェック
-    const { data: existingSubcategory } = await supabase
+    const { data: existingSubcategory } = await supabaseAdmin
       .from('subcategories')
       .select('subcategory_id')
       .eq('subcategory_id', subcategory_id)
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // サブカテゴリーを作成
-    const { data: newSubcategory, error: createError } = await supabase
+    const { data: newSubcategory, error: createError } = await supabaseAdmin
       .from('subcategories')
       .insert({
         subcategory_id,

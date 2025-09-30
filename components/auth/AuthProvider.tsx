@@ -307,11 +307,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('📨 AuthProvider: Login response received')
       
       if (error) {
-        // ユーザー入力エラーは詳細ログを出さない
+        // ユーザー入力エラーは詳細ログを出さない（Supabaseエラーアイコン抑制）
         if (error.message.includes('Invalid login credentials') || 
             error.message.includes('Email not confirmed') ||
+            error.message.includes('invalid credentials') ||
+            error.message.includes('invalid email or password') ||
             error.status === 400) {
-          console.log('ℹ️ Login failed: Invalid credentials or unconfirmed email')
+          // 認証失敗は静かに処理（エラーログアイコン回避）
+          console.debug('Authentication failed: Invalid credentials')
         } else {
           // システムエラーのみ詳細ログ
           console.error('❌ System authentication error:', error.message)

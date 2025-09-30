@@ -51,6 +51,10 @@ interface XPStats {
     last_activity_at?: string
     // streak calculation
     learning_streak: number
+    // learning time statistics
+    total_learning_time_seconds?: number
+    quiz_learning_time_seconds?: number
+    course_learning_time_seconds?: number
   }
   categories: {
     [categoryId: string]: {
@@ -64,8 +68,9 @@ interface XPStats {
     }
   }
   subcategories: {
-    [subcategoryId: string]: {
+    [compositeKey: string]: { // format: "category_id:subcategory_id"
       category_id: string
+      subcategory_id: string
       total_xp: number
       current_level: number
       quiz_xp: number
@@ -179,7 +184,11 @@ export async function GET(request: Request) {
         knowledge_cards_total: userStats.knowledge_cards_total || 0,
         badges_total: userStats.badges_total || 0,
         last_activity_at: userStats.last_activity_at || undefined,
-        learning_streak: learningStreak
+        learning_streak: learningStreak,
+        // learning time statistics
+        total_learning_time_seconds: userStats.total_learning_time_seconds || 0,
+        quiz_learning_time_seconds: userStats.quiz_learning_time_seconds || 0,
+        course_learning_time_seconds: userStats.course_learning_time_seconds || 0
       } : {
         // 新規ユーザー用のデフォルト値
         total_xp: 0,
@@ -198,7 +207,11 @@ export async function GET(request: Request) {
         wisdom_cards_total: 0,
         knowledge_cards_total: 0,
         badges_total: 0,
-        learning_streak: 0
+        learning_streak: 0,
+        // learning time statistics
+        total_learning_time_seconds: 0,
+        quiz_learning_time_seconds: 0,
+        course_learning_time_seconds: 0
       },
       categories: {},
       subcategories: {},
@@ -226,10 +239,12 @@ export async function GET(request: Request) {
       }
     })
 
-    // サブカテゴリー統計整形
+    // サブカテゴリー統計整形（複合キー: category_id:subcategory_id）
     subcategoryStats?.forEach(stat => {
-      response.subcategories[stat.subcategory_id] = {
+      const compositeKey = `${stat.category_id}:${stat.subcategory_id}`
+      response.subcategories[compositeKey] = {
         category_id: stat.category_id,
+        subcategory_id: stat.subcategory_id,
         total_xp: stat.total_xp || 0,
         current_level: stat.current_level || 1,
         quiz_xp: stat.quiz_xp || 0,

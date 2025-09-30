@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // PDFから抽出したサブカテゴリーIDマッピング（日本語ID → 英語ID）
 const subcategoryIdMapping: Record<string, string> = {
@@ -125,7 +125,7 @@ export async function POST() {
     console.log('🔄 サブカテゴリーIDの修正を開始します...')
 
     // 1. 現在のサブカテゴリーを取得
-    const { data: currentSubcategories, error: fetchError } = await supabase
+    const { data: currentSubcategories, error: fetchError } = await supabaseAdmin
       .from('subcategories')
       .select('*')
 
@@ -153,7 +153,7 @@ export async function POST() {
         
         try {
           // 1. 新しいIDでレコードを作成
-          const { error: insertError } = await supabase
+          const { error: insertError } = await supabaseAdmin
             .from('subcategories')
             .insert({
               subcategory_id: correctId,
@@ -176,14 +176,14 @@ export async function POST() {
           }
 
           // 2. 古いレコードを削除
-          const { error: deleteError } = await supabase
+          const { error: deleteError } = await supabaseAdmin
             .from('subcategories')
             .delete()
             .eq('subcategory_id', subcategory.subcategory_id)
 
           if (deleteError) {
             // 挿入したレコードを削除してロールバック
-            await supabase.from('subcategories').delete().eq('subcategory_id', correctId)
+            await supabaseAdmin.from('subcategories').delete().eq('subcategory_id', correctId)
             throw new Error(`削除エラー: ${deleteError.message}`)
           }
 

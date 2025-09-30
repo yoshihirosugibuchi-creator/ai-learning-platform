@@ -66,16 +66,15 @@ export async function getUserQuizConfig(userId: string): Promise<PersonalizedQui
     return null
   }
 
-  return data?.setting_value as PersonalizedQuizConfig
+  return data?.setting_value as unknown as PersonalizedQuizConfig
 }
 
 export async function saveUserQuizConfig(config: PersonalizedQuizConfig): Promise<boolean> {
   const { error } = await supabase
     .from('user_settings')
     .upsert({
-      user_id: config.user_id,
       setting_key: 'quiz_config',
-      setting_value: config
+      setting_value: JSON.stringify(config)
     })
 
   if (error) {
@@ -103,16 +102,15 @@ export async function getQuestionMemoryStrength(userId: string): Promise<Questio
     return []
   }
 
-  return (data?.setting_value as QuestionMemoryStrength[]) || []
+  return (data?.setting_value as unknown as QuestionMemoryStrength[]) || []
 }
 
 export async function saveQuestionMemoryStrength(userId: string, memoryData: QuestionMemoryStrength[]): Promise<boolean> {
   const { error } = await supabase
     .from('user_settings')
     .upsert({
-      user_id: userId,
       setting_key: 'memory_strength',
-      setting_value: memoryData
+      setting_value: JSON.stringify(memoryData)
     })
 
   if (error) {
@@ -140,16 +138,15 @@ export async function getLearningEfficiencyMetrics(userId: string): Promise<Lear
     return null
   }
 
-  return data?.setting_value as LearningEfficiencyMetrics
+  return data?.setting_value as unknown as LearningEfficiencyMetrics
 }
 
 export async function saveLearningEfficiencyMetrics(metrics: LearningEfficiencyMetrics): Promise<boolean> {
   const { error } = await supabase
     .from('user_settings')
     .upsert({
-      user_id: metrics.user_id,
       setting_key: 'learning_metrics',
-      setting_value: metrics
+      setting_value: JSON.stringify(metrics)
     })
 
   if (error) {

@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from './database-types-official'
 
 // XP設定の型定義
 export interface XPSettings {
@@ -82,7 +83,7 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5分間
 /**
  * XP設定をデータベースから取得
  */
-export async function loadXPSettings(supabaseClient?: SupabaseClient): Promise<XPSettings> {
+export async function loadXPSettings(supabaseClient?: SupabaseClient<Database>): Promise<XPSettings> {
   try {
     // キャッシュチェック
     const now = Date.now()
@@ -96,7 +97,7 @@ export async function loadXPSettings(supabaseClient?: SupabaseClient): Promise<X
     // Supabaseクライアントを取得
     let supabase = supabaseClient
     if (!supabase) {
-      supabase = createClient(
+      supabase = createClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       )

@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabaseAdmin } from './supabase-admin'
 
 // Learning Session Types
 export interface LearningSession {
@@ -74,7 +74,7 @@ export async function saveLearningSession(session: Omit<LearningSession, 'id' | 
     completed_at: session.completed ? (session.end_time || new Date().toISOString()) : null
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('learning_progress')
     .insert([progressData])
     .select()
@@ -99,8 +99,8 @@ export async function saveLearningSession(session: Omit<LearningSession, 'id' | 
     completed: session.completed,
     quiz_score: session.quiz_score,
     content_interactions: session.content_interactions,
-    created_at: data.created_at,
-    updated_at: data.updated_at
+    created_at: data.created_at || undefined,
+    updated_at: data.updated_at || undefined
   }
 
   return learningSession
@@ -108,7 +108,7 @@ export async function saveLearningSession(session: Omit<LearningSession, 'id' | 
 
 export async function getUserLearningSessions(userId: string): Promise<LearningSession[]> {
   // learning_progressテーブルから進捗データを取得
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('learning_progress')
     .select('*')
     .eq('user_id', userId)
@@ -127,14 +127,18 @@ export async function getUserLearningSessions(userId: string): Promise<LearningS
     course_id: progress.course_id,
     genre_id: '',
     theme_id: '',
-    start_time: progress.created_at,
-    end_time: progress.completed_at,
+    start_time: progress.created_at || new Date().toISOString(),
+    end_time: progress.completed_at || undefined,
     duration: 0,
     completed: progress.completion_percentage === 100,
     quiz_score: 0,
-    content_interactions: progress.progress_data,
-    created_at: progress.created_at,
-    updated_at: progress.updated_at
+    content_interactions: progress.progress_data as {
+      scrollDepth: number
+      timeOnSection: Record<string, number>
+      clickEvents: Array<{ element: string; timestamp: string }>
+    } | undefined,
+    created_at: progress.created_at || undefined,
+    updated_at: progress.updated_at || undefined
   }))
 
   return sessions
@@ -156,7 +160,7 @@ export async function updateLearningSession(sessionId: string, updates: Partial<
   
   progressUpdates.updated_at = new Date().toISOString()
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('learning_progress')
     .update(progressUpdates)
     .eq('id', sessionId)
@@ -171,7 +175,7 @@ export async function updateLearningSession(sessionId: string, updates: Partial<
 
 // SKP Transaction Functions
 export async function saveSKPTransaction(transaction: Omit<SKPTransaction, 'id' | 'created_at'>): Promise<SKPTransaction | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('skp_transactions')
     .insert([transaction])
     .select()
@@ -182,11 +186,21 @@ export async function saveSKPTransaction(transaction: Omit<SKPTransaction, 'id' 
     return null
   }
 
-  return data
+  // DBデータをSKPTransaction形式に変換
+  return {
+    id: data.id,
+    user_id: data.user_id || '',
+    type: data.type as 'earned' | 'spent',
+    amount: data.amount,
+    source: data.source,
+    description: data.description,
+    timestamp: data.timestamp || new Date().toISOString(),
+    created_at: data.created_at || undefined
+  }
 }
 
 export async function getUserSKPTransactions(userId: string): Promise<SKPTransaction[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('skp_transactions')
     .select('*')
     .eq('user_id', userId)
@@ -197,7 +211,17 @@ export async function getUserSKPTransactions(userId: string): Promise<SKPTransac
     return []
   }
 
-  return data || []
+  // DBデータをSKPTransaction形式に変換
+  return (data || []).map(transaction => ({
+    id: transaction.id,
+    user_id: transaction.user_id || '',
+    type: transaction.type as 'earned' | 'spent',
+    amount: transaction.amount,
+    source: transaction.source,
+    description: transaction.description,
+    timestamp: transaction.timestamp || new Date().toISOString(),
+    created_at: transaction.created_at || undefined
+  }))
 }
 
 export async function getUserSKPBalance(userId: string): Promise<number> {
@@ -210,18 +234,42 @@ export async function getUserSKPBalance(userId: string): Promise<number> {
 
 // Category Progress Functions
 export async function getCategoryProgress(userId: string): Promise<CategoryProgress[]> {
-  const { data, error } = await supabase
-    .from('category_progress')
-    .select('*')
+  const { data, error } = await supabaseAdmin
+    .from('user_category_xp_stats_v2')
+    .select(`
+      id,
+      user_id,
+      category_id,
+      current_level,
+      total_xp,
+      quiz_questions_correct,
+      quiz_questions_answered,
+      updated_at,
+      created_at
+    `)
     .eq('user_id', userId)
-    .order('last_answered_at', { ascending: false })
+    .order('updated_at', { ascending: false })
 
   if (error) {
     console.error('Error fetching category progress:', error)
     return []
   }
 
-  return data || []
+  // v2テーブルのデータをCategoryProgress形式にマッピング
+  const mappedData = data?.map(item => ({
+    id: item.id,
+    user_id: item.user_id,
+    category_id: item.category_id,
+    current_level: item.current_level,
+    total_xp: item.total_xp,
+    correct_answers: item.quiz_questions_correct,
+    total_answers: item.quiz_questions_answered,
+    last_answered_at: item.updated_at || undefined,
+    created_at: item.created_at || undefined,
+    updated_at: item.updated_at || undefined
+  })) || []
+
+  return mappedData
 }
 
 export async function updateCategoryProgress(
@@ -233,9 +281,9 @@ export async function updateCategoryProgress(
 ): Promise<CategoryProgress | null> {
   console.log(`📊 updateCategoryProgress: userId=${userId}, categoryId=${categoryId}, correctAnswers=${correctAnswers}, totalAnswers=${totalAnswers}, xpGained=${xpGained}`)
   
-  // Get existing progress
-  const { data: existing } = await supabase
-    .from('category_progress')
+  // Get existing progress from v2 table
+  const { data: existing } = await supabaseAdmin
+    .from('user_category_xp_stats_v2')
     .select('*')
     .eq('user_id', userId)
     .eq('category_id', categoryId)
@@ -248,20 +296,30 @@ export async function updateCategoryProgress(
   if (existing) {
     // Update existing progress
     const newTotalXP = existing.total_xp + xpGained
-    const newLevel = Math.floor(newTotalXP / 500) + 1 // メインカテゴリー閾値500XP
+    const newQuizXP = existing.quiz_xp + xpGained
+    const newCorrectAnswers = existing.quiz_questions_correct + correctAnswers
+    const newTotalAnswers = existing.quiz_questions_answered + totalAnswers
+    
+    // Calculate level using new system (main category threshold: 500XP)
+    const newLevel = Math.floor(newTotalXP / 500) + 1
+    
+    // Calculate accuracy
+    const newAccuracy = newTotalAnswers > 0 ? Math.round((newCorrectAnswers / newTotalAnswers) * 100) : 0
     
     const updatedData = {
-      correct_answers: existing.correct_answers + correctAnswers,
-      total_answers: existing.total_answers + totalAnswers,
       total_xp: newTotalXP,
+      quiz_xp: newQuizXP,
+      quiz_questions_correct: newCorrectAnswers,
+      quiz_questions_answered: newTotalAnswers,
+      quiz_average_accuracy: newAccuracy,
       current_level: newLevel,
-      last_answered_at: now
+      updated_at: now
     }
     
-    console.log(`📈 Updating progress: old_xp=${existing.total_xp} + ${xpGained} = ${newTotalXP}, level=${newLevel}`)
+    console.log(`📈 Updating v2 progress: old_xp=${existing.total_xp} + ${xpGained} = ${newTotalXP}, level=${newLevel}`)
 
-    const { data, error } = await supabase
-      .from('category_progress')
+    const { data, error } = await supabaseAdmin
+      .from('user_category_xp_stats_v2')
       .update(updatedData)
       .eq('id', existing.id)
       .select()
@@ -272,25 +330,46 @@ export async function updateCategoryProgress(
       return null
     }
 
-    return data
+    // Map v2 data back to CategoryProgress format
+    return {
+      id: data.id,
+      user_id: data.user_id,
+      category_id: data.category_id,
+      current_level: data.current_level,
+      total_xp: data.total_xp,
+      correct_answers: data.quiz_questions_correct,
+      total_answers: data.quiz_questions_answered,
+      last_answered_at: data.updated_at || undefined,
+      created_at: data.created_at || undefined,
+      updated_at: data.updated_at || undefined
+    }
   } else {
-    // Create new progress record
-    const newLevel = Math.floor(xpGained / 500) + 1 // メインカテゴリー閾値500XP
+    // Create new progress record in v2 table
+    const newLevel = Math.floor(xpGained / 500) + 1
+    const accuracy = totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0
     
     const newProgress = {
       user_id: userId,
       category_id: categoryId,
-      correct_answers: correctAnswers,
-      total_answers: totalAnswers,
       total_xp: xpGained,
+      quiz_xp: xpGained,
+      course_xp: 0,
       current_level: newLevel,
-      last_answered_at: now
+      quiz_sessions_completed: 0, // Will be updated by other systems
+      quiz_questions_answered: totalAnswers,
+      quiz_questions_correct: correctAnswers,
+      quiz_average_accuracy: accuracy,
+      course_sessions_completed: 0,
+      course_themes_completed: 0,
+      course_completions: 0,
+      created_at: now,
+      updated_at: now
     }
     
-    console.log(`📝 Creating new progress: xp=${xpGained}, level=${newLevel}`)
+    console.log(`📝 Creating new v2 progress: xp=${xpGained}, level=${newLevel}`)
 
-    const { data, error } = await supabase
-      .from('category_progress')
+    const { data, error } = await supabaseAdmin
+      .from('user_category_xp_stats_v2')
       .insert([newProgress])
       .select()
       .single()
@@ -300,14 +379,27 @@ export async function updateCategoryProgress(
       return null
     }
     
-    console.log(`✅ Created new progress record:`, data)
-    return data
+    console.log(`✅ Created new v2 progress record:`, data)
+    
+    // Map v2 data back to CategoryProgress format
+    return {
+      id: data.id,
+      user_id: data.user_id,
+      category_id: data.category_id,
+      current_level: data.current_level,
+      total_xp: data.total_xp,
+      correct_answers: data.quiz_questions_correct,
+      total_answers: data.quiz_questions_answered,
+      last_answered_at: data.updated_at || undefined,
+      created_at: data.created_at || undefined,
+      updated_at: data.updated_at || undefined
+    }
   }
 }
 
 // Detailed Quiz Data Functions
 export async function saveDetailedQuizData(detailData: Omit<DetailedQuizData, 'id' | 'created_at'>[]): Promise<boolean> {
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('detailed_quiz_data')
     .insert(detailData)
 
@@ -320,7 +412,7 @@ export async function saveDetailedQuizData(detailData: Omit<DetailedQuizData, 'i
 }
 
 export async function getUserDetailedQuizData(userId: string): Promise<DetailedQuizData[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('detailed_quiz_data')
     .select('*')
     .eq('user_id', userId)
@@ -332,7 +424,22 @@ export async function getUserDetailedQuizData(userId: string): Promise<DetailedQ
     return []
   }
 
-  return data || []
+  // DBデータをDetailedQuizData形式に変換
+  return (data || []).map(item => ({
+    id: item.id,
+    user_id: item.user_id || '',
+    quiz_result_id: item.quiz_result_id || '',
+    question_id: item.question_id,
+    question_text: item.question_text,
+    selected_answer: item.selected_answer,
+    correct_answer: item.correct_answer,
+    is_correct: item.is_correct,
+    response_time: item.response_time,
+    confidence_level: item.confidence_level || undefined,
+    category: item.category,
+    difficulty: item.difficulty || undefined,
+    created_at: item.created_at || undefined
+  }))
 }
 
 // Learning Progress Functions
@@ -370,17 +477,17 @@ export async function saveLearningProgressSupabase(
     console.log('📋 Attempting to save progress data:', progressData)
 
     // Check authentication and table access before attempting upsert
-    const { data: authUser, error: authError } = await supabase.auth.getUser()
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.getUser()
     console.log('🔐 Auth check:', { user: authUser?.user?.id, error: authError })
     
     // Test table access with a simple query first
-    const { data: testData, error: testError } = await supabase
+    const { data: testData, error: testError } = await supabaseAdmin
       .from('user_settings')
       .select('id')
       .limit(1)
     console.log('🔍 Table access test:', { data: testData, error: testError })
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('user_settings')
       .upsert(progressData, {
         onConflict: 'user_id,setting_key'
@@ -455,7 +562,7 @@ export async function saveLearningProgressSupabase(
 
 export async function getLearningProgressSupabase(userId: string): Promise<Record<string, unknown>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('user_settings')
       .select('setting_key, setting_value')
       .eq('user_id', userId)
@@ -552,12 +659,11 @@ export async function getLearningProgressSupabase(userId: string): Promise<Recor
 // Analytics Functions
 // Personalization Settings Functions
 export async function savePersonalizationSettings(userId: string, settingKey: string, settingValue: unknown): Promise<boolean> {
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('user_settings')
     .upsert({
-      user_id: userId,
       setting_key: settingKey,
-      setting_value: settingValue
+      setting_value: JSON.stringify(settingValue)
     })
 
   if (error) {
@@ -569,7 +675,7 @@ export async function savePersonalizationSettings(userId: string, settingKey: st
 }
 
 export async function getPersonalizationSettings(userId: string, settingKey?: string): Promise<Record<string, unknown> | unknown> {
-  let query = supabase
+  let query = supabaseAdmin
     .from('user_settings')
     .select('setting_key, setting_value')
     .eq('user_id', userId)
@@ -602,10 +708,10 @@ export async function getPersonalizationSettings(userId: string, settingKey?: st
 export async function getUserLearningStreak(userId: string): Promise<number> {
   try {
     // XPシステムのdaily_xp_recordsテーブルから連続日数を計算
-    const { supabase } = await import('@/lib/supabase')
+    const { supabaseAdmin } = await import('./supabase-admin')
     
     // XP統計とdaily_xp_recordsを取得
-    const { data: userStats } = await supabase
+    const { data: userStats } = await supabaseAdmin
       .from('user_xp_stats_v2')
       .select('*')
       .eq('user_id', userId)
@@ -617,7 +723,7 @@ export async function getUserLearningStreak(userId: string): Promise<number> {
     }
     
     // recent_activityを取得
-    const { data: activities } = await supabase
+    const { data: activities } = await supabaseAdmin
       .from('daily_xp_records')
       .select('*')
       .eq('user_id', userId)

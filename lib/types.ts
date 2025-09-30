@@ -99,11 +99,11 @@ export interface Question {
   question: string
   options: string[]
   correct: number
-  explanation: string
-  difficulty: QuizDifficulty | string // string for flexibility with legacy data
-  timeLimit: number
+  explanation: string | null // データベーススキーマに合わせる
+  difficulty: QuizDifficulty | string | null // データベーススキーマに合わせる
+  timeLimit: number | null // データベーススキーマに合わせる
   relatedTopics: string[]
-  source: string
+  source: string | null // データベーススキーマに合わせる
   deleted?: boolean // 削除フラグ
 }
 

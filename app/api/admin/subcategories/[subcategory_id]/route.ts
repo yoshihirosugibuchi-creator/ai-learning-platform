@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 interface RouteParams {
   params: Promise<{
@@ -12,7 +12,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { subcategory_id: subcategoryId } = await params
 
     // サブカテゴリーの存在確認
-    const { data: existingSubcategory, error: checkError } = await supabase
+    const { data: existingSubcategory, error: checkError } = await supabaseAdmin
       .from('subcategories')
       .select('subcategory_id, name')
       .eq('subcategory_id', subcategoryId)
@@ -26,7 +26,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // サブカテゴリーを削除
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await supabaseAdmin
       .from('subcategories')
       .delete()
       .eq('subcategory_id', subcategoryId)

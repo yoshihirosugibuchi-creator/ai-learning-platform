@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Brain, Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { logAuthDebugInfo, debugLoginAttempt, setupGlobalErrorHandling } from '@/lib/debug-auth'
+import type { AuthError } from '@supabase/supabase-js'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -129,9 +130,10 @@ export default function LoginPage() {
       
       if (error) {
         // ユーザー入力エラーは静かに処理（Supabaseエラーアイコン回避）
-        if ((error as any).message?.includes('Invalid login credentials') || 
-            (error as any).message?.includes('invalid credentials') ||
-            (error as any).message?.includes('invalid email or password')) {
+        const errorMessage = (error as AuthError)?.message || ''
+        if (errorMessage.includes('Invalid login credentials') || 
+            errorMessage.includes('invalid credentials') ||
+            errorMessage.includes('invalid email or password')) {
           console.debug('Login failed: Invalid credentials')
         } else {
           console.error('❌ Login error:', error)

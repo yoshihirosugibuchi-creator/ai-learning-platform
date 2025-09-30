@@ -25,7 +25,9 @@ import {
   Edit,
   Plus,
   Minus,
-  Filter
+  Filter,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
@@ -35,7 +37,8 @@ import { getUserSKPBalance, getUserSKPTransactions, SKPTransaction } from '@/lib
 import { getUserBadges } from '@/lib/supabase-badges'
 import { UserBadge } from '@/lib/types/learning'
 import { updateUserProfile } from '@/lib/supabase-user'
-import { mainCategories, industryCategories } from '@/lib/categories'
+import { mainCategories, industryCategories, getSubcategories } from '@/lib/categories'
+import type { Subcategory } from '@/lib/types/category'
 import { useXPStats } from '@/hooks/useXPStats'
 import ProfileEditModal from '@/components/profile/ProfileEditModal'
 
@@ -63,6 +66,35 @@ export default function ProfilePage() {
   // SKPフィルター状態
   const [skpFilter, setSkpFilter] = useState<'all' | 'earned' | 'spent'>('all')
   
+  // サブカテゴリー展開状態
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  
+  // サブカテゴリーマスターデータ
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([])
+  const [_subcategoriesLoading, setSubcategoriesLoading] = useState(false)
+
+  // サブカテゴリーの表示名を取得するヘルパー関数
+  const getSubcategoryDisplayName = (subcategoryId: string): string => {
+    if (subcategoryId === 'category_level') {
+      return '総合'
+    }
+    
+    // サブカテゴリーマスターデータから日本語名を取得
+    const subcategory = subcategories.find(sub => sub.id === subcategoryId)
+    return subcategory?.name || subcategoryId
+  }
+
+  // カテゴリー展開状態の切り替え
+  const toggleCategoryExpansion = (categoryId: string) => {
+    const newExpanded = new Set(expandedCategories)
+    if (newExpanded.has(categoryId)) {
+      newExpanded.delete(categoryId)
+    } else {
+      newExpanded.add(categoryId)
+    }
+    setExpandedCategories(newExpanded)
+  }
+  
   // プロフィール編集状態
   const [profileData, setProfileData] = useState({
     name: '',
@@ -82,6 +114,20 @@ export default function ProfilePage() {
   // データ取得
   useEffect(() => {
     if (user && profile) {
+      // サブカテゴリーマスターデータを取得
+      const loadSubcategories = async () => {
+        setSubcategoriesLoading(true)
+        try {
+          const allSubcategories = await getSubcategories()
+          setSubcategories(allSubcategories)
+        } catch (error) {
+          console.error('Error fetching subcategories:', error)
+        } finally {
+          setSubcategoriesLoading(false)
+        }
+      }
+      loadSubcategories()
+      
       // クイズ統計を取得
       getUserStats(user.id).then(stats => {
         setQuizStats(stats)
@@ -571,24 +617,87 @@ export default function ProfilePage() {
                   {mainCategories.map((category) => {
                     const categoryXP = xpStats?.categories[category.id]?.total_xp || 0
                     const categoryLevel = Math.floor(categoryXP / 500) + 1 // メインカテゴリーは500XP/レベル
+                    const isExpanded = expandedCategories.has(category.id)
+                    
+                    // このカテゴリーのサブカテゴリー統計を取得
+                    const categorySubcategories = Object.entries(xpStats?.subcategories || {})
+                      .filter(([compositeKey]) => compositeKey.startsWith(`${category.id}:`))
+                      .map(([compositeKey, subcategoryStats]) => ({
+                        compositeKey,
+                        subcategoryId: subcategoryStats.subcategory_id,
+                        ...subcategoryStats
+                      }))
+                      .sort((a, b) => b.total_xp - a.total_xp) // XP順でソート
+
                     return (
-                      <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="text-2xl">{category.icon}</div>
-                          <div>
-                            <h4 className="font-medium">{category.name}</h4>
-                            <p className="text-sm text-muted-foreground">{category.description}</p>
+                      <div key={category.id} className="border rounded-lg">
+                        {/* メインカテゴリー情報 */}
+                        <div className="flex items-center justify-between p-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="text-2xl">{category.icon}</div>
+                            <div>
+                              <h4 className="font-medium">{category.name}</h4>
+                              <p className="text-sm text-muted-foreground">{category.description}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <div className="text-right">
+                              <div className="text-lg font-bold">レベル {categoryLevel}</div>
+                              <p className="text-sm text-muted-foreground">{categoryXP.toLocaleString()} XP</p>
+                              {xpStats?.categories[category.id] && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  クイズ{xpStats.categories[category.id].quiz_sessions_completed}回 コース{xpStats.categories[category.id].course_sessions_completed}回
+                                </div>
+                              )}
+                            </div>
+                            {/* サブカテゴリー展開ボタン */}
+                            {categorySubcategories.length > 0 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleCategoryExpansion(category.id)}
+                                className="ml-2"
+                              >
+                                {isExpanded ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )}
+                              </Button>
+                            )}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold">レベル {categoryLevel}</div>
-                          <p className="text-sm text-muted-foreground">{categoryXP.toLocaleString()} XP</p>
-                          {xpStats?.categories[category.id] && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              クイズ{xpStats.categories[category.id].quiz_sessions_completed}回 コース{xpStats.categories[category.id].course_sessions_completed}回
+                        
+                        {/* サブカテゴリー統計（展開時のみ表示） */}
+                        {isExpanded && categorySubcategories.length > 0 && (
+                          <div className="border-t bg-gray-50 p-4">
+                            <h5 className="text-sm font-medium text-gray-700 mb-3">サブカテゴリー統計</h5>
+                            <div className="space-y-2">
+                              {categorySubcategories.map((subcategory) => {
+                                const subcategoryLevel = Math.floor(subcategory.total_xp / 500) + 1
+                                return (
+                                  <div key={subcategory.compositeKey} className="flex items-center justify-between py-2 px-3 bg-white rounded border">
+                                    <div>
+                                      <h6 className="text-sm font-medium">
+                                        {getSubcategoryDisplayName(subcategory.subcategoryId)}
+                                      </h6>
+                                      <p className="text-xs text-gray-500">
+                                        クイズ{subcategory.quiz_sessions_completed}回 コース{subcategory.course_sessions_completed}回
+                                      </p>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="text-sm font-semibold">レベル {subcategoryLevel}</div>
+                                      <p className="text-xs text-gray-500">{subcategory.total_xp.toLocaleString()} XP</p>
+                                      {subcategory.quiz_average_accuracy > 0 && (
+                                        <p className="text-xs text-green-600">正答率 {subcategory.quiz_average_accuracy.toFixed(1)}%</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              })}
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     )
                   })}
@@ -614,24 +723,87 @@ export default function ProfilePage() {
                   {industryCategories.map((category) => {
                     const industryXP = xpStats?.categories[category.id]?.total_xp || 0
                     const industryLevel = Math.floor(industryXP / 1000) + 1 // 業界カテゴリーは1000XP/レベル
+                    const isExpanded = expandedCategories.has(category.id)
+                    
+                    // このカテゴリーのサブカテゴリー統計を取得
+                    const categorySubcategories = Object.entries(xpStats?.subcategories || {})
+                      .filter(([compositeKey]) => compositeKey.startsWith(`${category.id}:`))
+                      .map(([compositeKey, subcategoryStats]) => ({
+                        compositeKey,
+                        subcategoryId: subcategoryStats.subcategory_id,
+                        ...subcategoryStats
+                      }))
+                      .sort((a, b) => b.total_xp - a.total_xp) // XP順でソート
+
                     return (
-                      <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="text-2xl">{category.icon}</div>
-                          <div>
-                            <h4 className="font-medium">{category.name}</h4>
-                            <p className="text-sm text-muted-foreground">{category.description}</p>
+                      <div key={category.id} className="border rounded-lg">
+                        {/* 業界カテゴリー情報 */}
+                        <div className="flex items-center justify-between p-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="text-2xl">{category.icon}</div>
+                            <div>
+                              <h4 className="font-medium">{category.name}</h4>
+                              <p className="text-sm text-muted-foreground">{category.description}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <div className="text-right">
+                              <div className="text-lg font-bold">レベル {industryLevel}</div>
+                              <p className="text-sm text-muted-foreground">{industryXP.toLocaleString()} XP</p>
+                              {xpStats?.categories[category.id] && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  クイズ{xpStats.categories[category.id].quiz_sessions_completed}回 コース{xpStats.categories[category.id].course_sessions_completed}回
+                                </div>
+                              )}
+                            </div>
+                            {/* サブカテゴリー展開ボタン */}
+                            {categorySubcategories.length > 0 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleCategoryExpansion(category.id)}
+                                className="ml-2"
+                              >
+                                {isExpanded ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )}
+                              </Button>
+                            )}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold">レベル {industryLevel}</div>
-                          <p className="text-sm text-muted-foreground">{industryXP.toLocaleString()} XP</p>
-                          {xpStats?.categories[category.id] && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              正答率{xpStats.categories[category.id].quiz_average_accuracy.toFixed(1)}%
+                        
+                        {/* サブカテゴリー統計（展開時のみ表示） */}
+                        {isExpanded && categorySubcategories.length > 0 && (
+                          <div className="border-t bg-gray-50 p-4">
+                            <h5 className="text-sm font-medium text-gray-700 mb-3">サブカテゴリー統計</h5>
+                            <div className="space-y-2">
+                              {categorySubcategories.map((subcategory) => {
+                                const subcategoryLevel = Math.floor(subcategory.total_xp / 500) + 1
+                                return (
+                                  <div key={subcategory.compositeKey} className="flex items-center justify-between py-2 px-3 bg-white rounded border">
+                                    <div>
+                                      <h6 className="text-sm font-medium">
+                                        {getSubcategoryDisplayName(subcategory.subcategoryId)}
+                                      </h6>
+                                      <p className="text-xs text-gray-500">
+                                        クイズ{subcategory.quiz_sessions_completed}回 コース{subcategory.course_sessions_completed}回
+                                      </p>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="text-sm font-semibold">レベル {subcategoryLevel}</div>
+                                      <p className="text-xs text-gray-500">{subcategory.total_xp.toLocaleString()} XP</p>
+                                      {subcategory.quiz_average_accuracy > 0 && (
+                                        <p className="text-xs text-green-600">正答率 {subcategory.quiz_average_accuracy.toFixed(1)}%</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              })}
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     )
                   })}

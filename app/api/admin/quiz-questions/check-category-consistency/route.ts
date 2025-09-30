@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function GET() {
   try {
     console.log('🔍 カテゴリーとサブカテゴリーの整合性をチェックします...')
 
     // 1. quiz_questionsのカテゴリー・サブカテゴリー組み合わせを取得
-    const { data: quizData, error: quizError } = await supabase
+    const { data: quizData, error: quizError } = await supabaseAdmin
       .from('quiz_questions')
       .select('category_id, subcategory, subcategory_id')
 
@@ -15,7 +15,7 @@ export async function GET() {
     }
 
     // 2. subcategoriesテーブルのデータを取得
-    const { data: subcategoriesData, error: subcategoriesError } = await supabase
+    const { data: subcategoriesData, error: subcategoriesError } = await supabaseAdmin
       .from('subcategories')
       .select('subcategory_id, name, parent_category_id')
 
@@ -24,7 +24,7 @@ export async function GET() {
     }
 
     // 3. categoriesテーブルのデータを取得
-    const { data: categoriesData, error: categoriesError } = await supabase
+    const { data: categoriesData, error: categoriesError } = await supabaseAdmin
       .from('categories')
       .select('category_id, name')
 
@@ -39,11 +39,11 @@ export async function GET() {
     // 整合性チェック
     const inconsistencies: Array<{
       id?: number
-      category: string
-      subcategory: string
-      subcategory_id: string
+      category: string | null
+      subcategory: string | null
+      subcategory_id: string | null
       issue: string
-      expectedCategory?: string
+      expectedCategory?: string | null
       foundInSubcategoriesTable?: boolean
     }> = []
 
@@ -53,13 +53,13 @@ export async function GET() {
         return
       }
 
-      const subcategoryRecord = subcategoryMap.get(quiz.subcategory_id)
+      const subcategoryRecord = subcategoryMap.get(quiz.subcategory_id || '')
       
       if (!subcategoryRecord) {
         inconsistencies.push({
-          category: quiz.category_id,
-          subcategory: quiz.subcategory,
-          subcategory_id: quiz.subcategory_id,
+          category: quiz.category_id || '',
+          subcategory: quiz.subcategory || '',
+          subcategory_id: quiz.subcategory_id || '',
           issue: 'サブカテゴリーIDがsubcategoriesテーブルに存在しない',
           foundInSubcategoriesTable: false
         })
@@ -67,9 +67,9 @@ export async function GET() {
         // カテゴリーとの整合性チェック
         if (quiz.category_id !== subcategoryRecord.parent_category_id) {
           inconsistencies.push({
-            category: quiz.category_id,
-            subcategory: quiz.subcategory,
-            subcategory_id: quiz.subcategory_id,
+            category: quiz.category_id || '',
+            subcategory: quiz.subcategory || '',
+            subcategory_id: quiz.subcategory_id || '',
             issue: 'カテゴリーとサブカテゴリーの関係が不整合',
             expectedCategory: subcategoryRecord.parent_category_id,
             foundInSubcategoriesTable: true
@@ -79,9 +79,9 @@ export async function GET() {
         // サブカテゴリー名の整合性チェック
         if (quiz.subcategory !== subcategoryRecord.name) {
           inconsistencies.push({
-            category: quiz.category_id,
-            subcategory: quiz.subcategory,
-            subcategory_id: quiz.subcategory_id,
+            category: quiz.category_id || '',
+            subcategory: quiz.subcategory || '',
+            subcategory_id: quiz.subcategory_id || '',
             issue: 'サブカテゴリー名が不整合',
             expectedCategory: subcategoryRecord.parent_category_id,
             foundInSubcategoriesTable: true

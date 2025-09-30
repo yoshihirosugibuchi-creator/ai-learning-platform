@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import type { Database } from '@/lib/database-types-official'
 
 export async function POST(request: Request) {
   try {
@@ -26,15 +27,16 @@ export async function POST(request: Request) {
     console.log('🔄 Updating category display order:', categories.map(c => `${c.category_id}: ${c.display_order}`))
 
     // Update categories in batch
-    const updatePromises = categories.map(category => 
-      supabase
+    const updatePromises = categories.map((category: { category_id: string; display_order: number }) => {
+      const updateData: Database['public']['Tables']['categories']['Update'] = {
+        display_order: category.display_order,
+        updated_at: new Date().toISOString()
+      }
+      return supabaseAdmin
         .from('categories')
-        .update({ 
-          display_order: category.display_order,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('category_id', category.category_id)
-    )
+    })
 
     const results = await Promise.all(updatePromises)
 

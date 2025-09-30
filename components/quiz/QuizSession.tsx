@@ -161,7 +161,7 @@ export default function QuizSession({
       // 初回の場合は基礎から中級中心
       const basicQuestions = questions.filter(q => q.difficulty === '基礎')
       const intermediateQuestions = questions.filter(q => q.difficulty === '中級')
-      const otherQuestions = questions.filter(q => !['基礎', '中級'].includes(q.difficulty))
+      const otherQuestions = questions.filter(q => q.difficulty && !['基礎', '中級'].includes(q.difficulty))
       
       const optimized = [
         ...getRandomQuestions(basicQuestions, 4),
@@ -309,7 +309,7 @@ export default function QuizSession({
       category: currentQuestion.category,
       subcategory: currentQuestion.subcategory,
       subcategory_id: currentQuestion.subcategory_id,
-      difficulty: currentQuestion.difficulty
+      difficulty: currentQuestion.difficulty || '未設定'
     }
     
     setQuestionAnswers(prev => [...prev, questionAnswer])
@@ -744,7 +744,7 @@ export default function QuizSession({
               
               if (difficulties && difficulties.length > 0) {
                 filteredQuestions = filteredQuestions.filter(q => 
-                  difficulties.includes(q.difficulty)
+                  q.difficulty && difficulties.includes(q.difficulty)
                 )
                 
                 if (filteredQuestions.length < 10) {
@@ -753,7 +753,7 @@ export default function QuizSession({
                     allCategoryQuestions = allCategoryQuestions.filter(q => q.category === category)
                   }
                   const remainingQuestions = allCategoryQuestions.filter(q => 
-                    !difficulties.includes(q.difficulty)
+                    q.difficulty && !difficulties.includes(q.difficulty)
                   )
                   filteredQuestions = [...filteredQuestions, ...remainingQuestions]
                 }

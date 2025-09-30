@@ -61,6 +61,7 @@
     "dotenv": "^17.2.2",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
+    "supabase": "^2.47.2",
     "tailwindcss": "^4",
     "tsx": "^4.20.5",
     "tw-animate-css": "^1.3.8",

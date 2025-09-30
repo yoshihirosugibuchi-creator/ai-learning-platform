@@ -439,12 +439,34 @@ export default function AnalyticsPage() {
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="p-4 bg-blue-50 rounded-lg">
                       <h4 className="font-medium text-blue-900 mb-2">最適学習時間</h4>
-                      <p className="text-sm text-blue-800">
-                        {optimalTime.bestTimeOfDay.timeSlot}（{optimalTime.bestTimeOfDay.hour}時頃）
-                      </p>
-                      <p className="text-xs text-blue-600 mt-1">
-                        信頼度: {optimalTime.bestTimeOfDay.confidence}%
-                      </p>
+                      {optimalTime.bestTimeOfDay.confidence >= 70 ? (
+                        <>
+                          <p className="text-sm text-blue-800">
+                            {optimalTime.bestTimeOfDay.timeSlot}（{optimalTime.bestTimeOfDay.hour}時頃）
+                          </p>
+                          <p className="text-xs text-blue-600 mt-1">
+                            信頼度: {optimalTime.bestTimeOfDay.confidence}%
+                          </p>
+                        </>
+                      ) : optimalTime.bestTimeOfDay.confidence >= 60 ? (
+                        <>
+                          <p className="text-sm text-blue-800">
+                            {optimalTime.bestTimeOfDay.timeSlot}（{optimalTime.bestTimeOfDay.hour}時頃）
+                          </p>
+                          <p className="text-xs text-amber-600 mt-1">
+                            信頼度: {optimalTime.bestTimeOfDay.confidence}% - より多くのデータが必要
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm text-gray-600">
+                            データ蓄積中...
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            最低10問の学習データが必要です
+                          </p>
+                        </>
+                      )}
                     </div>
                     <div className="p-4 bg-green-50 rounded-lg">
                       <h4 className="font-medium text-green-900 mb-2">推奨セッション長</h4>

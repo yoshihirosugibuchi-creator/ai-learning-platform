@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import type { Database } from '@/lib/database-types-official'
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // カテゴリーIDの重複チェック
-    const { data: existingCategory, error: checkError } = await supabase
+    const { data: existingCategory, error: checkError } = await supabaseAdmin
       .from('categories')
       .select('category_id')
       .eq('category_id', category_id)
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 同タイプの最大display_orderを取得
-    const { data: maxOrderResult, error: maxOrderError } = await supabase
+    const { data: maxOrderResult, error: maxOrderError } = await supabaseAdmin
       .from('categories')
       .select('display_order')
       .eq('type', type)
@@ -71,21 +72,23 @@ export async function POST(request: NextRequest) {
     const nextDisplayOrder = (maxOrderResult?.[0]?.display_order || 0) + 1
 
     // 新しいカテゴリーを作成
-    const { data: newCategory, error: insertError } = await supabase
+    const newCategoryData: Database['public']['Tables']['categories']['Insert'] = {
+      category_id,
+      name,
+      description: description || '',
+      type,
+      icon: icon || '📚',
+      color: color || '#6B7280',
+      display_order: nextDisplayOrder,
+      is_active,
+      is_visible,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    const { data: newCategory, error: insertError } = await supabaseAdmin
       .from('categories')
-      .insert([{
-        category_id,
-        name,
-        description: description || '',
-        type,
-        icon: icon || '📚',
-        color: color || '#6B7280',
-        display_order: nextDisplayOrder,
-        is_active,
-        is_visible,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }])
+      .insert([newCategoryData])
       .select()
       .single()
 
@@ -97,7 +100,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('✅ 新しいカテゴリーが作成されました:', newCategory.category_id)
+    console.log('✅ 新しいカテゴリーが作成されました:', newCategory?.category_id)
     
     return NextResponse.json({
       message: 'カテゴリーが正常に作成されました',

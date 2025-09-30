@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST() {
   try {
@@ -11,7 +11,7 @@ export async function POST() {
     console.log('🔄 ブランディング・ポジショニング問題を顧客分析・セグメンテーションに修正...')
     
     // まず該当問題を特定
-    const { data: brandingQuestions, error: brandingError } = await supabase
+    const { data: brandingQuestions, error: brandingError } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, question, subcategory')
       .eq('subcategory', 'ブランディング・ポジショニング')
@@ -27,7 +27,7 @@ export async function POST() {
 
     // ブランディング・ポジショニング問題を顧客分析・セグメンテーションに変更
     if (brandingQuestions && brandingQuestions.length > 0) {
-      const { error: updateBrandingError } = await supabase
+      const { error: updateBrandingError } = await supabaseAdmin
         .from('quiz_questions')
         .update({
           subcategory: '顧客分析・セグメンテーション',
@@ -51,7 +51,7 @@ export async function POST() {
     console.log('🔄 ID315問題を財務分析・企業価値評価に修正...')
     
     // ID315の内容を確認
-    const { data: id315Questions, error: id315Error } = await supabase
+    const { data: id315Questions, error: id315Error } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, question, subcategory, subcategory_id')
       .eq('id', 315)
@@ -64,7 +64,7 @@ export async function POST() {
       const id315Question = id315Questions[0]
       console.log(`📋 ID315問題内容: ${id315Question.question.substring(0, 100)}...`)
       
-      const { error: updateId315Error } = await supabase
+      const { error: updateId315Error } = await supabaseAdmin
         .from('quiz_questions')
         .update({
           subcategory: '財務分析・企業価値評価',
@@ -85,7 +85,7 @@ export async function POST() {
     }
 
     // 修正後の確認
-    const { data: finalCheck, error: finalCheckError } = await supabase
+    const { data: finalCheck, error: finalCheckError } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, category_id, subcategory, subcategory_id, question')
       .or('id.eq.315,subcategory.eq.顧客分析・セグメンテーション,subcategory.eq.事業計画・資金調達,subcategory.eq.財務分析・企業価値評価')

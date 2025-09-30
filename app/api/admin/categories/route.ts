@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+// Database type not used in this route
 
 export async function GET(request: Request) {
   try {
@@ -49,8 +50,25 @@ export async function GET(request: Request) {
       )
     }
 
-    // 各カテゴリーの統計情報を取得
-    const categoriesWithStats = await Promise.all(
+    // 各カテゴリーの統計情報を取得  
+    type CategoryWithStats = {
+      category_id: string;
+      name: string;
+      description: string | null;
+      type: string;
+      icon: string | null;
+      color: string | null;
+      display_order: number;
+      is_active: boolean;
+      is_visible: boolean;
+      activation_date: string | null;
+      created_at: string | null;
+      updated_at: string | null;
+      subcategory_count: number;
+      question_count: number;
+      last_updated: string | null;
+    }
+    const categoriesWithStats: CategoryWithStats[] = await Promise.all(
       (categories || []).map(async (category) => {
         // サブカテゴリー数を取得
         const { count: subcategoriesCount, error: subError } = await supabaseAdmin
@@ -67,7 +85,7 @@ export async function GET(request: Request) {
         const { count: quizCount, error: quizError } = await supabaseAdmin
           .from('quiz_questions')
           .select('*', { count: 'exact', head: true })
-          .eq('category', category.category_id)
+          .eq('category_id', category.category_id)
           .neq('is_deleted', true)
 
         if (quizError) {
@@ -79,7 +97,7 @@ export async function GET(request: Request) {
           subcategory_count: subcategoriesCount || 0,
           question_count: quizCount || 0,
           last_updated: category.updated_at
-        }
+        } satisfies CategoryWithStats
       })
     )
 
@@ -88,12 +106,12 @@ export async function GET(request: Request) {
       categories: categoriesWithStats,
       meta: {
         total: categoriesWithStats.length,
-        main_count: categoriesWithStats.filter(cat => cat.type === 'main').length,
-        industry_count: categoriesWithStats.filter(cat => cat.type === 'industry').length,
-        active_count: categoriesWithStats.filter(cat => cat.is_active).length,
-        inactive_count: categoriesWithStats.filter(cat => !cat.is_active).length,
-        total_subcategories: categoriesWithStats.reduce((sum, cat) => sum + (cat.subcategory_count || 0), 0),
-        total_quizzes: categoriesWithStats.reduce((sum, cat) => sum + (cat.question_count || 0), 0)
+        main_count: categoriesWithStats.filter((cat: CategoryWithStats) => cat.type === 'main').length,
+        industry_count: categoriesWithStats.filter((cat: CategoryWithStats) => cat.type === 'industry').length,
+        active_count: categoriesWithStats.filter((cat: CategoryWithStats) => cat.is_active).length,
+        inactive_count: categoriesWithStats.filter((cat: CategoryWithStats) => !cat.is_active).length,
+        total_subcategories: categoriesWithStats.reduce((sum: number, cat: CategoryWithStats) => sum + cat.subcategory_count, 0),
+        total_quizzes: categoriesWithStats.reduce((sum: number, cat: CategoryWithStats) => sum + cat.question_count, 0)
       }
     }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     // 1. learning_progress - 学習進捗を全削除
     try {
-      const { error: progressError, count: _count } = await supabase
+      const { error: progressError, count: _count } = await supabaseAdmin
         .from('learning_progress')
         .delete()
         .eq('user_id', userId)
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     // 2. user_badges - バッジを全削除
     try {
-      const { error: badgeError } = await supabase
+      const { error: badgeError } = await supabaseAdmin
         .from('user_badges')
         .delete()
         .eq('user_id', userId)
@@ -53,27 +53,9 @@ export async function POST(request: NextRequest) {
       errors.push('user_badges: ' + (err as Error).message)
     }
 
-    // 3. user_xp_stats - XP統計を全削除（v1テーブル）
+    // 3. user_xp_stats_v2 - XP統計を全削除（v2テーブル）
     try {
-      const { error: xpError } = await supabase
-        .from('user_xp_stats')
-        .delete()
-        .eq('user_id', userId)
-
-      if (xpError) {
-        console.warn('⚠️ Error deleting user_xp_stats:', xpError)
-        errors.push('user_xp_stats: ' + xpError.message)
-      } else {
-        console.log('✅ user_xp_stats deleted')
-        deletedTables.push('user_xp_stats')
-      }
-    } catch (err) {
-      errors.push('user_xp_stats: ' + (err as Error).message)
-    }
-
-    // 3b. user_xp_stats_v2 - XP統計を全削除（v2テーブル）
-    try {
-      const { error: xpV2Error } = await supabase
+      const { error: xpV2Error } = await supabaseAdmin
         .from('user_xp_stats_v2')
         .delete()
         .eq('user_id', userId)
@@ -89,27 +71,9 @@ export async function POST(request: NextRequest) {
       errors.push('user_xp_stats_v2: ' + (err as Error).message)
     }
 
-    // 4. user_category_xp_stats - カテゴリ別XP統計を全削除（v1テーブル）
+    // 4. user_category_xp_stats_v2 - カテゴリ別XP統計を全削除（v2テーブル）
     try {
-      const { error: categoryXpError } = await supabase
-        .from('user_category_xp_stats')
-        .delete()
-        .eq('user_id', userId)
-
-      if (categoryXpError) {
-        console.warn('⚠️ Error deleting user_category_xp_stats:', categoryXpError)
-        errors.push('user_category_xp_stats: ' + categoryXpError.message)
-      } else {
-        console.log('✅ user_category_xp_stats deleted')
-        deletedTables.push('user_category_xp_stats')
-      }
-    } catch (err) {
-      errors.push('user_category_xp_stats: ' + (err as Error).message)
-    }
-
-    // 4b. user_category_xp_stats_v2 - カテゴリ別XP統計を全削除（v2テーブル）
-    try {
-      const { error: categoryXpV2Error } = await supabase
+      const { error: categoryXpV2Error } = await supabaseAdmin
         .from('user_category_xp_stats_v2')
         .delete()
         .eq('user_id', userId)
@@ -125,9 +89,9 @@ export async function POST(request: NextRequest) {
       errors.push('user_category_xp_stats_v2: ' + (err as Error).message)
     }
 
-    // 4c. user_subcategory_xp_stats_v2 - サブカテゴリ別XP統計を全削除（v2テーブル）
+    // 5. user_subcategory_xp_stats_v2 - サブカテゴリ別XP統計を全削除（v2テーブル）
     try {
-      const { error: subcategoryXpV2Error } = await supabase
+      const { error: subcategoryXpV2Error } = await supabaseAdmin
         .from('user_subcategory_xp_stats_v2')
         .delete()
         .eq('user_id', userId)
@@ -150,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     // 6. course_session_completions - コースセッション完了履歴を削除
     try {
-      const { error: courseSessionError } = await supabase
+      const { error: courseSessionError } = await supabaseAdmin
         .from('course_session_completions')
         .delete()
         .eq('user_id', userId)
@@ -168,7 +132,7 @@ export async function POST(request: NextRequest) {
 
     // 7. course_theme_completions - コーステーマ完了履歴を削除
     try {
-      const { error: courseThemeError } = await supabase
+      const { error: courseThemeError } = await supabaseAdmin
         .from('course_theme_completions')
         .delete()
         .eq('user_id', userId)
@@ -186,7 +150,7 @@ export async function POST(request: NextRequest) {
 
     // 8. course_completions - コース完了履歴を削除
     try {
-      const { error: courseCompletionError } = await supabase
+      const { error: courseCompletionError } = await supabaseAdmin
         .from('course_completions')
         .delete()
         .eq('user_id', userId)
@@ -204,7 +168,7 @@ export async function POST(request: NextRequest) {
 
     // 9. user_progress - ユーザー進捗を削除
     try {
-      const { error: userProgressError } = await supabase
+      const { error: userProgressError } = await supabaseAdmin
         .from('user_progress')
         .delete()
         .eq('user_id', userId)
@@ -222,7 +186,7 @@ export async function POST(request: NextRequest) {
 
     // 10. quiz_results - クイズ結果を削除
     try {
-      const { error: quizResultsError } = await supabase
+      const { error: quizResultsError } = await supabaseAdmin
         .from('quiz_results')
         .delete()
         .eq('user_id', userId)
@@ -240,7 +204,7 @@ export async function POST(request: NextRequest) {
 
     // 11. detailed_quiz_data - 詳細クイズデータを削除
     try {
-      const { error: detailedQuizError } = await supabase
+      const { error: detailedQuizError } = await supabaseAdmin
         .from('detailed_quiz_data')
         .delete()
         .eq('user_id', userId)
@@ -258,7 +222,7 @@ export async function POST(request: NextRequest) {
 
     // 12. knowledge_card_collection - ナレッジカード収集を削除
     try {
-      const { error: knowledgeCardError } = await supabase
+      const { error: knowledgeCardError } = await supabaseAdmin
         .from('knowledge_card_collection')
         .delete()
         .eq('user_id', userId)
@@ -276,7 +240,7 @@ export async function POST(request: NextRequest) {
 
     // 13. wisdom_card_collection - 格言カード収集を削除
     try {
-      const { error: wisdomCardError } = await supabase
+      const { error: wisdomCardError } = await supabaseAdmin
         .from('wisdom_card_collection')
         .delete()
         .eq('user_id', userId)
@@ -294,7 +258,7 @@ export async function POST(request: NextRequest) {
 
     // 14. user_settings - ユーザー設定を削除
     try {
-      const { error: userSettingsError } = await supabase
+      const { error: userSettingsError } = await supabaseAdmin
         .from('user_settings')
         .delete()
         .eq('user_id', userId)
@@ -312,7 +276,7 @@ export async function POST(request: NextRequest) {
 
     // 15. SKP取引履歴を削除
     try {
-      const { error: skpError } = await supabase
+      const { error: skpError } = await supabaseAdmin
         .from('skp_transactions')
         .delete()
         .eq('user_id', userId)
@@ -330,7 +294,7 @@ export async function POST(request: NextRequest) {
 
     // 16. daily_xp_records - 日別XP記録を削除（連続学習日数計算用）
     try {
-      const { error: dailyXpError } = await supabase
+      const { error: dailyXpError } = await supabaseAdmin
         .from('daily_xp_records')
         .delete()
         .eq('user_id', userId)
@@ -348,7 +312,7 @@ export async function POST(request: NextRequest) {
 
     // 17. quiz_sessions - クイズセッション履歴を削除
     try {
-      const { error: quizError } = await supabase
+      const { error: quizError } = await supabaseAdmin
         .from('quiz_sessions')
         .delete()
         .eq('user_id', userId)

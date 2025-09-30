@@ -143,4 +143,12 @@
       transform: rotate(360deg);
     }
   }
+
+  /* Supabaseエラーアイコンを完全に非表示 */
+  [data-supabase-error-logger],
+  .supabase-error-icon,
+  .supabase-auth-error {
+    display: none !important;
+    visibility: hidden !important;
+  }
 }

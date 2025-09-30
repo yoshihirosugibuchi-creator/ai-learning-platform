@@ -48,9 +48,9 @@ export interface UserProfile {
   id: string
   email: string
   name?: string
-  skill_level: 'beginner' | 'intermediate' | 'advanced'
-  learning_style: 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed'
-  experience_level: string | number // Allow both for compatibility
+  skill_level?: 'beginner' | 'intermediate' | 'advanced'
+  learning_style?: 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed'
+  experience_level?: string | number // Allow both for compatibility
   total_xp: number
   current_level: number
   streak: number
@@ -91,7 +91,22 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
       return null
     }
 
-    return data
+    // DBデータをUserProfile形式に変換（NULL→未設定）
+    return {
+      id: data.id,
+      email: data.email,
+      name: data.name || undefined,
+      skill_level: data.skill_level as 'beginner' | 'intermediate' | 'advanced' | undefined,
+      learning_style: data.learning_style as 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed' | undefined,
+      experience_level: data.experience_level || undefined,
+      total_xp: data.total_xp || 0,
+      current_level: data.current_level || 1,
+      streak: data.streak || 0,
+      last_active: data.last_active || new Date().toISOString(),
+      selected_industry_categories: data.selected_industry_categories as string[] | undefined,
+      created_at: data.created_at || undefined,
+      updated_at: data.updated_at || undefined
+    }
   } catch (error) {
     console.error('❌ Exception in getUserProfile:', error)
     return null
@@ -101,9 +116,9 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 // ユーザープロファイルを作成
 export async function createUserProfile(user: SupabaseUser): Promise<UserProfile | null> {
   try {
-    const profile: Partial<UserProfile> = {
+    const profile = {
       id: user.id,
-      email: user.email!,
+      email: user.email || '',
       name: user.email?.split('@')[0], // メールのローカル部分を名前として使用
       skill_level: 'beginner',
       learning_style: 'mixed',
@@ -117,7 +132,7 @@ export async function createUserProfile(user: SupabaseUser): Promise<UserProfile
 
     const { data, error } = await supabase
       .from('users')
-      .insert([profile])
+      .insert(profile)
       .select()
       .single()
 
@@ -148,7 +163,22 @@ export async function createUserProfile(user: SupabaseUser): Promise<UserProfile
       return null
     }
 
-    return data
+    // DBデータをUserProfile形式に変換
+    return {
+      id: data.id,
+      email: data.email,
+      name: data.name || undefined,
+      skill_level: data.skill_level as 'beginner' | 'intermediate' | 'advanced' | undefined,
+      learning_style: data.learning_style as 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed' | undefined,
+      experience_level: data.experience_level || undefined,
+      total_xp: data.total_xp || 0,
+      current_level: data.current_level || 1,
+      streak: data.streak || 0,
+      last_active: data.last_active || new Date().toISOString(),
+      selected_industry_categories: data.selected_industry_categories as string[] | undefined,
+      created_at: data.created_at || undefined,
+      updated_at: data.updated_at || undefined
+    }
   } catch (error) {
     console.error('❌ Exception in createUserProfile:', error)
     return null
@@ -194,7 +224,22 @@ export async function updateUserProfile(userId: string, updates: Record<string, 
   }
 
   console.log('Profile updated successfully:', data)
-  return data
+  // DBデータをUserProfile形式に変換
+  return {
+    id: data.id,
+    email: data.email,
+    name: data.name || undefined,
+    skill_level: data.skill_level as 'beginner' | 'intermediate' | 'advanced' | undefined,
+    learning_style: data.learning_style as 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed' | undefined,
+    experience_level: data.experience_level || undefined,
+    total_xp: data.total_xp || 0,
+    current_level: data.current_level || 1,
+    streak: data.streak || 0,
+    last_active: data.last_active || new Date().toISOString(),
+    selected_industry_categories: data.selected_industry_categories as string[] | undefined,
+    created_at: data.created_at || undefined,
+    updated_at: data.updated_at || undefined
+  }
 }
 
 // ユーザープロファイルを取得または作成

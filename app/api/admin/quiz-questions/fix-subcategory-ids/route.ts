@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+
+type QuestionIdData = { id: number; subcategory_id: string | null }
 
 // quiz_questionsで使用されている誤ったIDを正しいIDにマッピング
 const quizSubcategoryIdMapping: Record<string, string> = {
@@ -72,7 +74,7 @@ export async function POST() {
     console.log('🔄 quiz_questionsテーブルのsubcategory_idの修正を開始します...')
 
     // 1. 現在のquiz_questionsのsubcategory_idをカウント
-    const { data: questions, error: fetchError } = await supabase
+    const { data: questions, error: fetchError } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, subcategory_id')
 
@@ -82,8 +84,10 @@ export async function POST() {
 
     // 修正対象のsubcategory_idをカウント
     const subcategoryIdCounts: Record<string, number> = {}
-    questions?.forEach(q => {
-      subcategoryIdCounts[q.subcategory_id] = (subcategoryIdCounts[q.subcategory_id] || 0) + 1
+    questions?.forEach((q: QuestionIdData) => {
+      if (q.subcategory_id) {
+        subcategoryIdCounts[q.subcategory_id] = (subcategoryIdCounts[q.subcategory_id] || 0) + 1
+      }
     })
 
     console.log(`📊 総質問数: ${questions?.length}`)
@@ -108,7 +112,7 @@ export async function POST() {
         
         try {
           // バッチで更新
-          const { error: updateError } = await supabase
+          const { error: updateError } = await supabaseAdmin
             .from('quiz_questions')
             .update({ 
               subcategory_id: newId,
@@ -156,14 +160,16 @@ export async function POST() {
     console.log(`✅ 修正完了! 更新: ${updateCount}問, スキップ: ${skipCount}件`)
 
     // 3. 修正後の状況を確認
-    const { data: updatedQuestions, error: verifyError } = await supabase
+    const { data: updatedQuestions, error: verifyError } = await supabaseAdmin
       .from('quiz_questions')
       .select('subcategory_id')
 
     if (!verifyError && updatedQuestions) {
       const updatedCounts: Record<string, number> = {}
-      updatedQuestions.forEach(q => {
-        updatedCounts[q.subcategory_id] = (updatedCounts[q.subcategory_id] || 0) + 1
+      updatedQuestions.forEach((q: { subcategory_id: string | null }) => {
+        if (q.subcategory_id) {
+          updatedCounts[q.subcategory_id] = (updatedCounts[q.subcategory_id] || 0) + 1
+        }
       })
 
       console.log('\n📋 修正後のsubcategory_id使用状況:')

@@ -188,13 +188,13 @@ export async function GET(request: Request) {
 
       // 5. カテゴリー別統計
       supabase
-        .from('user_category_xp_stats')
+        .from('user_category_xp_stats_v2')
         .select('*')
         .eq('user_id', userId),
 
       // 6. サブカテゴリー別統計
       supabase
-        .from('user_subcategory_xp_stats')
+        .from('user_subcategory_xp_stats_v2')
         .select('*')
         .eq('user_id', userId)
     ])

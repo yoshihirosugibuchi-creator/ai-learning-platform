@@ -188,16 +188,16 @@ export async function getUserBadges(userId: string): Promise<UserBadge[]> {
         description: item.badge_description || '',
         icon: '🏆', // デフォルトアイコン
         color: item.badge_color || '#FFD700',
-        badgeImageUrl: item.badge_image_url,
-        difficulty: item.difficulty,
-        validityPeriodMonths: item.validity_period_months
+        badgeImageUrl: item.badge_image_url || undefined,
+        difficulty: (item.difficulty as 'basic' | 'intermediate' | 'advanced' | 'expert') || 'intermediate',
+        validityPeriodMonths: item.validity_period_months || undefined
       },
       earnedAt: new Date(item.earned_at),
       expiresAt: item.expires_at ? new Date(item.expires_at) : undefined,
       isExpired: item.expires_at ? new Date(item.expires_at) < new Date() : false,
       courseId: item.course_id,
       courseName: item.course_name
-    }))
+    })) as UserBadge[]
   } catch (error) {
     console.error('Exception in getUserBadges:', error)
     return []
@@ -224,7 +224,7 @@ export async function getExpiringBadges(userId: string): Promise<UserBadge[]> {
       return []
     }
 
-    return data.map(item => ({
+    return (data || []).map(item => ({
       id: item.id,
       badge: {
         id: item.badge_id,
@@ -232,16 +232,16 @@ export async function getExpiringBadges(userId: string): Promise<UserBadge[]> {
         description: item.badge_description || '',
         icon: '🏆',
         color: item.badge_color || '#FFD700',
-        badgeImageUrl: item.badge_image_url,
-        difficulty: item.difficulty,
-        validityPeriodMonths: item.validity_period_months
+        badgeImageUrl: item.badge_image_url || undefined,
+        difficulty: (item.difficulty as 'basic' | 'intermediate' | 'advanced' | 'expert') || 'intermediate',
+        validityPeriodMonths: item.validity_period_months || undefined
       },
       earnedAt: new Date(item.earned_at),
-      expiresAt: new Date(item.expires_at),
+      expiresAt: item.expires_at ? new Date(item.expires_at) : new Date(),
       isExpired: false,
       courseId: item.course_id,
       courseName: item.course_name
-    }))
+    })) as UserBadge[]
   } catch (error) {
     console.error('Exception in getExpiringBadges:', error)
     return []
@@ -272,12 +272,12 @@ export async function getExpiredBadges(userId: string): Promise<UserBadge[]> {
         description: item.badge_description || '',
         icon: '🏆',
         color: item.badge_color || '#999999',
-        badgeImageUrl: item.badge_image_url,
-        difficulty: item.difficulty,
-        validityPeriodMonths: item.validity_period_months
+        badgeImageUrl: item.badge_image_url || undefined,
+        difficulty: (item.difficulty as 'basic' | 'intermediate' | 'advanced' | 'expert') || 'intermediate',
+        validityPeriodMonths: item.validity_period_months || undefined
       },
       earnedAt: new Date(item.earned_at),
-      expiresAt: new Date(item.expires_at),
+      expiresAt: item.expires_at ? new Date(item.expires_at) : new Date(),
       isExpired: true,
       courseId: item.course_id,
       courseName: item.course_name

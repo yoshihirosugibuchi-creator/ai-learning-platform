@@ -58,7 +58,16 @@ export async function getUserWisdomCards(userId: string): Promise<WisdomCardColl
     }
 
     console.log('✅ Wisdom cards fetched successfully:', data?.length || 0)
-    return data || []
+    // DBデータをWisdomCardCollection形式に変換
+    return (data || []).map(card => ({
+      id: card.id,
+      user_id: card.user_id,
+      card_id: card.card_id,
+      count: card.count || 0,
+      obtained_at: card.obtained_at || new Date().toISOString(),
+      last_obtained_at: card.last_obtained_at || new Date().toISOString(),
+      created_at: card.created_at || undefined
+    }))
   } catch (error) {
     console.warn('⚠️ Exception in getUserWisdomCards:', error)
     return []
@@ -81,7 +90,7 @@ export async function addWisdomCardToCollection(userId: string, cardId: number):
     const { data, error } = await supabase
       .from('wisdom_card_collection')
       .update({
-        count: existing.count + 1,
+        count: (existing.count || 0) + 1,
         last_obtained_at: now
       })
       .eq('id', existing.id)
@@ -90,10 +99,10 @@ export async function addWisdomCardToCollection(userId: string, cardId: number):
 
     if (error) {
       console.error('Error updating wisdom card:', error)
-      return { count: existing.count, isNew: false }
+      return { count: existing.count || 0, isNew: false }
     }
 
-    return { count: data.count, isNew: false }
+    return { count: data.count || 0, isNew: false }
   } else {
     // Add new card
     const { data: _data, error } = await supabase
@@ -213,7 +222,16 @@ export async function getUserKnowledgeCards(userId: string): Promise<KnowledgeCa
     return []
   }
 
-  return data || []
+  // DBデータをKnowledgeCardCollection形式に変換
+  return (data || []).map(card => ({
+    id: card.id,
+    user_id: card.user_id || '',
+    card_id: card.card_id,
+    count: card.count || 0,
+    obtained_at: card.obtained_at || new Date().toISOString(),
+    last_obtained_at: card.last_obtained_at || new Date().toISOString(),
+    created_at: card.created_at || undefined
+  }))
 }
 
 export async function addKnowledgeCardToCollection(userId: string, cardId: string | number): Promise<{ count: number; isNew: boolean }> {
@@ -242,7 +260,7 @@ export async function addKnowledgeCardToCollection(userId: string, cardId: strin
     const { data, error } = await supabase
       .from('knowledge_card_collection')
       .update({
-        count: existing.count + 1,
+        count: (existing.count || 0) + 1,
         last_obtained_at: now
       })
       .eq('id', existing.id)
@@ -251,11 +269,11 @@ export async function addKnowledgeCardToCollection(userId: string, cardId: strin
 
     if (error) {
       console.error('❌ Error updating knowledge card:', error)
-      return { count: existing.count, isNew: false }
+      return { count: existing.count || 0, isNew: false }
     }
 
     console.log('✅ CARD COUNT UPDATED:', { cardId, numericCardId, newCount: data.count })
-    return { count: data.count, isNew: false }
+    return { count: data.count || 0, isNew: false }
   } else {
     // Add new card
     const { data, error } = await supabase
@@ -431,8 +449,7 @@ export async function reviewKnowledgeCard(userId: string, cardId: string | numbe
     const { error } = await supabase
       .from('knowledge_card_collection')
       .update({
-        review_count: existingCard.review_count + 1,
-        last_reviewed_at: new Date().toISOString()
+        last_obtained_at: new Date().toISOString()
       })
       .eq('user_id', userId)
       .eq('card_id', numericCardId)

@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { Button } from '@/components/ui/button'
 import { 
   Zap, 
   Target, 
@@ -10,7 +11,8 @@ import {
   Calendar,
   Sparkles,
   BookOpen,
-  Star
+  Star,
+  RefreshCw
 } from 'lucide-react'
 import { useXPStats } from '@/hooks/useXPStats'
 import { loadXPSettings } from '@/lib/xp-settings'
@@ -21,9 +23,67 @@ interface XPStatsCardProps {
   className?: string
 }
 
+// サブカテゴリーの表示名を取得するヘルパー関数
+const _getSubcategoryDisplayName = (subcategoryId: string): string => {
+  return subcategoryId === 'category_level' ? '総合' : subcategoryId
+}
+
+// 学習時間フォーマット関数
+const formatLearningTime = (seconds: number): string => {
+  if (seconds === 0) return '0m'
+  
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  
+  if (hours > 0) {
+    return `${hours}h${minutes > 0 ? ` ${minutes}m` : ''}`
+  }
+  return `${minutes}m`
+}
+
 export default function XPStatsCard({ showDetailedStats = false, className }: XPStatsCardProps) {
-  const { stats, loading, error } = useXPStats()
+  const { stats, loading, error, refetch } = useXPStats()
   const [, setLevelThreshold] = useState(1000) // デフォルト値
+  const [isRecalculating, setIsRecalculating] = useState(false)
+
+  // 統計再計算機能
+  const handleRecalculateStats = async () => {
+    setIsRecalculating(true)
+    try {
+      // 正しいSupabaseセッション取得
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('認証セッションがありません')
+      }
+      
+      const response = await fetch('/api/admin/recalculate-learning-time', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({})
+      })
+      
+      if (!response.ok) {
+        throw new Error('再計算に失敗しました')
+      }
+      
+      const result = await response.json()
+      console.log('✅ 統計再計算完了:', result)
+      
+      // 統計データを再取得
+      await refetch()
+      
+    } catch (error) {
+      console.error('❌ 統計再計算エラー:', error)
+      alert('統計の再計算に失敗しました。しばらく待ってから再試行してください。')
+    } finally {
+      setIsRecalculating(false)
+    }
+  }
 
   // XP設定からレベル閾値を取得
   useEffect(() => {
@@ -118,9 +178,21 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
             <Zap className="h-5 w-5 text-yellow-500" />
             学習統計
           </div>
-          <Badge variant="outline" className="text-xs">
-            総合レベル {currentLevel}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRecalculateStats}
+              disabled={isRecalculating}
+              className="h-8 w-8 p-0"
+              title="統計を再計算"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRecalculating ? 'animate-spin' : ''}`} />
+            </Button>
+            <Badge variant="outline" className="text-xs">
+              総合レベル {currentLevel}
+            </Badge>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -132,14 +204,22 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
           </div>
           <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg">
             <div className="text-2xl font-bold text-purple-600">{user.total_skp.toLocaleString()}</div>
-            <div className="text-xs text-gray-600">総合SKP</div>
+            <div className="text-xs text-gray-600">累計獲得SKP</div>
           </div>
         </div>
         
-        {/* セッション数 */}
-        <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
-          <div className="text-2xl font-bold text-blue-600">{user.quiz_sessions_completed + user.course_sessions_completed}</div>
-          <div className="text-xs text-gray-600">学習セッション</div>
+        {/* セッション数と総学習時間 */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">{user.quiz_sessions_completed + user.course_sessions_completed}</div>
+            <div className="text-xs text-gray-600">学習セッション</div>
+          </div>
+          <div className="text-center p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
+            <div className="text-2xl font-bold text-green-600">
+              {formatLearningTime(user.total_learning_time_seconds || 0)}
+            </div>
+            <div className="text-xs text-gray-600">総学習時間</div>
+          </div>
         </div>
 
         {/* XP内訳 */}
@@ -217,12 +297,12 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
               </h4>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <div className="text-gray-600">クイズ正答率</div>
+                  <div className="text-gray-600">総合正答率</div>
                   <div className="font-medium">{user.quiz_average_accuracy.toFixed(1)}%</div>
                 </div>
                 <div>
                   <div className="text-gray-600">学習実施カテゴリー</div>
-                  <div className="font-medium">{categoryCount}種類</div>
+                  <div className="font-medium">{categoryCount}分野</div>
                 </div>
                 <div>
                   <div className="text-gray-600">学習実施サブカテゴリー</div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import fs from 'fs'
 import path from 'path'
 
@@ -10,12 +10,12 @@ export async function GET() {
     
     // 全てのテーブルから並列でデータを取得
     const [coursesResult, genresResult, themesResult, sessionsResult, contentsResult, quizzesResult] = await Promise.all([
-      supabase.from('learning_courses').select('*').order('display_order'),
-      supabase.from('learning_genres').select('*').order('display_order'),
-      supabase.from('learning_themes').select('*').order('display_order'),
-      supabase.from('learning_sessions').select('*').order('display_order'),
-      supabase.from('session_contents').select('*').order('content_order'),
-      supabase.from('session_quizzes').select('*')
+      supabaseAdmin.from('learning_courses').select('*').order('display_order'),
+      supabaseAdmin.from('learning_genres').select('*').order('display_order'),
+      supabaseAdmin.from('learning_themes').select('*').order('display_order'),
+      supabaseAdmin.from('learning_sessions').select('*').order('display_order'),
+      supabaseAdmin.from('session_contents').select('*').order('content_order'),
+      supabaseAdmin.from('session_quizzes').select('*')
     ])
 
     // エラーチェック

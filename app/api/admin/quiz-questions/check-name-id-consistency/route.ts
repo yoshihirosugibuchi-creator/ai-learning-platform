@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function GET() {
   try {
@@ -20,7 +20,7 @@ export async function GET() {
     ]
 
     // quiz_questionsから修正されたサブカテゴリーのデータを取得
-    const { data: quizData, error: quizError } = await supabase
+    const { data: quizData, error: quizError } = await supabaseAdmin
       .from('quiz_questions')
       .select('subcategory, subcategory_id, category_id')
       .in('subcategory', modifiedSubcategories)
@@ -30,7 +30,7 @@ export async function GET() {
     }
 
     // subcategoriesテーブルから対応するデータを取得
-    const { data: subcategoriesData, error: subcategoriesError } = await supabase
+    const { data: subcategoriesData, error: subcategoriesError } = await supabaseAdmin
       .from('subcategories')
       .select('subcategory_id, name, parent_category_id')
       .in('name', modifiedSubcategories)
@@ -45,32 +45,33 @@ export async function GET() {
 
     // 整合性チェック
     const inconsistencies: Array<{
-      subcategory: string
-      currentId: string
-      expectedId: string
-      currentCategory: string
-      expectedCategory: string
+      subcategory: string | null
+      currentId: string | null
+      expectedId: string | null
+      currentCategory: string | null
+      expectedCategory: string | null
       issue: string
     }> = []
 
-    const uniqueQuizData = new Map()
-    quizData?.forEach(quiz => {
+    type QuizDataItem = { subcategory: string | null; subcategory_id: string | null; category_id: string | null }
+    const uniqueQuizData = new Map<string, QuizDataItem>()
+    quizData?.forEach((quiz: QuizDataItem) => {
       const key = `${quiz.subcategory}_${quiz.subcategory_id}_${quiz.category_id}`
       if (!uniqueQuizData.has(key)) {
         uniqueQuizData.set(key, quiz)
       }
     })
 
-    Array.from(uniqueQuizData.values()).forEach(quiz => {
-      const expectedId = nameToIdMap.get(quiz.subcategory)
-      const expectedCategory = nameToParentMap.get(quiz.subcategory)
+    Array.from(uniqueQuizData.values()).forEach((quiz: QuizDataItem) => {
+      const expectedId = nameToIdMap.get(quiz.subcategory || '')
+      const expectedCategory = nameToParentMap.get(quiz.subcategory || '')
 
       if (expectedId && quiz.subcategory_id !== expectedId) {
         inconsistencies.push({
-          subcategory: quiz.subcategory,
-          currentId: quiz.subcategory_id,
-          expectedId: expectedId,
-          currentCategory: quiz.category_id,
+          subcategory: quiz.subcategory || '',
+          currentId: quiz.subcategory_id || '',
+          expectedId: expectedId || '',
+          currentCategory: quiz.category_id || '',
           expectedCategory: expectedCategory || '',
           issue: 'サブカテゴリーIDが不整合'
         })
@@ -78,11 +79,11 @@ export async function GET() {
 
       if (expectedCategory && quiz.category_id !== expectedCategory) {
         inconsistencies.push({
-          subcategory: quiz.subcategory,
-          currentId: quiz.subcategory_id,
+          subcategory: quiz.subcategory || '',
+          currentId: quiz.subcategory_id || '',
           expectedId: expectedId || '',
-          currentCategory: quiz.category_id,
-          expectedCategory: expectedCategory,
+          currentCategory: quiz.category_id || '',
+          expectedCategory: expectedCategory || '',
           issue: 'カテゴリーIDが不整合'
         })
       }

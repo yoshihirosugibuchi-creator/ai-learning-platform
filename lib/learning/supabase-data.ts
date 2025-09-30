@@ -8,20 +8,6 @@ import { LearningCourse, LearningGenre } from '@/lib/types/learning'
 import { globalCache } from '@/lib/performance-optimizer'
 
 // ===== 型定義 =====
-interface DbCourse {
-  id: string
-  title: string
-  description: string
-  estimated_days: number
-  difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert'
-  icon: string
-  color: string
-  display_order: number
-  status: 'draft' | 'available' | 'coming_soon' | 'archived'
-  badge_data: unknown
-  created_at: string
-  updated_at: string
-}
 
 interface DbGenre {
   id: string
@@ -45,35 +31,8 @@ interface DbTheme {
   reward_card_data: unknown
 }
 
-interface DbSession {
-  id: string
-  theme_id: string
-  title: string
-  estimated_minutes: number
-  session_type: 'knowledge' | 'practice' | 'case_study'
-  display_order: number
-}
 
-interface DbContent {
-  id: string
-  session_id: string
-  content_type: 'text' | 'image' | 'video' | 'example' | 'key_points'
-  title: string | null
-  content: string
-  duration: number | null
-  display_order: number
-}
 
-interface DbQuiz {
-  id: string
-  session_id: string
-  question: string
-  options: string // JSON string
-  correct_answer: number
-  explanation: string
-  quiz_type: 'single_choice' | 'multiple_choice'
-  display_order: number
-}
 
 // ===== コース一覧取得 =====
 export async function getCoursesFromDB(): Promise<{
@@ -131,7 +90,7 @@ export async function getCoursesFromDB(): Promise<{
     
     // 各コースのジャンル・テーマ数を集計
     const coursesWithCounts = await Promise.all(
-      coursesData.map(async (course: DbCourse) => {
+      coursesData.map(async (course) => {
         try {
           // ジャンル数取得
           const { count: genreCount } = await supabase
@@ -275,7 +234,7 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
               .order('display_order', { ascending: true })
             
             const sessions = await Promise.all(
-              (sessionsData || []).map(async (session: DbSession) => {
+              (sessionsData || []).map(async (session) => {
                 // コンテンツ取得
                 const { data: contentsData } = await supabase
                   .from('session_contents')
@@ -296,7 +255,7 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
                   estimatedMinutes: session.estimated_minutes,
                   type: session.session_type,
                   displayOrder: session.display_order,
-                  content: (contentsData || []).map((content: DbContent) => ({
+                  content: (contentsData || []).map((content) => ({
                     id: content.id,
                     type: content.content_type,
                     title: content.title,
@@ -304,10 +263,10 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
                     duration: content.duration,
                     displayOrder: content.display_order
                   })),
-                  quiz: (quizzesData || []).map((quiz: DbQuiz) => ({
+                  quiz: (quizzesData || []).map((quiz) => ({
                     id: quiz.id,
                     question: quiz.question,
-                    options: JSON.parse(quiz.options),
+                    options: JSON.parse(quiz.options as string),
                     correct: quiz.correct_answer,
                     explanation: quiz.explanation,
                     type: quiz.quiz_type
@@ -348,7 +307,7 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
       title: courseData.title,
       description: courseData.description,
       estimatedDays: courseData.estimated_days,
-      difficulty: courseData.difficulty,
+      difficulty: courseData.difficulty as 'basic' | 'intermediate' | 'advanced' | 'expert',
       icon: courseData.icon,
       color: courseData.color,
       displayOrder: courseData.display_order,
@@ -407,7 +366,7 @@ export async function getSessionDetailsFromDB(sessionId: string) {
     
     const sessionDetails = {
       ...sessionData,
-      content: (contentsData || []).map((content: DbContent) => ({
+      content: (contentsData || []).map((content) => ({
         id: content.id,
         type: content.content_type,
         title: content.title,
@@ -415,10 +374,10 @@ export async function getSessionDetailsFromDB(sessionId: string) {
         duration: content.duration,
         displayOrder: content.display_order
       })),
-      quiz: (quizzesData || []).map((quiz: DbQuiz) => ({
+      quiz: (quizzesData || []).map((quiz) => ({
         id: quiz.id,
         question: quiz.question,
-        options: JSON.parse(quiz.options),
+        options: JSON.parse(quiz.options as string),
         correct: quiz.correct_answer,
         explanation: quiz.explanation,
         type: quiz.quiz_type

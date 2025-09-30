@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     // 各サブカテゴリーの並び順を更新
     const updatePromises = subcategories.map(async (sub: { subcategory_id: string, display_order: number }) => {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('subcategories')
         .update({ 
           display_order: sub.display_order,

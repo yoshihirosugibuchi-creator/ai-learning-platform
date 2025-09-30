@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import type { Database } from '@/lib/database-types-official'
 
 export async function PATCH(
   request: Request,
@@ -32,11 +33,7 @@ export async function PATCH(
     }
 
     // 更新データの準備
-    const updates: {
-      is_active: boolean
-      updated_at: string
-      activation_date?: string | null
-    } = {
+    const updates: Database['public']['Tables']['categories']['Update'] = {
       is_active,
       updated_at: new Date().toISOString()
     }
@@ -50,7 +47,7 @@ export async function PATCH(
     }
 
     // カテゴリー状態を更新
-    const { data: updatedCategory, error: updateError } = await supabaseAdmin
+    const updateResult = await supabaseAdmin
       .from('categories')
       .update(updates)
       .eq('category_id', category_id)
@@ -63,6 +60,8 @@ export async function PATCH(
         updated_at
       `)
       .single()
+    
+    const { data: updatedCategory, error: updateError } = updateResult
 
     if (updateError) {
       console.error('Error updating category status:', updateError)
@@ -75,13 +74,16 @@ export async function PATCH(
     // サブカテゴリーの状態も同期更新（オプション）
     // メインカテゴリーが無効化された場合、サブカテゴリーも無効化
     if (!is_active && existingCategory.type === 'main') {
-      const { error: subUpdateError } = await supabaseAdmin
+      const subUpdateData: Database['public']['Tables']['subcategories']['Update'] = {
+        is_active: false,
+        updated_at: new Date().toISOString()
+      }
+      const subUpdateResult = await supabaseAdmin
         .from('subcategories')
-        .update({ 
-          is_active: false,
-          updated_at: new Date().toISOString()
-        })
+        .update(subUpdateData)
         .eq('parent_category_id', category_id)
+      
+      const { error: subUpdateError } = subUpdateResult
 
       if (subUpdateError) {
         console.warn('Warning: Failed to update subcategories status:', subUpdateError)

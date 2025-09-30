@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from './database-types-official'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -9,8 +10,8 @@ if (process.env.NODE_ENV === 'development') {
   console.log('Supabase Key (first 10 chars):', supabaseAnonKey.substring(0, 10))
 }
 
-// 認証設定でリダイレクトURLを設定
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Supabaseクライアントを作成（Database型あり）
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,

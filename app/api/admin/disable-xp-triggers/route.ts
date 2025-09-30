@@ -33,16 +33,16 @@ export async function POST() {
       )
     }
     
-    // XP統計テーブル関連のトリガーを無効化
+    // XP統計テーブル関連のトリガーを無効化（v2テーブル対応）
     const disableTriggerQueries = [
-      // user_xp_stats テーブルのトリガーを無効化
-      `ALTER TABLE public.user_xp_stats DISABLE TRIGGER ALL;`,
+      // user_xp_stats_v2 テーブルのトリガーを無効化
+      `ALTER TABLE public.user_xp_stats_v2 DISABLE TRIGGER ALL;`,
       
-      // user_category_xp_stats テーブルのトリガーを無効化  
-      `ALTER TABLE public.user_category_xp_stats DISABLE TRIGGER ALL;`,
+      // user_category_xp_stats_v2 テーブルのトリガーを無効化  
+      `ALTER TABLE public.user_category_xp_stats_v2 DISABLE TRIGGER ALL;`,
       
-      // user_subcategory_xp_stats テーブルのトリガーを無効化
-      `ALTER TABLE public.user_subcategory_xp_stats DISABLE TRIGGER ALL;`,
+      // user_subcategory_xp_stats_v2 テーブルのトリガーを無効化
+      `ALTER TABLE public.user_subcategory_xp_stats_v2 DISABLE TRIGGER ALL;`,
       
       // トリガー関数も削除（エラーを避けるため）
       `DROP FUNCTION IF EXISTS public.update_user_level_on_xp_change() CASCADE;`
@@ -111,9 +111,9 @@ export async function POST() {
         message: error instanceof Error ? error.message : 'Unknown error',
         manual_instructions: [
           'Please run these SQL commands manually in Supabase Dashboard:',
-          'ALTER TABLE public.user_xp_stats DISABLE TRIGGER ALL;',
-          'ALTER TABLE public.user_category_xp_stats DISABLE TRIGGER ALL;',
-          'ALTER TABLE public.user_subcategory_xp_stats DISABLE TRIGGER ALL;',
+          'ALTER TABLE public.user_xp_stats_v2 DISABLE TRIGGER ALL;',
+          'ALTER TABLE public.user_category_xp_stats_v2 DISABLE TRIGGER ALL;',
+          'ALTER TABLE public.user_subcategory_xp_stats_v2 DISABLE TRIGGER ALL;',
           'DROP FUNCTION IF EXISTS public.update_user_level_on_xp_change() CASCADE;'
         ]
       },

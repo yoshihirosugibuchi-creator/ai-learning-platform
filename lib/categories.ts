@@ -655,7 +655,12 @@ export async function getAllCategories(): Promise<(MainCategory | IndustryCatego
 /**
  * 英語の難易度IDを日本語の表示名に変換
  */
-export function getDifficultyDisplayName(difficultyId: string): string {
+export function getDifficultyDisplayName(difficultyId: string | null): string {
+  // nullの場合は未設定を返す
+  if (difficultyId === null) {
+    return '未設定'
+  }
+  
   // 既に日本語の場合はそのまま返す
   if (['基礎', '中級', '上級', 'エキスパート'].includes(difficultyId)) {
     return difficultyId

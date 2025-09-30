@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+
+type QuestionNameData = { id: number; subcategory: string | null }
 
 // quiz_questionsで使用されている誤ったサブカテゴリー名を正しい名称にマッピング
 const quizSubcategoryNameMapping: Record<string, string> = {
@@ -33,7 +35,7 @@ export async function POST() {
     console.log('🔄 quiz_questionsテーブルのサブカテゴリー名の修正を開始します...')
 
     // 1. 現在のquiz_questionsの不正な名称をカウント
-    const { data: questions, error: fetchError } = await supabase
+    const { data: questions, error: fetchError } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, subcategory')
 
@@ -43,8 +45,10 @@ export async function POST() {
 
     // 修正対象のサブカテゴリー名をカウント
     const subcategoryNameCounts: Record<string, number> = {}
-    questions?.forEach(q => {
-      subcategoryNameCounts[q.subcategory] = (subcategoryNameCounts[q.subcategory] || 0) + 1
+    questions?.forEach((q: QuestionNameData) => {
+      if (q.subcategory) {
+        subcategoryNameCounts[q.subcategory] = (subcategoryNameCounts[q.subcategory] || 0) + 1
+      }
     })
 
     console.log(`📊 総質問数: ${questions?.length}`)
@@ -69,7 +73,7 @@ export async function POST() {
         
         try {
           // バッチで更新
-          const { error: updateError } = await supabase
+          const { error: updateError } = await supabaseAdmin
             .from('quiz_questions')
             .update({ 
               subcategory: newName,
@@ -117,14 +121,16 @@ export async function POST() {
     console.log(`✅ 修正完了! 更新: ${updateCount}問, スキップ: ${skipCount}件`)
 
     // 3. 修正後の状況を確認
-    const { data: updatedQuestions, error: verifyError } = await supabase
+    const { data: updatedQuestions, error: verifyError } = await supabaseAdmin
       .from('quiz_questions')
       .select('subcategory')
 
     if (!verifyError && updatedQuestions) {
       const updatedCounts: Record<string, number> = {}
-      updatedQuestions.forEach(q => {
-        updatedCounts[q.subcategory] = (updatedCounts[q.subcategory] || 0) + 1
+      updatedQuestions.forEach((q: { subcategory: string | null }) => {
+        if (q.subcategory) {
+          updatedCounts[q.subcategory] = (updatedCounts[q.subcategory] || 0) + 1
+        }
       })
 
       console.log('\n📋 修正後のサブカテゴリー名使用状況（上位20位）:')

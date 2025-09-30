@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST() {
   try {
     console.log('🔄 category_levelの修正を元に戻します...')
 
     // subcategory_idとsubcategoryの両方を元に戻す
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('quiz_questions')
       .update({ 
         subcategory_id: 'category_level',
@@ -20,7 +20,7 @@ export async function POST() {
     }
 
     // 修正結果を確認
-    const { data: updatedQuestions, error: fetchError } = await supabase
+    const { data: updatedQuestions, error: fetchError } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, subcategory_id, subcategory')
       .eq('subcategory', 'category_level')

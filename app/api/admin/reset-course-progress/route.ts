@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     console.log(`🔄 Resetting course progress for user ${userId}, course ${courseId}`)
 
     // 1. learning_progressテーブルからコース完了記録を削除
-    const { error: progressError } = await supabase
+    const { error: progressError } = await supabaseAdmin
       .from('learning_progress')
       .delete()
       .eq('user_id', userId)
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // 2. user_badgesテーブルからコース関連バッジを削除（存在する場合）
     try {
-      const { error: badgeError } = await supabase
+      const { error: badgeError } = await supabaseAdmin
         .from('user_badges')
         .delete()
         .eq('user_id', userId)
@@ -46,13 +46,13 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ Badge deletion failed (table may not exist):', badgeErr)
     }
 
-    // 3. user_xp_statsからコース関連のXPを削除（セッション記録をリセット）
+    // 3. user_xp_stats_v2からコース関連のXPを削除（セッション記録をリセット）
     try {
-      const { error: xpError } = await supabase
-        .from('user_xp_stats')
+      const { error: xpError } = await supabaseAdmin
+        .from('user_xp_stats_v2')
         .update({
           course_sessions_completed: 0,
-          course_total_xp: 0
+          course_xp: 0
         })
         .eq('user_id', userId)
 

@@ -129,6 +129,7 @@ export async function POST(request: Request) {
       category_id: string;
       subcategory_id: string;
       difficulty: string;
+      session_type: string;
     }> = []
     for (const answer of body.answers) {
       let earnedXP = 0
@@ -148,7 +149,8 @@ export async function POST(request: Request) {
         category_id: answer.category_id,
         subcategory_id: answer.subcategory_id,
         difficulty: answer.difficulty,
-        earned_xp: earnedXP
+        earned_xp: earnedXP,
+        session_type: 'quiz'
       })
     }
 
@@ -161,8 +163,9 @@ export async function POST(request: Request) {
       throw new Error(`Answers insertion error: ${answersError.message}`)
     }
 
-    // 4. セッション合計XP計算とボーナス処理
+    // 4. セッション合計XP・時間計算とボーナス処理
     const totalQuestionXP = answerInserts.reduce((sum, answer) => sum + answer.earned_xp, 0)
+    const totalTimeSpent = answerInserts.reduce((sum, answer) => sum + answer.time_spent, 0) // 秒単位
     let bonusXP = 0
     let wisdomCards = 0
 
@@ -244,6 +247,10 @@ export async function POST(request: Request) {
       course_skp: existingStats?.course_skp || 0,
       bonus_skp: existingStats?.bonus_skp || 0,
       streak_skp: existingStats?.streak_skp || 0,
+      // 学習時間統計
+      total_learning_time_seconds: (existingStats?.total_learning_time_seconds || 0) + totalTimeSpent,
+      quiz_learning_time_seconds: (existingStats?.quiz_learning_time_seconds || 0) + totalTimeSpent,
+      course_learning_time_seconds: existingStats?.course_learning_time_seconds || 0,
       // 既存フィールド
       quiz_sessions_completed: (existingStats?.quiz_sessions_completed || 0) + 1,
       course_sessions_completed: existingStats?.course_sessions_completed || 0,
@@ -338,7 +345,11 @@ export async function POST(request: Request) {
       quiz_xp_earned: (existingDailyRecord?.quiz_xp_earned || 0) + totalXP,
       course_xp_earned: existingDailyRecord?.course_xp_earned || 0,
       total_xp_earned: (existingDailyRecord?.total_xp_earned || 0) + totalXP,
-      bonus_xp_earned: (existingDailyRecord?.bonus_xp_earned || 0) + bonusXP
+      bonus_xp_earned: (existingDailyRecord?.bonus_xp_earned || 0) + bonusXP,
+      // 学習時間統計
+      quiz_time_seconds: (existingDailyRecord?.quiz_time_seconds || 0) + totalTimeSpent,
+      course_time_seconds: existingDailyRecord?.course_time_seconds || 0,
+      total_time_seconds: (existingDailyRecord?.total_time_seconds || 0) + totalTimeSpent
     }
 
     let dailyRecordError

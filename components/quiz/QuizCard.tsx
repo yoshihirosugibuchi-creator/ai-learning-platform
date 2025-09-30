@@ -60,7 +60,7 @@ export default function QuizCard({
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
+        if (prev === null || prev <= 1) {
           setIsTimeUp(true)
           return 0
         }
@@ -99,7 +99,9 @@ export default function QuizCard({
     return 'opacity-50'
   }
 
-  const progressPercentage = ((question.timeLimit - timeLeft) / question.timeLimit) * 100
+  const progressPercentage = question.timeLimit && timeLeft !== null 
+    ? ((question.timeLimit - timeLeft) / question.timeLimit) * 100 
+    : 0
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -108,8 +110,8 @@ export default function QuizCard({
           <Badge variant="outline" className="text-xs w-fit">
             問題 {questionNumber} / {totalQuestions}
           </Badge>
-          <Badge variant={getDifficultyBadgeVariant(getDifficultyDisplayName(question.difficulty))} className="text-xs w-fit">
-            {getDifficultyDisplayName(question.difficulty)}
+          <Badge variant={getDifficultyBadgeVariant(getDifficultyDisplayName(question.difficulty || 'intermediate'))} className="text-xs w-fit">
+            {getDifficultyDisplayName(question.difficulty || 'intermediate')}
           </Badge>
         </div>
         

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import type { Database } from '@/lib/database-types-official'
 
 interface RouteParams {
   params: Promise<{
@@ -36,7 +37,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     // カテゴリーの存在確認
     console.log('🔍 Checking if category exists:', categoryId)
-    const { data: existingCategory, error: checkError } = await supabase
+    const { data: existingCategory, error: checkError } = await supabaseAdmin
       .from('categories')
       .select('category_id, name, is_active, is_visible')
       .eq('category_id', categoryId)
@@ -62,17 +63,18 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       is_active: is_active ?? false,
       is_visible: is_visible ?? true,
       updated_at: new Date().toISOString()
-    }
+    } as Database['public']['Tables']['categories']['Update']
 
     console.log('🔄 Attempting to update with data:', updateData)
 
-    // カテゴリーを更新
-    const { data: updatedCategory, error: updateError } = await supabase
+    // カテゴリーを更新 
+    // 型システムの問題を回避するために型アサーションを使用
+    const { data: updatedCategory, error: updateError } = await (supabaseAdmin
       .from('categories')
       .update(updateData)
       .eq('category_id', categoryId)
       .select()
-      .single()
+      .single())
 
     console.log('📤 Update response:', { updatedCategory, updateError })
 
@@ -97,7 +99,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     // 更新後の確認
     console.log('🔍 Verifying update...')
-    const { data: verifyData, error: verifyError } = await supabase
+    const { data: verifyData, error: verifyError } = await supabaseAdmin
       .from('categories')
       .select('category_id, name, is_active, is_visible, updated_at')
       .eq('category_id', categoryId)

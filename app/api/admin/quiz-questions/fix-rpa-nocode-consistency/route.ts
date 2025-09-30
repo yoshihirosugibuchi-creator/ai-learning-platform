@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+
+type QuestionData = { id: number; question: string }
 
 export async function POST() {
   try {
@@ -11,7 +13,7 @@ export async function POST() {
     console.log('🔄 RPAとノーコード問題をAI・機械学習活用に移動...')
     
     // RPAの問題を特定して移動
-    const { data: rpaQuestions, error: rpaError } = await supabase
+    const { data: rpaQuestions, error: rpaError } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, question')
       .ilike('question', '%RPA%')
@@ -19,7 +21,7 @@ export async function POST() {
     if (rpaError) throw new Error(`RPA問題取得エラー: ${rpaError.message}`)
 
     // ノーコード問題を特定して移動
-    const { data: nocodeQuestions, error: nocodeError } = await supabase
+    const { data: nocodeQuestions, error: nocodeError } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, question')
       .or('question.ilike.%ローコード%,question.ilike.%ノーコード%,question.ilike.%low-code%,question.ilike.%no-code%')
@@ -27,12 +29,12 @@ export async function POST() {
     if (nocodeError) throw new Error(`ノーコード問題取得エラー: ${nocodeError.message}`)
 
     const targetQuestionIds = [
-      ...(rpaQuestions?.map(q => q.id) || []),
-      ...(nocodeQuestions?.map(q => q.id) || [])
+      ...(rpaQuestions?.map((q: QuestionData) => q.id) || []),
+      ...(nocodeQuestions?.map((q: QuestionData) => q.id) || [])
     ]
 
     if (targetQuestionIds.length > 0) {
-      const { error: updateRpaNoCodeError } = await supabase
+      const { error: updateRpaNoCodeError } = await supabaseAdmin
         .from('quiz_questions')
         .update({
           category_id: 'ai_digital_utilization',
@@ -55,7 +57,7 @@ export async function POST() {
 
     // 2. プロジェクト炎上対応・リカバリーのサブカテゴリーIDを修正
     console.log('🔄 プロジェクト炎上対応・リカバリーのサブカテゴリーID修正...')
-    const { error: projectRecoveryError } = await supabase
+    const { error: projectRecoveryError } = await supabaseAdmin
       .from('quiz_questions')
       .update({
         subcategory_id: 'project_recovery',
@@ -76,7 +78,7 @@ export async function POST() {
 
     // 3. AI・機械学習活用の誤分類をai_digital_utilizationに修正
     console.log('🔄 AI・機械学習活用の誤分類修正...')
-    const { error: aiMlCategoryError } = await supabase
+    const { error: aiMlCategoryError } = await supabaseAdmin
       .from('quiz_questions')
       .update({
         category_id: 'ai_digital_utilization',
@@ -95,7 +97,7 @@ export async function POST() {
 
     // 4. 業務システム設計の誤分類をbusiness_process_analysisに修正
     console.log('🔄 業務システム設計の誤分類修正...')
-    const { error: businessSystemError } = await supabase
+    const { error: businessSystemError } = await supabaseAdmin
       .from('quiz_questions')
       .update({
         category_id: 'business_process_analysis',
@@ -113,7 +115,7 @@ export async function POST() {
     })
 
     // 修正後の確認
-    const { data: finalCheck, error: finalCheckError } = await supabase
+    const { data: finalCheck, error: finalCheckError } = await supabaseAdmin
       .from('quiz_questions')
       .select('category_id, subcategory, subcategory_id')
       .in('subcategory', ['AI・機械学習活用', 'プロジェクト炎上対応・リカバリー', '業務システム設計'])
@@ -124,9 +126,9 @@ export async function POST() {
 
     // 統計
     const stats = {
-      aiMlQuestions: finalCheck?.filter(q => q.subcategory === 'AI・機械学習活用').length || 0,
-      projectRecoveryQuestions: finalCheck?.filter(q => q.subcategory === 'プロジェクト炎上対応・リカバリー').length || 0,
-      businessSystemQuestions: finalCheck?.filter(q => q.subcategory === '業務システム設計').length || 0
+      aiMlQuestions: finalCheck?.filter((q: { subcategory: string | null }) => q.subcategory === 'AI・機械学習活用').length || 0,
+      projectRecoveryQuestions: finalCheck?.filter((q: { subcategory: string | null }) => q.subcategory === 'プロジェクト炎上対応・リカバリー').length || 0,
+      businessSystemQuestions: finalCheck?.filter((q: { subcategory: string | null }) => q.subcategory === '業務システム設計').length || 0
     }
 
     console.log(`✅ 修正完了! ${fixes.length}件の修正を実行しました`)

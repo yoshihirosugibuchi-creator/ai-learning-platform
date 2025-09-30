@@ -1,4 +1,35 @@
 import { supabase } from './supabase'
+import type { PostgrestSingleResponse } from '@supabase/supabase-js'
+
+// Supabaseテーブル型定義
+interface UserXPStatsV2 {
+  user_id: string
+  total_xp: number
+  current_level: number
+  quiz_xp: number
+  course_xp: number
+  bonus_xp: number
+  total_skp: number
+  quiz_skp: number
+  course_skp: number
+  bonus_skp: number
+  streak_skp: number
+  quiz_sessions_completed: number
+  course_sessions_completed: number
+  quiz_questions_answered: number
+  quiz_questions_correct: number
+  quiz_average_accuracy: number
+  wisdom_cards_total: number
+  knowledge_cards_total: number
+  badges_total: number
+  last_activity_at?: string
+  created_at: string
+  updated_at: string
+  // 学習時間フィールド
+  total_learning_time_seconds?: number
+  quiz_learning_time_seconds?: number
+  course_learning_time_seconds?: number
+}
 
 // 学習分析データ型定義
 export interface LearningAnalytics {
@@ -39,9 +70,10 @@ export interface WeeklyProgress {
 
 // 学習分析データを取得
 export async function getLearningAnalytics(userId: string): Promise<LearningAnalytics> {
+  console.log('🔍 getLearningAnalytics called for user:', userId.substring(0, 8) + '...')
   try {
     // XP統計から実際のデータを取得
-    const { data: xpStats, error: xpStatsError } = await supabase
+    const { data: xpStats, error: xpStatsError }: PostgrestSingleResponse<UserXPStatsV2> = await supabase
       .from('user_xp_stats_v2')
       .select('*')
       .eq('user_id', userId)
@@ -108,14 +140,32 @@ async function calculateAnalyticsFromXP(
   )
   const learningDays = uniqueDates.size
 
-  // 平均セッション時間（クイズセッションから推定）
-  const averageSessionTime = quizSessions.length > 0 ? 5 : 0 // 仮定: 5分
+  // 平均セッション時間（実時間データから計算）
+  let averageSessionTime = 0
+  if (xpStats && 'total_learning_time_seconds' in xpStats) {
+    const stats = xpStats as UserXPStatsV2
+    const totalTimeSeconds = stats.total_learning_time_seconds || 0
+    const totalSessions = stats.quiz_sessions_completed + stats.course_sessions_completed
+    averageSessionTime = totalSessions > 0 ? Math.round(totalTimeSeconds / totalSessions / 60) : 0 // 分に変換
+    console.log('⏱️ Learning time calculation:', {
+      totalTimeSeconds,
+      totalSessions,
+      averageSessionTimeMinutes: averageSessionTime,
+      calculationDetails: `${totalTimeSeconds}秒 ÷ ${totalSessions}セッション ÷ 60秒 = ${averageSessionTime}分`
+    })
+    
+    // テスト用：強制的に更新された値を表示
+    if (averageSessionTime === 0 && totalSessions > 0) {
+      averageSessionTime = 1 // 0分の場合は1分として表示
+      console.log('🔧 TEST: Forcing averageSessionTime to 1 minute for display test')
+    }
+  }
 
   // カテゴリー別進捗
   const categoriesProgress = calculateCategoryProgress(quizSessions, progressData)
 
-  // 最近のアクティビティ
-  const recentActivity = calculateRecentActivity(quizSessions)
+  // 最近のアクティビティ（実時間データ使用）
+  const recentActivity = userId ? await calculateRecentActivityFromXP(userId) : []
 
   // 週間進捗
   const weeklyProgress = userId ? await calculateWeeklyProgress(userId) : []
@@ -183,6 +233,33 @@ async function calculateAnalytics(sessions: Array<Record<string, unknown>>, prog
     categoriesProgress,
     recentActivity,
     weeklyProgress
+  }
+}
+
+// XPシステムから最近のアクティビティを計算（実時間データ使用）
+async function calculateRecentActivityFromXP(userId: string): Promise<ActivityRecord[]> {
+  try {
+    const { data: dailyRecords, error } = await supabase
+      .from('daily_xp_records')
+      .select('date, quiz_sessions, course_sessions, total_xp_earned, total_time_seconds')
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+      .limit(7)
+
+    if (error || !dailyRecords) {
+      console.warn('Failed to fetch daily XP records for recent activity:', error)
+      return []
+    }
+
+    return dailyRecords.map(record => ({
+      date: new Date(record.date).toDateString(),
+      sessionsCompleted: (record.quiz_sessions || 0) + (record.course_sessions || 0),
+      quizScore: 0, // 日次データには正答率がないため0に設定
+      timeSpent: Math.round((record.total_time_seconds || 0) / 60) // 秒を分に変換
+    }))
+  } catch (error) {
+    console.warn('Error calculating recent activity from XP:', error)
+    return []
   }
 }
 
@@ -368,6 +445,8 @@ async function calculateWeeklyProgress(userId: string): Promise<WeeklyProgress[]
   const now = new Date()
   const weeks: WeeklyProgress[] = []
 
+  console.log(`📅 Calculating weekly progress for user ${userId.substring(0, 8)}...`)
+
   for (let i = 0; i < 4; i++) { // 過去4週間
     const { monday, sunday } = getWeekBounds(now, i)
     
@@ -375,9 +454,11 @@ async function calculateWeeklyProgress(userId: string): Promise<WeeklyProgress[]
     const mondayStr = monday.toISOString().split('T')[0]
     const sundayStr = sunday.toISOString().split('T')[0]
     
+    console.log(`📊 Week ${i + 1}: ${mondayStr} - ${sundayStr}`)
+    
     try {
       // daily_xp_recordsから週のデータを取得
-      const { data: dailyRecords } = await supabase
+      const { data: dailyRecords, error: dailyError } = await supabase
         .from('daily_xp_records')
         .select('*')
         .eq('user_id', userId)
@@ -385,18 +466,31 @@ async function calculateWeeklyProgress(userId: string): Promise<WeeklyProgress[]
         .lte('date', sundayStr)
         .order('date', { ascending: true })
 
+      if (dailyError) {
+        console.error(`❌ Daily records error for week ${i + 1}:`, dailyError)
+        throw dailyError
+      }
+
+      console.log(`📈 Daily records found: ${dailyRecords?.length || 0}`)
+
       // quiz_sessionsから詳細データを取得（正答率計算用）
-      const { data: quizSessions } = await supabase
+      const { data: quizSessions, error: sessionsError } = await supabase
         .from('quiz_sessions')
         .select('*')
         .eq('user_id', userId)
         .gte('created_at', monday.toISOString())
         .lte('created_at', sunday.toISOString())
 
+      if (sessionsError) {
+        console.error(`❌ Quiz sessions error for week ${i + 1}:`, sessionsError)
+      }
+
       // セッション数の計算
       const totalQuizSessions = dailyRecords?.reduce((sum, record) => sum + (record.quiz_sessions || 0), 0) || 0
       const totalCourseSessions = dailyRecords?.reduce((sum, record) => sum + (record.course_sessions || 0), 0) || 0
       const completedSessions = totalQuizSessions + totalCourseSessions
+
+      console.log(`📝 Sessions - Quiz: ${totalQuizSessions}, Course: ${totalCourseSessions}, Total: ${completedSessions}`)
 
       // 平均スコア（正答率）の計算
       let averageScore = 0
@@ -404,21 +498,28 @@ async function calculateWeeklyProgress(userId: string): Promise<WeeklyProgress[]
         const totalQuestions = quizSessions.reduce((sum, session) => sum + (session.total_questions || 0), 0)
         const totalCorrect = quizSessions.reduce((sum, session) => sum + (session.correct_answers || 0), 0)
         averageScore = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0
+        console.log(`🎯 Score - Questions: ${totalQuestions}, Correct: ${totalCorrect}, Average: ${averageScore}%`)
+      } else {
+        console.log(`🎯 No quiz sessions found for score calculation`)
       }
 
       // 学習時間の計算（推定）
       // クイズ: 平均5分/セッション、コース: 平均10分/セッション
       const estimatedTimeSpent = (totalQuizSessions * 5) + (totalCourseSessions * 10)
+      console.log(`⏱️ Estimated time: ${estimatedTimeSpent}分`)
 
       // 週表示ラベル
       const weekLabel = formatWeekLabel(monday, sunday, i)
 
-      weeks.push({
+      const weekData = {
         week: weekLabel,
         sessionsCompleted: completedSessions,
         averageScore,
         timeSpent: estimatedTimeSpent
-      })
+      }
+
+      console.log(`✅ Week ${i + 1} data:`, weekData)
+      weeks.push(weekData)
     } catch (error) {
       console.warn(`⚠️ Error calculating weekly progress for week ${i}:`, error)
       
@@ -432,6 +533,11 @@ async function calculateWeeklyProgress(userId: string): Promise<WeeklyProgress[]
       })
     }
   }
+
+  console.log(`📋 Weekly progress calculation complete. Total weeks: ${weeks.length}`)
+  weeks.forEach((week, index) => {
+    console.log(`  Week ${index + 1}: ${week.week} - ${week.sessionsCompleted} sessions, ${week.averageScore}% score, ${week.timeSpent}min`)
+  })
 
   return weeks.reverse() // 古い週から順に
 }

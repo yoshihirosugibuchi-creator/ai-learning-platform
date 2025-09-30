@@ -24,6 +24,10 @@ interface XPStats {
     last_activity_at?: string
     // streak calculation
     learning_streak: number
+    // learning time statistics
+    total_learning_time_seconds?: number
+    quiz_learning_time_seconds?: number
+    course_learning_time_seconds?: number
   }
   categories: {
     [categoryId: string]: {
@@ -37,8 +41,9 @@ interface XPStats {
     }
   }
   subcategories: {
-    [subcategoryId: string]: {
+    [compositeKey: string]: { // format: "category_id:subcategory_id"
       category_id: string
+      subcategory_id: string
       total_xp: number
       current_level: number
       quiz_xp: number

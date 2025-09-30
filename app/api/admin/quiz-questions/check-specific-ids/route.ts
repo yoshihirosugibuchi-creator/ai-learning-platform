@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+
+type QuizQuestionPartial = {
+  id: number
+  category_id: string
+  subcategory: string | null
+  subcategory_id: string | null
+  question: string
+}
 
 export async function GET() {
   try {
     console.log('🔍 特定ID問題の確認を開始します...')
 
     // ID 236, 275, 315の問題を確認
-    const { data: specificQuestions, error: specificError } = await supabase
+    const { data: specificQuestions, error: specificError } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, category_id, subcategory, subcategory_id, question')
       .in('id', [236, 275, 315])
@@ -17,7 +25,7 @@ export async function GET() {
     }
 
     // ブランディング・ポジショニング問題も確認
-    const { data: brandingQuestions, error: brandingError } = await supabase
+    const { data: brandingQuestions, error: brandingError } = await supabaseAdmin
       .from('quiz_questions')
       .select('id, category_id, subcategory, subcategory_id, question')
       .eq('subcategory', 'ブランディング・ポジショニング')
@@ -31,14 +39,14 @@ export async function GET() {
 
     return NextResponse.json({
       message: '特定ID問題の確認完了',
-      specificQuestions: specificQuestions?.map(q => ({
+      specificQuestions: specificQuestions?.map((q: QuizQuestionPartial) => ({
         id: q.id,
         category_id: q.category_id,
         subcategory: q.subcategory,
         subcategory_id: q.subcategory_id,
         question: q.question.substring(0, 100) + '...'
       })),
-      brandingQuestions: brandingQuestions?.map(q => ({
+      brandingQuestions: brandingQuestions?.map((q: QuizQuestionPartial) => ({
         id: q.id,
         category_id: q.category_id,
         subcategory: q.subcategory,

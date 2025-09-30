@@ -280,7 +280,7 @@ export async function calculateLearningStats(userId: string): Promise<{
     
     try {
       const { data: userStats } = await supabase
-        .from('user_xp_stats')
+        .from('user_xp_stats_v2')
         .select('*')
         .eq('user_id', userId)
         .single()
@@ -445,7 +445,7 @@ export async function getTotalAvailableSessions(): Promise<number> {
 }
 
 // XPシステム統合版の連続学習日数計算
-async function calculateLearningStreakFromXP(userId: string, xpStats: { user: { last_activity_at: string }; recent_activity: { date: string; quiz_sessions: number; course_sessions: number }[] } | null): Promise<number> {
+async function calculateLearningStreakFromXP(userId: string, xpStats: { user: { last_activity_at: string | null }; recent_activity: { date: string; quiz_sessions: number; course_sessions: number }[] } | null): Promise<number> {
   try {
     // console.log('🔍 Debug: calculateLearningStreakFromXP called', {
     //   hasXPStats: !!xpStats,

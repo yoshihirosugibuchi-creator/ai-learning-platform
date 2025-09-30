@@ -300,7 +300,10 @@ export default function LearningSession({
         category_id: categoryId,
         subcategory_id: subcategoryId,
         session_quiz_correct: hasQuiz ? getQuizScore() === 100 : true, // Perfect score or no quiz means correct
-        is_first_completion: isFirstCompletion ?? false // 事前判定した結果を使用（nullの場合はfalse）
+        is_first_completion: isFirstCompletion ?? false, // 事前判定した結果を使用（nullの場合はfalse）
+        session_start_time: startTime.toISOString(),
+        session_end_time: endTime.toISOString(),
+        duration_seconds: Math.floor(duration / 1000) // ミリ秒を秒に変換
       }
       
       const xpResult = await saveCourseSession(courseSessionData)
