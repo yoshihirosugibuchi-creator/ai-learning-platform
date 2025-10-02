@@ -16,29 +16,29 @@ export type Database = {
         Row: {
           id: string
           email: string
-          name: string
-          skill_level: string
-          learning_style: string
-          experience_level: number
-          total_xp: number
-          current_level: number
-          streak: number
-          last_active: string
+          name: string | null
+          skill_level: string | null
+          learning_style: string | null
+          experience_level: number | null
+          total_xp: number | null
+          current_level: number | null
+          streak: number | null
+          last_active: string | null
           created_at: string
           updated_at: string
-          display_name: string
-          job_title: string
-          position_level: string
-          learning_level: string
-          industry: string
-          experience_years: number
-          interested_industries: string[]
-          learning_goals: string[]
-          selected_categories: string[]
-          selected_industry_categories: string[]
-          weekly_goal: number
-          profile_completed_at: string
-          last_profile_update: string
+          display_name: string | null
+          job_title: string | null
+          position_level: string | null
+          learning_level: string | null
+          industry: string | null
+          experience_years: number | null
+          interested_industries: string[] | null
+          learning_goals: string[] | null
+          selected_categories: string[] | null
+          selected_industry_categories: string[] | null
+          weekly_goal: string | null
+          profile_completed_at: string | null
+          last_profile_update: string | null
         }
         Insert: {
           id?: string
@@ -63,7 +63,7 @@ export type Database = {
           learning_goals?: string[]
           selected_categories?: string[]
           selected_industry_categories?: string[]
-          weekly_goal?: number
+          weekly_goal?: string
           profile_completed_at?: string
           last_profile_update?: string
         }
@@ -90,7 +90,7 @@ export type Database = {
           learning_goals?: string[]
           selected_categories?: string[]
           selected_industry_categories?: string[]
-          weekly_goal?: number
+          weekly_goal?: string
           profile_completed_at?: string
           last_profile_update?: string
         }
@@ -121,79 +121,10 @@ export type Database = {
           updated_at?: string
         }
       }
-      user_progress: {
-        Row: {
-          id: string
-          user_id: string
-          category_id: string
-          subcategory_id: string
-          correct_answers: number
-          total_attempts: number
-          last_accessed: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          category_id: string
-          subcategory_id: string
-          correct_answers?: number
-          total_attempts?: number
-          last_accessed?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          category_id?: string
-          subcategory_id?: string
-          correct_answers?: number
-          total_attempts?: number
-          last_accessed?: string
-          created_at?: string
-        }
-      }
-      quiz_results: {
-        Row: {
-          id: string
-          created_at: string
-          user_id: string
-          category_id: string
-          subcategory_id: string
-          questions: Record<string, unknown>[]
-          answers: Record<string, unknown>[]
-          score: number
-          total_questions: number
-          time_taken: number
-          completed_at: string
-        }
-        Insert: {
-          id?: string
-          created_at?: string
-          user_id: string
-          category_id: string
-          subcategory_id?: string
-          questions: Record<string, unknown>[]
-          answers: Record<string, unknown>[]
-          score: number
-          total_questions: number
-          time_taken: number
-          completed_at?: string
-        }
-        Update: {
-          id?: string
-          created_at?: string
-          user_id?: string
-          category_id?: string
-          subcategory_id?: string
-          questions?: Record<string, unknown>[]
-          answers?: Record<string, unknown>[]
-          score?: number
-          total_questions?: number
-          time_taken?: number
-          completed_at?: string
-        }
-      }
+      // user_progress: レガシーテーブル（削除済み）
+      // Note: 代わりにuser_category_xp_stats_v2を使用してください
+      // quiz_results: レガシーテーブル（削除済み）
+      // Note: 代わりにquiz_sessionsを使用してください
       quiz_answers: {
         Row: {
           id: string
@@ -209,10 +140,10 @@ export type Database = {
           earned_xp: number
           created_at: string
           session_type: string
-          course_session_id: string
-          course_id: string
-          theme_id: string
-          genre_id: string
+          course_session_id: string | null
+          course_id: string | null
+          theme_id: string | null
+          genre_id: string | null
         }
         Insert: {
           id?: string
@@ -268,8 +199,8 @@ export type Database = {
           activation_date: string | null
           created_at: string
           updated_at: string
-          created_by: string
-          updated_by: string
+          created_by: string | null
+          updated_by: string | null
         }
         Insert: {
           id?: string
@@ -320,8 +251,8 @@ export type Database = {
           activation_date: string | null
           created_at: string
           updated_at: string
-          created_by: string
-          updated_by: string
+          created_by: string | null
+          updated_by: string | null
         }
         Insert: {
           id?: string
@@ -408,11 +339,11 @@ export type Database = {
           session_id: string
           progress_data: Json
           completion_percentage: number
-          completed_at: string
+          completed_at: string | null
           created_at: string
           updated_at: string
-          session_start_time: string
-          session_end_time: string
+          session_start_time: string | null
+          session_end_time: string | null
           duration_seconds: number
         }
         Insert: {
@@ -822,8 +753,8 @@ export type Database = {
           badge_color: string
           difficulty: string
           earned_at: string
-          expires_at: string
-          validity_period_months: number
+          expires_at: string | null
+          validity_period_months: number | null
           created_at: string
         }
         Insert: {
@@ -973,44 +904,8 @@ export type Database = {
           updated_at?: string
         }
       }
-      category_progress: {
-        Row: {
-          id: string
-          user_id: string
-          category_id: string
-          current_level: number
-          total_xp: number
-          correct_answers: number
-          total_answers: number
-          last_answered_at: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          category_id: string
-          current_level?: number
-          total_xp?: number
-          correct_answers?: number
-          total_answers?: number
-          last_answered_at?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          category_id?: string
-          current_level?: number
-          total_xp?: number
-          correct_answers?: number
-          total_answers?: number
-          last_answered_at?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
+      // category_progress: レガシーテーブル（削除済み）
+      // Note: 代わりにuser_category_xp_stats_v2を使用してください
       category_stats: {
         Row: {
           category_id: string
@@ -1388,6 +1283,246 @@ export type Database = {
           created_at?: string
         }
       }
+      unified_learning_session_analytics: {
+        Row: {
+          id: string
+          user_id: string
+          session_type: string
+          session_start_time: string
+          session_end_time: string
+          duration_seconds: number
+          quiz_session_id: string | null
+          course_session_id: string | null
+          course_id: string | null
+          theme_id: string | null
+          genre_id: string | null
+          category_id: string
+          subcategory_id: string
+          difficulty_level: string
+          questions_total: number
+          questions_correct: number
+          accuracy_rate: number
+          completion_rate: number
+          average_response_time_ms: number
+          cognitive_load_score: number
+          attention_breaks: number
+          flow_state_duration: number
+          flow_state_index: number
+          forgetting_curve_data: Json | null
+          spaced_repetition_due: string | null
+          optimal_review_interval: number | null
+          time_of_day: string
+          day_of_week: number
+          device_type: string | null
+          interruption_count: number
+          energy_level_reported: number | null
+          engagement_score: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          session_type: string
+          session_start_time: string
+          session_end_time: string
+          duration_seconds: number
+          quiz_session_id?: string | null
+          course_session_id?: string | null
+          course_id?: string | null
+          theme_id?: string | null
+          genre_id?: string | null
+          category_id: string
+          subcategory_id: string
+          difficulty_level: string
+          questions_total?: number
+          questions_correct?: number
+          accuracy_rate?: number
+          completion_rate?: number
+          average_response_time_ms?: number
+          cognitive_load_score?: number
+          attention_breaks?: number
+          flow_state_duration?: number
+          flow_state_index?: number
+          forgetting_curve_data?: Json | null
+          spaced_repetition_due?: string | null
+          optimal_review_interval?: number | null
+          time_of_day: string
+          day_of_week: number
+          device_type?: string | null
+          interruption_count?: number
+          energy_level_reported?: number | null
+          engagement_score?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          session_type?: string
+          session_start_time?: string
+          session_end_time?: string
+          duration_seconds?: number
+          quiz_session_id?: string | null
+          course_session_id?: string | null
+          course_id?: string | null
+          theme_id?: string | null
+          genre_id?: string | null
+          category_id?: string
+          subcategory_id?: string
+          difficulty_level?: string
+          questions_total?: number
+          questions_correct?: number
+          accuracy_rate?: number
+          completion_rate?: number
+          average_response_time_ms?: number
+          cognitive_load_score?: number
+          attention_breaks?: number
+          flow_state_duration?: number
+          flow_state_index?: number
+          forgetting_curve_data?: Json | null
+          spaced_repetition_due?: string | null
+          optimal_review_interval?: number | null
+          time_of_day?: string
+          day_of_week?: number
+          device_type?: string | null
+          interruption_count?: number
+          energy_level_reported?: number | null
+          engagement_score?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_learning_profiles: {
+        Row: {
+          user_id: string
+          optimal_session_length: number
+          peak_performance_hours: number[]
+          fatigue_threshold: number
+          recovery_time_needed: number
+          difficulty_progression_rate: number
+          learning_style_type: string
+          chronotype: string
+          cognitive_load_tolerance: number
+          flow_state_preference: Json
+          forgetting_curve_parameters: Json
+          optimal_review_intervals: number[]
+          attention_span_minutes: number
+          motivation_factors: string[]
+          stress_indicators: Json
+          last_analysis_update: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          optimal_session_length?: number
+          peak_performance_hours?: number[]
+          fatigue_threshold?: number
+          recovery_time_needed?: number
+          difficulty_progression_rate?: number
+          learning_style_type?: string
+          chronotype?: string
+          cognitive_load_tolerance?: number
+          flow_state_preference?: Json
+          forgetting_curve_parameters?: Json
+          optimal_review_intervals?: number[]
+          attention_span_minutes?: number
+          motivation_factors?: string[]
+          stress_indicators?: Json
+          last_analysis_update?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          optimal_session_length?: number
+          peak_performance_hours?: number[]
+          fatigue_threshold?: number
+          recovery_time_needed?: number
+          difficulty_progression_rate?: number
+          learning_style_type?: string
+          chronotype?: string
+          cognitive_load_tolerance?: number
+          flow_state_preference?: Json
+          forgetting_curve_parameters?: Json
+          optimal_review_intervals?: number[]
+          attention_span_minutes?: number
+          motivation_factors?: string[]
+          stress_indicators?: Json
+          last_analysis_update?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      spaced_repetition_schedule: {
+        Row: {
+          id: string
+          user_id: string
+          content_type: string
+          content_id: string
+          category_id: string
+          subcategory_id: string
+          initial_learning_date: string
+          last_review_date: string | null
+          next_review_date: string
+          review_count: number
+          mastery_level: number
+          difficulty_adjustment: number
+          retention_strength: number
+          forgetting_curve_slope: number
+          optimal_interval_days: number
+          priority_score: number
+          is_mastered: boolean
+          scheduled_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          content_type: string
+          content_id: string
+          category_id: string
+          subcategory_id: string
+          initial_learning_date: string
+          last_review_date?: string | null
+          next_review_date: string
+          review_count?: number
+          mastery_level?: number
+          difficulty_adjustment?: number
+          retention_strength?: number
+          forgetting_curve_slope?: number
+          optimal_interval_days?: number
+          priority_score?: number
+          is_mastered?: boolean
+          scheduled_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          content_type?: string
+          content_id?: string
+          category_id?: string
+          subcategory_id?: string
+          initial_learning_date?: string
+          last_review_date?: string | null
+          next_review_date?: string
+          review_count?: number
+          mastery_level?: number
+          difficulty_adjustment?: number
+          retention_strength?: number
+          forgetting_curve_slope?: number
+          optimal_interval_days?: number
+          priority_score?: number
+          is_mastered?: boolean
+          scheduled_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Functions: {
       count_theme_sessions: {
@@ -1453,3 +1588,18 @@ export type SKPTransactionInsert = Database['public']['Tables']['skp_transaction
 export type QuizQuestionInsert = Database['public']['Tables']['quiz_questions']['Insert']
 export type QuizSessionInsert = Database['public']['Tables']['quiz_sessions']['Insert']
 export type WisdomCardCollectionInsert = Database['public']['Tables']['wisdom_card_collection']['Insert']
+
+// Unified Learning Analytics types
+export type UnifiedLearningSessionAnalytics = Database['public']['Tables']['unified_learning_session_analytics']['Row']
+export type UnifiedLearningSessionAnalyticsInsert = Database['public']['Tables']['unified_learning_session_analytics']['Insert']
+export type UnifiedLearningSessionAnalyticsUpdate = Database['public']['Tables']['unified_learning_session_analytics']['Update']
+
+// User Learning Profile types
+export type UserLearningProfile = Database['public']['Tables']['user_learning_profiles']['Row']
+export type UserLearningProfileInsert = Database['public']['Tables']['user_learning_profiles']['Insert']
+export type UserLearningProfileUpdate = Database['public']['Tables']['user_learning_profiles']['Update']
+
+// Spaced Repetition Schedule types
+export type SpacedRepetitionSchedule = Database['public']['Tables']['spaced_repetition_schedule']['Row']
+export type SpacedRepetitionScheduleInsert = Database['public']['Tables']['spaced_repetition_schedule']['Insert']
+export type SpacedRepetitionScheduleUpdate = Database['public']['Tables']['spaced_repetition_schedule']['Update']

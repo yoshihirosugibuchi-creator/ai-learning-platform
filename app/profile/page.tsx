@@ -37,8 +37,8 @@ import { getUserSKPBalance, getUserSKPTransactions, SKPTransaction } from '@/lib
 import { getUserBadges } from '@/lib/supabase-badges'
 import { UserBadge } from '@/lib/types/learning'
 import { updateUserProfile } from '@/lib/supabase-user'
-import { mainCategories, industryCategories, getSubcategories } from '@/lib/categories'
-import type { Subcategory } from '@/lib/types/category'
+import { getSubcategories, getCategories } from '@/lib/categories'
+import type { Subcategory, IndustryCategory, MainCategory } from '@/lib/types/category'
 import { useXPStats } from '@/hooks/useXPStats'
 import ProfileEditModal from '@/components/profile/ProfileEditModal'
 
@@ -46,6 +46,11 @@ export default function ProfilePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user, profile, loading, refreshProfile } = useAuth()
   const [activeTab, setActiveTab] = useState('basic')
+  
+  // カテゴリーデータ状態
+  const [industryCategories, setIndustryCategories] = useState<IndustryCategory[]>([])
+  const [mainCategories, setMainCategories] = useState<MainCategory[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
   
   // データ状態
   const [quizStats, setQuizStats] = useState({
@@ -68,6 +73,27 @@ export default function ProfilePage() {
   
   // サブカテゴリー展開状態
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  
+  // カテゴリーを動的に読み込み
+  useEffect(() => {
+    const loadCategories = async () => {
+      setCategoriesLoading(true)
+      try {
+        const [industryResult, mainResult] = await Promise.all([
+          getCategories({ type: 'industry', activeOnly: true }),
+          getCategories({ type: 'main', activeOnly: true })
+        ])
+        setIndustryCategories(industryResult as IndustryCategory[])
+        setMainCategories(mainResult as MainCategory[])
+      } catch (error) {
+        console.error('Failed to load categories:', error)
+      } finally {
+        setCategoriesLoading(false)
+      }
+    }
+    
+    loadCategories()
+  }, [])
   
   // サブカテゴリーマスターデータ
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
@@ -118,7 +144,7 @@ export default function ProfilePage() {
       const loadSubcategories = async () => {
         setSubcategoriesLoading(true)
         try {
-          const allSubcategories = await getSubcategories()
+          const allSubcategories = await getSubcategories(undefined, true)
           setSubcategories(allSubcategories)
         } catch (error) {
           console.error('Error fetching subcategories:', error)
@@ -163,7 +189,10 @@ export default function ProfilePage() {
       
       // プロフィールデータを初期化
       const profileRecord = profile as unknown as Record<string, unknown>
-      console.log('Setting profile data from:', profileRecord)
+      console.log('Setting profile data from profile:', profile)
+      console.log('Profile record keys:', Object.keys(profileRecord))
+      console.log('Raw profile data:', profileRecord)
+      
       setProfileData({
         name: profile.name || '',
         displayName: (profileRecord.display_name as string) || '',
@@ -171,12 +200,27 @@ export default function ProfilePage() {
         jobTitle: (profileRecord.job_title as string) || '',
         positionLevel: (profileRecord.position_level as string) || '',
         learningLevel: (profileRecord.learning_level as string) || '',
-        experienceYears: (profileRecord.experience_years as number) || 0, // Keep as number
-        interestedIndustries: (profileRecord.interested_industries as string[]) || [],
-        learningGoals: (profileRecord.learning_goals as string[]) || [],
-        selectedCategories: (profileRecord.selected_categories as string[]) || [],
-        selectedIndustryCategories: (profileRecord.selected_industry_categories as string[]) || [],
+        experienceYears: Number(profileRecord.experience_years) || 0,
+        interestedIndustries: Array.isArray(profileRecord.interested_industries) 
+          ? (profileRecord.interested_industries as string[]) 
+          : [],
+        learningGoals: Array.isArray(profileRecord.learning_goals) 
+          ? (profileRecord.learning_goals as string[]) 
+          : [],
+        selectedCategories: Array.isArray(profileRecord.selected_categories) 
+          ? (profileRecord.selected_categories as string[]) 
+          : [],
+        selectedIndustryCategories: Array.isArray(profileRecord.selected_industry_categories) 
+          ? (profileRecord.selected_industry_categories as string[]) 
+          : [],
         weeklyGoal: (profileRecord.weekly_goal as string) || ''
+      })
+      
+      console.log('Final profileData state:', {
+        name: profile.name || '',
+        displayName: (profileRecord.display_name as string) || '',
+        industry: (profileRecord.industry as string) || '',
+        jobTitle: (profileRecord.job_title as string) || ''
       })
     }
   }, [user, profile])
@@ -223,6 +267,11 @@ export default function ProfilePage() {
   if (!user) {
     return <div className="min-h-screen bg-background flex items-center justify-center">ログインが必要です</div>
   }
+
+  // デバッグ情報表示
+  console.log('Profile page render - User:', user?.email)
+  console.log('Profile page render - Profile:', profile)
+  console.log('Profile page render - ProfileData:', profileData)
 
   // XPStatsから連続学習日数を取得
   const learningStreak = xpStats?.user.learning_streak || 0
@@ -476,9 +525,9 @@ export default function ProfilePage() {
                             <p className="text-sm text-gray-600 mt-1">
                               {(() => {
                                 const levelLabels = {
-                                  'beginner': '初心者',
-                                  'intermediate': '中級者',
-                                  'advanced': '上級者',
+                                  'basic': '初級',
+                                  'intermediate': '中級',
+                                  'advanced': '上級',
                                   'expert': 'エキスパート'
                                 }
                                 return levelLabels[profileData.learningLevel as keyof typeof levelLabels] || profileData.learningLevel || '未設定'
@@ -614,23 +663,29 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4">
-                  {mainCategories.map((category) => {
-                    const categoryXP = xpStats?.categories[category.id]?.total_xp || 0
-                    const categoryLevel = Math.floor(categoryXP / 500) + 1 // メインカテゴリーは500XP/レベル
-                    const isExpanded = expandedCategories.has(category.id)
-                    
-                    // このカテゴリーのサブカテゴリー統計を取得
-                    const categorySubcategories = Object.entries(xpStats?.subcategories || {})
-                      .filter(([compositeKey]) => compositeKey.startsWith(`${category.id}:`))
-                      .map(([compositeKey, subcategoryStats]) => ({
-                        compositeKey,
-                        subcategoryId: subcategoryStats.subcategory_id,
-                        ...subcategoryStats
-                      }))
-                      .sort((a, b) => b.total_xp - a.total_xp) // XP順でソート
+                  {categoriesLoading ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      メインカテゴリーを読み込み中...
+                    </div>
+                  ) : (
+                    mainCategories.map((category) => {
+                      const categoryXP = xpStats?.categories[category.id]?.total_xp || 0
+                      const categoryLevel = Math.floor(categoryXP / 500) + 1 // メインカテゴリーは500XP/レベル
+                      const isExpanded = expandedCategories.has(category.id)
+                      
+                      // このカテゴリーのサブカテゴリー統計を取得
+                      const categorySubcategories = Object.entries(xpStats?.subcategories || {})
+                        .filter(([compositeKey]) => compositeKey.startsWith(`${category.id}:`))
+                        .map(([compositeKey, subcategoryStats]) => ({
+                          compositeKey,
+                          subcategoryId: subcategoryStats.subcategory_id,
+                          ...subcategoryStats
+                        }))
+                        .sort((a, b) => b.total_xp - a.total_xp) // XP順でソート
 
-                    return (
-                      <div key={category.id} className="border rounded-lg">
+                      return (
+                        <div key={category.id} className="border rounded-lg">
                         {/* メインカテゴリー情報 */}
                         <div className="flex items-center justify-between p-4">
                           <div className="flex items-center space-x-3">
@@ -698,9 +753,10 @@ export default function ProfilePage() {
                             </div>
                           </div>
                         )}
-                      </div>
-                    )
-                  })}
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -720,23 +776,29 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4">
-                  {industryCategories.map((category) => {
-                    const industryXP = xpStats?.categories[category.id]?.total_xp || 0
-                    const industryLevel = Math.floor(industryXP / 1000) + 1 // 業界カテゴリーは1000XP/レベル
-                    const isExpanded = expandedCategories.has(category.id)
-                    
-                    // このカテゴリーのサブカテゴリー統計を取得
-                    const categorySubcategories = Object.entries(xpStats?.subcategories || {})
-                      .filter(([compositeKey]) => compositeKey.startsWith(`${category.id}:`))
-                      .map(([compositeKey, subcategoryStats]) => ({
-                        compositeKey,
-                        subcategoryId: subcategoryStats.subcategory_id,
-                        ...subcategoryStats
-                      }))
-                      .sort((a, b) => b.total_xp - a.total_xp) // XP順でソート
+                  {categoriesLoading ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      業界カテゴリーを読み込み中...
+                    </div>
+                  ) : (
+                    industryCategories.map((category) => {
+                      const industryXP = xpStats?.categories[category.id]?.total_xp || 0
+                      const industryLevel = Math.floor(industryXP / 1000) + 1 // 業界カテゴリーは1000XP/レベル
+                      const isExpanded = expandedCategories.has(category.id)
+                      
+                      // このカテゴリーのサブカテゴリー統計を取得
+                      const categorySubcategories = Object.entries(xpStats?.subcategories || {})
+                        .filter(([compositeKey]) => compositeKey.startsWith(`${category.id}:`))
+                        .map(([compositeKey, subcategoryStats]) => ({
+                          compositeKey,
+                          subcategoryId: subcategoryStats.subcategory_id,
+                          ...subcategoryStats
+                        }))
+                        .sort((a, b) => b.total_xp - a.total_xp) // XP順でソート
 
-                    return (
-                      <div key={category.id} className="border rounded-lg">
+                      return (
+                        <div key={category.id} className="border rounded-lg">
                         {/* 業界カテゴリー情報 */}
                         <div className="flex items-center justify-between p-4">
                           <div className="flex items-center space-x-3">
@@ -804,9 +866,10 @@ export default function ProfilePage() {
                             </div>
                           </div>
                         )}
-                      </div>
-                    )
-                  })}
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
               </CardContent>
             </Card>

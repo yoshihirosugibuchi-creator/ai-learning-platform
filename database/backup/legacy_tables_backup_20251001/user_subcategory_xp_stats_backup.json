@@ -1,0 +1,45 @@
+{
+  "tableName": "user_subcategory_xp_stats",
+  "backupDate": "2025-10-01T05:10:02.982Z",
+  "recordCount": 2,
+  "data": [
+    {
+      "id": "a80f1cf9-c466-4dc3-b0c8-8d50e4c190b1",
+      "user_id": "82413077-a06d-4d9c-82bb-6fdb6a6b8e13",
+      "category_id": "thinking",
+      "subcategory_id": "creative_thinking",
+      "total_xp": 135,
+      "quiz_xp": 135,
+      "course_xp": 0,
+      "quiz_sessions_completed": 9,
+      "quiz_questions_answered": 9,
+      "quiz_questions_correct": 9,
+      "quiz_average_accuracy": 8,
+      "quiz_perfect_sessions": 0,
+      "quiz_80plus_sessions": 0,
+      "course_sessions_completed": 0,
+      "course_themes_completed": 0,
+      "updated_at": "2025-09-25T14:07:11.483734+00:00",
+      "current_level": 1
+    },
+    {
+      "id": "a36269f4-3a4c-4edd-82e3-51c22b901eb7",
+      "user_id": "82413077-a06d-4d9c-82bb-6fdb6a6b8e13",
+      "category_id": "thinking",
+      "subcategory_id": "logical_thinking",
+      "total_xp": 198,
+      "quiz_xp": 108,
+      "course_xp": 90,
+      "quiz_sessions_completed": 9,
+      "quiz_questions_answered": 18,
+      "quiz_questions_correct": 9,
+      "quiz_average_accuracy": 8,
+      "quiz_perfect_sessions": 0,
+      "quiz_80plus_sessions": 0,
+      "course_sessions_completed": 9,
+      "course_themes_completed": 0,
+      "updated_at": "2025-09-25T14:07:11.483734+00:00",
+      "current_level": 1
+    }
+  ]
+}

@@ -30,8 +30,8 @@ export async function GET(request: Request) {
       query = query.eq('parent_category_id', parentCategoryId)
     }
 
-    // アクティブフィルター (デフォルトはアクティブのみ)
-    if (activeOnly !== false) {
+    // アクティブフィルター
+    if (activeOnly) {
       query = query.eq('is_active', true)
     }
 

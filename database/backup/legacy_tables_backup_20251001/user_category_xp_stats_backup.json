@@ -1,0 +1,24 @@
+{
+  "tableName": "user_category_xp_stats",
+  "backupDate": "2025-10-01T05:10:02.822Z",
+  "recordCount": 1,
+  "data": [
+    {
+      "id": "4e3d5dc6-4904-4f9f-ad75-0d90fe5c8874",
+      "user_id": "82413077-a06d-4d9c-82bb-6fdb6a6b8e13",
+      "category_id": "thinking",
+      "total_xp": 333,
+      "quiz_xp": 243,
+      "course_xp": 90,
+      "quiz_sessions_completed": 18,
+      "quiz_questions_answered": 27,
+      "quiz_questions_correct": 18,
+      "quiz_average_accuracy": 66.67,
+      "course_sessions_completed": 9,
+      "course_themes_completed": 0,
+      "course_completions": 0,
+      "updated_at": "2025-09-25T14:07:11.483734+00:00",
+      "current_level": 1
+    }
+  ]
+}

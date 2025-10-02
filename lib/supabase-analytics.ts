@@ -140,25 +140,19 @@ async function calculateAnalyticsFromXP(
   )
   const learningDays = uniqueDates.size
 
-  // 平均セッション時間（実時間データから計算）
+  // 平均セッション時間（修正済みの実時間データから計算）
   let averageSessionTime = 0
   if (xpStats && 'total_learning_time_seconds' in xpStats) {
     const stats = xpStats as UserXPStatsV2
     const totalTimeSeconds = stats.total_learning_time_seconds || 0
     const totalSessions = stats.quiz_sessions_completed + stats.course_sessions_completed
     averageSessionTime = totalSessions > 0 ? Math.round(totalTimeSeconds / totalSessions / 60) : 0 // 分に変換
-    console.log('⏱️ Learning time calculation:', {
+    console.log('⏱️ Learning time calculation (fixed data):', {
       totalTimeSeconds,
       totalSessions,
       averageSessionTimeMinutes: averageSessionTime,
       calculationDetails: `${totalTimeSeconds}秒 ÷ ${totalSessions}セッション ÷ 60秒 = ${averageSessionTime}分`
     })
-    
-    // テスト用：強制的に更新された値を表示
-    if (averageSessionTime === 0 && totalSessions > 0) {
-      averageSessionTime = 1 // 0分の場合は1分として表示
-      console.log('🔧 TEST: Forcing averageSessionTime to 1 minute for display test')
-    }
   }
 
   // カテゴリー別進捗
@@ -503,10 +497,10 @@ async function calculateWeeklyProgress(userId: string): Promise<WeeklyProgress[]
         console.log(`🎯 No quiz sessions found for score calculation`)
       }
 
-      // 学習時間の計算（推定）
-      // クイズ: 平均5分/セッション、コース: 平均10分/セッション
-      const estimatedTimeSpent = (totalQuizSessions * 5) + (totalCourseSessions * 10)
-      console.log(`⏱️ Estimated time: ${estimatedTimeSpent}分`)
+      // 学習時間の計算（修正済みの実時間データ使用）
+      const totalTimeSeconds = dailyRecords?.reduce((sum, record) => sum + (record.total_time_seconds || 0), 0) || 0
+      const actualTimeSpent = Math.round(totalTimeSeconds / 60) // 秒を分に変換
+      console.log(`⏱️ Weekly time: ${actualTimeSpent}分 (${totalTimeSeconds}秒)`)
 
       // 週表示ラベル
       const weekLabel = formatWeekLabel(monday, sunday, i)
@@ -515,7 +509,7 @@ async function calculateWeeklyProgress(userId: string): Promise<WeeklyProgress[]
         week: weekLabel,
         sessionsCompleted: completedSessions,
         averageScore,
-        timeSpent: estimatedTimeSpent
+        timeSpent: actualTimeSpent
       }
 
       console.log(`✅ Week ${i + 1} data:`, weekData)
@@ -524,7 +518,8 @@ async function calculateWeeklyProgress(userId: string): Promise<WeeklyProgress[]
       console.warn(`⚠️ Error calculating weekly progress for week ${i}:`, error)
       
       // エラー時のフォールバック
-      const weekLabel = formatWeekLabel(monday, sunday, i)
+      const { monday: fallbackMonday, sunday: fallbackSunday } = getWeekBounds(now, i)
+      const weekLabel = formatWeekLabel(fallbackMonday, fallbackSunday, i)
       weeks.push({
         week: weekLabel,
         sessionsCompleted: 0,

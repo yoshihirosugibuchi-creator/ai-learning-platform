@@ -1,0 +1,126 @@
+{
+  "tableName": "xp_settings",
+  "backupDate": "2025-10-01T05:10:03.152Z",
+  "recordCount": 17,
+  "data": [
+    {
+      "setting_key": "quiz_base_xp",
+      "setting_value": "10",
+      "setting_description": "クイズ問題1問正解時の基礎XP",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:12:33.198312+00:00"
+    },
+    {
+      "setting_key": "difficulty_basic",
+      "setting_value": "1.0",
+      "setting_description": "基礎レベル難易度倍率",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:12:33.198312+00:00"
+    },
+    {
+      "setting_key": "difficulty_intermediate",
+      "setting_value": "1.2",
+      "setting_description": "中級レベル難易度倍率",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:12:33.198312+00:00"
+    },
+    {
+      "setting_key": "difficulty_advanced",
+      "setting_value": "1.5",
+      "setting_description": "上級レベル難易度倍率",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:12:33.198312+00:00"
+    },
+    {
+      "setting_key": "difficulty_expert",
+      "setting_value": "2.0",
+      "setting_description": "エキスパートレベル難易度倍率",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:12:33.198312+00:00"
+    },
+    {
+      "setting_key": "quiz_bonus_80_percent",
+      "setting_value": "20",
+      "setting_description": "80%以上正答率ボーナスXP",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:12:33.198312+00:00"
+    },
+    {
+      "setting_key": "quiz_bonus_100_percent",
+      "setting_value": "30",
+      "setting_description": "100%正答率ボーナスXP",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:12:33.198312+00:00"
+    },
+    {
+      "setting_key": "course_base_xp",
+      "setting_value": "10",
+      "setting_description": "コースセッション完了時の基礎XP",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:12:33.198312+00:00"
+    },
+    {
+      "setting_key": "course_completion_bonus",
+      "setting_value": "20",
+      "setting_description": "コース完了ボーナスXP",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:12:33.198312+00:00"
+    },
+    {
+      "setting_key": "wisdom_cards_80_percent",
+      "setting_value": "1",
+      "setting_description": "80%以上正答率での格言カード付与数",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:12:33.198312+00:00"
+    },
+    {
+      "setting_key": "wisdom_cards_100_percent",
+      "setting_value": "2",
+      "setting_description": "100%正答率での格言カード付与数",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:12:33.198312+00:00"
+    },
+    {
+      "setting_key": "knowledge_cards_theme_completion",
+      "setting_value": "1",
+      "setting_description": "テーマ完了時のナレッジカード付与数",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:13:35.602087+00:00"
+    },
+    {
+      "setting_key": "badges_course_completion",
+      "setting_value": "1",
+      "setting_description": "コース完了時のバッジ付与数",
+      "setting_type": "number",
+      "updated_at": "2025-09-25T02:13:35.602087+00:00"
+    },
+    {
+      "setting_key": "xp_course_basic",
+      "setting_value": "15",
+      "setting_description": "コース基礎セッションのXP",
+      "setting_type": "number",
+      "updated_at": "2025-09-26T23:10:32.947859+00:00"
+    },
+    {
+      "setting_key": "xp_course_intermediate",
+      "setting_value": "25",
+      "setting_description": "コース中級セッションのXP",
+      "setting_type": "number",
+      "updated_at": "2025-09-26T23:10:33.018287+00:00"
+    },
+    {
+      "setting_key": "xp_course_advanced",
+      "setting_value": "35",
+      "setting_description": "コース上級セッションのXP",
+      "setting_type": "number",
+      "updated_at": "2025-09-26T23:10:33.059954+00:00"
+    },
+    {
+      "setting_key": "xp_course_expert",
+      "setting_value": "55",
+      "setting_description": "コースエキスパートセッションのXP",
+      "setting_type": "number",
+      "updated_at": "2025-09-26T23:10:33.112105+00:00"
+    }
+  ]
+}

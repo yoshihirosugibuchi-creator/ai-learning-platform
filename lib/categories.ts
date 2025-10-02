@@ -594,12 +594,13 @@ function transformDBSkillLevelToLocal(dbSkillLevel: DBSkillLevel): SkillLevelDef
 /**
  * サブカテゴリーを取得（DB API + フォールバック）
  */
-export async function getSubcategories(parentCategoryId?: string): Promise<Subcategory[]> {
+export async function getSubcategories(parentCategoryId?: string, activeOnly = false): Promise<Subcategory[]> {
   const _now = Date.now()
   
   try {
     const queryParams = new URLSearchParams()
     if (parentCategoryId) queryParams.set('parent_category_id', parentCategoryId)
+    if (activeOnly) queryParams.set('active_only', 'true')
     
     const response = await fetchFromAPI<{subcategories: DBSubcategory[]}>(`/subcategories?${queryParams}`)
     

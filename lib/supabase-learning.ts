@@ -397,49 +397,16 @@ export async function updateCategoryProgress(
   }
 }
 
-// Detailed Quiz Data Functions
-export async function saveDetailedQuizData(detailData: Omit<DetailedQuizData, 'id' | 'created_at'>[]): Promise<boolean> {
-  const { error } = await supabaseAdmin
-    .from('detailed_quiz_data')
-    .insert(detailData)
-
-  if (error) {
-    console.error('Error saving detailed quiz data:', error)
-    return false
-  }
-
-  return true
+// Detailed Quiz Data Functions（レガシー関数 - 使用禁止）
+// Note: detailed_quiz_dataテーブルは削除済み。代わりにquiz_answersを使用してください
+export async function saveDetailedQuizData(_detailData: Omit<DetailedQuizData, 'id' | 'created_at'>[]): Promise<boolean> {
+  console.warn('⚠️ saveDetailedQuizData: レガシー関数です。quiz_answersテーブルを使用してください')
+  return false
 }
 
-export async function getUserDetailedQuizData(userId: string): Promise<DetailedQuizData[]> {
-  const { data, error } = await supabaseAdmin
-    .from('detailed_quiz_data')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(1000) // Limit to recent records
-
-  if (error) {
-    console.error('Error fetching detailed quiz data:', error)
-    return []
-  }
-
-  // DBデータをDetailedQuizData形式に変換
-  return (data || []).map(item => ({
-    id: item.id,
-    user_id: item.user_id || '',
-    quiz_result_id: item.quiz_result_id || '',
-    question_id: item.question_id,
-    question_text: item.question_text,
-    selected_answer: item.selected_answer,
-    correct_answer: item.correct_answer,
-    is_correct: item.is_correct,
-    response_time: item.response_time,
-    confidence_level: item.confidence_level || undefined,
-    category: item.category,
-    difficulty: item.difficulty || undefined,
-    created_at: item.created_at || undefined
-  }))
+export async function getUserDetailedQuizData(_userId: string): Promise<DetailedQuizData[]> {
+  console.warn('⚠️ getUserDetailedQuizData: レガシー関数です。quiz_answersテーブルを使用してください')
+  return []
 }
 
 // Learning Progress Functions

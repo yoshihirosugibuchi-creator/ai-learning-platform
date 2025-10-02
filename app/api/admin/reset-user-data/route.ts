@@ -166,59 +166,14 @@ export async function POST(request: NextRequest) {
       errors.push('course_completions: ' + (err as Error).message)
     }
 
-    // 9. user_progress - ユーザー進捗を削除
-    try {
-      const { error: userProgressError } = await supabaseAdmin
-        .from('user_progress')
-        .delete()
-        .eq('user_id', userId)
+    // 9. user_progress - レガシーテーブル（削除済み）
+    // Note: user_progressテーブルは削除済みのため処理をスキップ
 
-      if (userProgressError) {
-        console.warn('⚠️ Error deleting user_progress:', userProgressError)
-        errors.push('user_progress: ' + userProgressError.message)
-      } else {
-        console.log('✅ user_progress deleted')
-        deletedTables.push('user_progress')
-      }
-    } catch (err) {
-      errors.push('user_progress: ' + (err as Error).message)
-    }
+    // 10. quiz_results - レガシーテーブル（削除済み）
+    // Note: quiz_resultsテーブルは削除済みのため処理をスキップ
 
-    // 10. quiz_results - クイズ結果を削除
-    try {
-      const { error: quizResultsError } = await supabaseAdmin
-        .from('quiz_results')
-        .delete()
-        .eq('user_id', userId)
-
-      if (quizResultsError) {
-        console.warn('⚠️ Error deleting quiz_results:', quizResultsError)
-        errors.push('quiz_results: ' + quizResultsError.message)
-      } else {
-        console.log('✅ quiz_results deleted')
-        deletedTables.push('quiz_results')
-      }
-    } catch (err) {
-      errors.push('quiz_results: ' + (err as Error).message)
-    }
-
-    // 11. detailed_quiz_data - 詳細クイズデータを削除
-    try {
-      const { error: detailedQuizError } = await supabaseAdmin
-        .from('detailed_quiz_data')
-        .delete()
-        .eq('user_id', userId)
-
-      if (detailedQuizError) {
-        console.warn('⚠️ Error deleting detailed_quiz_data:', detailedQuizError)
-        errors.push('detailed_quiz_data: ' + detailedQuizError.message)
-      } else {
-        console.log('✅ detailed_quiz_data deleted')
-        deletedTables.push('detailed_quiz_data')
-      }
-    } catch (err) {
-      errors.push('detailed_quiz_data: ' + (err as Error).message)
-    }
+    // 11. detailed_quiz_data - レガシーテーブル（削除済み）
+    // Note: detailed_quiz_dataテーブルは削除済みのため処理をスキップ
 
     // 12. knowledge_card_collection - ナレッジカード収集を削除
     try {

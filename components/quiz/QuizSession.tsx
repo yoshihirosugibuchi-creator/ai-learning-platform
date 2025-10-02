@@ -19,6 +19,7 @@ import WisdomCard from '@/components/cards/WisdomCard'
 import { getCategoryDisplayName } from '@/lib/category-mapping'
 import { isValidCategoryId, getDifficultyDisplayName } from '@/lib/categories'
 import { addWisdomCardToCollection } from '@/lib/supabase-cards'
+import { UnifiedLearningAnalysisEngine } from '@/lib/unified-learning-analytics'
 // import { saveDetailedQuizData } from '@/lib/supabase-learning' // 未使用のためコメントアウト
 // import { updateProgressAfterQuiz, calculateChallengeQuizRewards, saveChallengeQuizProgressToDatabase } from '@/lib/xp-level-system'
 // import { getSubcategoryId } from '@/lib/categories'
@@ -111,6 +112,11 @@ export default function QuizSession({
     userId: string;
     categoryResults: Record<string, unknown>;
   } | null>(null)
+  const [analyticsEngine] = useState(() => new UnifiedLearningAnalysisEngine(user.id))
+  const [_sessionId] = useState(() => crypto.randomUUID())
+  const [cognitiveLoadSamples, setCognitiveLoadSamples] = useState<number[]>([])
+  const [flowStateSamples, setFlowStateSamples] = useState<number[]>([])
+  const [_lastResponseTime, setLastResponseTime] = useState<number>(0)
 
   // 🔧 チャレンジクイズDB更新機能を一時的に無効化（フリーズ問題解決のため）
   // useEffect(() => {
@@ -281,6 +287,34 @@ export default function QuizSession({
     }))
   }, [questions, category, level, difficulties, user.id, profile, optimizeQuestionsForUser])
 
+  // Helper functions for cognitive load and flow state calculation
+  const calculateCognitiveLoad = useCallback((responseTime: number, isCorrect: boolean): number => {
+    // Base load on response time (0-10 scale)
+    const timeLoad = Math.min(responseTime / 30 * 10, 10) // 30+ seconds = max load
+    
+    // Adjust for correctness (incorrect answers indicate higher load)
+    const accuracyAdjustment = isCorrect ? 0 : 2
+    
+    return Math.min(timeLoad + accuracyAdjustment, 10)
+  }, [])
+
+  const calculateFlowState = useCallback((responseTime: number, isCorrect: boolean, difficulty: string): number => {
+    // Optimal flow: correct answers in reasonable time
+    if (isCorrect) {
+      if (difficulty === 'basic' && responseTime <= 15) return 0.9
+      if (difficulty === 'intermediate' && responseTime <= 25) return 0.8
+      if (difficulty === 'advanced' && responseTime <= 35) return 0.85
+      if (difficulty === 'expert' && responseTime <= 45) return 0.9
+    }
+    
+    // Poor flow: too fast (guessing) or too slow (struggling)
+    if (responseTime < 5) return 0.3 // Too fast, likely guessing
+    if (responseTime > 60) return 0.2 // Too slow, cognitive overload
+    
+    // Moderate flow for other cases
+    return isCorrect ? 0.6 : 0.4
+  }, [])
+
   const currentQuestion = sessionQuestions[currentQuestionIndex]
   
   // Update question start time when question changes
@@ -293,7 +327,16 @@ export default function QuizSession({
   }, [currentQuestionIndex, currentQuestion])
 
   const handleAnswer = (option: number, isCorrect: boolean) => {
-    const responseTime = Date.now() - questionStartTime
+    const responseTime = Math.round((Date.now() - questionStartTime) / 1000) // ミリ秒→秒に変換
+    setLastResponseTime(responseTime)
+    
+    // Calculate cognitive load based on response time and accuracy
+    const cognitiveLoadScore = calculateCognitiveLoad(responseTime, isCorrect)
+    setCognitiveLoadSamples(prev => [...prev, cognitiveLoadScore])
+    
+    // Calculate flow state based on difficulty vs performance
+    const flowScore = calculateFlowState(responseTime, isCorrect, currentQuestion?.difficulty || 'basic')
+    setFlowStateSamples(prev => [...prev, flowScore])
     
     setSelectedOption(option)
     setShowResult(true)
@@ -471,6 +514,70 @@ export default function QuizSession({
                 success: saveResult.success
               }
               console.log('✅ Quiz result saved successfully:', quizResult?.id)
+
+              // Save unified learning analytics data
+              try {
+                console.log('📊 Saving unified learning analytics data...')
+                const analyticsData = {
+                  sessionId: quizResult?.id || 'quiz-' + Date.now(),
+                  userId: user?.id || '',
+                  sessionType: 'quiz' as const,
+                  startTime: new Date(Date.now() - finalResults.timeSpent * 1000),
+                  endTime: new Date(),
+                  content: {
+                    quizSessionId: quizResult?.id,
+                    categoryId: quizCategory || 'logical_thinking_problem_solving',
+                    subcategoryId: 'general',
+                    difficulty: (level || 'basic') as 'basic' | 'intermediate' | 'advanced' | 'expert'
+                  },
+                  performance: {
+                    questionsTotal: finalResults.totalQuestions,
+                    questionsCorrect: finalResults.correctAnswers,
+                    accuracyRate: (finalResults.correctAnswers / finalResults.totalQuestions) * 100,
+                    completionRate: 1.0,
+                    averageResponseTimeMs: (questionAnswers.reduce((sum, qa) => sum + qa.responseTime, 0) / questionAnswers.length) * 1000
+                  },
+                  categoryId: quizCategory || 'logical_thinking_problem_solving',
+                  subcategoryId: 'general',
+                  skillLevel: level || 'basic',
+                  difficultyProgression: questionAnswers.map(qa => qa.difficulty),
+                  cognitiveLoadSamples,
+                  flowStateSamples,
+                  cognitive: {
+                    loadScore: cognitiveLoadSamples.length > 0 ? cognitiveLoadSamples[cognitiveLoadSamples.length - 1] : 5.0,
+                    attentionBreaks: 0,
+                    flowStateDuration: finalResults.timeSpent,
+                    flowStateIndex: flowStateSamples.length > 0 ? flowStateSamples[flowStateSamples.length - 1] : 0.7
+                  },
+                  context: {
+                    timeOfDay: new Date().getHours().toString(),
+                    dayOfWeek: new Date().getDay(),
+                    deviceType: 'web',
+                    interruptionCount: 0,
+                    energyLevelReported: 5,
+                    engagementScore: questionAnswers
+                      .filter(qa => qa.confidenceLevel !== undefined)
+                      .reduce((sum, qa) => sum + (qa.confidenceLevel || 0), 0) / 
+                      Math.max(questionAnswers.filter(qa => qa.confidenceLevel !== undefined).length, 1)
+                  },
+                  engagementMetrics: {
+                    averageConfidence: questionAnswers
+                      .filter(qa => qa.confidenceLevel !== undefined)
+                      .reduce((sum, qa) => sum + (qa.confidenceLevel || 0), 0) / 
+                      Math.max(questionAnswers.filter(qa => qa.confidenceLevel !== undefined).length, 1)
+                  },
+                  learningOutcomes: questionAnswers.map(qa => ({
+                    concept: qa.category,
+                    mastery: qa.isCorrect ? 0.8 : 0.2,
+                    confidence: qa.confidenceLevel || 0.5
+                  }))
+                }
+
+                await analyticsEngine.recordLearningSession(analyticsData)
+                console.log('✅ Unified learning analytics saved successfully')
+              } catch (analyticsError) {
+                console.error('❌ Failed to save unified learning analytics:', analyticsError)
+              }
               
             } catch (quizSaveError) {
               const error = quizSaveError as Error

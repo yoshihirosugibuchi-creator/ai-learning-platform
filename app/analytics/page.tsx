@@ -15,7 +15,6 @@ import {
   Flame,
   Clock,
   Target,
-  Award,
   Lightbulb,
   Zap,
   Users,
@@ -30,6 +29,7 @@ import { industryAnalytics, IndustrySkillProfile } from '@/lib/industry-analytic
 import { SimpleSelect, SimpleSelectItem } from '@/components/ui/select'
 import { globalCache, useResourceMonitor } from '@/lib/performance-optimizer'
 import XPStatsCard from '@/components/xp/XPStatsCard'
+import { LearningAnalyticsDashboard } from '@/components/learning-analytics'
 
 // レーダーチャートコンポーネントを遅延読み込み
 const SkillRadarChart = lazy(() => import('@/components/analytics/SkillRadarChart'))
@@ -199,19 +199,27 @@ export default function AnalyticsPage() {
         <Tabs defaultValue="overview" className="space-y-8">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto lg:h-10 gap-1 p-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">概要</TabsTrigger>
-            <TabsTrigger value="performance" className="text-xs sm:text-sm py-2">パフォーマンス</TabsTrigger>
+            <TabsTrigger value="unified" className="text-xs sm:text-sm py-2">統合AI分析</TabsTrigger>
             <TabsTrigger value="patterns" className="text-xs sm:text-sm py-2">学習パターン</TabsTrigger>
             <TabsTrigger value="industry" className="text-xs sm:text-sm py-2">業界分析</TabsTrigger>
             <TabsTrigger value="insights" className="text-xs sm:text-sm py-2">インサイト</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="unified" className="space-y-6">
+            {/* 統合学習分析ダッシュボード */}
+            {user?.id && (
+              <LearningAnalyticsDashboard 
+                userId={user.id}
+                className="w-full"
+              />
+            )}
+          </TabsContent>
+
           <TabsContent value="overview" className="space-y-6">
             {/* 学習統計カード */}
             <XPStatsCard showDetailedStats={true} className="mb-6" />
-          </TabsContent>
 
-          <TabsContent value="performance" className="space-y-6">
-            {/* 週間進捗 */}
+            {/* 週間パフォーマンス */}
             <Card>
               <CardHeader>
                 <CardTitle>週間パフォーマンス</CardTitle>
@@ -259,39 +267,8 @@ export default function AnalyticsPage() {
                 )}
               </CardContent>
             </Card>
-
-            {/* 学習時間統計 */}
-            <Card>
-              <CardHeader>
-                <CardTitle>学習時間統計</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <Clock className="mx-auto h-8 w-8 text-blue-600 mb-2" />
-                    <p className="text-2xl font-bold text-blue-700">
-                      {analytics?.averageSessionTime || 0}分
-                    </p>
-                    <p className="text-sm text-blue-600">平均セッション時間</p>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <Award className="mx-auto h-8 w-8 text-green-600 mb-2" />
-                    <p className="text-2xl font-bold text-green-700">
-                      {analytics?.completedSessions || 0}
-                    </p>
-                    <p className="text-sm text-green-600">完了セッション数</p>
-                  </div>
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <TrendingUp className="mx-auto h-8 w-8 text-purple-600 mb-2" />
-                    <p className="text-2xl font-bold text-purple-700">
-                      {analytics ? Math.round((analytics.completedSessions / Math.max(analytics.totalSessions, 1)) * 100) : 0}%
-                    </p>
-                    <p className="text-sm text-purple-600">完了率</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
+
 
           <TabsContent value="patterns" className="space-y-6">
             {/* AI学習パターン分析 */}

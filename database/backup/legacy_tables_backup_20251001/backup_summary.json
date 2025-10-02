@@ -1,0 +1,57 @@
+{
+  "backupDate": "2025-10-01T05:10:03.152Z",
+  "totalTables": 8,
+  "successfulBackups": 8,
+  "failedBackups": 0,
+  "totalRecords": 708,
+  "results": [
+    {
+      "tableName": "category_progress",
+      "success": true,
+      "recordCount": 70,
+      "filePath": "category_progress_backup.json"
+    },
+    {
+      "tableName": "detailed_quiz_data",
+      "success": true,
+      "recordCount": 560,
+      "filePath": "detailed_quiz_data_backup.json"
+    },
+    {
+      "tableName": "quiz_results",
+      "success": true,
+      "recordCount": 56,
+      "filePath": "quiz_results_backup.json"
+    },
+    {
+      "tableName": "user_category_xp_stats",
+      "success": true,
+      "recordCount": 1,
+      "filePath": "user_category_xp_stats_backup.json"
+    },
+    {
+      "tableName": "user_progress",
+      "success": true,
+      "recordCount": 1,
+      "filePath": "user_progress_backup.json"
+    },
+    {
+      "tableName": "user_subcategory_xp_stats",
+      "success": true,
+      "recordCount": 2,
+      "filePath": "user_subcategory_xp_stats_backup.json"
+    },
+    {
+      "tableName": "user_xp_stats",
+      "success": true,
+      "recordCount": 1,
+      "filePath": "user_xp_stats_backup.json"
+    },
+    {
+      "tableName": "xp_settings",
+      "success": true,
+      "recordCount": 17,
+      "filePath": "xp_settings_backup.json"
+    }
+  ]
+}

@@ -652,20 +652,28 @@ export async function POST(request: Request) {
         if (hasRecentActivity) {
           console.log('📅 Recent activity detected, calculating full streak (async)')
           
-          // フル計算は非同期で実行
-          const { data } = await supabase.rpc('calculate_learning_streak', { 
-            p_user_id: userId 
-          })
-          
-          if (data && data.current_streak > 0) {
-            const streakDays = data.current_streak
-            const newBonus = data.new_bonus_amount
+          // フル計算は非同期で実行 - Temporarily disabled until function is available
+          try {
+            console.log('Streak calculation temporarily disabled - function not yet available')
+            // const { data, error } = await supabase.rpc('calculate_learning_streak', { 
+            //   p_user_id: userId 
+            // })
             
-            if (newBonus > 0) {
-              console.log(`✅ Auto-awarded streak bonus (async): ${newBonus} SKP for ${streakDays} days streak`)
-            } else {
-              console.log(`ℹ️ No new streak bonus needed (async). Current streak: ${streakDays} days`)
-            }
+            // if (error) {
+            //   console.warn('Streak calculation function not available:', error.message)
+            // } else if (data && typeof data === 'object' && 'current_streak' in data && 'new_bonus_amount' in data) {
+            //   const streakResult = data as { current_streak: number; new_bonus_amount: number }
+            //   const streakDays = streakResult.current_streak
+            //   const newBonus = streakResult.new_bonus_amount
+            //   
+            //   if (newBonus > 0) {
+            //     console.log(`✅ Auto-awarded streak bonus (async): ${newBonus} SKP for ${streakDays} days streak`)
+            //   } else {
+            //     console.log(`ℹ️ No new streak bonus needed (async). Current streak: ${streakDays} days`)
+            //   }
+            // }
+          } catch (streakError) {
+            console.warn('Failed to calculate learning streak:', streakError)
           }
         } else {
           console.log('📅 No recent activity, skipping streak calculation (async)')

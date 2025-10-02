@@ -25,12 +25,13 @@ export interface UserProgress {
   created_at?: string
 }
 
-// クイズ結果を保存（シンプル版）
+// クイズ結果を保存（レガシー関数 - 使用禁止）
+// Note: quiz_resultsテーブルは削除済み。代わりにquiz_sessionsを使用してください
 export async function saveQuizResult(result: Omit<QuizResult, 'id' | 'created_at'>): Promise<QuizResult | null> {
   console.log('🔍 Attempting to save quiz result:', result)
   
   try {
-    const insertData = {
+    const _insertData = {
       category_id: result.category_id,
       subcategory_id: result.subcategory_id,
       user_id: result.user_id,
@@ -43,8 +44,18 @@ export async function saveQuizResult(result: Omit<QuizResult, 'id' | 'created_at
     }
     
     const { data, error } = await supabase
-      .from('quiz_results')
-      .insert(insertData)
+      .from('quiz_sessions')
+      .insert({
+        user_id: result.user_id,
+        correct_answers: result.score,
+        total_questions: result.total_questions,
+        accuracy_rate: (result.score / result.total_questions) * 100,
+        session_start_time: new Date(result.completed_at).toISOString(),
+        session_end_time: new Date(result.completed_at).toISOString(),
+        status: 'completed',
+        total_xp: 0,
+        bonus_xp: 0
+      })
       .select()
       .single()
 
@@ -61,17 +72,18 @@ export async function saveQuizResult(result: Omit<QuizResult, 'id' | 'created_at
 
     console.log('✅ Quiz result saved successfully:', data)
     // DBデータをQuizResult形式に変換
+    // quiz_sessionsテーブル構造に合わせて変換
     return {
       id: data.id,
       user_id: data.user_id,
-      category_id: data.category_id,
-      subcategory_id: data.subcategory_id || undefined,
-      questions: data.questions as Record<string, unknown>[],
-      answers: data.answers as Record<string, unknown>[],
-      score: data.score,
+      category_id: '', // quiz_sessionsには存在しないため空値
+      subcategory_id: undefined,
+      questions: [], // quiz_sessionsには保存されない
+      answers: [], // quiz_sessionsには保存されない
+      score: data.correct_answers,
       total_questions: data.total_questions,
-      time_taken: data.time_taken,
-      completed_at: data.completed_at || new Date().toISOString()
+      time_taken: 0, // quiz_sessionsには保存されない
+      completed_at: data.session_end_time || new Date().toISOString()
     }
   } catch (saveError) {
     console.error('❌ Quiz save exception:', (saveError as Error)?.message || saveError)
@@ -79,71 +91,126 @@ export async function saveQuizResult(result: Omit<QuizResult, 'id' | 'created_at
   }
 }
 
-// ユーザーのクイズ結果を取得
+// ユーザーのクイズ結果を取得（レガシー関数 - 使用禁止）
+// 新実装: quiz_sessions + quiz_answersから詳細データを復元
 export async function getUserQuizResults(userId: string): Promise<QuizResult[]> {
-  const { data, error } = await supabase
-    .from('quiz_results')
-    .select('*')
+  // quiz_sessionsとquiz_answersを結合して詳細データを取得
+  const { data: sessions, error: sessionsError } = await supabase
+    .from('quiz_sessions')
+    .select(`
+      *,
+      quiz_answers (
+        id,
+        question_id,
+        user_answer,
+        is_correct,
+        time_spent,
+        difficulty,
+        category_id,
+        subcategory_id,
+        earned_xp
+      )
+    `)
     .eq('user_id', userId)
-    .order('completed_at', { ascending: false })
+    .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Error fetching quiz results:', error)
+  if (sessionsError) {
+    console.error('Error fetching quiz sessions:', sessionsError)
     return []
   }
 
-  // DBデータをQuizResult形式に変換
-  return (data || []).map(result => ({
-    id: result.id,
-    user_id: result.user_id,
-    category_id: result.category_id,
-    subcategory_id: result.subcategory_id || undefined,
-    questions: result.questions as Record<string, unknown>[],
-    answers: result.answers as Record<string, unknown>[],
-    score: result.score,
-    total_questions: result.total_questions,
-    time_taken: result.time_taken,
-    completed_at: result.completed_at || new Date().toISOString()
+  // quiz_sessionsベースでQuizResult形式に変換
+  return (sessions || []).map(session => ({
+    id: session.id,
+    user_id: session.user_id,
+    // quiz_answersから最初の回答のカテゴリーを取得（セッション全体の代表として）
+    category_id: session.quiz_answers?.[0]?.category_id || '',
+    subcategory_id: session.quiz_answers?.[0]?.subcategory_id || undefined,
+    // quiz_answersの質問IDと回答を復元
+    questions: session.quiz_answers?.map(answer => ({
+      id: answer.question_id,
+      difficulty: answer.difficulty
+    })) || [],
+    answers: session.quiz_answers?.map(answer => ({
+      question_id: answer.question_id,
+      user_answer: answer.user_answer,
+      is_correct: answer.is_correct,
+      time_spent: answer.time_spent,
+      earned_xp: answer.earned_xp
+    })) || [],
+    score: session.correct_answers,
+    total_questions: session.total_questions,
+    time_taken: session.quiz_answers?.reduce((sum, answer) => sum + (answer.time_spent || 0), 0) || 0,
+    completed_at: session.session_end_time || session.created_at || new Date().toISOString()
   }))
 }
 
-// 特定カテゴリのクイズ結果を取得
+// 新実装: 特定カテゴリのクイズ結果をquiz_sessions + quiz_answersから取得
 export async function getCategoryQuizResults(userId: string, categoryId: string): Promise<QuizResult[]> {
-  const { data, error } = await supabase
-    .from('quiz_results')
-    .select('*')
+  // quiz_sessionsでユーザーのセッションを取得し、quiz_answersでカテゴリーフィルタ
+  const { data: sessions, error: sessionsError } = await supabase
+    .from('quiz_sessions')
+    .select(`
+      *,
+      quiz_answers!inner (
+        id,
+        question_id,
+        user_answer,
+        is_correct,
+        time_spent,
+        difficulty,
+        category_id,
+        subcategory_id,
+        earned_xp
+      )
+    `)
     .eq('user_id', userId)
-    .eq('category_id', categoryId)
-    .order('completed_at', { ascending: false })
+    .eq('quiz_answers.category_id', categoryId)
+    .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Error fetching category quiz results:', error)
+  if (sessionsError) {
+    console.error('Error fetching category quiz sessions:', sessionsError)
     return []
   }
 
-  // DBデータをQuizResult形式に変換
-  return (data || []).map(result => ({
-    id: result.id,
-    user_id: result.user_id,
-    category_id: result.category_id,
-    subcategory_id: result.subcategory_id || undefined,
-    questions: Array.isArray(result.questions) ? result.questions as Record<string, unknown>[] : [],
-    answers: Array.isArray(result.answers) ? result.answers as Record<string, unknown>[] : [],
-    score: result.score,
-    total_questions: result.total_questions,
-    time_taken: result.time_taken,
-    completed_at: result.completed_at || new Date().toISOString()
+  // quiz_sessionsベースでQuizResult形式に変換（カテゴリーフィルタ済み）
+  return (sessions || []).map(session => ({
+    id: session.id,
+    user_id: session.user_id,
+    category_id: categoryId,
+    subcategory_id: session.quiz_answers?.[0]?.subcategory_id || undefined,
+    questions: session.quiz_answers?.map(answer => ({
+      id: answer.question_id,
+      difficulty: answer.difficulty
+    })) || [],
+    answers: session.quiz_answers?.map(answer => ({
+      question_id: answer.question_id,
+      user_answer: answer.user_answer,
+      is_correct: answer.is_correct,
+      time_spent: answer.time_spent,
+      earned_xp: answer.earned_xp
+    })) || [],
+    score: session.correct_answers,
+    total_questions: session.total_questions,
+    time_taken: session.quiz_answers?.reduce((sum, answer) => sum + (answer.time_spent || 0), 0) || 0,
+    completed_at: session.session_end_time || session.created_at || new Date().toISOString()
   }))
 }
 
-// ユーザー進捗を更新または作成
+// ユーザー進捗を更新または作成（レガシー関数 - 使用禁止）
+// Note: user_progressテーブルは削除済み。代わりにuser_category_xp_stats_v2を使用してください
 export async function updateUserProgress(
-  userId: string, 
-  categoryId: string, 
-  subcategoryId: string | null, 
-  correctAnswers: number, 
-  totalQuestions: number
+  _userId: string, 
+  _categoryId: string, 
+  _subcategoryId: string | null, 
+  _correctAnswers: number, 
+  _totalQuestions: number
 ): Promise<UserProgress | null> {
+  console.warn('⚠️ updateUserProgress is deprecated - user_progress table deleted. Use user_category_xp_stats_v2 instead.')
+  return null
+  
+  // 以下の実装は削除されたテーブルへの参照のためコメント化
+  /*
   // 既存の進捗を取得
   const { data: existing } = await supabase
     .from('user_progress')
@@ -162,78 +229,20 @@ export async function updateUserProgress(
     last_accessed: new Date().toISOString()
   }
 
-  if (existing) {
-    // 更新
-    const { data, error } = await supabase
-      .from('user_progress')
-      .update(progressData)
-      .eq('id', existing.id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('❌ User progress update error details:', {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        updateData: progressData
-      })
-      return null
-    }
-    // DBデータをUserProgress形式に変換
-    return {
-      id: data.id,
-      user_id: data.user_id,
-      category_id: data.category_id,
-      subcategory_id: data.subcategory_id || undefined,
-      correct_answers: data.correct_answers || 0,
-      total_attempts: data.total_attempts || 0,
-      last_accessed: data.last_accessed || new Date().toISOString(),
-      created_at: data.created_at || undefined
-    }
-  } else {
-    // 新規作成
-    const { data, error } = await supabase
-      .from('user_progress')
-      .insert([progressData])
-      .select()
-      .single()
-
-    if (error) {
-      console.error('❌ User progress creation error details:', {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        insertData: progressData
-      })
-      return null
-    }
-    // DBデータをUserProgress形式に変換
-    return {
-      id: data.id,
-      user_id: data.user_id,
-      category_id: data.category_id,
-      subcategory_id: data.subcategory_id || undefined,
-      correct_answers: data.correct_answers || 0,
-      total_attempts: data.total_attempts || 0,
-      last_accessed: data.last_accessed || new Date().toISOString(),
-      created_at: data.created_at || undefined
-    }
-  }
+  */
 }
 
-// ユーザーの総合統計を取得（クイズ＋コース学習の統合統計）
+// ユーザーの総合統計を取得（v2統計システムベース）
 export async function getUserStats(userId: string) {
-  // user_category_xp_stats_v2から全カテゴリーの統計を取得
-  const { data: categoryProgress, error } = await supabase
-    .from('user_category_xp_stats_v2')
-    .select('quiz_questions_correct, quiz_questions_answered')
+  // user_xp_stats_v2から統合統計を取得
+  const { data: userStats, error: userStatsError } = await supabase
+    .from('user_xp_stats_v2')
+    .select('quiz_questions_answered, quiz_questions_correct, quiz_sessions_completed, quiz_average_accuracy, quiz_learning_time_seconds')
     .eq('user_id', userId)
+    .single()
 
-  if (error) {
-    console.error('Error fetching category progress for stats:', error)
+  if (userStatsError) {
+    console.error('Error fetching user stats:', userStatsError)
     return {
       totalQuestions: 0,
       correctAnswers: 0,
@@ -244,20 +253,25 @@ export async function getUserStats(userId: string) {
     }
   }
 
-  // user_category_xp_stats_v2から全体統計を集計
-  const totalAnswers = categoryProgress?.reduce((sum, cat) => sum + cat.quiz_questions_answered, 0) || 0
-  const totalCorrect = categoryProgress?.reduce((sum, cat) => sum + cat.quiz_questions_correct, 0) || 0
+  // quiz_sessionsから追加統計を取得（v2システム）
+  const { data: _quizSessions, error: sessionsError } = await supabase
+    .from('quiz_sessions')
+    .select('total_questions, correct_answers, accuracy_rate')
+    .eq('user_id', userId)
 
-  // クイズ結果から追加統計を取得
-  const quizResults = await getUserQuizResults(userId)
-  const totalTimeSpent = quizResults.reduce((sum, result) => sum + result.time_taken, 0)
-  const averageScore = quizResults.length > 0 ? Math.round(quizResults.reduce((sum, result) => sum + result.score, 0) / quizResults.length) : 0
+  if (sessionsError) {
+    console.warn('Warning: Could not fetch quiz sessions:', sessionsError)
+  }
+
+  const totalQuizzes = userStats?.quiz_sessions_completed || 0
+  const averageScore = userStats?.quiz_average_accuracy ? Math.round(userStats.quiz_average_accuracy * 100) : 0
+  const totalTimeSpent = Math.round((userStats?.quiz_learning_time_seconds || 0) / 60) // 秒から分に変換
 
   return {
-    totalQuestions: totalAnswers,
-    correctAnswers: totalCorrect,
-    accuracy: totalAnswers > 0 ? Math.round((totalCorrect / totalAnswers) * 100) : 0,
-    totalQuizzes: quizResults.length,
+    totalQuestions: userStats?.quiz_questions_answered || 0,
+    correctAnswers: userStats?.quiz_questions_correct || 0,
+    accuracy: averageScore,
+    totalQuizzes,
     averageScore,
     totalTimeSpent
   }

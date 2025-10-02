@@ -50,23 +50,19 @@ export async function POST(request: NextRequest) {
     const tablesToReset = [
       'learning_progress',
       'user_badges', 
-      'user_xp_stats',
-      'user_xp_stats_v2',
-      'user_category_xp_stats', // v1テーブル（正しい名前）
+      'user_xp_stats_v2', // v2統計システムのみ使用
       'user_category_xp_stats_v2',
       'user_subcategory_xp_stats_v2',
       'course_session_completions',
       'course_theme_completions', 
       'course_completions',
-      'user_progress',
-      'quiz_results',
-      'detailed_quiz_data',
       'knowledge_card_collection',
       'wisdom_card_collection',
       'user_settings',
       'skp_transactions',
       'daily_xp_records',
       'quiz_sessions'
+      // レガシーテーブル除去: user_xp_stats, user_category_xp_stats, user_progress, quiz_results, detailed_quiz_data
       // quiz_answers は quiz_sessions 削除時に自動削除されるため除外
     ]
 

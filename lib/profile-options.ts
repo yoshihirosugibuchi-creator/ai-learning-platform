@@ -49,10 +49,44 @@ export const POSITION_LEVELS = [
   { value: 'executive', label: '役員・エグゼクティブ' }
 ]
 
-// 学習レベル（新規追加）
-export const LEARNING_LEVELS = [
-  { value: 'beginner', label: '初心者', description: '基礎から学びたい' },
-  { value: 'intermediate', label: '中級者', description: '基礎知識はある' },
-  { value: 'advanced', label: '上級者', description: '専門知識を深めたい' },
-  { value: 'expert', label: 'エキスパート', description: '最新動向を追いたい' }
+// 学習レベル（skill_levelsテーブルから動的取得用）
+// 静的データは廃止し、getLearningLevels()関数を使用
+export async function getLearningLevels() {
+  try {
+    const response = await fetch('/api/skill-levels')
+    const data = await response.json()
+    
+    if (data?.skill_levels) {
+      return data.skill_levels.map((level: { id: string; name: string; target_experience?: string; description?: string }) => ({
+        value: level.id,           // 'basic', 'intermediate', 'advanced', 'expert'
+        label: level.name,         // '初級', '中級', '上級', 'エキスパート'
+        description: level.target_experience || level.description
+      }))
+    }
+    
+    // フォールバック用の静的データ
+    return [
+      { value: 'basic', label: '初級', description: '新人〜入社3年目' },
+      { value: 'intermediate', label: '中級', description: '入社3-7年目、チームリーダー' },
+      { value: 'advanced', label: '上級', description: 'マネージャー、専門家' },
+      { value: 'expert', label: 'エキスパート', description: 'シニアマネージャー、業界専門家' }
+    ]
+  } catch (error) {
+    console.error('Failed to fetch learning levels:', error)
+    // エラー時のフォールバック
+    return [
+      { value: 'basic', label: '初級', description: '新人〜入社3年目' },
+      { value: 'intermediate', label: '中級', description: '入社3-7年目、チームリーダー' },
+      { value: 'advanced', label: '上級', description: 'マネージャー、専門家' },
+      { value: 'expert', label: 'エキスパート', description: 'シニアマネージャー、業界専門家' }
+    ]
+  }
+}
+
+// 後方互換性のための静的定数（段階的に廃止予定）
+export const LEARNING_LEVELS_LEGACY = [
+  { value: 'basic', label: '初級', description: '新人〜入社3年目' },
+  { value: 'intermediate', label: '中級', description: '入社3-7年目、チームリーダー' },
+  { value: 'advanced', label: '上級', description: 'マネージャー、専門家' },
+  { value: 'expert', label: 'エキスパート', description: 'シニアマネージャー、業界専門家' }
 ]

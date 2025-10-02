@@ -36,7 +36,7 @@ export interface User {
   id: string
   email: string
   name: string
-  skill_level: 'beginner' | 'intermediate' | 'advanced'
+  skill_level: 'basic' | 'intermediate' | 'advanced'
   learning_style: 'visual' | 'auditory' | 'reading' | 'kinesthetic'
   experience_level: number
   created_at: string

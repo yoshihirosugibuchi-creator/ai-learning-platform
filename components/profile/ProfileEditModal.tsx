@@ -14,14 +14,16 @@ import {
   CheckCircle,
   Briefcase
 } from 'lucide-react'
-import { industryCategories, mainCategories } from '@/lib/categories'
+import { getCategories } from '@/lib/categories'
+import type { IndustryCategory, MainCategory } from '@/lib/types/category'
 import { 
   EXPERIENCE_OPTIONS, 
   JOB_TITLES, 
   LEARNING_GOALS, 
   WEEKLY_GOALS,
   POSITION_LEVELS,
-  LEARNING_LEVELS
+  getLearningLevels,
+  LEARNING_LEVELS_LEGACY
 } from '@/lib/profile-options'
 
 interface ProfileData {
@@ -50,6 +52,10 @@ export default function ProfileEditModal({ initialData, onSave, children }: Prof
   const [activeTab, setActiveTab] = useState('basic')
   const [formData, setFormData] = useState<Partial<ProfileData>>(initialData)
   const [saving, setSaving] = useState(false)
+  const [learningLevels, setLearningLevels] = useState(LEARNING_LEVELS_LEGACY)
+  const [industryCategories, setIndustryCategories] = useState<IndustryCategory[]>([])
+  const [mainCategories, setMainCategories] = useState<MainCategory[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
 
   // Reset form data when modal opens
   useEffect(() => {
@@ -57,6 +63,35 @@ export default function ProfileEditModal({ initialData, onSave, children }: Prof
       setFormData(initialData)
     }
   }, [open, initialData])
+
+  // Load learning levels and categories data
+  useEffect(() => {
+    const loadDynamicData = async () => {
+      setCategoriesLoading(true)
+      try {
+        // Load learning levels from skill_levels table
+        const levels = await getLearningLevels()
+        setLearningLevels(levels)
+
+        // Load categories from database
+        const [allIndustryCategories, allMainCategories] = await Promise.all([
+          getCategories({ type: 'industry', activeOnly: true }),
+          getCategories({ type: 'main', activeOnly: true })
+        ])
+
+        setIndustryCategories(allIndustryCategories as IndustryCategory[])
+        setMainCategories(allMainCategories as MainCategory[])
+        
+      } catch (error) {
+        console.error('Failed to load dynamic data:', error)
+        // Keep using fallbacks
+      } finally {
+        setCategoriesLoading(false)
+      }
+    }
+    
+    loadDynamicData()
+  }, [])
 
   const handleSave = async () => {
     setSaving(true)
@@ -159,30 +194,59 @@ export default function ProfileEditModal({ initialData, onSave, children }: Prof
                 <div>
                   <Label>所属業界</Label>
                   <div className="grid grid-cols-2 gap-2 mt-2 max-h-48 overflow-y-auto">
-                    {industryCategories.map((industry) => (
-                      <Button
-                        key={industry.id}
-                        variant={formData.industry === industry.id ? "default" : "outline"}
-                        size="sm"
-                        className="justify-start text-left h-auto py-2"
-                        onClick={() => updateFormData('industry', industry.id)}
-                      >
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <span>{industry.icon}</span>
-                            <span className="text-xs">{industry.name}</span>
+                    {categoriesLoading ? (
+                      <div className="col-span-2 text-center py-4 text-gray-500">
+                        読み込み中...
+                      </div>
+                    ) : (
+                      <>
+                        {industryCategories.map((industry) => (
+                          <Button
+                            key={industry.id}
+                            variant={formData.industry === industry.id ? "default" : "outline"}
+                            size="sm"
+                            className="justify-start text-left h-auto py-2"
+                            onClick={() => updateFormData('industry', industry.id)}
+                          >
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <span>{industry.icon}</span>
+                                <span className="text-xs">{industry.name}</span>
+                              </div>
+                            </div>
+                          </Button>
+                        ))}
+                        
+                        {/* 追加の選択肢 */}
+                        <Button
+                          variant={formData.industry === 'student' ? "default" : "outline"}
+                          size="sm"
+                          className="justify-start text-left h-auto py-2"
+                          onClick={() => updateFormData('industry', 'student')}
+                        >
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span>🎓</span>
+                              <span className="text-xs">学生</span>
+                            </div>
                           </div>
-                        </div>
-                      </Button>
-                    ))}
-                    <Button
-                      variant={formData.industry === 'other' ? "default" : "outline"}
-                      size="sm"
-                      className="justify-start"
-                      onClick={() => updateFormData('industry', 'other')}
-                    >
-                      その他
-                    </Button>
+                        </Button>
+                        
+                        <Button
+                          variant={formData.industry === 'other' ? "default" : "outline"}
+                          size="sm"
+                          className="justify-start text-left h-auto py-2"
+                          onClick={() => updateFormData('industry', 'other')}
+                        >
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span>📝</span>
+                              <span className="text-xs">その他</span>
+                            </div>
+                          </div>
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -257,25 +321,31 @@ export default function ProfileEditModal({ initialData, onSave, children }: Prof
                 <div>
                   <Label>自分の業界以外で興味ある業界（複数選択可）</Label>
                   <div className="grid grid-cols-2 gap-2 mt-2 max-h-48 overflow-y-auto">
-                    {industryCategories.map((industry) => (
-                      <Button
-                        key={industry.id}
-                        variant={(formData.interestedIndustries || []).includes(industry.id) ? "default" : "outline"}
-                        size="sm"
-                        className="justify-start text-left h-auto py-2"
-                        onClick={() => toggleArrayItem('interestedIndustries', industry.id)}
-                      >
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            {(formData.interestedIndustries || []).includes(industry.id) && 
-                              <CheckCircle className="h-3 w-3" />
-                            }
-                            <span>{industry.icon}</span>
-                            <span className="text-xs">{industry.name}</span>
+                    {categoriesLoading ? (
+                      <div className="col-span-2 text-center py-4 text-gray-500">
+                        読み込み中...
+                      </div>
+                    ) : (
+                      industryCategories.map((industry) => (
+                        <Button
+                          key={industry.id}
+                          variant={(formData.interestedIndustries || []).includes(industry.id) ? "default" : "outline"}
+                          size="sm"
+                          className="justify-start text-left h-auto py-2"
+                          onClick={() => toggleArrayItem('interestedIndustries', industry.id)}
+                        >
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              {(formData.interestedIndustries || []).includes(industry.id) && 
+                                <CheckCircle className="h-3 w-3" />
+                              }
+                              <span>{industry.icon}</span>
+                              <span className="text-xs">{industry.name}</span>
+                            </div>
                           </div>
-                        </div>
-                      </Button>
-                    ))}
+                        </Button>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -283,25 +353,31 @@ export default function ProfileEditModal({ initialData, onSave, children }: Prof
                 <div>
                   <Label>重点的に学習したいメインカテゴリー（複数選択可）</Label>
                   <div className="grid grid-cols-2 gap-2 mt-2 max-h-48 overflow-y-auto">
-                    {mainCategories.map((category) => (
-                      <Button
-                        key={category.id}
-                        variant={(formData.selectedCategories || []).includes(category.id) ? "default" : "outline"}
-                        size="sm"
-                        className="justify-start text-left h-auto py-2"
-                        onClick={() => toggleArrayItem('selectedCategories', category.id)}
-                      >
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            {(formData.selectedCategories || []).includes(category.id) && 
-                              <CheckCircle className="h-3 w-3" />
-                            }
-                            <span>{category.icon}</span>
-                            <span className="text-xs">{category.name}</span>
+                    {categoriesLoading ? (
+                      <div className="col-span-2 text-center py-4 text-gray-500">
+                        読み込み中...
+                      </div>
+                    ) : (
+                      mainCategories.map((category) => (
+                        <Button
+                          key={category.id}
+                          variant={(formData.selectedCategories || []).includes(category.id) ? "default" : "outline"}
+                          size="sm"
+                          className="justify-start text-left h-auto py-2"
+                          onClick={() => toggleArrayItem('selectedCategories', category.id)}
+                        >
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              {(formData.selectedCategories || []).includes(category.id) && 
+                                <CheckCircle className="h-3 w-3" />
+                              }
+                              <span>{category.icon}</span>
+                              <span className="text-xs">{category.name}</span>
+                            </div>
                           </div>
-                        </div>
-                      </Button>
-                    ))}
+                        </Button>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -309,7 +385,7 @@ export default function ProfileEditModal({ initialData, onSave, children }: Prof
                 <div>
                   <Label>学習レベル</Label>
                   <div className="grid grid-cols-1 gap-2 mt-2">
-                    {LEARNING_LEVELS.map((level) => (
+                    {learningLevels.map((level) => (
                       <Button
                         key={level.value}
                         variant={formData.learningLevel === level.value ? "default" : "outline"}

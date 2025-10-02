@@ -191,22 +191,30 @@ class AILearningAnalytics {
 
   private async getProgressData(userId: string): Promise<QuestionProgress[]> {
     try {
-      // Try to get detailed quiz data first (most accurate)
-      const { data: detailedData } = await supabase
-        .from('detailed_quiz_data')
-        .select('*')
-        .eq('user_id', userId)
+      // Get quiz answers data from v2 system
+      const { data: quizAnswers } = await supabase
+        .from('quiz_answers')
+        .select(`
+          question_id,
+          is_correct,
+          time_spent,
+          category_id,
+          difficulty,
+          created_at,
+          quiz_sessions!inner(user_id)
+        `)
+        .eq('quiz_sessions.user_id', userId)
         .order('created_at', { ascending: false })
         .limit(500) // Recent data
 
       const progressData: QuestionProgress[] = []
 
-      if (detailedData && detailedData.length > 0) {
-        console.log(`[Analytics] Using detailed quiz data: ${detailedData.length} records`)
+      if (quizAnswers && quizAnswers.length > 0) {
+        console.log(`[Analytics] Using quiz answers data: ${quizAnswers.length} records`)
         
-        detailedData.forEach((record) => {
-          // 詳細データからメインカテゴリーを特定
-          const mainCategory = this.mapToMainCategory(record.category as string)
+        quizAnswers.forEach((record) => {
+          // カテゴリーIDからメインカテゴリーを特定
+          const mainCategory = this.mapToMainCategory(record.category_id as string)
           if (mainCategory) {
             progressData.push({
               userId,
@@ -214,11 +222,11 @@ class AILearningAnalytics {
               category: mainCategory,
               difficulty: (record.difficulty as string | null) || 'medium',
               isCorrect: record.is_correct as boolean,
-              timeSpent: record.response_time as number,
+              timeSpent: record.time_spent as number,
               timestamp: record.created_at as string
             })
           } else {
-            console.warn(`[Analytics] Unable to map category to main category: ${record.category}`)
+            console.warn(`[Analytics] Unable to map category to main category: ${record.category_id}`)
           }
         })
       } else {

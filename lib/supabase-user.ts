@@ -48,7 +48,7 @@ export interface UserProfile {
   id: string
   email: string
   name?: string
-  skill_level?: 'beginner' | 'intermediate' | 'advanced'
+  skill_level?: 'basic' | 'intermediate' | 'advanced'
   learning_style?: 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed'
   experience_level?: string | number // Allow both for compatibility
   total_xp: number
@@ -92,11 +92,13 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     }
 
     // DBデータをUserProfile形式に変換（NULL→未設定）
-    return {
+    console.log('🔍 getUserProfile - Raw DB data:', data)
+    
+    const profile = {
       id: data.id,
       email: data.email,
       name: data.name || undefined,
-      skill_level: data.skill_level as 'beginner' | 'intermediate' | 'advanced' | undefined,
+      skill_level: data.skill_level as 'basic' | 'intermediate' | 'advanced' | undefined,
       learning_style: data.learning_style as 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed' | undefined,
       experience_level: data.experience_level || undefined,
       total_xp: data.total_xp || 0,
@@ -105,8 +107,24 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
       last_active: data.last_active || new Date().toISOString(),
       selected_industry_categories: data.selected_industry_categories as string[] | undefined,
       created_at: data.created_at || undefined,
-      updated_at: data.updated_at || undefined
-    }
+      updated_at: data.updated_at || undefined,
+      // 拡張プロフィール情報（Database型対応）
+      display_name: data.display_name || undefined,
+      job_title: data.job_title || undefined,
+      position_level: data.position_level || undefined,
+      learning_level: data.learning_level || undefined,
+      industry: data.industry || undefined,
+      experience_years: data.experience_years || undefined,
+      interested_industries: data.interested_industries || undefined,
+      learning_goals: data.learning_goals || undefined,
+      selected_categories: data.selected_categories || undefined,
+      weekly_goal: data.weekly_goal || undefined,
+      profile_completed_at: data.profile_completed_at || undefined,
+      last_profile_update: data.last_profile_update || undefined
+    } as UserProfile & Record<string, unknown>
+    
+    console.log('✅ getUserProfile - Converted profile:', profile)
+    return profile
   } catch (error) {
     console.error('❌ Exception in getUserProfile:', error)
     return null
@@ -120,9 +138,9 @@ export async function createUserProfile(user: SupabaseUser): Promise<UserProfile
       id: user.id,
       email: user.email || '',
       name: user.email?.split('@')[0], // メールのローカル部分を名前として使用
-      skill_level: 'beginner',
+      skill_level: 'basic',
       learning_style: 'mixed',
-      experience_level: 'beginner',
+      experience_level: 'basic',
       total_xp: 0,
       current_level: 1,
       streak: 0,
@@ -149,9 +167,9 @@ export async function createUserProfile(user: SupabaseUser): Promise<UserProfile
           id: user.id,
           email: user.email!,
           name: user.email?.split('@')[0] || 'User',
-          skill_level: 'beginner',
+          skill_level: 'basic',
           learning_style: 'mixed',
-          experience_level: 'beginner',
+          experience_level: 'basic',
           total_xp: 0,
           current_level: 1,
           streak: 0,
@@ -168,7 +186,7 @@ export async function createUserProfile(user: SupabaseUser): Promise<UserProfile
       id: data.id,
       email: data.email,
       name: data.name || undefined,
-      skill_level: data.skill_level as 'beginner' | 'intermediate' | 'advanced' | undefined,
+      skill_level: data.skill_level as 'basic' | 'intermediate' | 'advanced' | undefined,
       learning_style: data.learning_style as 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed' | undefined,
       experience_level: data.experience_level || undefined,
       total_xp: data.total_xp || 0,
@@ -229,7 +247,7 @@ export async function updateUserProfile(userId: string, updates: Record<string, 
     id: data.id,
     email: data.email,
     name: data.name || undefined,
-    skill_level: data.skill_level as 'beginner' | 'intermediate' | 'advanced' | undefined,
+    skill_level: data.skill_level as 'basic' | 'intermediate' | 'advanced' | undefined,
     learning_style: data.learning_style as 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed' | undefined,
     experience_level: data.experience_level || undefined,
     total_xp: data.total_xp || 0,
@@ -251,9 +269,9 @@ export async function getOrCreateUserProfile(user: SupabaseUser): Promise<UserPr
     id: user.id,
     email: user.email!,
     name: user.email?.split('@')[0] || 'User',
-    skill_level: 'beginner',
+    skill_level: 'basic',
     learning_style: 'mixed',
-    experience_level: 'beginner',
+    experience_level: 'basic',
     total_xp: 0,
     current_level: 1,
     streak: 0,
