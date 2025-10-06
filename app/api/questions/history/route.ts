@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/database-types-official'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Supabaseクライアント作成（サーバーサイド用）
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
+const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
 
 /**
  * 問題の学習履歴を取得
@@ -23,19 +29,8 @@ export async function POST(request: NextRequest) {
 
     console.log(`📚 Fetching question history for user ${userId}, category ${categoryId}, difficulty ${difficulty}`)
 
-    // SQL クエリ: 学習履歴を集計
-    const { data: histories, error } = await supabase.rpc('get_question_history_stats', {
-      p_user_id: userId,
-      p_category_id: categoryId,
-      p_difficulty: difficulty
-    })
-
-    if (error) {
-      console.error('❌ Database function error:', error)
-      console.log('🔄 Falling back to direct table query...')
-      
-      // フォールバック: 直接テーブルから取得 (正しいリレーション)
-      const { data: fallbackData, error: fallbackError } = await supabase
+    // 直接テーブルから学習履歴を取得
+    const { data: fallbackData, error: fallbackError } = await supabase
       .from('quiz_answers')
       .select(`
         question_id,
@@ -50,23 +45,19 @@ export async function POST(request: NextRequest) {
       .eq('difficulty', difficulty)
       .order('created_at', { ascending: false })
 
-      if (fallbackError) {
-        console.error('❌ Fallback query failed:', fallbackError)
-        return NextResponse.json(
-          { error: 'Failed to fetch question history' },
-          { status: 500 }
-        )
-      }
-
-      // 手動で集計
-      const aggregatedHistories = aggregateQuestionHistory(fallbackData || [])
-      
-      console.log(`✅ Question history fetched (fallback): ${aggregatedHistories.length} questions`)
-      return NextResponse.json({ histories: aggregatedHistories })
+    if (fallbackError) {
+      console.error('❌ Query failed:', fallbackError)
+      return NextResponse.json(
+        { error: 'Failed to fetch question history' },
+        { status: 500 }
+      )
     }
 
-    console.log(`✅ Question history fetched: ${histories?.length || 0} questions`)
-    return NextResponse.json({ histories: histories || [] })
+    // 手動で集計
+    const aggregatedHistories = aggregateQuestionHistory(fallbackData || [])
+    
+    console.log(`✅ Question history fetched: ${aggregatedHistories.length} questions`)
+    return NextResponse.json({ histories: aggregatedHistories })
 
   } catch (error) {
     console.error('❌ Error in question history API:', error)
