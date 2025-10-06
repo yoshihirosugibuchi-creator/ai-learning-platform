@@ -314,6 +314,10 @@ export default function QuizSession({
       // 難易度未選択: 正答率ベース最適化
       const selectedQuestions = optimizeQuestionsForUser(filteredQuestions, user.id, profile, isRandomQuiz)
       setSessionQuestions(selectedQuestions)
+      setResults(prev => ({
+        ...prev,
+        totalQuestions: selectedQuestions.length
+      }))
     } else if (difficulties.length === 1 && category) {
       // 単一難易度選択: 優先順位ベース選択（非同期処理）
       console.log(`🎯 Single difficulty selected: ${difficulties[0]} for category: ${category}`)
@@ -549,12 +553,13 @@ export default function QuizSession({
               })
               
               console.log('🚀 Calling saveQuizSession (new XP system)...')
+              const actualTotalQuestions = sessionQuestions.length || questionAnswers.length
               const quizSessionData = {
                 session_start_time: new Date(startTime).toISOString(),
                 session_end_time: new Date().toISOString(),
-                total_questions: finalResults.totalQuestions,
+                total_questions: actualTotalQuestions,
                 correct_answers: finalResults.correctAnswers,
-                accuracy_rate: (finalResults.correctAnswers / finalResults.totalQuestions) * 100,
+                accuracy_rate: actualTotalQuestions > 0 ? (finalResults.correctAnswers / actualTotalQuestions) * 100 : 0,
                 answers: questionAnswers.map(qa => ({
                   question_id: qa.questionId,
                   user_answer: null, // We don't store the answer index in the new format
@@ -566,6 +571,15 @@ export default function QuizSession({
                   difficulty: qa.difficulty
                 }))
               }
+              
+              console.log('📝 Quiz session data being sent:', {
+                total_questions: quizSessionData.total_questions,
+                correct_answers: quizSessionData.correct_answers,
+                accuracy_rate: quizSessionData.accuracy_rate,
+                answers_count: quizSessionData.answers.length,
+                sessionQuestions_length: sessionQuestions.length,
+                questionAnswers_length: questionAnswers.length
+              })
               
               const saveResult = await saveQuizSession(quizSessionData)
               quizResult = {

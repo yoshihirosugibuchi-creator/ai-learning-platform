@@ -217,7 +217,12 @@ export function useXPStats(): UseXPStatsReturn {
       const result = await response.json()
       
       if (!response.ok) {
-        throw new Error(result.message || 'Quiz save failed')
+        console.error('❌ Quiz save API error details:', {
+          status: response.status,
+          statusText: response.statusText,
+          result: result
+        })
+        throw new Error(result.message || result.error || 'Quiz save failed')
       }
       
       console.log('✅ Quiz session saved:', result)
