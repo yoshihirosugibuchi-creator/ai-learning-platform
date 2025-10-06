@@ -2,30 +2,11 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { loadXPSettings, calculateQuizXP, calculateBonusXP, calculateSKP } from '@/lib/xp-settings'
 
-// リクエストヘッダーから認証情報を取得してSupabaseクライアントを作成
-function getSupabaseWithAuth(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  
-  if (!authHeader) {
-    throw new Error('No authorization header')
-  }
-
-  const token = authHeader.replace('Bearer ', '')
-  
+// Supabaseクライアントを作成（認証は後で個別処理）
+function createSupabaseClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      },
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    }
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
 
@@ -58,21 +39,40 @@ export async function POST(request: Request) {
 
     const body: QuizSessionRequest = await request.json()
     
-    // 認証付きSupabaseクライアント作成
-    let supabase
-    try {
-      supabase = getSupabaseWithAuth(request)
-    } catch (authError) {
-      console.error('❌ Auth error:', authError)
+    // Supabaseクライアント作成
+    const supabase = createSupabaseClient()
+    
+    // Cookieから認証情報を取得
+    const authHeader = request.headers.get('authorization') || request.headers.get('cookie')
+    
+    if (!authHeader) {
+      console.error('❌ No authentication provided')
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
     
-    // 認証確認
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    let user
     
-    if (userError || !user) {
-      console.error('❌ User error:', userError)
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    // Authorization headerからトークンを取得
+    if (authHeader.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '')
+      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token)
+      
+      if (tokenError || !tokenUser) {
+        console.error('❌ Token authentication failed:', tokenError)
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      }
+      
+      user = tokenUser
+    } else {
+      // Cookieベース認証（フォールバック）
+      const { data: { user: cookieUser }, error: cookieError } = await supabase.auth.getUser()
+      
+      if (cookieError || !cookieUser) {
+        console.error('❌ Cookie authentication failed:', cookieError)
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      }
+      
+      user = cookieUser
     }
 
     const userId = user.id
