@@ -272,64 +272,6 @@ export type Database = {
         }
         Relationships: []
       }
-      industry_level_targets: {
-        Row: {
-          created_at: string | null
-          display_in_radar: boolean | null
-          id: string
-          importance_weight: number | null
-          industry_category_id: string
-          level: string
-          subcategory_id: string
-          target_xp: number
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          display_in_radar?: boolean | null
-          id?: string
-          importance_weight?: number | null
-          industry_category_id: string
-          level: string
-          subcategory_id: string
-          target_xp?: number
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          display_in_radar?: boolean | null
-          id?: string
-          importance_weight?: number | null
-          industry_category_id?: string
-          level?: string
-          subcategory_id?: string
-          target_xp?: number
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "industry_level_targets_industry_category_id_fkey"
-            columns: ["industry_category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["category_id"]
-          },
-          {
-            foreignKeyName: "industry_level_targets_industry_category_id_fkey"
-            columns: ["industry_category_id"]
-            isOneToOne: false
-            referencedRelation: "category_stats"
-            referencedColumns: ["category_id"]
-          },
-          {
-            foreignKeyName: "industry_level_targets_subcategory_id_fkey"
-            columns: ["subcategory_id"]
-            isOneToOne: false
-            referencedRelation: "subcategories"
-            referencedColumns: ["subcategory_id"]
-          },
-        ]
-      }
       knowledge_card_collection: {
         Row: {
           card_id: number
@@ -1872,10 +1814,6 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
-      insert_initial_industry_targets: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       optimize_session_parameters: {
         Args: { p_user_id: string }
         Returns: {
@@ -2169,8 +2107,3 @@ export type UserLearningProfileUpdate = Database['public']['Tables']['user_learn
 export type SpacedRepetitionSchedule = Database['public']['Tables']['spaced_repetition_schedule']['Row']
 export type SpacedRepetitionScheduleInsert = Database['public']['Tables']['spaced_repetition_schedule']['Insert']
 export type SpacedRepetitionScheduleUpdate = Database['public']['Tables']['spaced_repetition_schedule']['Update']
-
-// Industry Level Targets types
-export type IndustryLevelTarget = Database['public']['Tables']['industry_level_targets']['Row']
-export type IndustryLevelTargetInsert = Database['public']['Tables']['industry_level_targets']['Insert']
-export type IndustryLevelTargetUpdate = Database['public']['Tables']['industry_level_targets']['Update']

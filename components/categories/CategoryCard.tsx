@@ -50,7 +50,8 @@ export default function CategoryCard({
   }
 
   // Check category status based on isActive and isVisible
-  const isActive = category.isActive === true
+  // If isActive is undefined (static data), treat as active for backward compatibility
+  const isActive = category.isActive !== false
   const isComingSoon = category.isActive === false && category.isVisible !== false
   const isClickable = isActive
 

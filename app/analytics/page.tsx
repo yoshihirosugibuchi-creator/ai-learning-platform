@@ -1,11 +1,9 @@
 'use client'
 
-import { useState, useEffect, Suspense, lazy } from 'react'
+import { useState, useEffect, lazy } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { 
   BarChart3, 
   TrendingUp, 
@@ -16,30 +14,26 @@ import {
   Clock,
   Target,
   Lightbulb,
-  Zap,
-  Users,
-  CheckCircle2
+  Zap
 } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { getLearningAnalytics, LearningAnalytics } from '@/lib/supabase-analytics'
 import { aiAnalytics, LearningPattern, OptimalLearningTime, PersonalizedHints } from '@/lib/ai-analytics'
-import { industryAnalytics, IndustrySkillProfile } from '@/lib/industry-analytics'
-import { SimpleSelect, SimpleSelectItem } from '@/components/ui/select'
+import IndustryAnalysisPage from '@/components/analytics/IndustryAnalysisPage'
 import { globalCache, useResourceMonitor } from '@/lib/performance-optimizer'
 import XPStatsCard from '@/components/xp/XPStatsCard'
 import { LearningAnalyticsDashboard } from '@/components/learning-analytics'
 
 // レーダーチャートコンポーネントを遅延読み込み
-const SkillRadarChart = lazy(() => import('@/components/analytics/SkillRadarChart'))
+const _SkillRadarChart = lazy(() => import('@/components/analytics/SkillRadarChart'))
 
 interface CachedAnalyticsData {
   analytics: LearningAnalytics | null
   aiPatterns: LearningPattern | null  
   optimalTime: OptimalLearningTime | null
   hints: PersonalizedHints | null
-  industryProfile: IndustrySkillProfile | null
 }
 
 export default function AnalyticsPage() {
@@ -49,8 +43,6 @@ export default function AnalyticsPage() {
   const [aiPatterns, setAiPatterns] = useState<LearningPattern | null>(null)
   const [optimalTime, setOptimalTime] = useState<OptimalLearningTime | null>(null)
   const [hints, setHints] = useState<PersonalizedHints | null>(null)
-  const [industryProfile, setIndustryProfile] = useState<IndustrySkillProfile | null>(null)
-  const [selectedIndustry, setSelectedIndustry] = useState<string>('consulting')
   const { user, loading } = useAuth()
 
   // パフォーマンス監視（開発環境のみ）
@@ -67,7 +59,7 @@ export default function AnalyticsPage() {
       if (user?.id) {
         setIsLoading(true)
         try {
-          const cacheKey = `analytics_${user.id}_${selectedIndustry}`
+          const cacheKey = `analytics_${user.id}`
           
           // キャッシュから取得を試行
           const cachedData = globalCache.get(cacheKey) as CachedAnalyticsData | undefined
@@ -76,7 +68,6 @@ export default function AnalyticsPage() {
             setAiPatterns(cachedData.aiPatterns)
             setOptimalTime(cachedData.optimalTime)
             setHints(cachedData.hints)
-            setIndustryProfile(cachedData.industryProfile)
             setIsLoading(false)
             return
           }
@@ -96,26 +87,13 @@ export default function AnalyticsPage() {
           setAiPatterns(patterns)
           setOptimalTime(optimalTimeData)
           setHints(hintsData)
-          
-          // Load industry profile if patterns exist
-          let industryData = null
-          if (patterns && patterns.learningFrequency.activeDays > 0) {
-            const progressData: unknown[] = [] // We'll need to extract this from the patterns
-            industryData = await industryAnalytics.analyzeIndustrySkills(
-              user.id, 
-              selectedIndustry, 
-              progressData
-            )
-            setIndustryProfile(industryData)
-          }
 
           // キャッシュに保存（2分間有効）
           globalCache.set(cacheKey, {
             analytics: basicData,
             aiPatterns: patterns,
             optimalTime: optimalTimeData,
-            hints: hintsData,
-            industryProfile: industryData
+            hints: hintsData
           }, 2 * 60 * 1000)
 
         } catch (error) {
@@ -127,7 +105,7 @@ export default function AnalyticsPage() {
     }
 
     loadAnalytics()
-  }, [user?.id, selectedIndustry])
+  }, [user?.id])
 
   // 分析データの更新
   const refreshAnalytics = async () => {
@@ -135,7 +113,7 @@ export default function AnalyticsPage() {
       setIsLoading(true)
       try {
         // キャッシュをクリア
-        const cacheKey = `analytics_${user.id}_${selectedIndustry}`
+        const cacheKey = `analytics_${user.id}`
         globalCache.delete(cacheKey)
         
         // 新しいデータを読み込み
@@ -150,17 +128,6 @@ export default function AnalyticsPage() {
         setAiPatterns(patterns)
         setOptimalTime(optimalTimeData)
         setHints(hintsData)
-
-        // 業界プロファイルも更新
-        if (patterns && patterns.learningFrequency.activeDays > 0) {
-          const progressData: unknown[] = []
-          const industryData = await industryAnalytics.analyzeIndustrySkills(
-            user.id, 
-            selectedIndustry, 
-            progressData
-          )
-          setIndustryProfile(industryData)
-        }
 
       } catch (error) {
         console.error('Error refreshing analytics:', error)
@@ -483,143 +450,7 @@ export default function AnalyticsPage() {
           </TabsContent>
 
           <TabsContent value="industry" className="space-y-6">
-            {/* 業界選択 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  業界別スキル分析
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4">
-                  <label className="text-sm font-medium mb-2 block">分析対象業界を選択:</label>
-                  <SimpleSelect value={selectedIndustry} onValueChange={setSelectedIndustry} className="w-64">
-                    <SimpleSelectItem value="consulting">コンサルティング業界</SimpleSelectItem>
-                    <SimpleSelectItem value="it_si">IT・SI業界</SimpleSelectItem>
-                    <SimpleSelectItem value="manufacturing">製造業</SimpleSelectItem>
-                    <SimpleSelectItem value="finance">金融業界</SimpleSelectItem>
-                    <SimpleSelectItem value="healthcare">ヘルスケア業界</SimpleSelectItem>
-                  </SimpleSelect>
-                </div>
-
-                {industryProfile ? (
-                  <div className="space-y-6">
-                    {/* 業界スコア概要 */}
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <div className="p-4 bg-blue-50 rounded-lg text-center">
-                        <h4 className="font-medium text-blue-900 mb-2">総合スコア</h4>
-                        <p className="text-2xl font-bold text-blue-700">{industryProfile.overallScore}</p>
-                        <p className="text-xs text-blue-600">/{industryProfile.industryName}</p>
-                      </div>
-                      <div className="p-4 bg-green-50 rounded-lg text-center">
-                        <h4 className="font-medium text-green-900 mb-2">強みスキル</h4>
-                        <p className="text-lg font-bold text-green-700">
-                          {industryProfile.skillAreas.filter(s => s.score >= 80).length}
-                        </p>
-                        <p className="text-xs text-green-600">分野</p>
-                      </div>
-                      <div className="p-4 bg-orange-50 rounded-lg text-center">
-                        <h4 className="font-medium text-orange-900 mb-2">改善領域</h4>
-                        <p className="text-lg font-bold text-orange-700">
-                          {industryProfile.skillAreas.filter(s => s.score < 60 && s.importance >= 4).length}
-                        </p>
-                        <p className="text-xs text-orange-600">分野</p>
-                      </div>
-                    </div>
-
-                    {/* スキルレーダーチャート */}
-                    <div className="grid gap-6 lg:grid-cols-2">
-                      <div>
-                        <h4 className="font-medium mb-4">スキル可視化</h4>
-                        <div className="bg-white border rounded-lg p-4">
-                          <Suspense fallback={
-                            <div className="w-full h-80 flex items-center justify-center">
-                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                            </div>
-                          }>
-                            <SkillRadarChart 
-                              data={industryAnalytics.generateRadarChartData(industryProfile)}
-                              title={`${industryProfile.industryName}スキルプロファイル`}
-                            />
-                          </Suspense>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-medium mb-4">スキル領域別詳細</h4>
-                        <div className="space-y-3 max-h-80 overflow-y-auto">
-                          {industryProfile.skillAreas.slice(0, 8).map((skill, index) => (
-                            <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium text-sm">{skill.categoryName}</span>
-                                <div className="flex items-center gap-2">
-                                  <Badge variant={skill.importance >= 4 ? 'default' : 'secondary'} className="text-xs">
-                                    重要度: {skill.importance}/5
-                                  </Badge>
-                                  <Badge variant={skill.score >= 80 ? 'default' : skill.score >= 60 ? 'secondary' : 'destructive'} className="text-xs">
-                                    {skill.score}点
-                                  </Badge>
-                                </div>
-                              </div>
-                              <Progress value={skill.score} className="h-2 mb-1" />
-                              <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>現在: {skill.currentLevel}</span>
-                                <span>目標: {skill.targetLevel}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* レコメンデーション */}
-                    {industryProfile.recommendations.length > 0 && (
-                      <div className="p-4 bg-blue-50 rounded-lg">
-                        <h4 className="font-medium text-blue-900 mb-2 flex items-center">
-                          <Lightbulb className="w-4 h-4 mr-2" />
-                          業界特化レコメンデーション
-                        </h4>
-                        <ul className="text-sm text-blue-800 space-y-1">
-                          {industryProfile.recommendations.map((rec, index) => (
-                            <li key={index} className="flex items-start">
-                              <span className="mr-2">•</span>
-                              {rec}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* 次のアクション */}
-                    {industryProfile.nextActions.length > 0 && (
-                      <div className="p-4 bg-green-50 rounded-lg">
-                        <h4 className="font-medium text-green-900 mb-2 flex items-center">
-                          <CheckCircle2 className="w-4 h-4 mr-2" />
-                          推奨アクション
-                        </h4>
-                        <ul className="text-sm text-green-800 space-y-1">
-                          {industryProfile.nextActions.map((action, index) => (
-                            <li key={index} className="flex items-start">
-                              <span className="mr-2">•</span>
-                              {action}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium mb-2">業界分析準備中</h3>
-                    <p className="text-muted-foreground">
-                      学習データの蓄積により業界特化分析が利用可能になります
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <IndustryAnalysisPage />
           </TabsContent>
 
           <TabsContent value="insights" className="space-y-6">

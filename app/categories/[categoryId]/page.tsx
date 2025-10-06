@@ -34,7 +34,7 @@ export default function CategoryDetailPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [questions, setQuestions] = useState<Question[]>([])
   const [, setLoading] = useState(true)
-  const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>([])
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null)
 
   const categoryId = params.categoryId as string
   const category = [...mainCategories, ...industryCategories]
@@ -126,21 +126,17 @@ export default function CategoryDetailPage() {
     totalAnswers: userCategoryProgress?.totalAnswers || 0
   }
 
-  // 難易度選択の処理
-  const toggleDifficulty = (difficulty: string) => {
-    setSelectedDifficulties(prev => 
-      prev.includes(difficulty) 
-        ? prev.filter(d => d !== difficulty)
-        : [...prev, difficulty]
-    )
+  // 難易度選択の処理（単一選択）
+  const selectDifficulty = (difficulty: string) => {
+    setSelectedDifficulty(prev => prev === difficulty ? null : difficulty)
   }
 
   // クイズ開始処理
   const startQuiz = () => {
     const params = new URLSearchParams()
     params.set('category', categoryId)
-    if (selectedDifficulties.length > 0) {
-      params.set('difficulties', selectedDifficulties.join(','))
+    if (selectedDifficulty) {
+      params.set('difficulties', selectedDifficulty)
     }
     // カテゴリー詳細に戻るためのリファラー情報を追加
     params.set('returnTo', `/categories/${categoryId}`)
@@ -237,20 +233,20 @@ export default function CategoryDetailPage() {
                     <div className="space-y-4">
                       {/* 難易度選択 */}
                       <div className="space-y-3">
-                        <div className="text-sm font-medium text-muted-foreground">難易度選択（複数選択可）</div>
+                        <div className="text-sm font-medium text-muted-foreground">難易度選択（未選択または単一選択）</div>
                         <div className="grid grid-cols-2 gap-2">
                           {skillLevels.map((level) => {
                             // スキルレベルマスタから日本語名を取得
                             const difficulty = level.name // '基礎', '中級', '上級', 'エキスパート'
                             const count = questionsByDifficulty[difficulty] || 0
-                            const isSelected = selectedDifficulties.includes(difficulty)
+                            const isSelected = selectedDifficulty === difficulty
                             
                             return (
                               <Button
                                 key={level.id}
                                 variant={isSelected ? "default" : "outline"}
                                 size="sm"
-                                onClick={() => toggleDifficulty(difficulty)}
+                                onClick={() => selectDifficulty(difficulty)}
                                 disabled={count === 0}
                                 className={`text-xs justify-between ${isSelected ? 'bg-primary text-primary-foreground' : ''}`}
                               >
@@ -266,12 +262,12 @@ export default function CategoryDetailPage() {
                           })}
                         </div>
                         
-                        {selectedDifficulties.length > 0 && (
-                          <div className="text-xs text-muted-foreground">
-                            選択中: {selectedDifficulties.join(', ')} 
-                            {' '}({selectedDifficulties.reduce((sum, diff) => sum + (questionsByDifficulty[diff] || 0), 0)}問)
-                          </div>
-                        )}
+                        <div className="text-xs text-muted-foreground">
+                          {selectedDifficulty 
+                            ? `選択中: ${selectedDifficulty} (${questionsByDifficulty[selectedDifficulty] || 0}問)`
+                            : '未選択: 学習履歴に基づく最適化された難易度で出題'
+                          }
+                        </div>
                       </div>
                       
                       {/* 総問題数を表示 */}
@@ -293,28 +289,25 @@ export default function CategoryDetailPage() {
                           disabled={realStats.totalQuizzes === 0}
                         >
                           <Play className="h-4 w-4 mr-2" />
-                          {selectedDifficulties.length > 0 
-                            ? `選択した難易度でクイズに挑戦 (${selectedDifficulties.reduce((sum, diff) => sum + (questionsByDifficulty[diff] || 0), 0)}問)`
-                            : realStats.totalQuizzes > 0 ? 'このカテゴリーのクイズに挑戦（全難易度）' : '問題準備中'
+                          {selectedDifficulty 
+                            ? `選択した難易度でクイズに挑戦 (${questionsByDifficulty[selectedDifficulty] || 0}問)`
+                            : realStats.totalQuizzes > 0 ? 'このカテゴリーのクイズに挑戦（最適化出題）' : '問題準備中'
                           }
                         </Button>
                         
-                        {selectedDifficulties.length > 0 && (
+                        {selectedDifficulty && (
                           <Button 
                             variant="outline"
-                            onClick={() => setSelectedDifficulties([])}
+                            onClick={() => setSelectedDifficulty(null)}
                             className="w-full text-xs"
                           >
                             難易度選択をクリア
                           </Button>
                         )}
                         
-                        {realStats.totalQuizzes > 0 && (
-                          <p className="text-xs text-muted-foreground text-center">
-                            {selectedDifficulties.length > 0 
-                              ? '選択した難易度で不足する場合は他の難易度も含めて出題されます'
-                              : 'あなたの学習履歴に基づいて最適化された問題を出題します'
-                            }
+                        {realStats.totalQuizzes > 0 && selectedDifficulty && (
+                          <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                            選択した難易度の問題が不足する場合は、他の難易度も含めて出題されます。
                           </p>
                         )}
                       </div>

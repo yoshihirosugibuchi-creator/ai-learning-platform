@@ -5,7 +5,8 @@ import {
   FileText, 
   BarChart3,
   Settings,
-  Sliders
+  Sliders,
+  Target
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -83,6 +84,23 @@ export default function AdminPage() {
               <p className="text-sm text-muted-foreground">
                 XP・レベル・SKPの設定値を<br/>
                 動的に変更・管理します
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/industry-targets">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Target className="h-5 w-5 text-red-600" />
+                <span>業界目標管理</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                業界レベル別の目標XPと<br/>
+                レーダーチャート設定を管理
               </p>
             </CardContent>
           </Card>

@@ -17,7 +17,13 @@ import type { User } from '@supabase/supabase-js'
 import { getRandomWisdomCard, WisdomCard as WisdomCardType } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
 import { getCategoryDisplayName } from '@/lib/category-mapping'
-import { isValidCategoryId, getDifficultyDisplayName } from '@/lib/categories'
+import { isValidCategoryId, getDifficultyDisplayName, getMainCategoryIds } from '@/lib/categories'
+import { selectQuestionsByPriority } from '@/lib/question-priority'
+import { 
+  calculateMainCategoryAccuracy,
+  getDifficultyDistributionByAccuracy,
+  getDefaultDifficultyDistribution 
+} from '@/lib/accuracy-calculator'
 import { addWisdomCardToCollection } from '@/lib/supabase-cards'
 import { UnifiedLearningAnalysisEngine } from '@/lib/unified-learning-analytics'
 // import { saveDetailedQuizData } from '@/lib/supabase-learning' // 未使用のためコメントアウト
@@ -153,14 +159,49 @@ export default function QuizSession({
   //   }
   // }, [isFinished, challengeQuizUpdateData, category]);
 
-  // 学習履歴に基づく問題最適化関数
-  const optimizeQuestionsForUser = useCallback((questions: Question[], userId: string, userProfile: UserProfileWithProgress | null): Question[] => {
+  // 学習履歴に基づく問題最適化関数（ランダムクイズ対応）
+  const optimizeQuestionsForUser = useCallback((
+    questions: Question[], 
+    userId: string, 
+    userProfile: UserProfileWithProgress | null,
+    isRandomQuiz: boolean = false
+  ): Question[] => {
     if (!userProfile || questions.length === 0) {
       return getRandomQuestions(questions, 10)
     }
 
-    // ユーザーのカテゴリー別正答率を取得
     const categoryProgress = userProfile.categoryProgress || []
+
+    // ランダムクイズの場合の処理
+    if (isRandomQuiz) {
+      console.log('🎲 Random quiz - applying overall accuracy optimization')
+      
+      // type='main'カテゴリーに問題を限定
+      const mainCategoryIds = getMainCategoryIds()
+      const mainCategoryQuestions = questions.filter(q => mainCategoryIds.includes(q.category))
+      
+      if (mainCategoryQuestions.length === 0) {
+        console.log('⚠️ No main category questions found, using all questions')
+        return getRandomQuestions(questions, 10)
+      }
+
+      // 全体正答率を計算
+      const overallAccuracy = calculateMainCategoryAccuracy(categoryProgress, mainCategoryIds)
+      
+      console.log(`📊 Overall accuracy for main categories: ${(overallAccuracy.accuracy * 100).toFixed(1)}% (confidence: ${overallAccuracy.confidence})`)
+      
+      // データ信頼度が低い場合はデフォルト配分
+      if (!overallAccuracy.hasData || overallAccuracy.confidence === 'low') {
+        console.log('⚠️ Low data confidence, using default distribution')
+        return optimizeByDistribution(mainCategoryQuestions, getDefaultDifficultyDistribution())
+      }
+      
+      // 正答率に基づく配分
+      const distribution = getDifficultyDistributionByAccuracy(overallAccuracy.accuracy)
+      return optimizeByDistribution(mainCategoryQuestions, distribution)
+    }
+
+    // カテゴリー別クイズの場合（既存ロジック）
     const categoryStats = categoryProgress.find((cp: CategoryProgress) => cp.category_id === category)
     
     if (!categoryStats) {
@@ -189,23 +230,17 @@ export default function QuizSession({
     const accuracy = categoryStats.correct_answers / Math.max(categoryStats.total_answers, 1)
     console.log(`📈 User accuracy for ${category}: ${(accuracy * 100).toFixed(1)}%`)
     
-    let difficultyDistribution: Record<string, number>
-    if (accuracy < 0.5) {
-      // 正答率50%未満: 基礎重視
-      difficultyDistribution = { '基礎': 6, '中級': 3, '上級': 1, 'エキスパート': 0 }
-    } else if (accuracy < 0.7) {
-      // 正答率50-70%: 中級重視
-      difficultyDistribution = { '基礎': 3, '中級': 5, '上級': 2, 'エキスパート': 0 }
-    } else if (accuracy < 0.85) {
-      // 正答率70-85%: 上級重視
-      difficultyDistribution = { '基礎': 2, '中級': 3, '上級': 4, 'エキスパート': 1 }
-    } else {
-      // 正答率85%以上: エキスパート重視
-      difficultyDistribution = { '基礎': 1, '中級': 2, '上級': 4, 'エキスパート': 3 }
-    }
-    
+    // 配分を計算して適用
+    const difficultyDistribution = getDifficultyDistributionByAccuracy(accuracy)
+    return optimizeByDistribution(questions, difficultyDistribution)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category])
+
+  // 難易度配分に基づく問題選択ヘルパー関数
+  const optimizeByDistribution = useCallback((questions: Question[], distribution: Record<string, number>): Question[] => {
     const optimized: Question[] = []
-    for (const [difficulty, count] of Object.entries(difficultyDistribution)) {
+    
+    for (const [difficulty, count] of Object.entries(distribution)) {
       const difficultyQuestions = questions.filter(q => q.difficulty === difficulty)
       optimized.push(...getRandomQuestions(difficultyQuestions, count))
     }
@@ -216,11 +251,12 @@ export default function QuizSession({
       optimized.push(...getRandomQuestions(remaining, 10 - optimized.length))
     }
     
-    console.log(`🎯 Optimized quiz for accuracy ${(accuracy * 100).toFixed(1)}%:`, 
-      Object.entries(difficultyDistribution).map(([d, c]) => `${d}:${c}`).join(', '))
+    console.log(`🎯 Applied difficulty distribution:`, 
+      Object.entries(distribution).map(([d, c]) => `${d}:${c}`).join(', ')
+    )
     
     return optimized.slice(0, 10)
-  }, [category])
+  }, [])
 
   useEffect(() => {
     // クイズ開始時の状態リセット
@@ -271,20 +307,43 @@ export default function QuizSession({
       }
     }
     
-    // 学習履歴に基づく最適化（難易度選択なしの場合）
-    let selectedQuestions: Question[]
+    // 学習履歴に基づく最適化
+    const isRandomQuiz = !category // categoryが未指定の場合はランダムクイズ
+    
     if (!difficulties || difficulties.length === 0) {
-      selectedQuestions = optimizeQuestionsForUser(filteredQuestions, user.id, profile)
+      // 難易度未選択: 正答率ベース最適化
+      const selectedQuestions = optimizeQuestionsForUser(filteredQuestions, user.id, profile, isRandomQuiz)
+      setSessionQuestions(selectedQuestions)
+    } else if (difficulties.length === 1 && category) {
+      // 単一難易度選択: 優先順位ベース選択（非同期処理）
+      console.log(`🎯 Single difficulty selected: ${difficulties[0]} for category: ${category}`)
+      selectQuestionsByPriority(filteredQuestions, user.id, category, difficulties[0], 10)
+        .then(selectedQuestions => {
+          setSessionQuestions(selectedQuestions)
+          setResults(prev => ({
+            ...prev,
+            totalQuestions: selectedQuestions.length
+          }))
+        })
+        .catch(error => {
+          console.error('❌ Priority selection failed, falling back to random:', error)
+          const fallbackQuestions = getRandomQuestions(filteredQuestions, 10)
+          setSessionQuestions(fallbackQuestions)
+          setResults(prev => ({
+            ...prev,
+            totalQuestions: fallbackQuestions.length
+          }))
+        })
+      return // 非同期処理のため早期リターン
     } else {
-      selectedQuestions = getRandomQuestions(filteredQuestions, 10)
+      // 複数難易度選択またはその他: ランダム選択
+      const selectedQuestions = getRandomQuestions(filteredQuestions, 10)
+      setSessionQuestions(selectedQuestions)
+      setResults(prev => ({
+        ...prev,
+        totalQuestions: selectedQuestions.length
+      }))
     }
-    
-    setSessionQuestions(selectedQuestions)
-    
-    setResults(prev => ({
-      ...prev,
-      totalQuestions: selectedQuestions.length
-    }))
   }, [questions, category, level, difficulties, user.id, profile, optimizeQuestionsForUser])
 
   // Helper functions for cognitive load and flow state calculation
@@ -867,20 +926,44 @@ export default function QuizSession({
               }
               
               // 新しい問題セットを生成
-              let newQuestions: Question[]
+              const isRandomQuiz = !category // categoryが未指定の場合はランダムクイズ
+              
               if (!difficulties || difficulties.length === 0) {
-                newQuestions = optimizeQuestionsForUser(filteredQuestions, user.id, profile)
+                const newQuestions = optimizeQuestionsForUser(filteredQuestions, user.id, profile, isRandomQuiz)
+                setSessionQuestions(newQuestions)
+                setResults(prev => ({
+                  ...prev,
+                  totalQuestions: newQuestions.length
+                }))
+              } else if (difficulties.length === 1 && category) {
+                // 単一難易度選択: 優先順位ベース選択（非同期処理）
+                selectQuestionsByPriority(filteredQuestions, user.id, category, difficulties[0], 10)
+                  .then(newQuestions => {
+                    setSessionQuestions(newQuestions)
+                    setResults(prev => ({
+                      ...prev,
+                      totalQuestions: newQuestions.length
+                    }))
+                  })
+                  .catch(error => {
+                    console.error('❌ Priority selection failed in refresh, falling back to random:', error)
+                    const fallbackQuestions = getRandomQuestions(filteredQuestions, 10)
+                    setSessionQuestions(fallbackQuestions)
+                    setResults(prev => ({
+                      ...prev,
+                      totalQuestions: fallbackQuestions.length
+                    }))
+                  })
               } else {
-                newQuestions = getRandomQuestions(filteredQuestions, 10)
+                const newQuestions = getRandomQuestions(filteredQuestions, 10)
+                setSessionQuestions(newQuestions)
+                setResults(prev => ({
+                  ...prev,
+                  totalQuestions: newQuestions.length
+                }))
               }
               
-              setSessionQuestions(newQuestions)
-              setResults(prev => ({
-                ...prev,
-                totalQuestions: newQuestions.length
-              }))
-              
-              console.log(`✅ New question set generated: ${newQuestions.length} questions`)
+              console.log(`✅ New question set generation initiated`)
             }} className="flex-1">
               もう一度挑戦
             </Button>

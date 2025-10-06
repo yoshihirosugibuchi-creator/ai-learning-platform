@@ -79,7 +79,7 @@ export default function QuizPage() {
     return <LoadingScreen message="問題を読み込んでいます..." />
   }
 
-  // 難易度パラメータを配列に変換
+  // 難易度パラメータを配列に変換（単一選択でも配列として処理）
   const difficulties = difficultiesParam ? difficultiesParam.split(',') : undefined
 
   return (

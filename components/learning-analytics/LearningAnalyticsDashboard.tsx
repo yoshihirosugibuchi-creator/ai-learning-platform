@@ -57,11 +57,20 @@ export function LearningAnalyticsDashboard({
       setLoading(true)
       setError(null)
 
-      // Get user learning profile
-      const profile = await analyticsEngine.getUserLearningProfile()
+      // Get actual learning statistics from XP system
+      const [_profile, xpStatsResponse] = await Promise.all([
+        analyticsEngine.getUserLearningProfile(),
+        fetch('/api/xp-stats').then(res => res.json())
+      ])
       
-      // Determine learning stage based on data availability
-      const stage = determineLearningStage(profile)
+      // Calculate actual learning days and sessions from XP stats
+      const actualData = {
+        learningDaysCount: xpStatsResponse.stats?.learningDaysCount || 0,
+        totalSessions: (xpStatsResponse.stats?.quizSessionsCompleted || 0) + (xpStatsResponse.stats?.courseSessionsCompleted || 0)
+      }
+      
+      // Determine learning stage based on actual data
+      const stage = determineLearningStage(actualData)
       setLearningStage(stage)
 
       // If sufficient data exists, get analytics
@@ -168,10 +177,13 @@ export function LearningAnalyticsDashboard({
     }
   }, [isInSession, currentSessionId, updateRealTimeMetrics])
 
-  const determineLearningStage = (_profile: unknown): LearningStage => {
-    // Mock calculation - in production, calculate based on actual data
-    const daysActive = 15 // Calculate from user's learning history
-    const sessionCount = 45 // Get from analytics
+  const determineLearningStage = (profile: {
+    learningDaysCount?: number
+    totalSessions?: number
+  }): LearningStage => {
+    // 実際のデータから計算
+    const daysActive = profile?.learningDaysCount || 0
+    const sessionCount = profile?.totalSessions || 0
 
     if (daysActive < 7 || sessionCount < 10) {
       return {
@@ -197,19 +209,30 @@ export function LearningAnalyticsDashboard({
     }
   }
 
-  const transformReviewItems = (reviews: Record<string, unknown>[]): ReviewItem[] => {
+  const transformReviewItems = (reviews: Array<{
+    id?: string
+    content_id?: string
+    content_type?: string
+    category_id?: string
+    subcategory_id?: string
+    days_overdue?: number | null
+    mastery_level?: number | null
+    priority_score?: number | null
+    urgency_score?: number | null
+    review_count?: number | null
+  }>): ReviewItem[] => {
     return reviews.map((review) => ({
-      contentId: (review.id as string) || (review.content_id as string) || 'unknown',
-      contentType: ((review.content_type as string) || 'quiz_question') as 'quiz_question' | 'course_material' | 'concept' | 'skill',
-      categoryId: review.category_id as string,
-      categoryName: review.category_id as string, // Would get actual name from categories
-      subcategoryName: review.subcategory_id as string,
-      daysSinceLearning: (review.days_overdue as number) || 1,
-      predictedRetention: ((review.mastery_level as number) || 0.5) * 100,
-      urgencyScore: (review.priority_score as number) || 5,
-      recommendedAction: ((review.urgency_score as number) || 5) > 8 ? 'URGENT_REVIEW' : 'REVIEW_SOON',
-      masteryLevel: (review.mastery_level as number) || 0.5,
-      reviewCount: (review.review_count as number) || 0,
+      contentId: review.id || review.content_id || 'unknown',
+      contentType: (review.content_type || 'quiz_question') as 'quiz_question' | 'course_material' | 'concept' | 'skill',
+      categoryId: review.category_id || '',
+      categoryName: review.category_id || '', // Would get actual name from categories
+      subcategoryName: review.subcategory_id || '',
+      daysSinceLearning: review.days_overdue || 1,
+      predictedRetention: (review.mastery_level || 0.5) * 100,
+      urgencyScore: review.priority_score || 5,
+      recommendedAction: (review.urgency_score || 5) > 8 ? 'URGENT_REVIEW' : 'REVIEW_SOON',
+      masteryLevel: review.mastery_level || 0.5,
+      reviewCount: review.review_count || 0,
       nextOptimalDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
     }))
   }

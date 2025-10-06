@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') // 'main', 'industry', or null (all)
-    const activeOnly = searchParams.get('active_only') === 'true'
+    const activeOnly = searchParams.get('active_only') !== 'false' // デフォルトでアクティブのみ
 
     // クエリ構築
     let query = supabase
@@ -31,8 +31,8 @@ export async function GET(request: Request) {
       query = query.eq('type', type)
     }
 
-    // アクティブフィルター (デフォルトはアクティブのみ)
-    if (activeOnly !== false) {
+    // アクティブフィルター
+    if (activeOnly) {
       query = query.eq('is_active', true)
     }
 

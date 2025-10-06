@@ -97,6 +97,16 @@ async function getQuestionsByCategoryFromDB(category: string, limit: number = 10
   }
 }
 
+// Fisher-Yates Shuffle実装（真のランダム化）
+function fisherYatesShuffle<T>(array: T[]): T[] {
+  const shuffled = [...array]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
 // ランダム問題取得（オーバーロード対応）
 export function getRandomQuestions(questions: Question[], count?: number): Question[]
 export function getRandomQuestions(count?: number): Promise<Question[]>
@@ -106,7 +116,7 @@ export function getRandomQuestions(questionsOrCount?: Question[] | number, count
     const questions = questionsOrCount
     const finalCount = count || 10
     const activeQuestions = questions.filter(q => !q.deleted)
-    const shuffled = [...activeQuestions].sort(() => 0.5 - Math.random())
+    const shuffled = fisherYatesShuffle(activeQuestions)
     return shuffled.slice(0, finalCount)
   }
   
@@ -206,6 +216,6 @@ export function getQuestionsByCategoryLegacy(questions: Question[], category: st
 
 export function getRandomQuestionsLegacy(questions: Question[], count: number = 10): Question[] {
   const activeQuestions = questions.filter(q => !q.deleted)
-  const shuffled = [...activeQuestions].sort(() => 0.5 - Math.random())
+  const shuffled = fisherYatesShuffle(activeQuestions)
   return shuffled.slice(0, count)
 }

@@ -9,7 +9,7 @@ import {
 } from './types/category'
 
 // フロントエンド用APIクライアント（クライアントサイドで使用）
-const API_BASE_URL = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000'
+const API_BASE_URL = process.env.NODE_ENV === 'production' ? '' : ''
 
 // DB APIレスポンス型定義
 interface DBCategory {
@@ -48,6 +48,16 @@ const _cachedSubcategories: Subcategory[] | null = null
 let cachedSkillLevels: SkillLevelDefinition[] | null = null
 let cacheTimestamp: number = 0
 const CACHE_DURATION = 5 * 60 * 1000 // 5分間キャッシュ
+
+// キャッシュクリア関数
+export function clearCategoriesCache() {
+  cachedCategories = null
+  cachedSkillLevels = null
+  cacheTimestamp = 0
+}
+
+// 強制的にキャッシュをクリア（即座に実行）
+clearCategoriesCache()
 
 /**
  * DB APIクライアント関数
@@ -471,11 +481,11 @@ export async function getCategories(options?: {
   try {
     const queryParams = new URLSearchParams()
     if (options?.type) queryParams.set('type', options.type)
-    if (options?.activeOnly) queryParams.set('active_only', 'true')
+    if (options?.activeOnly !== false) queryParams.set('active_only', 'true') // デフォルトはactiveのみ
     
     const response = await fetchFromAPI<{categories: DBCategory[]}>(`/categories?${queryParams}`)
     
-    if (response?.categories) {
+    if (response?.categories && response.categories.length > 0) {
       // サブカテゴリー情報も一緒に取得
       const allSubcategoriesResponse = await fetchFromAPI<{subcategories: DBSubcategory[]}>('/subcategories')
       const subcategoriesMap = new Map<string, string[]>()
@@ -644,6 +654,18 @@ export function getAllValidCategoryIds(): string[] {
     ...staticMainCategories.map(cat => cat.id),
     ...staticIndustryCategories.map(cat => cat.id)
   ]
+}
+
+// type='main'のカテゴリーIDのみを取得（ランダムクイズ用）
+export function getMainCategoryIds(): string[] {
+  return staticMainCategories
+    .filter(cat => cat.isVisible !== false) // 非表示カテゴリーを除外
+    .map(cat => cat.id)
+}
+
+// カテゴリーIDがtype='main'かどうかを判定
+export function isMainCategory(categoryId: string): boolean {
+  return staticMainCategories.some(cat => cat.id === categoryId)
 }
 
 /**

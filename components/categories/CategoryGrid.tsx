@@ -11,8 +11,6 @@ import { MainCategory, IndustryCategory, SkillLevel, SkillLevelDefinition } from
 import { Question } from '@/lib/types'
 import { Search, Filter, Users, Building2, TrendingUp, BookOpen } from 'lucide-react'
 import { useUserContext } from '@/contexts/UserContext'
-import { getUserQuizResults } from '@/lib/storage'
-import { getAllQuestions } from '@/lib/questions'
 
 interface CategoryGridProps {
   showSearch?: boolean
@@ -40,7 +38,7 @@ export default function CategoryGrid({
   categoryStats
 }: CategoryGridProps) {
   const { user } = useUserContext()
-  const [allQuestions, setAllQuestions] = useState<Question[]>([])
+  const [_allQuestions, setAllQuestions] = useState<Question[]>([])
   const [dbCategories, setDbCategories] = useState<(MainCategory | IndustryCategory)[]>([])
   const [dbSkillLevels, setDbSkillLevels] = useState<SkillLevelDefinition[]>([])
   const [loading, setLoading] = useState(true)
@@ -48,21 +46,40 @@ export default function CategoryGrid({
   // Load all questions and DB data on component mount
   useEffect(() => {
     const loadData = async () => {
+      console.log('🔄 CategoryGrid: Starting data load...')
+      
+      // Set a timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.warn('⚠️ CategoryGrid: Data loading timeout, using fallback')
+        setAllQuestions([])
+        setDbCategories([...mainCategories, ...industryCategories])
+        setDbSkillLevels(skillLevels)
+        setLoading(false)
+      }, 10000) // 10 seconds timeout
+      
       try {
-        const [questions, categories, skillLevels] = await Promise.all([
-          getAllQuestions(),
-          getCategories({ activeOnly: false }), // Show all categories including coming soon
-          getSkillLevels()
-        ])
-        setAllQuestions(questions)
+        console.log('📁 CategoryGrid: Loading categories...')
+        const categories = await getCategories({ activeOnly: false }) // Show all categories including coming soon
+        console.log('✅ CategoryGrid: Categories loaded:', categories.length)
+        
+        console.log('🎯 CategoryGrid: Loading skill levels...')
+        const skillLevels = await getSkillLevels()
+        console.log('✅ CategoryGrid: Skill levels loaded:', skillLevels.length)
+        
+        clearTimeout(timeoutId)
+        setAllQuestions([]) // Questions not needed for category display
         setDbCategories(categories)
         setDbSkillLevels(skillLevels)
+        console.log('✅ CategoryGrid: All data loaded successfully (questions skipped for performance)')
       } catch (error) {
-        console.error('Error loading data:', error)
+        console.error('❌ CategoryGrid: Error loading data:', error)
+        clearTimeout(timeoutId)
         setAllQuestions([])
         setDbCategories([...mainCategories, ...industryCategories]) // Fallback to static
         setDbSkillLevels(skillLevels) // Fallback to static
+        console.log('🔧 CategoryGrid: Using fallback data')
       } finally {
+        console.log('🏁 CategoryGrid: Setting loading to false')
         setLoading(false)
       }
     }
@@ -102,89 +119,27 @@ export default function CategoryGrid({
     [dbIndustryCategories, filterCategories]
   )
 
-  // Calculate real category stats based on user's quiz results and available questions
+  // Simplified stats - for category display we don't need detailed calculations
   const realStats = useMemo(() => {
-    if (!user || allQuestions.length === 0) {
+    if (!user) {
       return {}
     }
     
-    const userQuizResults = getUserQuizResults(user.id)
-    
-    // Group questions by category to get total available questions per category
-    const questionsByCategory = allQuestions.reduce((acc, question) => {
-      if (!acc[question.category]) {
-        acc[question.category] = []
-      }
-      acc[question.category].push(question)
-      return acc
-    }, {} as Record<string, Question[]>)
-    
-    // Calculate stats for each category
+    // Initialize basic stats for all categories
     const categoryStats: Record<string, Record<string, unknown>> = {}
-    
-    // First, initialize all categories with zero stats
     const allCategoryIds = [...filteredMainCategories, ...filteredIndustryCategories].map(cat => cat.id)
+    
     allCategoryIds.forEach(categoryId => {
-      const totalQuestions = questionsByCategory[categoryId]?.length || 0
       categoryStats[categoryId] = {
-        totalContents: totalQuestions,
+        totalContents: 10, // Placeholder - will be loaded asynchronously if needed
         completedContents: 0,
         averageScore: 0,
         learningTime: 0
       }
     })
     
-    // Then update with actual user progress
-    Object.keys(questionsByCategory).forEach(categoryId => {
-      const totalQuestions = questionsByCategory[categoryId].length
-      
-      // Get user's quiz results for this category
-      const categoryResults = userQuizResults.filter(result => 
-        result.categoryScores && result.categoryScores[categoryId]
-      )
-      
-      // Calculate completed questions and average score
-      let totalAnswered = 0
-      let totalCorrect = 0
-      let totalTime = 0
-      
-      categoryResults.forEach(result => {
-        const categoryScore = result.categoryScores[categoryId]
-        if (categoryScore) {
-          totalAnswered += categoryScore.total
-          totalCorrect += categoryScore.correct
-          totalTime += result.timeSpent || 0
-        }
-      })
-      
-      const averageScore = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0
-      const completionRate = totalQuestions > 0 ? Math.min(totalAnswered / totalQuestions, 1) : 0
-      const completedContents = totalQuestions > 0 ? Math.round(totalQuestions * completionRate) : 0
-      const learningTimeMinutes = totalTime > 0 ? Math.round(totalTime / 1000 / 60) : 0
-      
-      // Ensure all values are valid numbers
-      const safeStats = {
-        totalContents: Math.max(0, totalQuestions || 0),
-        completedContents: Math.max(0, completedContents || 0),
-        averageScore: Math.max(0, averageScore || 0),
-        learningTime: Math.max(0, learningTimeMinutes || 0)
-      }
-      
-      categoryStats[categoryId] = safeStats
-      
-      // Debug logging for all categories
-      console.log(`📊 Category ${categoryId}:`, {
-        totalQuestions: safeStats.totalContents,
-        completedContents: safeStats.completedContents,
-        averageScore: safeStats.averageScore,
-        learningTime: safeStats.learningTime,
-        userAnswered: totalAnswered,
-        completionRate: Math.round(completionRate * 100) + '%'
-      })
-    })
-    
     return categoryStats
-  }, [user, allQuestions, filteredMainCategories, filteredIndustryCategories])
+  }, [user, filteredMainCategories, filteredIndustryCategories])
   
   const statsToUse = categoryStats || realStats
 
@@ -198,6 +153,17 @@ export default function CategoryGrid({
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           <p className="text-muted-foreground mt-2">カテゴリーを読み込んでいます...</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            問題が続く場合はページを再読み込みしてください
+          </p>
+          <div className="mt-4">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="text-sm text-blue-600 hover:text-blue-800 underline"
+            >
+              ページを再読み込み
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -303,31 +269,9 @@ export default function CategoryGrid({
             <CardContent className="pt-6 text-center">
               <div className="flex items-center justify-center space-x-2">
                 <TrendingUp className="h-5 w-5 text-purple-500" />
-                <div className="text-2xl font-bold">
-                  {(() => {
-                    const validStats = Object.values(statsToUse).filter((stat): stat is {
-                      totalContents: number
-                      completedContents: number
-                      averageScore: number
-                      learningTime: number
-                    } => {
-                      if (!stat || typeof stat !== 'object') return false
-                      const obj = stat as Record<string, unknown>
-                      return 'totalContents' in obj && typeof obj.totalContents === 'number' && obj.totalContents > 0
-                    })
-                    if (validStats.length === 0) return '0'
-                    
-                    const totalProgress = validStats.reduce((acc, stat) => {
-                      const rate = stat.totalContents > 0 ? (stat.completedContents / stat.totalContents) : 0
-                      return acc + rate
-                    }, 0)
-                    
-                    const averageRate = totalProgress / validStats.length
-                    return Math.round(averageRate * 100)
-                  })()}%
-                </div>
+                <div className="text-2xl font-bold">-</div>
               </div>
-              <p className="text-sm text-muted-foreground">クイズ消化率</p>
+              <p className="text-sm text-muted-foreground">進捗率</p>
             </CardContent>
           </Card>
         </div>

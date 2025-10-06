@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
-import CategoryGrid from '@/components/categories/CategoryGrid'
+import FastCategoryGrid from '@/components/categories/FastCategoryGrid'
 import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function CategoriesPage() {
@@ -23,19 +23,8 @@ export default function CategoriesPage() {
       return
     }
 
-    // 認証完了後、学習データを事前にプリロード
-    const preloadLearningData = async () => {
-      try {
-        const { getLearningCourses } = await import('@/lib/learning/data')
-        console.log('📦 Categories: Preloading learning data...')
-        await getLearningCourses()
-        console.log('✅ Categories: Learning data preloaded')
-      } catch (error) {
-        console.warn('⚠️ Categories: Failed to preload learning data:', error)
-      }
-    }
-
-    preloadLearningData()
+    // Note: Removed learning data preloading for faster page load
+    // Learning data will be loaded when actually needed
   }, [user, authLoading, router])
 
   const handleCategoryClick = (categoryId: string) => {
@@ -54,12 +43,9 @@ export default function CategoriesPage() {
       <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 
       <main className="container mx-auto px-4 py-6">
-        <CategoryGrid
+        <FastCategoryGrid
           title="学習カテゴリー"
           description="ALEで学ぶことができるスキルの一覧です"
-          showSearch={false}
-          showFilter={false}
-          showStats={false}
           onCategoryClick={handleCategoryClick}
         />
       </main>

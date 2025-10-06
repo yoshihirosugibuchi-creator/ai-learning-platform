@@ -37,7 +37,7 @@ import { getUserSKPBalance, getUserSKPTransactions, SKPTransaction } from '@/lib
 import { getUserBadges } from '@/lib/supabase-badges'
 import { UserBadge } from '@/lib/types/learning'
 import { updateUserProfile } from '@/lib/supabase-user'
-import { getSubcategories, getCategories } from '@/lib/categories'
+import { getSubcategories, getCategories, clearCategoriesCache, mainCategories as staticMainCategories, industryCategories as staticIndustryCategories } from '@/lib/categories'
 import type { Subcategory, IndustryCategory, MainCategory } from '@/lib/types/category'
 import { useXPStats } from '@/hooks/useXPStats'
 import ProfileEditModal from '@/components/profile/ProfileEditModal'
@@ -79,14 +79,25 @@ export default function ProfilePage() {
     const loadCategories = async () => {
       setCategoriesLoading(true)
       try {
+        // キャッシュクリアして最新データを取得
+        clearCategoriesCache()
+        
         const [industryResult, mainResult] = await Promise.all([
           getCategories({ type: 'industry', activeOnly: true }),
           getCategories({ type: 'main', activeOnly: true })
         ])
-        setIndustryCategories(industryResult as IndustryCategory[])
-        setMainCategories(mainResult as MainCategory[])
+        
+        // APIから正しくデータが取得できた場合はそれを使用、そうでなければ静的データを使用
+        const industryData = (industryResult && industryResult.length > 0) ? industryResult : staticIndustryCategories
+        const mainData = (mainResult && mainResult.length > 0) ? mainResult : staticMainCategories
+        
+        setIndustryCategories(industryData as IndustryCategory[])
+        setMainCategories(mainData as MainCategory[])
       } catch (error) {
         console.error('Failed to load categories:', error)
+        // エラーの場合は静的データをフォールバックとして使用
+        setIndustryCategories(staticIndustryCategories)
+        setMainCategories(staticMainCategories)
       } finally {
         setCategoriesLoading(false)
       }

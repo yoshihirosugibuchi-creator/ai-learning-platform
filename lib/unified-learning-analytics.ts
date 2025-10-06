@@ -476,8 +476,82 @@ export class UnifiedLearningAnalysisEngine {
   }
 
   // Private helper methods
+  private async analyzeTimePatternsWithPython() {
+    // const _supabaseClient = supabase  // Commented out unused variable
+    const { data } = await supabase
+      .from('unified_learning_session_analytics')
+      .select('*')
+      .eq('user_id', this.userId)
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+
+    if (!data?.length) {
+      return {
+        optimalHours: [9, 10, 14, 15],
+        weeklyPerformance: [],
+        fatigueThreshold: 60
+      }
+    }
+
+    // 朝と夜のパフォーマンスデータを抽出
+    const morningAccuracies: number[] = []
+    const eveningAccuracies: number[] = []
+    const dailyPerformance = new Map<number, { total: number, correct: number, count: number }>()
+
+    data.forEach(session => {
+      const hour = new Date(session.session_start_time).getHours()
+      const day = new Date(session.session_start_time).getDay()
+      const accuracy = session.accuracy_rate || 0
+      
+      // 朝 (6-12時) vs 夜 (18-24時) の分類
+      if (hour >= 6 && hour < 12) {
+        morningAccuracies.push(accuracy * 100)
+      } else if (hour >= 18 && hour < 24) {
+        eveningAccuracies.push(accuracy * 100)
+      }
+
+      // 日別パフォーマンス
+      if (!dailyPerformance.has(day)) {
+        dailyPerformance.set(day, { total: 0, correct: 0, count: 0 })
+      }
+      const dayData = dailyPerformance.get(day)!
+      dayData.total += session.questions_total || 0
+      dayData.correct += session.questions_correct || 0
+      dayData.count += 1
+    })
+
+    // 統計分析をスキップ（Node.js統計ライブラリ移行のため一時的に無効化）
+    // const _timeAnalysisResult = null  // Commented out unused variable
+    console.log('Time pattern analysis with advanced statistics engine will be implemented')
+
+    // 最適時間帯の決定（基本的な平均値比較）
+    let optimalHours = [9, 10, 14, 15] // デフォルト
+    if (morningAccuracies.length >= 3 && eveningAccuracies.length >= 3) {
+      const morningAvg = morningAccuracies.reduce((sum, acc) => sum + acc, 0) / morningAccuracies.length
+      const eveningAvg = eveningAccuracies.reduce((sum, acc) => sum + acc, 0) / eveningAccuracies.length
+      
+      if (Math.abs(morningAvg - eveningAvg) > 5) { // 5%以上の差があれば考慮
+        optimalHours = morningAvg > eveningAvg ? [8, 9, 10, 11] : [18, 19, 20, 21]
+      }
+    }
+
+    // 週間パフォーマンス
+    const weeklyPerformance: DayPerformance[] = Array.from(dailyPerformance.entries())
+      .map(([day, data]) => ({
+        dayOfWeek: day,
+        averageAccuracy: data.total > 0 ? (data.correct / data.total) * 100 : 0,
+        averageEngagement: 70, // Default value
+        sessionCount: data.count
+      }))
+
+    return {
+      optimalHours,
+      weeklyPerformance,
+      fatigueThreshold: 60
+    }
+  }
+
   private async analyzeTimePatterns() {
-    const supabaseClient = supabase
+    // const _supabaseClient = supabase  // Commented out unused variable
     const { data } = await supabase
       .from('unified_learning_session_analytics')
       .select('*')
@@ -573,7 +647,7 @@ export class UnifiedLearningAnalysisEngine {
   }
 
   private async analyzeCognitiveLoad() {
-    const supabaseClient = supabase
+    // const _supabaseClient = supabase  // Commented out unused variable
     const { data } = await supabase
       .from('unified_learning_session_analytics')
       .select('cognitive_load_score, duration_seconds')
@@ -601,7 +675,7 @@ export class UnifiedLearningAnalysisEngine {
   }
 
   private async analyzeFlowState() {
-    const supabaseClient = supabase
+    // const _supabaseClient = supabase  // Commented out unused variable
     const { data } = await supabase
       .from('unified_learning_session_analytics')
       .select('flow_state_index, difficulty_level, accuracy_rate')
