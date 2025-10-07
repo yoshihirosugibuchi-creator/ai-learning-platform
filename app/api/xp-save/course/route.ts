@@ -401,12 +401,19 @@ export async function POST(request: Request) {
           data: existingCategoryStats 
         })
 
+        // 🔧 修正: quiz_xp と course_xp を分離して管理
+        const newCourseXP = (existingCategoryStats?.course_xp || 0) + earnedXP
+        const existingQuizXP = existingCategoryStats?.quiz_xp || 0
+        const newTotalXP = existingQuizXP + newCourseXP
+
         const categoryStatsData = {
           user_id: userId,
           category_id: body.category_id,
           quiz_questions_answered: (existingCategoryStats?.quiz_questions_answered || 0) + 1,
           quiz_questions_correct: (existingCategoryStats?.quiz_questions_correct || 0) + (body.session_quiz_correct ? 1 : 0),
-          total_xp: (existingCategoryStats?.total_xp || 0) + earnedXP,
+          quiz_xp: existingQuizXP, // クイズXPは変更なし
+          course_xp: newCourseXP, // コースXPに今回のXPを加算
+          total_xp: newTotalXP, // total = quiz + course
           course_sessions_completed: (existingCategoryStats?.course_sessions_completed || 0) + 1,
           quiz_sessions_completed: existingCategoryStats?.quiz_sessions_completed || 0,
           quiz_average_accuracy: 0, // 後で計算
@@ -430,7 +437,10 @@ export async function POST(request: Request) {
         } else {
           console.log('✅ Course category stats updated:', {
             categoryId: body.category_id,
-            newXP: categoryStatsData.total_xp,
+            quizXP: categoryStatsData.quiz_xp,
+            courseXP: categoryStatsData.course_xp,
+            totalXP: categoryStatsData.total_xp,
+            earnedXP: earnedXP,
             courseSessions: categoryStatsData.course_sessions_completed
           })
         }
@@ -457,13 +467,20 @@ export async function POST(request: Request) {
             data: existingSubcategoryStats 
           })
 
+        // 🔧 修正: サブカテゴリーもquiz_xp と course_xp を分離して管理
+        const newSubcategoryCourseXP = (existingSubcategoryStats?.course_xp || 0) + earnedXP
+        const existingSubcategoryQuizXP = existingSubcategoryStats?.quiz_xp || 0
+        const newSubcategoryTotalXP = existingSubcategoryQuizXP + newSubcategoryCourseXP
+
         const subcategoryStatsData = {
           user_id: userId,
           category_id: body.category_id,
           subcategory_id: body.subcategory_id,
           quiz_questions_answered: (existingSubcategoryStats?.quiz_questions_answered || 0) + 1,
           quiz_questions_correct: (existingSubcategoryStats?.quiz_questions_correct || 0) + (body.session_quiz_correct ? 1 : 0),
-          total_xp: (existingSubcategoryStats?.total_xp || 0) + earnedXP,
+          quiz_xp: existingSubcategoryQuizXP, // クイズXPは変更なし
+          course_xp: newSubcategoryCourseXP, // コースXPに今回のXPを加算
+          total_xp: newSubcategoryTotalXP, // total = quiz + course
           course_sessions_completed: (existingSubcategoryStats?.course_sessions_completed || 0) + 1,
           quiz_sessions_completed: existingSubcategoryStats?.quiz_sessions_completed || 0,
           quiz_average_accuracy: 0, // 後で計算
@@ -488,7 +505,10 @@ export async function POST(request: Request) {
           console.log('✅ Course subcategory stats updated:', {
             categoryId: body.category_id,
             subcategoryId: body.subcategory_id,
-            newXP: subcategoryStatsData.total_xp,
+            quizXP: subcategoryStatsData.quiz_xp,
+            courseXP: subcategoryStatsData.course_xp,
+            totalXP: subcategoryStatsData.total_xp,
+            earnedXP: earnedXP,
             courseSessions: subcategoryStatsData.course_sessions_completed
           })
         }

@@ -538,14 +538,20 @@ export async function POST(request: Request) {
           const newQuestionsCategoryCorrect = (existingCategoryStats?.quiz_questions_correct || 0) + categoryCorrectAnswers
           const newCategoryTotalXP = (existingCategoryStats?.total_xp || 0) + categoryXP
         
+          // 🔧 修正: course_xpも正しく保持し、total_xp = quiz_xp + course_xpにする
+          const newQuizXP = (existingCategoryStats?.quiz_xp || 0) + categoryXP
+          const existingCourseXP = existingCategoryStats?.course_xp || 0
+          const calculatedTotalXP = newQuizXP + existingCourseXP
+
           const { error: categoryStatsError } = await supabase
             .from('user_category_xp_stats_v2')
             .upsert({
               user_id: userId,
               category_id: categoryId,
-              total_xp: newCategoryTotalXP,
-              current_level: Math.floor(newCategoryTotalXP / 500) + 1, // メインカテゴリーは500XP/レベル
-              quiz_xp: (existingCategoryStats?.quiz_xp || 0) + categoryXP,
+              quiz_xp: newQuizXP,
+              course_xp: existingCourseXP, // 既存のコースXPを保持
+              total_xp: calculatedTotalXP, // total = quiz + course
+              current_level: Math.floor(calculatedTotalXP / 500) + 1, // メインカテゴリーは500XP/レベル
               quiz_sessions_completed: (existingCategoryStats?.quiz_sessions_completed || 0) + 1,
               quiz_questions_answered: newQuestionsCategoryAnswered,
               quiz_questions_correct: newQuestionsCategoryCorrect,
@@ -608,15 +614,21 @@ export async function POST(request: Request) {
             const newQuestionsSubcategoryCorrect = (existingSubcategoryStats?.quiz_questions_correct || 0) + subcategoryCorrectAnswers
             const newSubcategoryTotalXP = (existingSubcategoryStats?.total_xp || 0) + subcategoryXP
 
+            // 🔧 修正: サブカテゴリーでもcourse_xpを正しく保持し、total_xp = quiz_xp + course_xpにする
+            const newSubcategoryQuizXP = (existingSubcategoryStats?.quiz_xp || 0) + subcategoryXP
+            const existingSubcategoryCourseXP = existingSubcategoryStats?.course_xp || 0
+            const calculatedSubcategoryTotalXP = newSubcategoryQuizXP + existingSubcategoryCourseXP
+
             const { error: subcategoryStatsError } = await supabase
               .from('user_subcategory_xp_stats_v2')
               .upsert({
                 user_id: userId,
                 category_id: categoryId,
                 subcategory_id: subcategoryId,
-                total_xp: newSubcategoryTotalXP,
-                current_level: Math.floor(newSubcategoryTotalXP / 500) + 1, // サブカテゴリーも500XP/レベル
-                quiz_xp: (existingSubcategoryStats?.quiz_xp || 0) + subcategoryXP,
+                quiz_xp: newSubcategoryQuizXP,
+                course_xp: existingSubcategoryCourseXP, // 既存のコースXPを保持
+                total_xp: calculatedSubcategoryTotalXP, // total = quiz + course
+                current_level: Math.floor(calculatedSubcategoryTotalXP / 500) + 1, // サブカテゴリーも500XP/レベル
                 quiz_sessions_completed: (existingSubcategoryStats?.quiz_sessions_completed || 0) + 1,
                 quiz_questions_answered: newQuestionsSubcategoryAnswered,
                 quiz_questions_correct: newQuestionsSubcategoryCorrect,

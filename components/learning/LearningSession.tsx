@@ -266,9 +266,15 @@ export default function LearningSession({
     console.log('🚀 Starting session completion...')
     setIsCompletingSession(true)
 
+    const endTime = new Date()
+    const duration = endTime.getTime() - startTime.getTime()
+
     try {
-      const endTime = new Date()
-      const duration = endTime.getTime() - startTime.getTime()
+      // 🚀 パフォーマンス改善: UIを即座に更新
+      setSessionCompleted(true)
+      setViewState('completed')
+      onComplete(session.id)
+      console.log('⚡ UI updated immediately for better UX')
       
       // XP system integration: Save course session data FIRST (初回・復習問わず記録）
       console.log(`💾 Saving course session to XP system... (clientSideFirstCompletion: ${isFirstCompletion})`)
@@ -314,205 +320,151 @@ export default function LearningSession({
         quiz_time_spent: quizTimeSpent // 理解度チェック実行時間
       }
       
+      // ⚡ XP保存のみ待機（最重要データ）
       const xpResult = await saveCourseSession(courseSessionData)
       
       if (!xpResult.success) {
         console.error('❌ Course session save failed:', xpResult.error)
-        setIsCompletingSession(false)
-        alert('セッション完了の保存に失敗しました。もう一度お試しください。')
-        return
-      }
-
-      console.log('✅ Course session saved:', {
-        earned_xp: xpResult.earned_xp,
-        session_id: xpResult.session_id,
-        is_first_completion: isFirstCompletion
-      })
-
-      // 並列実行でパフォーマンス改善: 学習進捗保存とセッション更新を同時実行
-      const parallelOperations = []
-      
-      console.log('🔍 重複問題デバッグ:', {
-        currentSessionDataExists: !!currentSessionData,
-        currentSessionDataHasId: !!currentSessionData?.id,
-        sessionId: currentSessionData?.id,
-        willCreateNew: currentSessionData && !currentSessionData.id,
-        willUpdate: currentSessionData?.id
-      })
-      
-      // 学習進捗保存
-      console.log('📝 Saving learning progress...', { userId: user.id, courseId, genreId, themeId, sessionId: session.id })
-      parallelOperations.push(
-        saveLearningProgressSupabase(user.id, courseId, genreId, themeId, session.id, true)
-          .then(result => {
-            console.log('📝 Progress save result:', result)
-            return { type: 'progress', result }
-          })
-      )
-      
-      // 学習セッション記録（初回記録 - 重複問題解決のため完了時のみ記録）
-      if (currentSessionData && !currentSessionData.id) {
-        console.log('📝 Creating complete learning session record...', { sessionData: currentSessionData })
-        
-        // 完了データで新規作成
-        const completeSessionData: LearningSessionData = {
-          ...currentSessionData,
-          end_time: endTime.toISOString(),
-          duration,
-          completed: true,
-          quiz_score: hasQuiz ? getQuizScore() : undefined,
-          content_interactions: {
-            scrollDepth: 100, // 完了時は100%とみなす
-            timeOnSection: {}, // 学習セクションでの時間記録
-            clickEvents: [], // クリックイベント履歴
-            sessionType: 'course_learning',
-            hasQuiz: hasQuiz,
-            quizAnswers: hasQuiz ? Object.entries(quizAnswers).map(([index, answer]) => ({
-              questionIndex: parseInt(index),
-              selectedAnswer: answer,
-              isCorrect: quizResults[parseInt(index)] || false,
-              question: session.quiz?.[parseInt(index)]?.question || '',
-              correctAnswer: session.quiz?.[parseInt(index)]?.options[session.quiz?.[parseInt(index)]?.correct] || ''
-            })) : [],
-            quizScore: hasQuiz ? getQuizScore() : undefined,
-            totalQuestions: hasQuiz ? (session.quiz?.length || 0) : 0,
-            correctAnswers: hasQuiz ? Object.values(quizResults).filter(r => r).length : 0,
-            themeId,
-            genreId,
-            categoryId,
-            subcategoryId,
-            sessionId: session.id,
-            completedAt: endTime.toISOString()
-          }
-        }
-        
-        parallelOperations.push(
-          saveLearningSessionSupabase(completeSessionData).then(savedSession => {
-            console.log('✅ Complete session saved:', savedSession?.id)
-            return { type: 'session_create', result: savedSession }
-          })
-        )
-      } else if (currentSessionData?.id) {
-        // 既存セッションの更新（通常は実行されない想定）
-        console.log('🔄 Updating existing learning session...', { sessionId: currentSessionData.id })
-        parallelOperations.push(
-          updateLearningSession(currentSessionData.id, {
-            end_time: endTime.toISOString(),
-            duration,
-            completed: true,
-            quiz_score: hasQuiz ? getQuizScore() : undefined
-          }).then(result => {
-            console.log('🔄 Session update result:', result)
-            return { type: 'session_update', result }
-          })
-        )
-      }
-
-      // 並列実行
-      await Promise.all(parallelOperations)
-      
-      // パフォーマンス改善: テーマ完了チェックとバッジ処理を並列実行
-      const [themeCompleted] = await Promise.all([
-        checkThemeCompletion(),
-        // その他の処理があれば追加
-      ])
-      
-      console.log('Session completion debug:', {
-        isLastSession,
-        themeRewardCard,
-        sessionCompleted,
-        userId: user.id,
-        isFirstCompletion,
-        themeCompleted
-      })
-      
-      setIsThemeCompleted(themeCompleted && (isFirstCompletion ?? false)) // Only show on first completion
-      console.log(`🎯 Theme completion status: ${themeCompleted}, showing rewards: ${themeCompleted && isFirstCompletion}`)
-      
-      // カード獲得処理も非同期で実行（UIブロックを避ける）
-      if (themeCompleted && themeRewardCard && isFirstCompletion) {
-        console.log('🎉 ATTEMPTING TO ACQUIRE CARD:', themeRewardCard.id, 'for user:', user.id)
-        
-        // カード獲得処理を非同期で実行（完了を待たない）
-        addKnowledgeCardToCollection(user.id, themeRewardCard.id)
-          .then(result => {
-            setCardAcquired(result.isNew)
-            console.log('🎯 CARD ACQUISITION RESULT:', {
-              result,
-              cardId: themeRewardCard.id,
-              cardTitle: themeRewardCard.title,
-              isNew: result.isNew,
-              count: result.count
-            })
-          })
-          .catch(error => {
-            console.error('❌ Error acquiring knowledge card:', error)
-          })
+        // UIは既に更新済みなので、エラー表示のみ
+        console.error('XP保存に失敗しましたが、セッションは完了として処理されました')
       } else {
-        console.log('⚠️ Card acquisition skipped:', {
-          isLastSession,
-          hasThemeRewardCard: !!themeRewardCard,
-          sessionCompleted
+        console.log('✅ Course session saved:', {
+          earned_xp: xpResult.earned_xp,
+          session_id: xpResult.session_id
         })
       }
-      
-      // 修正: user_settingsベースの復習判定（UI表示と統一）
-      let isReviewMode = false
-      try {
-        // user_settingsから現在の進捗状態を取得
-        const progressKey = `${courseId}_${genreId}_${themeId}_${session.id}`
-        const { data: settingData } = await supabase
-          .from('user_settings')
-          .select('setting_value')
-          .eq('user_id', user.id)
-          .eq('setting_key', `lp_${progressKey}`)
-          .single()
-        
-        // 既存の完了記録があれば復習モード
-        const progressData = settingData?.setting_value as { completed?: boolean } | null
-        isReviewMode = !!progressData?.completed
-        console.log(`📚 Session mode: isReviewMode=${isReviewMode} (user_settings基準・UI表示と統一)`, { 
-          progressKey: `lp_${progressKey}`, 
-          progressData 
-        })
-      } catch (error) {
-        console.log(`📚 Session mode: isReviewMode=${isReviewMode} (初回実行・user_settings記録なし)`, error)
-      }
-      
-      // 初回完了時のみコース完了チェック＆バッジ授与（現在のセッションが初回完了の場合）
-      if (isFirstCompletion) {
-        console.log('🏆 Checking for course completion and badge award...')
-        // バッジ処理も非同期で実行（UIブロックを避ける）
-        checkAndAwardCourseBadge(user.id, courseId, genreId, themeId, session.id)
-          .then(badgeResult => {
-            if (badgeResult.completed && badgeResult.badge) {
-              console.log('🎉 Course completed! Badge awarded:', badgeResult.badge)
-              setBadgeAwarded(badgeResult.badge)
-            }
-          })
-          .catch(error => {
-            console.error('❌ Error checking course badge:', error)
-          })
-      } else {
-        console.log('📚 Review mode - skipping badge award check')
-      }
 
-
-      setSessionCompleted(true)
-      setViewState('completed')
-      onComplete(session.id)
+      // 🔥 その他の処理は全て非同期で実行（UIブロックしない）
+      executeBackgroundTasks(endTime, duration).catch(error => {
+        console.error('❌ Background tasks failed (UI not affected):', error)
+      })
       
-      console.log('✅ Session completed successfully')
+      console.log('✅ Session completed successfully with optimized performance')
     } catch (error) {
       console.error('❌ Error completing session:', error)
-      // Still allow the UI to show completion even if some operations failed
-      setSessionCompleted(true)
-      setViewState('completed')
-      onComplete(session.id)
+      // UI更新は既に完了しているため、エラーが発生してもユーザー体験に影響なし
     } finally {
       setIsCompletingSession(false)
     }
   }
+
+  // 🚀 バックグラウンド処理を分離してパフォーマンス改善
+  const executeBackgroundTasks = async (endTime: Date, duration: number) => {
+    console.log('🔥 Executing background tasks (non-blocking)...')
+
+    // 並列実行でパフォーマンス最大化
+    const backgroundTasks = []
+
+    // 学習進捗保存
+    backgroundTasks.push(
+      saveLearningProgressSupabase(user!.id, courseId, genreId, themeId, session.id, true)
+        .then(result => {
+          console.log('📝 Progress saved in background:', result)
+        })
+        .catch(error => {
+          console.error('❌ Progress save failed (background):', error)
+        })
+    )
+
+    // 学習セッション記録
+    if (currentSessionData && !currentSessionData.id) {
+      const completeSessionData: LearningSessionData = {
+        ...currentSessionData,
+        end_time: endTime.toISOString(),
+        duration,
+        completed: true,
+        quiz_score: hasQuiz ? getQuizScore() : undefined,
+        content_interactions: {
+          scrollDepth: 100,
+          timeOnSection: {},
+          clickEvents: [],
+          sessionType: 'course_learning',
+          hasQuiz: hasQuiz,
+          quizAnswers: hasQuiz ? Object.entries(quizAnswers).map(([index, answer]) => ({
+            questionIndex: parseInt(index),
+            selectedAnswer: answer,
+            isCorrect: quizResults[parseInt(index)] || false,
+            question: session.quiz?.[parseInt(index)]?.question || '',
+            correctAnswer: session.quiz?.[parseInt(index)]?.options[session.quiz?.[parseInt(index)]?.correct] || ''
+          })) : [],
+          quizScore: hasQuiz ? getQuizScore() : undefined,
+          totalQuestions: hasQuiz ? (session.quiz?.length || 0) : 0,
+          correctAnswers: hasQuiz ? Object.values(quizResults).filter(r => r).length : 0,
+          themeId,
+          genreId,
+          categoryId,
+          subcategoryId,
+          sessionId: session.id,
+          completedAt: endTime.toISOString()
+        }
+      }
+      
+      backgroundTasks.push(
+        saveLearningSessionSupabase(completeSessionData)
+          .then(savedSession => {
+            console.log('✅ Session saved in background:', savedSession?.id)
+          })
+          .catch(error => {
+            console.error('❌ Session save failed (background):', error)
+          })
+      )
+    } else if (currentSessionData?.id) {
+      backgroundTasks.push(
+        updateLearningSession(currentSessionData.id, {
+          end_time: endTime.toISOString(),
+          duration,
+          completed: true,
+          quiz_score: hasQuiz ? getQuizScore() : undefined
+        }).then(result => {
+          console.log('🔄 Session updated in background:', result)
+        }).catch(error => {
+          console.error('❌ Session update failed (background):', error)
+        })
+      )
+    }
+
+    // テーマ完了チェック & 報酬処理
+    backgroundTasks.push(
+      checkThemeCompletion()
+        .then(themeCompleted => {
+          setIsThemeCompleted(themeCompleted && (isFirstCompletion ?? false))
+          console.log(`🎯 Theme completion (background): ${themeCompleted}`)
+          
+          // カード獲得処理
+          if (themeCompleted && themeRewardCard && isFirstCompletion) {
+            return addKnowledgeCardToCollection(user!.id, themeRewardCard.id)
+              .then(result => {
+                setCardAcquired(result.isNew)
+                console.log('🎯 Card acquired in background:', result)
+              })
+          }
+        })
+        .catch(error => {
+          console.error('❌ Theme completion/card acquisition failed (background):', error)
+        })
+    )
+
+    // バッジ処理
+    if (isFirstCompletion) {
+      backgroundTasks.push(
+        checkAndAwardCourseBadge(user!.id, courseId, genreId, themeId, session.id)
+          .then(badgeResult => {
+            if (badgeResult.completed && badgeResult.badge) {
+              console.log('🎉 Badge awarded in background:', badgeResult.badge)
+              setBadgeAwarded(badgeResult.badge)
+            }
+          })
+          .catch(error => {
+            console.error('❌ Badge award failed (background):', error)
+          })
+      )
+    }
+
+    // 全てのバックグラウンドタスクを並列実行
+    await Promise.allSettled(backgroundTasks)
+    console.log('🔥 Background tasks completed')
+  }
+
 
   const getQuizScore = () => {
     if (!hasQuiz) return 100
