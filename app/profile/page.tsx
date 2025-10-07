@@ -118,7 +118,10 @@ export default function ProfilePage() {
     
     // サブカテゴリーマスターデータから日本語名を取得
     const subcategory = subcategories.find(sub => sub.id === subcategoryId)
-    return subcategory?.name || subcategoryId
+    const result = subcategory?.name || subcategoryId
+    
+    
+    return result
   }
 
   // カテゴリー展開状態の切り替え
@@ -156,7 +159,7 @@ export default function ProfilePage() {
         setSubcategoriesLoading(true)
         try {
           const allSubcategories = await getSubcategories(undefined, true)
-          setSubcategories(allSubcategories)
+          setSubcategories(allSubcategories || [])
         } catch (error) {
           console.error('Error fetching subcategories:', error)
         } finally {

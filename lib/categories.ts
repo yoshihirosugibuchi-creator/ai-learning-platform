@@ -54,6 +54,7 @@ export function clearCategoriesCache() {
   cachedCategories = null
   cachedSkillLevels = null
   cacheTimestamp = 0
+  console.log('🔄 Categories cache cleared')
 }
 
 // 強制的にキャッシュをクリア（即座に実行）
@@ -615,10 +616,12 @@ export async function getSubcategories(parentCategoryId?: string, activeOnly = f
     const response = await fetchFromAPI<{subcategories: DBSubcategory[]}>(`/subcategories?${queryParams}`)
     
     if (response?.subcategories) {
-      return response.subcategories.map(transformDBSubcategoryToLocal)
+      const transformed = response.subcategories.map(transformDBSubcategoryToLocal)
+      console.log(`✅ getSubcategories success: ${transformed.length} items`)
+      return transformed
     }
   } catch (error) {
-    console.warn('DB subcategories fetch failed, using static fallback:', error)
+    console.warn('🚨 DB subcategories fetch failed, using static fallback:', error)
   }
 
   // フォールバック: 静的データから生成
@@ -626,7 +629,17 @@ export async function getSubcategories(parentCategoryId?: string, activeOnly = f
     return getSubcategoriesByParent(parentCategoryId)
   }
   
-  return []
+  // parentCategoryIdが未指定の場合、全カテゴリーのサブカテゴリーを返す（フォールバック用）
+  console.warn('🔄 Using static subcategories fallback for all categories')
+  const allCategories = [...staticMainCategories, ...staticIndustryCategories]
+  const allSubcategories: Subcategory[] = []
+  
+  allCategories.forEach(category => {
+    const subcats = getSubcategoriesByParent(category.id)
+    allSubcategories.push(...subcats)
+  })
+  
+  return allSubcategories
 }
 
 /**

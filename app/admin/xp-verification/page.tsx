@@ -162,6 +162,9 @@ export default function AdminXPVerificationPage() {
     addTestResult('🎯 テストクイズセッション開始...')
     
     const testQuizData = {
+      user_id: user?.id || 'test-user',
+      category_id: 'thinking',
+      subcategory_id: 'logical_thinking',
       session_start_time: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
       session_end_time: new Date().toISOString(),
       total_questions: 3,

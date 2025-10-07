@@ -1,0 +1,169 @@
+{
+  "tableName": "knowledge_card_collection",
+  "recordCount": 18,
+  "backupDate": "2025-10-07T09:43:35.732Z",
+  "data": [
+    {
+      "id": "f7ab43f1-527f-48ff-b2d9-fb3285bbd196",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 2237,
+      "count": 1,
+      "obtained_at": "2025-09-19T05:57:13.604+00:00",
+      "last_obtained_at": "2025-09-19T05:57:13.604+00:00",
+      "created_at": "2025-09-19T05:57:18.279689+00:00"
+    },
+    {
+      "id": "0e91b4aa-5116-489c-9694-a4026ddc7ff0",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 1870,
+      "count": 1,
+      "obtained_at": "2025-09-19T05:58:56.079+00:00",
+      "last_obtained_at": "2025-09-19T05:58:56.079+00:00",
+      "created_at": "2025-09-19T05:59:00.723644+00:00"
+    },
+    {
+      "id": "171b1d99-9bdf-4a22-bfdc-ad70e50e7869",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 1262,
+      "count": 1,
+      "obtained_at": "2025-09-19T06:01:04.01+00:00",
+      "last_obtained_at": "2025-09-19T06:01:04.01+00:00",
+      "created_at": "2025-09-19T06:01:08.670204+00:00"
+    },
+    {
+      "id": "15436ea1-da86-4642-b0c2-ce529f86eb30",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 1618,
+      "count": 1,
+      "obtained_at": "2025-09-19T06:02:27.758+00:00",
+      "last_obtained_at": "2025-09-19T06:02:27.758+00:00",
+      "created_at": "2025-09-19T06:02:32.43586+00:00"
+    },
+    {
+      "id": "8b7e429d-9bea-404f-902e-edd8b0324d36",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 2274,
+      "count": 1,
+      "obtained_at": "2025-09-24T01:46:58.598+00:00",
+      "last_obtained_at": "2025-09-24T01:46:58.598+00:00",
+      "created_at": "2025-09-24T01:47:13.672566+00:00"
+    },
+    {
+      "id": "09f84f62-4517-44b6-9dab-b40cb20ffbc3",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 1903,
+      "count": 1,
+      "obtained_at": "2025-09-24T02:37:48.213+00:00",
+      "last_obtained_at": "2025-09-24T02:37:48.213+00:00",
+      "created_at": "2025-09-24T02:38:03.35536+00:00"
+    },
+    {
+      "id": "df01299e-249e-4c6b-8129-e0f8a99ca852",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 2679,
+      "count": 1,
+      "obtained_at": "2025-09-24T02:40:31.199+00:00",
+      "last_obtained_at": "2025-09-24T02:40:31.199+00:00",
+      "created_at": "2025-09-24T02:40:46.364858+00:00"
+    },
+    {
+      "id": "050bb8b4-ffcf-4f30-85a6-36073913532f",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 1882,
+      "count": 1,
+      "obtained_at": "2025-09-24T02:43:22.56+00:00",
+      "last_obtained_at": "2025-09-24T02:43:22.56+00:00",
+      "created_at": "2025-09-24T02:43:37.697631+00:00"
+    },
+    {
+      "id": "fbe43c69-236f-4cfb-b015-9802066c131d",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 2262,
+      "count": 1,
+      "obtained_at": "2025-09-24T03:18:50.882+00:00",
+      "last_obtained_at": "2025-09-24T03:18:50.882+00:00",
+      "created_at": "2025-09-24T03:19:06.126589+00:00"
+    },
+    {
+      "id": "a87c8c0e-621a-415b-90ea-e14fd7f3ce42",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 1265,
+      "count": 1,
+      "obtained_at": "2025-09-24T03:21:18.002+00:00",
+      "last_obtained_at": "2025-09-24T03:21:18.002+00:00",
+      "created_at": "2025-09-24T03:21:33.208556+00:00"
+    },
+    {
+      "id": "b58ee93e-d43c-4bae-bd25-9f196e3d18ff",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 1799,
+      "count": 2,
+      "obtained_at": "2025-09-24T03:22:54.747+00:00",
+      "last_obtained_at": "2025-09-24T03:23:44.447+00:00",
+      "created_at": "2025-09-24T03:23:09.973493+00:00"
+    },
+    {
+      "id": "27fbd7a1-c02a-437b-a8c6-a560c5d3f57f",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 2325,
+      "count": 1,
+      "obtained_at": "2025-09-24T03:32:57.618+00:00",
+      "last_obtained_at": "2025-09-24T03:32:57.618+00:00",
+      "created_at": "2025-09-24T03:33:12.849855+00:00"
+    },
+    {
+      "id": "cb8d8b1c-7168-4c16-ba61-08728fc90ed2",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "card_id": 1747,
+      "count": 1,
+      "obtained_at": "2025-09-24T03:35:11.564+00:00",
+      "last_obtained_at": "2025-09-24T03:35:11.564+00:00",
+      "created_at": "2025-09-24T03:35:26.79887+00:00"
+    },
+    {
+      "id": "e711ab84-3ef3-4fdd-b42b-eb2afc6a5d82",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "card_id": 2237,
+      "count": 1,
+      "obtained_at": "2025-09-29T05:09:27.19+00:00",
+      "last_obtained_at": "2025-09-29T05:09:27.19+00:00",
+      "created_at": "2025-09-29T05:09:26.613949+00:00"
+    },
+    {
+      "id": "d6f8b968-b779-469f-825d-15ee88d3fa8b",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "card_id": 1870,
+      "count": 1,
+      "obtained_at": "2025-09-29T10:06:52.968+00:00",
+      "last_obtained_at": "2025-09-29T10:06:52.968+00:00",
+      "created_at": "2025-09-29T10:06:52.884714+00:00"
+    },
+    {
+      "id": "aa258a7f-bfa7-4509-817f-b41a8f781ddd",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "card_id": 1262,
+      "count": 1,
+      "obtained_at": "2025-09-30T18:28:52.471+00:00",
+      "last_obtained_at": "2025-09-30T18:28:52.471+00:00",
+      "created_at": "2025-09-30T18:28:52.660454+00:00"
+    },
+    {
+      "id": "a9aaf7b7-349d-4d5a-8030-d3404e4d2500",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "card_id": 2274,
+      "count": 1,
+      "obtained_at": "2025-10-07T05:38:16.636+00:00",
+      "last_obtained_at": "2025-10-07T05:38:16.636+00:00",
+      "created_at": "2025-10-07T05:38:16.611054+00:00"
+    },
+    {
+      "id": "b2fb7d2b-172f-412e-b135-c1b546c2d3b0",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "card_id": 1903,
+      "count": 1,
+      "obtained_at": "2025-10-07T07:48:47.28+00:00",
+      "last_obtained_at": "2025-10-07T07:48:47.28+00:00",
+      "created_at": "2025-10-07T07:48:47.319654+00:00"
+    }
+  ]
+}

@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { loadXPSettings, calculateCourseXP, type XPSettings } from '@/lib/xp-settings'
+import { loadXPSettings, type XPSettings } from '@/lib/xp-settings'
+import { 
+  calculateCourseXP as calculateCourseXPUnified,
+  calculateCourseSKP as calculateCourseSKPUnified,
+  mapDifficultyToEnglish
+} from '@/lib/xp-level-system'
 import type { 
   Database,
   UserXPStatsV2Update,
@@ -50,6 +55,7 @@ interface CourseSessionRequest {
   session_start_time?: string
   session_end_time?: string
   duration_seconds?: number
+  quiz_time_spent?: number  // 理解度チェック実測時間
 }
 
 // コース学習セッション完了時のXP保存API
@@ -153,36 +159,46 @@ export async function POST(request: Request) {
       }
     }
     
-    // 3. 新XP計算（難易度対応固定値方式）
+    // 3. 統合XP/SKP計算システム使用
+    console.log('🔄 Using unified XP/SKP calculation system for course')
+    
     const xpSettings = await loadXPSettings(supabase)
+    
+    // 難易度を統合システム形式に変換
+    const unifiedDifficulty = mapDifficultyToEnglish(courseDifficulty)
+    
+    // 統合コースXP計算
     let earnedXP = isFirstCompletion && body.session_quiz_correct 
-      ? calculateCourseXP(courseDifficulty, xpSettings) 
+      ? calculateCourseXPUnified(1)  // コースは正解数ベース
       : 0
 
-    // 4. SKP計算（コース学習用 - 初回のみ付与、パーフェクトボーナスなし）
+    // 統合コースSKP計算
     let totalSKP = 0
+    let skpResult = { skpGained: 0, breakdown: { base: 0, bonus: 0, description: 'No SKP (review or not first completion)' } }
+    
     if (isFirstCompletion) {
-      // コース確認クイズは正解/不正解のみでパーフェクトボーナスは適用しない
-      if (body.session_quiz_correct) {
-        totalSKP = xpSettings.skp.course_correct
-      } else {
-        totalSKP = xpSettings.skp.course_incorrect
-      }
+      const isReview = false  // 初回完了の場合は復習ではない
+      const isCompleted = body.session_quiz_correct  // 確認クイズ正解時のみ完了とみなす
+      
+      skpResult = calculateCourseSKPUnified(
+        body.session_quiz_correct ? 1 : 0,  // 正解数
+        1,  // 総問題数（コース確認クイズは1問）
+        isCompleted,
+        isReview
+      )
+      
+      totalSKP = skpResult.skpGained
     }
     
-    console.log('📚 Course XP calculation (new system):', {
+    console.log('📚 Unified course XP/SKP calculation:', {
       courseId: body.course_id,
       courseDifficulty,
+      unifiedDifficulty,
       isFirstCompletion,
       sessionQuizCorrect: body.session_quiz_correct,
       earnedXP,
       totalSKP,
-      xpSettingsUsed: {
-        basic: xpSettings.xp_course.basic,
-        intermediate: xpSettings.xp_course.intermediate,
-        advanced: xpSettings.xp_course.advanced,
-        expert: xpSettings.xp_course.expert
-      }
+      skpBreakdown: skpResult.breakdown
     })
 
     // 5. セッション完了記録作成（重複防止 + atomic操作で競合状態対策）
@@ -246,45 +262,21 @@ export async function POST(request: Request) {
       console.error('❌ Course completion insert critical error:', error)
     }
 
-    // 6. learning_progressに時間データを記録
-    if (body.duration_seconds && body.session_start_time && body.session_end_time) {
-      const { error: progressError } = await supabase
-        .from('learning_progress')
-        .insert({
-          user_id: userId,
-          course_id: body.course_id,
-          session_id: body.session_id,
-          progress_data: {
-            theme_id: body.theme_id,
-            genre_id: body.genre_id,
-            category_id: body.category_id,
-            subcategory_id: body.subcategory_id,
-            session_quiz_correct: body.session_quiz_correct
-          },
-          completion_percentage: 100,
-          completed_at: body.session_end_time,
-          session_start_time: body.session_start_time,
-          session_end_time: body.session_end_time,
-          duration_seconds: body.duration_seconds
-        })
-      
-      if (progressError) {
-        console.error('❗ Learning progress insert error:', progressError)
-      } else {
-        console.log('✅ Learning progress with time data recorded')
-      }
-    }
+    // 6. learning_progressへの時間データ記録は LearningSession.tsx で統一管理
+    // 重複防止のため、こちらでの直接記録は削除
+    console.log('📝 Learning progress recording delegated to LearningSession.tsx (重複防止)')
 
     // 7. 統一回答ログシステム: コース確認クイズ回答をquiz_answersテーブルに記録
     if (isFirstCompletion) {
       const { error: answerInsertError } = await supabase
         .from('quiz_answers')
         .insert({
+          user_id: userId, // ユーザーID追加
           quiz_session_id: null, // コース確認クイズはクイズセッションと無関係
           question_id: `course_confirmation_${body.session_id}`,
           user_answer: 1, // 確認クイズは通常選択肢がシンプル
           is_correct: body.session_quiz_correct,
-          time_spent: 30, // コース確認クイズのデフォルト回答時間
+          time_spent: body.quiz_time_spent || 30, // 理解度チェック実測時間（フォールバック30秒）
           is_timeout: false,
           session_type: 'course_confirmation',
           course_session_id: body.session_id,

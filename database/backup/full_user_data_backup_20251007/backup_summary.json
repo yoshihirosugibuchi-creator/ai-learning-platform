@@ -1,0 +1,401 @@
+{
+  "totalTables": 21,
+  "successfulBackups": 21,
+  "failedBackups": 0,
+  "totalRecords": 934,
+  "backupDirectory": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007",
+  "results": [
+    {
+      "tableName": "quiz_answers",
+      "recordCount": 429,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/quiz_answers_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "id": "b1444ad1-db9d-4bb5-ba7c-dd4547ea949c",
+        "quiz_session_id": "6f9ee12f-4e80-44b1-b71c-3e99d37554c3",
+        "question_id": "140",
+        "user_answer": null,
+        "is_correct": true,
+        "time_spent": 4,
+        "is_timeout": false,
+        "category_id": "finance",
+        "subcategory_id": "investment_risk_management",
+        "difficulty": "intermediate",
+        "earned_xp": 20,
+        "created_at": "2025-10-02T06:29:28.172977+00:00",
+        "session_type": "quiz",
+        "course_session_id": null,
+        "course_id": null,
+        "theme_id": null,
+        "genre_id": null,
+        "confidence_level": null,
+        "hint_used": false,
+        "review_needed": false,
+        "user_id": null
+      }
+    },
+    {
+      "tableName": "quiz_sessions",
+      "recordCount": 35,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/quiz_sessions_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "id": "6f9ee12f-4e80-44b1-b71c-3e99d37554c3",
+        "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+        "session_start_time": "2025-10-02T06:28:19.924+00:00",
+        "session_end_time": "2025-10-02T06:29:26.16+00:00",
+        "total_questions": 10,
+        "correct_answers": 10,
+        "accuracy_rate": 100,
+        "status": "completed",
+        "bonus_xp": 30,
+        "total_xp": 250,
+        "wisdom_cards_awarded": 1,
+        "created_at": "2025-10-02T06:29:27.636891+00:00",
+        "updated_at": "2025-10-07T06:53:54.366962+00:00",
+        "duration_seconds": 66
+      }
+    },
+    {
+      "tableName": "learning_progress",
+      "recordCount": 107,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/learning_progress_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "id": "35c6e72c-8c80-4069-8626-c3f89c8694fb",
+        "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+        "course_id": "ai_literacy_fundamentals",
+        "session_id": "what_is_ai",
+        "progress_data": {},
+        "completion_percentage": 0,
+        "completed_at": null,
+        "created_at": "2025-10-03T06:04:17.705038+00:00",
+        "updated_at": "2025-10-03T06:04:17.705038+00:00",
+        "session_start_time": null,
+        "session_end_time": null,
+        "duration_seconds": 0
+      }
+    },
+    {
+      "tableName": "user_xp_stats_v2",
+      "recordCount": 3,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/user_xp_stats_v2_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "user_id": "82413077-a06d-4d9c-82bb-6fdb6a6b8e13",
+        "total_xp": 455,
+        "quiz_xp": 440,
+        "course_xp": 15,
+        "bonus_xp": 50,
+        "quiz_sessions_completed": 0,
+        "course_sessions_completed": 1,
+        "quiz_questions_answered": 320,
+        "quiz_questions_correct": 301,
+        "quiz_average_accuracy": 94.06,
+        "wisdom_cards_total": 1,
+        "knowledge_cards_total": 0,
+        "badges_total": 0,
+        "current_level": 1,
+        "last_activity_at": "2025-10-06T01:40:13.644+00:00",
+        "created_at": "2025-09-26T07:44:26.375064+00:00",
+        "updated_at": "2025-10-06T14:30:56.652+00:00",
+        "total_skp": 262,
+        "quiz_skp": 242,
+        "course_skp": 10,
+        "bonus_skp": 0,
+        "streak_skp": 10,
+        "total_learning_time_seconds": 1773,
+        "quiz_learning_time_seconds": 1769,
+        "course_learning_time_seconds": 4
+      }
+    },
+    {
+      "tableName": "user_category_xp_stats_v2",
+      "recordCount": 32,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/user_category_xp_stats_v2_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "id": "a5f8dcd3-5f3c-4acb-a1a5-248810eac50d",
+        "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+        "category_id": "risk_crisis_management",
+        "total_xp": 220,
+        "quiz_xp": 220,
+        "course_xp": 0,
+        "current_level": 1,
+        "quiz_sessions_completed": 7,
+        "quiz_questions_answered": 13,
+        "quiz_questions_correct": 12,
+        "quiz_average_accuracy": 92.31,
+        "course_sessions_completed": 0,
+        "course_themes_completed": 0,
+        "course_completions": 0,
+        "created_at": "2025-10-01T05:28:42.850208+00:00",
+        "updated_at": "2025-10-07T05:18:14.07+00:00"
+      }
+    },
+    {
+      "tableName": "user_subcategory_xp_stats_v2",
+      "recordCount": 114,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/user_subcategory_xp_stats_v2_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "id": "7f7d659d-5806-4494-b99a-35f574ae673f",
+        "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+        "category_id": "si_industry",
+        "subcategory_id": "rfp_vendor_management",
+        "total_xp": 10,
+        "quiz_xp": 10,
+        "course_xp": 0,
+        "current_level": 1,
+        "quiz_sessions_completed": 1,
+        "quiz_questions_answered": 1,
+        "quiz_questions_correct": 1,
+        "quiz_average_accuracy": 100,
+        "quiz_perfect_sessions": 0,
+        "quiz_80plus_sessions": 0,
+        "course_sessions_completed": 0,
+        "course_themes_completed": 0,
+        "created_at": "2025-09-29T15:54:46.316334+00:00",
+        "updated_at": "2025-09-29T15:54:46.402+00:00"
+      }
+    },
+    {
+      "tableName": "daily_xp_records",
+      "recordCount": 16,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/daily_xp_records_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "id": "d83c95ad-2dd6-42ed-abe5-938be69ccb58",
+        "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+        "date": "2025-10-06",
+        "total_xp_earned": 1600,
+        "quiz_xp_earned": 1600,
+        "course_xp_earned": 0,
+        "bonus_xp_earned": 180,
+        "quiz_sessions": 8,
+        "course_sessions": 0,
+        "study_time_minutes": 0,
+        "created_at": "2025-10-06T03:45:08.317484+00:00",
+        "quiz_time_seconds": 488,
+        "course_time_seconds": 0,
+        "total_time_seconds": 488,
+        "peak_study_hour": null,
+        "learning_quality_score": 0
+      }
+    },
+    {
+      "tableName": "course_session_completions",
+      "recordCount": 29,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/course_session_completions_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "id": "76993c54-513f-4ce5-b32f-e67e693147d9",
+        "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+        "session_id": "conclusion_first_basics",
+        "course_id": "consulting_thinking_basics",
+        "theme_id": "conclusion_first",
+        "genre_id": "thinking_foundation",
+        "category_id": "logical_thinking_problem_solving",
+        "subcategory_id": "structured_thinking_mece",
+        "is_first_completion": true,
+        "session_quiz_correct": true,
+        "earned_xp": 15,
+        "completion_time": "2025-09-29T04:51:29.458049+00:00",
+        "review_count": 0,
+        "created_at": "2025-09-29T04:51:29.458049+00:00"
+      }
+    },
+    {
+      "tableName": "course_theme_completions",
+      "recordCount": 0,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/course_theme_completions_backup.json",
+      "success": true
+    },
+    {
+      "tableName": "course_completions",
+      "recordCount": 0,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/course_completions_backup.json",
+      "success": true
+    },
+    {
+      "tableName": "user_badges",
+      "recordCount": 0,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/user_badges_backup.json",
+      "success": true
+    },
+    {
+      "tableName": "knowledge_card_collection",
+      "recordCount": 18,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/knowledge_card_collection_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "id": "f7ab43f1-527f-48ff-b2d9-fb3285bbd196",
+        "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+        "card_id": 2237,
+        "count": 1,
+        "obtained_at": "2025-09-19T05:57:13.604+00:00",
+        "last_obtained_at": "2025-09-19T05:57:13.604+00:00",
+        "created_at": "2025-09-19T05:57:18.279689+00:00"
+      }
+    },
+    {
+      "tableName": "wisdom_card_collection",
+      "recordCount": 21,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/wisdom_card_collection_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "id": "33ce7bb0-713a-4eb8-9831-2b47f2663f17",
+        "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+        "card_id": 10,
+        "count": 3,
+        "obtained_at": "2025-09-29T02:02:47.667+00:00",
+        "last_obtained_at": "2025-09-29T04:24:35.477+00:00",
+        "created_at": "2025-09-29T02:02:56.251011+00:00"
+      }
+    },
+    {
+      "tableName": "skp_transactions",
+      "recordCount": 68,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/skp_transactions_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "id": "7b45e99e-81de-4565-8ced-7a88a4051cea",
+        "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+        "type": "earned",
+        "amount": 150,
+        "source": "quiz_session_6f9ee12f-4e80-44b1-b71c-3e99d37554c3",
+        "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+        "timestamp": "2025-10-02T06:29:29.733359+00:00",
+        "created_at": "2025-10-02T06:29:29.638+00:00"
+      }
+    },
+    {
+      "tableName": "user_settings",
+      "recordCount": 57,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/user_settings_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "id": "5692ef6c-fae3-4502-8a05-4e1bcbff6f60",
+        "user_id": "82413077-a06d-4d9c-82bb-6fdb6a6b8e13",
+        "setting_key": "lp_consulting_thinking_basics_thinking_foundation_conclusion_first_conclusion_first_basics",
+        "setting_value": {
+          "genreId": "thinking_foundation",
+          "themeId": "conclusion_first",
+          "courseId": "consulting_thinking_basics",
+          "completed": true,
+          "sessionId": "conclusion_first_basics",
+          "completedAt": "2025-10-06T01:39:15.598Z",
+          "lastAccessedAt": "2025-10-06T01:39:15.598Z"
+        },
+        "created_at": "2025-10-06T01:39:15.300165+00:00",
+        "updated_at": "2025-10-06T01:39:15.300165+00:00"
+      }
+    },
+    {
+      "tableName": "learning_analytics_summary",
+      "recordCount": 2,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/learning_analytics_summary_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "id": "71b1caa5-ef97-4a78-907a-1992bb9b45b2",
+        "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+        "calculation_date": "2025-10-06",
+        "total_study_time_minutes": 0,
+        "session_count": 1,
+        "average_session_duration": 0,
+        "learning_streak_days": 1,
+        "overall_accuracy": 90,
+        "quiz_accuracy": 90,
+        "course_completion_rate": 0,
+        "total_xp": 0,
+        "xp_growth_rate": 0,
+        "current_level": 1,
+        "category_breakdown": {},
+        "time_pattern_analysis": {},
+        "weakness_analysis": {},
+        "created_at": "2025-10-06T06:12:54.521928+00:00",
+        "updated_at": "2025-10-06T06:12:54.521928+00:00"
+      }
+    },
+    {
+      "tableName": "learning_effectiveness_tracking",
+      "recordCount": 0,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/learning_effectiveness_tracking_backup.json",
+      "success": true
+    },
+    {
+      "tableName": "learning_recommendations",
+      "recordCount": 0,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/learning_recommendations_backup.json",
+      "success": true
+    },
+    {
+      "tableName": "unified_learning_session_analytics",
+      "recordCount": 0,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/unified_learning_session_analytics_backup.json",
+      "success": true
+    },
+    {
+      "tableName": "user_learning_profiles",
+      "recordCount": 3,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/user_learning_profiles_backup.json",
+      "success": true,
+      "sampleRecord": {
+        "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+        "optimal_session_length": 25,
+        "peak_performance_hours": [
+          9,
+          10,
+          14,
+          15
+        ],
+        "fatigue_threshold": 60,
+        "recovery_time_needed": 10,
+        "difficulty_progression_rate": 1,
+        "learning_style_type": "balanced",
+        "chronotype": "unknown",
+        "cognitive_load_tolerance": 5,
+        "flow_state_preference": {
+          "goal_clarity": "high",
+          "feedback_frequency": "immediate",
+          "preferred_challenge_level": 0.7
+        },
+        "forgetting_curve_parameters": {
+          "decay_rate": 0.5,
+          "initial_retention": 0.9,
+          "consolidation_factor": 1
+        },
+        "optimal_review_intervals": [
+          1,
+          3,
+          7,
+          14,
+          30
+        ],
+        "attention_span_minutes": 25,
+        "motivation_factors": [
+          "progress_tracking",
+          "achievement_badges",
+          "social_comparison"
+        ],
+        "stress_indicators": {
+          "response_time_spike": 2,
+          "accuracy_drop_threshold": 0.15,
+          "error_pattern_sensitivity": 0.8
+        },
+        "last_analysis_update": "2025-10-02T05:29:20.955369+00:00",
+        "created_at": "2025-10-02T05:29:20.955369+00:00",
+        "updated_at": "2025-10-02T05:29:20.955369+00:00"
+      }
+    },
+    {
+      "tableName": "spaced_repetition_schedule",
+      "recordCount": 0,
+      "filePath": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007/spaced_repetition_schedule_backup.json",
+      "success": true
+    }
+  ],
+  "startTime": "2025-10-07T09:43:23.294Z",
+  "endTime": "2025-10-07T09:43:46.416Z",
+  "duration": "23秒"
+}

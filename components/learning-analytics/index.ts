@@ -2,7 +2,7 @@
 export { LearningAnalyticsCard } from './LearningAnalyticsCard'
 export { RealTimeLearningGuidance } from './RealTimeLearningGuidance'
 export { SpacedRepetitionRecommendations } from './SpacedRepetitionRecommendations'
-export { LearningAnalyticsDashboard } from './LearningAnalyticsDashboard'
+// export { LearningAnalyticsDashboard } from './LearningAnalyticsDashboard' // Component not found
 
 // Type exports
 export type { 

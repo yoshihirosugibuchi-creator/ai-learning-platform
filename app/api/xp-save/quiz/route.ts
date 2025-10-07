@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { loadXPSettings, calculateQuizXP, calculateBonusXP, calculateSKP } from '@/lib/xp-settings'
+import { loadXPSettings, calculateBonusXP } from '@/lib/xp-settings'
+import { 
+  calculateQuizXP as calculateQuizXPUnified,
+  calculateQuizSKP as calculateQuizSKPUnified,
+  mapDifficultyToEnglish
+} from '@/lib/xp-level-system'
 
 // リクエストヘッダーから認証情報を取得してSupabaseクライアントを作成
 function getSupabaseWithAuth(request: Request) {
@@ -108,12 +113,25 @@ export async function POST(request: Request) {
     }
 
     // 1. クイズセッション記録作成
+    const sessionEndTime = body.session_end_time || new Date().toISOString()
+    const durationSeconds = Math.floor(
+      (new Date(sessionEndTime).getTime() - new Date(body.session_start_time).getTime()) / 1000
+    )
+    
+    console.log('⏱️ Quiz session duration calculation:', {
+      sessionStartTime: body.session_start_time,
+      sessionEndTime,
+      durationSeconds,
+      durationMinutes: Math.round(durationSeconds / 60 * 10) / 10
+    })
+    
     const { data: sessionData, error: sessionError } = await supabase
       .from('quiz_sessions')
       .insert({
         user_id: userId,
         session_start_time: body.session_start_time,
-        session_end_time: body.session_end_time || new Date().toISOString(),
+        session_end_time: sessionEndTime,
+        duration_seconds: durationSeconds,
         total_questions: body.total_questions,
         correct_answers: body.correct_answers,
         accuracy_rate: body.accuracy_rate,
@@ -131,8 +149,31 @@ export async function POST(request: Request) {
     // 2. 新統合XP設定を取得
     const xpSettings = await loadXPSettings(supabase)
 
-    // 3. 各回答のXP計算と記録（新固定値方式）
+    // 3. 統合XP/SKP計算システム使用
+    console.log('🔄 Using unified XP/SKP calculation system')
+    
+    // 難易度判定（統合システム）
+    const unifiedDifficulty = body.answers.length > 0 
+      ? mapDifficultyToEnglish(body.answers[0].difficulty)
+      : 'basic'
+    
+    // 統合XP計算
+    const unifiedXP = calculateQuizXPUnified(body.correct_answers, body.total_questions, unifiedDifficulty)
+    
+    // 統合SKP計算
+    const isPerfect = body.accuracy_rate >= 100.0
+    const unifiedSKPResult = calculateQuizSKPUnified(body.correct_answers, body.total_questions, isPerfect)
+    
+    console.log('🎯 Unified calculation results:', {
+      difficulty: unifiedDifficulty,
+      unifiedXP,
+      unifiedSKP: unifiedSKPResult.skpGained,
+      skpBreakdown: unifiedSKPResult.breakdown.description
+    })
+    
+    // 各回答のXP計算と記録（統合システム使用）
     const answerInserts: Array<{
+      user_id: string;
       quiz_session_id: string;
       question_id: string;
       user_answer: number | null;
@@ -145,15 +186,18 @@ export async function POST(request: Request) {
       difficulty: string;
       session_type: string;
     }> = []
+    
     for (const answer of body.answers) {
       let earnedXP = 0
       
       if (answer.is_correct) {
-        // 新XP計算（固定値方式）
-        earnedXP = calculateQuizXP(answer.difficulty, xpSettings)
+        // 統合XP計算（1問あたりのXP）
+        const questionDifficulty = mapDifficultyToEnglish(answer.difficulty)
+        earnedXP = calculateQuizXPUnified(1, 1, questionDifficulty)
       }
 
       answerInserts.push({
+        user_id: userId,
         quiz_session_id: sessionId,
         question_id: answer.question_id,
         user_answer: answer.user_answer,
@@ -177,27 +221,25 @@ export async function POST(request: Request) {
       throw new Error(`Answers insertion error: ${answersError.message}`)
     }
 
-    // 4. セッション合計XP・時間計算とボーナス処理
-    const totalQuestionXP = answerInserts.reduce((sum, answer) => sum + answer.earned_xp, 0)
+    // 4. 統合システムでの最終XP/SKP計算
+    const totalQuestionXP = unifiedXP  // 統合システムの結果を使用
     const totalTimeSpent = answerInserts.reduce((sum, answer) => sum + answer.time_spent, 0) // 秒単位
     let bonusXP = 0
     let wisdomCards = 0
-
-    // 5. SKP計算（新規追加）
-    const correctAnswers = body.correct_answers
-    const incorrectAnswers = body.total_questions - body.correct_answers
-    const isPerfect = body.accuracy_rate >= 100.0
-    const totalSKP = calculateSKP(correctAnswers, incorrectAnswers, isPerfect, xpSettings)
     
-    console.log('🎯 SKP計算:', {
-      correctAnswers,
-      incorrectAnswers,
+    // 統合SKP計算結果を使用
+    const totalSKP = unifiedSKPResult.skpGained
+    
+    console.log('🎯 Unified SKP calculation:', {
+      correctAnswers: body.correct_answers,
+      totalQuestions: body.total_questions,
       isPerfect,
       totalSKP,
-      accuracyRate: body.accuracy_rate
+      accuracyRate: body.accuracy_rate,
+      breakdown: unifiedSKPResult.breakdown
     })
     
-    // 精度ボーナス計算（新設定システム）
+    // 精度ボーナス計算（統合システムから設定値取得）
     let accuracyBonus = 0
     if (body.accuracy_rate >= 100.0) {
       accuracyBonus = calculateBonusXP('quiz_accuracy_100', xpSettings)
@@ -408,7 +450,7 @@ export async function POST(request: Request) {
           type: 'earned',
           amount: totalSKP,
           source: `quiz_session_${sessionId}`,
-          description: `Quiz session: ${correctAnswers}/${body.total_questions} correct (${body.accuracy_rate}% accuracy)${isPerfect ? ' + Perfect bonus' : ''}`,
+          description: `Quiz session: ${body.correct_answers}/${body.total_questions} correct (${body.accuracy_rate}% accuracy)${isPerfect ? ' + Perfect bonus' : ''}`,
           created_at: new Date().toISOString()
         })
 

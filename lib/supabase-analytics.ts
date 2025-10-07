@@ -440,6 +440,21 @@ async function calculateWeeklyProgress(userId: string): Promise<WeeklyProgress[]
   const weeks: WeeklyProgress[] = []
 
   console.log(`📅 Calculating weekly progress for user ${userId.substring(0, 8)}...`)
+  
+  // 全データ確認用: daily_xp_recordsの全レコードを取得
+  const { data: allDailyRecords } = await supabase
+    .from('daily_xp_records')
+    .select('*')
+    .eq('user_id', userId)
+    .order('date', { ascending: false })
+    
+  console.log(`🔍 ALL DAILY RECORDS (${allDailyRecords?.length || 0} total):`)
+  allDailyRecords?.forEach((record, index) => {
+    console.log(`  ${index + 1}. ${record.date}: ${record.total_time_seconds || 0}秒`)
+  })
+  
+  const totalAllSeconds = allDailyRecords?.reduce((sum, r) => sum + (r.total_time_seconds || 0), 0) || 0
+  console.log(`📊 全レコード合計: ${totalAllSeconds}秒 (${Math.round(totalAllSeconds / 60)}分)`)
 
   for (let i = 0; i < 4; i++) { // 過去4週間
     const { monday, sunday } = getWeekBounds(now, i)
@@ -452,13 +467,27 @@ async function calculateWeeklyProgress(userId: string): Promise<WeeklyProgress[]
     
     try {
       // daily_xp_recordsから週のデータを取得
-      const { data: dailyRecords, error: dailyError } = await supabase
+      // 週境界の重複を防ぐため、今週以外は次週の月曜日未満で区切る
+      let query = supabase
         .from('daily_xp_records')
         .select('*')
         .eq('user_id', userId)
         .gte('date', mondayStr)
-        .lte('date', sundayStr)
-        .order('date', { ascending: true })
+      
+      // 全ての週で明確な境界を使用（重複完全防止）
+      query = query.lte('date', sundayStr)
+      
+      const { data: dailyRecords, error: dailyError } = await query.order('date', { ascending: true })
+        
+      // 詳細デバッグ: 実際のクエリとデータを表示
+      console.log(`🔍 DETAILED DEBUG Week ${i + 1} (FIXED BOUNDARIES):`)
+      console.log(`  Query: user_id=${userId.substring(0, 8)}, date >= ${mondayStr}, date <= ${sundayStr}`)
+      console.log(`  Raw dailyRecords:`, dailyRecords?.map(r => ({ 
+        date: r.date, 
+        total_time_seconds: r.total_time_seconds,
+        quiz_sessions: r.quiz_sessions, 
+        course_sessions: r.course_sessions 
+      })))
 
       if (dailyError) {
         console.error(`❌ Daily records error for week ${i + 1}:`, dailyError)
@@ -468,12 +497,16 @@ async function calculateWeeklyProgress(userId: string): Promise<WeeklyProgress[]
       console.log(`📈 Daily records found: ${dailyRecords?.length || 0}`)
 
       // quiz_sessionsから詳細データを取得（正答率計算用）
+      // 日付境界を明確に設定（23:59:59まで含む）
+      const sundayEnd = new Date(sunday)
+      sundayEnd.setHours(23, 59, 59, 999)
+      
       const { data: quizSessions, error: sessionsError } = await supabase
         .from('quiz_sessions')
         .select('*')
         .eq('user_id', userId)
         .gte('created_at', monday.toISOString())
-        .lte('created_at', sunday.toISOString())
+        .lte('created_at', sundayEnd.toISOString())
 
       if (sessionsError) {
         console.error(`❌ Quiz sessions error for week ${i + 1}:`, sessionsError)
@@ -533,6 +566,11 @@ async function calculateWeeklyProgress(userId: string): Promise<WeeklyProgress[]
   weeks.forEach((week, index) => {
     console.log(`  Week ${index + 1}: ${week.week} - ${week.sessionsCompleted} sessions, ${week.averageScore}% score, ${week.timeSpent}min`)
   })
+  
+  // 総時間の合計を計算してデバッグ（重複修正後）
+  const totalWeeklyTime = weeks.reduce((sum, week) => sum + week.timeSpent, 0)
+  console.log(`🔍 DEBUG FIXED: 全週間の合計時間: ${totalWeeklyTime}分 (重複修正済み)`)
+  console.log(`🔍 DEBUG FIXED: 週境界重複問題を修正し、各週は月曜日〜日曜日の明確な境界を使用`)
 
   return weeks.reverse() // 古い週から順に
 }

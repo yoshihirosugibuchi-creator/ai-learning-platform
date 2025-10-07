@@ -1,0 +1,687 @@
+{
+  "tableName": "skp_transactions",
+  "recordCount": 68,
+  "backupDate": "2025-10-07T09:43:37.878Z",
+  "data": [
+    {
+      "id": "7b45e99e-81de-4565-8ced-7a88a4051cea",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_6f9ee12f-4e80-44b1-b71c-3e99d37554c3",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-02T06:29:29.733359+00:00",
+      "created_at": "2025-10-02T06:29:29.638+00:00"
+    },
+    {
+      "id": "db302b48-bd9f-41c4-be3f-a184756489c2",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 10,
+      "source": "streak_3days",
+      "description": "Learning streak bonus: 3 consecutive days",
+      "timestamp": "2025-10-03T05:38:07.637519+00:00",
+      "created_at": "2025-10-03T05:38:07.53+00:00"
+    },
+    {
+      "id": "8409b7fe-2d33-473e-be79-afefbdf2dd2f",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 84,
+      "source": "quiz_session_50ba6bd1-9577-4767-a104-952bdf31f688",
+      "description": "Quiz session: 8/10 correct (80% accuracy)",
+      "timestamp": "2025-10-05T09:30:07.916467+00:00",
+      "created_at": "2025-10-05T09:30:08.009+00:00"
+    },
+    {
+      "id": "0f30e95a-f90a-4d6d-870f-27496bddeaa1",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 92,
+      "source": "quiz_session_256c641b-88ed-45e3-8bf7-0b83cfa011f3",
+      "description": "Quiz session: 9/10 correct (90% accuracy)",
+      "timestamp": "2025-10-06T03:45:08.583475+00:00",
+      "created_at": "2025-10-06T03:45:08.47+00:00"
+    },
+    {
+      "id": "6c7197db-2d38-40d5-893e-e648e4f375dc",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_ca15be17-98b4-4b2c-a6d6-060435beafe4",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-06T05:30:05.465089+00:00",
+      "created_at": "2025-10-06T05:30:05.366+00:00"
+    },
+    {
+      "id": "7f1b55bd-4393-4cb9-87d0-a81abb3e4087",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 2,
+      "source": "course_session_what_is_ai",
+      "description": "Course session: ai_literacy_fundamentals (Incorrect confirmation quiz)",
+      "timestamp": "2025-10-07T05:12:26.335161+00:00",
+      "created_at": "2025-10-07T05:12:26.225+00:00"
+    },
+    {
+      "id": "04a1a1e7-eb96-45ca-974e-37618592fae9",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_3c_basics",
+      "description": "Course session: consulting_thinking_basics (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-10-07T07:21:45.465793+00:00",
+      "created_at": "2025-10-07T07:21:45.474+00:00"
+    },
+    {
+      "id": "8ee777e3-8629-42de-a125-67c047c71341",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 84,
+      "source": "quiz_session_2b1a1a9a-3b12-47b3-bd65-77195f122b10",
+      "description": "Quiz session: 8/10 correct (80% accuracy)",
+      "timestamp": "2025-10-07T07:52:40.59607+00:00",
+      "created_at": "2025-10-07T07:52:40.601+00:00"
+    },
+    {
+      "id": "2f9787e3-4158-41ba-a4d1-d1de1b0b159e",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 10,
+      "source": "streak_2days",
+      "description": "Learning streak bonus: 2 consecutive days",
+      "timestamp": "2025-10-02T06:29:33.844929+00:00",
+      "created_at": "2025-10-02T06:29:33.744+00:00"
+    },
+    {
+      "id": "e09fe6b8-5d9b-44c3-a01b-6f8df743ee3d",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_2b8e7536-683c-435b-9ee9-b4cca3fba499",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-04T12:38:37.715597+00:00",
+      "created_at": "2025-10-04T12:38:37.646+00:00"
+    },
+    {
+      "id": "5cd7dc5f-a424-462b-a060-91c59e0dbb65",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_862c727c-2bb0-4ae7-92dc-896b20e338df",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-05T11:05:18.954785+00:00",
+      "created_at": "2025-10-05T11:05:18.929+00:00"
+    },
+    {
+      "id": "7ccfd4f8-3a9d-40b3-b9a4-846086f4b5d4",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 84,
+      "source": "quiz_session_74acd78d-3ba0-4c3b-8d2e-a2ffc77da329",
+      "description": "Quiz session: 8/10 correct (80% accuracy)",
+      "timestamp": "2025-10-06T05:07:20.582415+00:00",
+      "created_at": "2025-10-06T05:07:20.475+00:00"
+    },
+    {
+      "id": "a390cf33-6028-495e-b0ea-9597e2e822b0",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_b9054599-287f-437e-878e-5c7bb1f10219",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-06T05:39:22.399818+00:00",
+      "created_at": "2025-10-06T05:39:22.296+00:00"
+    },
+    {
+      "id": "15cdd490-d293-44e1-8288-5af78f980484",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_5256295d-50e6-4812-951e-58eaa3c8c453",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-07T05:18:13.225287+00:00",
+      "created_at": "2025-10-07T05:18:13.109+00:00"
+    },
+    {
+      "id": "a1940909-4eee-480b-b366-d082be4313d3",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 2,
+      "source": "course_session_3c_practice",
+      "description": "Course session: consulting_thinking_basics (Incorrect confirmation quiz)",
+      "timestamp": "2025-10-07T07:25:31.213266+00:00",
+      "created_at": "2025-10-07T07:25:31.232+00:00"
+    },
+    {
+      "id": "41dad28f-072e-4788-aab6-4a04d08bdf15",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "streak_4days",
+      "description": "Learning streak bonus: 4 consecutive days",
+      "timestamp": "2025-10-07T07:52:42.519214+00:00",
+      "created_at": "2025-10-07T07:52:42.519+00:00"
+    },
+    {
+      "id": "32e395e5-87c6-4bd4-9ac5-c89d99cfc141",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_2dc110bb-50f3-47f7-8694-555a75e6a64b",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-02T07:01:20.123708+00:00",
+      "created_at": "2025-10-02T07:01:20.016+00:00"
+    },
+    {
+      "id": "46e0cc9e-5730-4475-acda-072c2031a425",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_8e1a4bb0-13f7-456e-a6c8-d7c61266ca14",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-05T08:50:58.414828+00:00",
+      "created_at": "2025-10-05T08:50:58.74+00:00"
+    },
+    {
+      "id": "e23fddb2-1db3-4d9a-baed-d7ad6d37ae3a",
+      "user_id": "82413077-a06d-4d9c-82bb-6fdb6a6b8e13",
+      "type": "earned",
+      "amount": 92,
+      "source": "quiz_session_06fec763-b5b6-4b28-adef-ea09c706ad19",
+      "description": "Quiz session: 9/10 correct (90% accuracy)",
+      "timestamp": "2025-10-06T01:38:18.632563+00:00",
+      "created_at": "2025-10-06T01:38:18.911+00:00"
+    },
+    {
+      "id": "7f078545-453b-43fb-9c26-ee83d3a57da8",
+      "user_id": "82413077-a06d-4d9c-82bb-6fdb6a6b8e13",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_conclusion_first_basics",
+      "description": "Course session: consulting_thinking_basics (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-10-06T01:39:14.401156+00:00",
+      "created_at": "2025-10-06T01:39:14.507+00:00"
+    },
+    {
+      "id": "12997794-0f1a-4d82-9a78-c3797072b07c",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 92,
+      "source": "quiz_session_a50168c6-f92e-4d13-9903-53c8b19687e8",
+      "description": "Quiz session: 9/10 correct (90% accuracy)",
+      "timestamp": "2025-10-06T05:20:25.074985+00:00",
+      "created_at": "2025-10-06T05:20:24.969+00:00"
+    },
+    {
+      "id": "197c1dcb-d2de-4751-b19d-8fc517fad50b",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 92,
+      "source": "quiz_session_70a9662d-94b4-4217-9cf1-c32b5eba7edd",
+      "description": "Quiz session: 9/10 correct (90% accuracy)",
+      "timestamp": "2025-10-06T06:12:50.561383+00:00",
+      "created_at": "2025-10-06T06:12:50.661+00:00"
+    },
+    {
+      "id": "a4571365-8268-4a4d-aa81-2c087b234393",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_ai_business_applications",
+      "description": "Course session: ai_literacy_fundamentals (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-10-07T05:18:16.989255+00:00",
+      "created_at": "2025-10-07T05:18:16.891+00:00"
+    },
+    {
+      "id": "83a80127-41cb-4e87-b04b-f18fbc29e1ac",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_prompt_fundamentals",
+      "description": "Course session: ai_literacy_fundamentals (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-10-07T07:34:52.899635+00:00",
+      "created_at": "2025-10-07T07:34:52.893+00:00"
+    },
+    {
+      "id": "d7ebc9e1-38b2-436c-bb4d-f62cfe3c64b2",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_62bcad97-bafc-4e91-9232-b5e277e14f08",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-02T13:25:48.588234+00:00",
+      "created_at": "2025-10-02T13:25:48.456+00:00"
+    },
+    {
+      "id": "fc608abe-c624-4cc7-9629-ae1bfe9e51d8",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_360c8fd3-2c71-481a-9c82-2c5ec13f7dcc",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-05T08:51:35.992294+00:00",
+      "created_at": "2025-10-05T08:51:36.525+00:00"
+    },
+    {
+      "id": "8246580c-975f-4d15-91fc-179720c2f480",
+      "user_id": "82413077-a06d-4d9c-82bb-6fdb6a6b8e13",
+      "type": "earned",
+      "amount": 10,
+      "source": "streak_1days",
+      "description": "Learning streak bonus: 1 consecutive days",
+      "timestamp": "2025-10-06T01:38:20.706999+00:00",
+      "created_at": "2025-10-06T01:38:21.11+00:00"
+    },
+    {
+      "id": "1b5d2d28-5850-42f8-a0d9-d8296834553d",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 92,
+      "source": "quiz_session_d325ead5-304a-47ce-af1f-9961e70705e8",
+      "description": "Quiz session: 9/10 correct (90% accuracy)",
+      "timestamp": "2025-10-06T05:22:06.337075+00:00",
+      "created_at": "2025-10-06T05:22:06.231+00:00"
+    },
+    {
+      "id": "5179242e-c2ba-4e42-9657-ac9232bbe793",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "streak_3days",
+      "description": "Learning streak bonus: 3 consecutive days",
+      "timestamp": "2025-10-06T06:12:53.114091+00:00",
+      "created_at": "2025-10-06T06:12:53.226+00:00"
+    },
+    {
+      "id": "5bb6e3b2-b4e0-4d14-a5be-20ec399b2e96",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_ai_limitations_ethics",
+      "description": "Course session: ai_literacy_fundamentals (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-10-07T05:38:15.359637+00:00",
+      "created_at": "2025-10-07T05:38:15.43+00:00"
+    },
+    {
+      "id": "5fe0846e-6f0a-4242-a458-b4b42fed4be6",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 2,
+      "source": "course_session_advanced_prompting",
+      "description": "Course session: ai_literacy_fundamentals (Incorrect confirmation quiz)",
+      "timestamp": "2025-10-07T07:43:07.024308+00:00",
+      "created_at": "2025-10-07T07:43:07.02+00:00"
+    },
+    {
+      "id": "8a486c54-7e6b-4f3e-b8eb-75799b433bf2",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_4f7f2789-a409-4704-aaad-bd5f53d1067d",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-03T05:37:57.556584+00:00",
+      "created_at": "2025-10-03T05:37:57.446+00:00"
+    },
+    {
+      "id": "d263f108-2c3c-434a-8ef6-2dc1a98c0431",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 92,
+      "source": "quiz_session_aee891e0-e313-4c1a-86ff-d2e0e560c990",
+      "description": "Quiz session: 9/10 correct (90% accuracy)",
+      "timestamp": "2025-10-05T09:29:10.839474+00:00",
+      "created_at": "2025-10-05T09:29:11.089+00:00"
+    },
+    {
+      "id": "d4a7a025-d672-4b24-898c-0880aa6882e8",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 10,
+      "source": "challenge_quiz",
+      "description": "crisis_management_bcp: 正解1問(10SKP) + 不正解0問(0SKP)",
+      "timestamp": "2025-09-19T03:19:44.148+00:00",
+      "created_at": "2025-09-19T03:19:48.61464+00:00"
+    },
+    {
+      "id": "ee05b43c-36df-4867-bd22-87e97698eb62",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 10,
+      "source": "challenge_quiz",
+      "description": "project_design_wbs: 正解1問(10SKP) + 不正解0問(0SKP)",
+      "timestamp": "2025-09-19T03:19:44.532+00:00",
+      "created_at": "2025-09-19T03:19:48.931377+00:00"
+    },
+    {
+      "id": "f497427e-c3e0-414e-92b5-7f53a1a029ae",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 10,
+      "source": "challenge_quiz",
+      "description": "competitive_strategy_frameworks: 正解1問(10SKP) + 不正解0問(0SKP)",
+      "timestamp": "2025-09-19T03:19:44.847+00:00",
+      "created_at": "2025-09-19T03:19:49.251125+00:00"
+    },
+    {
+      "id": "5b47d702-4349-4159-8a32-809683470807",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 10,
+      "source": "challenge_quiz",
+      "description": "customer_analysis_segmentation: 正解1問(10SKP) + 不正解0問(0SKP)",
+      "timestamp": "2025-09-19T03:19:45.131+00:00",
+      "created_at": "2025-09-19T03:19:49.539477+00:00"
+    },
+    {
+      "id": "78d0fb9f-5e73-4dae-8670-546a6577e0d4",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 2,
+      "source": "challenge_quiz",
+      "description": "corporate_risk_management: 正解0問(0SKP) + 不正解1問(2SKP)",
+      "timestamp": "2025-09-19T03:19:45.4+00:00",
+      "created_at": "2025-09-19T03:19:49.799979+00:00"
+    },
+    {
+      "id": "fae02316-406e-4893-a599-790a8a7b3feb",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 10,
+      "source": "challenge_quiz",
+      "description": "hypothesis_validation_essence: 正解1問(10SKP) + 不正解0問(0SKP)",
+      "timestamp": "2025-09-19T03:19:45.672+00:00",
+      "created_at": "2025-09-19T03:19:50.081652+00:00"
+    },
+    {
+      "id": "99629215-0f96-46ce-b42c-28939a6ee69f",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 2,
+      "source": "challenge_quiz",
+      "description": "digital_marketing: 正解0問(0SKP) + 不正解1問(2SKP)",
+      "timestamp": "2025-09-19T03:19:45.944+00:00",
+      "created_at": "2025-09-19T03:19:50.347259+00:00"
+    },
+    {
+      "id": "80efa4b8-4104-4b88-8dd6-00630c081ff3",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 10,
+      "source": "challenge_quiz",
+      "description": "management_accounting_kpi: 正解1問(10SKP) + 不正解0問(0SKP)",
+      "timestamp": "2025-09-19T03:19:46.26+00:00",
+      "created_at": "2025-09-19T03:19:50.681662+00:00"
+    },
+    {
+      "id": "8fb5600d-b47c-4df2-8879-b19d4efbe7a9",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 10,
+      "source": "challenge_quiz",
+      "description": "branding_positioning: 正解1問(10SKP) + 不正解0問(0SKP)",
+      "timestamp": "2025-09-19T03:19:46.64+00:00",
+      "created_at": "2025-09-19T03:19:51.054976+00:00"
+    },
+    {
+      "id": "9ae5c01a-bb1a-4e7f-85cc-2c856b665603",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 10,
+      "source": "challenge_quiz",
+      "description": "quantitative_analysis_statistics: 正解1問(10SKP) + 不正解0問(0SKP)",
+      "timestamp": "2025-09-19T03:19:47.014+00:00",
+      "created_at": "2025-09-19T03:19:51.427666+00:00"
+    },
+    {
+      "id": "1d245b38-99bc-4919-b673-fa492c7ca5e7",
+      "user_id": "82413077-a06d-4d9c-82bb-6fdb6a6b8e13",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_31066ffe-8a80-4907-b7be-dd24e081a6d2",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-06T01:40:12.920334+00:00",
+      "created_at": "2025-10-06T01:40:13.804+00:00"
+    },
+    {
+      "id": "e4cf4869-be7e-4b6a-bb29-c0bac800c79b",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 92,
+      "source": "quiz_session_fbf5c46a-0636-42fa-9f3f-633ddd60f3c4",
+      "description": "Quiz session: 9/10 correct (90% accuracy)",
+      "timestamp": "2025-10-06T05:27:49.213474+00:00",
+      "created_at": "2025-10-06T05:27:49.114+00:00"
+    },
+    {
+      "id": "8acef731-c980-4a01-8b61-85da268c0f43",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 84,
+      "source": "quiz_session_67ed6152-3ecb-410a-a9a5-d68418d02899",
+      "description": "Quiz session: 8/10 correct (80% accuracy)",
+      "timestamp": "2025-10-06T06:46:09.116648+00:00",
+      "created_at": "2025-10-06T06:46:09.01+00:00"
+    },
+    {
+      "id": "6055fd73-38da-4e2d-bb82-30337dbfe223",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_5d5d1233-1174-4ff1-b71a-0be08ee9d15f",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-07T05:53:14.744568+00:00",
+      "created_at": "2025-10-07T05:53:14.648+00:00"
+    },
+    {
+      "id": "4f5b7179-72ae-42f0-a85e-3b60c46c5ac2",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_prompt_optimization",
+      "description": "Course session: ai_literacy_fundamentals (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-10-07T07:48:46.081413+00:00",
+      "created_at": "2025-10-07T07:48:46.076+00:00"
+    },
+    {
+      "id": "12b25e79-6dfd-4674-ae91-d0e4cc35ebe8",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 92,
+      "source": "quiz_session_f3f9dbaf-7e31-43f1-96f6-84266371006b",
+      "description": "Quiz session: 9/10 correct (90% accuracy)",
+      "timestamp": "2025-09-29T04:24:46.965983+00:00",
+      "created_at": "2025-09-29T04:24:46.845+00:00"
+    },
+    {
+      "id": "2e47d6e0-e3c8-48c0-b448-121ec4708ffc",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 10,
+      "source": "streak_1days",
+      "description": "Learning streak bonus: 1 consecutive days",
+      "timestamp": "2025-09-29T04:24:51.705708+00:00",
+      "created_at": "2025-09-29T04:24:51.586+00:00"
+    },
+    {
+      "id": "9e3a238d-d7dc-4a6a-a728-f061a25c6098",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 84,
+      "source": "quiz_session_7c902771-5a7f-4cdf-b704-a9acbe862795",
+      "description": "Quiz session: 8/10 correct (80% accuracy)",
+      "timestamp": "2025-09-29T04:28:44.891161+00:00",
+      "created_at": "2025-09-29T04:28:44.785+00:00"
+    },
+    {
+      "id": "35663d1c-59bb-40da-8acb-910ad0cf1a2c",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_e7ca87d1-a870-484a-b469-8ce10cec193c",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-09-29T04:41:54.258582+00:00",
+      "created_at": "2025-09-29T04:41:54.157+00:00"
+    },
+    {
+      "id": "1594cd9d-6069-4dc5-bcd4-610dc067833c",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_conclusion_first_basics",
+      "description": "Course session: consulting_thinking_basics (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-09-29T04:51:29.853398+00:00",
+      "created_at": "2025-09-29T04:51:29.843+00:00"
+    },
+    {
+      "id": "159e1f04-59d2-4b00-b902-83c992e5e0d4",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_conclusion_first_practice",
+      "description": "Course session: consulting_thinking_basics (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-09-29T05:00:33.537519+00:00",
+      "created_at": "2025-09-29T05:00:33.907+00:00"
+    },
+    {
+      "id": "5ab91507-d8d7-4f73-a17e-619aaa37efce",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_conclusion_first_application",
+      "description": "Course session: consulting_thinking_basics (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-09-29T05:09:25.495476+00:00",
+      "created_at": "2025-09-29T05:09:25.83+00:00"
+    },
+    {
+      "id": "01c2243b-7565-429a-83a8-14101bee8dfd",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_b7a9996e-2faa-4d9c-a4b1-0fa9fa05c60d",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-09-29T05:27:43.993569+00:00",
+      "created_at": "2025-09-29T05:27:43.882+00:00"
+    },
+    {
+      "id": "b7070937-bb27-44a9-b434-b8a878708b8c",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "streak_1days",
+      "description": "Learning streak bonus: 1 consecutive days",
+      "timestamp": "2025-09-29T05:27:53.865668+00:00",
+      "created_at": "2025-09-29T05:27:53.764+00:00"
+    },
+    {
+      "id": "2fd79b06-5102-49f1-a5a0-8d734f6d4745",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_mece_basics",
+      "description": "Course session: consulting_thinking_basics (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-09-29T08:50:00.114142+00:00",
+      "created_at": "2025-09-29T08:50:00.176+00:00"
+    },
+    {
+      "id": "aac75e84-8ab4-4cdc-871c-a02378627515",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_mece_practice",
+      "description": "Course session: consulting_thinking_basics (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-09-29T08:56:53.500674+00:00",
+      "created_at": "2025-09-29T08:56:53.659+00:00"
+    },
+    {
+      "id": "39e224de-d952-49e4-ad5b-3175d3e8432c",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_mece_advanced",
+      "description": "Course session: consulting_thinking_basics (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-09-29T10:06:51.624324+00:00",
+      "created_at": "2025-09-29T10:06:51.709+00:00"
+    },
+    {
+      "id": "eae96063-075f-4c32-b673-ea0badcc8681",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_so_what_basics",
+      "description": "Course session: consulting_thinking_basics (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-09-29T10:16:47.595181+00:00",
+      "created_at": "2025-09-29T10:16:47.727+00:00"
+    },
+    {
+      "id": "51270a5f-f6af-4fff-9f04-37b45faedb52",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_so_what_practice",
+      "description": "Course session: consulting_thinking_basics (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-09-29T10:20:32.999942+00:00",
+      "created_at": "2025-09-29T10:20:33.145+00:00"
+    },
+    {
+      "id": "705cb576-92ed-4599-9fa6-65b519364b7a",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 150,
+      "source": "quiz_session_5b4bab3c-fa1b-43d0-8e6b-e37062cba53e",
+      "description": "Quiz session: 10/10 correct (100% accuracy) + Perfect bonus",
+      "timestamp": "2025-09-29T14:11:52.467481+00:00",
+      "created_at": "2025-09-29T14:11:52.565+00:00"
+    },
+    {
+      "id": "a787c3cd-e063-4e3e-a5f3-f65805a2049a",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 92,
+      "source": "quiz_session_f2d7ee2e-30ce-4e80-a58a-86770d841e83",
+      "description": "Quiz session: 9/10 correct (90% accuracy)",
+      "timestamp": "2025-09-29T15:54:45.603143+00:00",
+      "created_at": "2025-09-29T15:54:45.681+00:00"
+    },
+    {
+      "id": "37b798f2-4bab-4163-a2d4-a90a7e5667a7",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "streak_2days",
+      "description": "Learning streak bonus: 2 consecutive days",
+      "timestamp": "2025-09-29T15:54:47.188198+00:00",
+      "created_at": "2025-09-29T15:54:47.281+00:00"
+    },
+    {
+      "id": "b78881ad-ff54-41ba-a25c-859b773e1fc0",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 10,
+      "source": "course_session_so_what_mastery",
+      "description": "Course session: consulting_thinking_basics (Correct confirmation quiz) + Perfect bonus",
+      "timestamp": "2025-09-30T18:28:50.188764+00:00",
+      "created_at": "2025-09-30T18:28:50.079+00:00"
+    },
+    {
+      "id": "0102b7ea-8598-465b-a8aa-7d9ad93c01f3",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "type": "earned",
+      "amount": 84,
+      "source": "quiz_session_9fa8a6bd-2a77-42c3-83d1-eb9e94431276",
+      "description": "Quiz session: 8/10 correct (80% accuracy)",
+      "timestamp": "2025-09-30T18:31:04.153898+00:00",
+      "created_at": "2025-09-30T18:31:04.038+00:00"
+    },
+    {
+      "id": "7cd17eb9-833e-4aeb-a0db-eb52c81dbaaa",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "type": "earned",
+      "amount": 158,
+      "source": "quiz_session_e248549f-0e4f-450f-8f4a-64d053702449",
+      "description": "Quiz session: 11/10 correct (110.00000000000001% accuracy) + Perfect bonus",
+      "timestamp": "2025-10-01T05:28:40.050501+00:00",
+      "created_at": "2025-10-01T05:28:39.957+00:00"
+    }
+  ]
+}

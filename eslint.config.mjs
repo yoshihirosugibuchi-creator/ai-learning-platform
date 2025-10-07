@@ -24,7 +24,12 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn", // Temporarily downgrade to warning
+      "@typescript-eslint/no-explicit-any": [
+        "warn",
+        {
+          "ignoreRestArgs": true
+        }
+      ],
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {
@@ -33,6 +38,13 @@ const eslintConfig = [
           "caughtErrorsIgnorePattern": "^_"
         }
       ],
+    },
+  },
+  {
+    // 管理者API・デバッグAPIでのSupabase情報スキーマアクセス許可
+    files: ["**/api/admin/**/*.ts", "**/api/debug/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off", // 情報スキーマアクセス等の正当な用途で許可
     },
   },
 ];

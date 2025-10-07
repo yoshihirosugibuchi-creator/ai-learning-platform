@@ -17,6 +17,27 @@ export interface LearningSession {
     scrollDepth: number
     timeOnSection: Record<string, number>
     clickEvents: Array<{ element: string; timestamp: string }>
+    // Additional fields for course learning
+    sessionType?: 'course_learning' | 'quiz' | 'mixed'
+    hasQuiz?: boolean
+    quizAnswers?: Array<{
+      questionIndex: number
+      selectedAnswer: string | number
+      isCorrect: boolean
+      question?: string
+      correctAnswer?: string
+      timeSpent?: number
+    }>
+    // Additional course-specific fields
+    quizScore?: number
+    totalQuestions?: number
+    correctAnswers?: number
+    themeId?: string
+    genreId?: string
+    categoryId?: string
+    subcategoryId?: string
+    sessionId?: string
+    completedAt?: string
   }
   created_at?: string
   updated_at?: string
@@ -71,7 +92,10 @@ export async function saveLearningSession(session: Omit<LearningSession, 'id' | 
     session_id: session.session_id,
     progress_data: session.content_interactions || {},
     completion_percentage: session.completed ? 100 : 0,
-    completed_at: session.completed ? (session.end_time || new Date().toISOString()) : null
+    completed_at: session.completed ? (session.end_time || new Date().toISOString()) : null,
+    session_start_time: session.start_time,
+    session_end_time: session.end_time,
+    duration_seconds: session.duration ? Math.floor(session.duration / 1000) : null
   }
 
   const { data, error } = await supabaseAdmin
@@ -777,37 +801,60 @@ export async function getUserLearningStreak(userId: string): Promise<number> {
   } catch (error) {
     console.error('Error calculating XP-based learning streak:', error)
     
-    // フォールバック: 古いロジック
+    // フォールバック: quiz_sessionsから直接計算
     try {
-      const sessions = await getUserLearningSessions(userId)
+      console.log('📅 Fallback: Using quiz_sessions for streak calculation')
       
-      if (sessions.length === 0) return 0
+      // quiz_sessionsテーブルから直接取得
+      const { data: quizSessions, error: quizError } = await supabaseAdmin
+        .from('quiz_sessions')
+        .select('created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+      
+      if (quizError || !quizSessions || quizSessions.length === 0) {
+        console.log('No quiz sessions found for fallback streak calculation')
+        return 0
+      }
 
       // 学習した日付のリストを作成（重複除去してソート）
-      const learningDates = sessions
-        .map(session => new Date(session.start_time).toDateString())
+      const learningDates = quizSessions
+        .map(session => session.created_at?.split('T')[0])
+        .filter(date => date)
         .filter((date, index, arr) => arr.indexOf(date) === index)
-        .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+        .sort((a, b) => new Date(b!).getTime() - new Date(a!).getTime())
+
+      console.log('📅 Learning dates from quiz sessions:', learningDates.slice(0, 10))
 
       if (learningDates.length === 0) return 0
 
       // 今日から連続で学習している日数を計算
       const today = new Date()
+      const todayStr = today.getFullYear() + '-' + 
+        String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(today.getDate()).padStart(2, '0')
+      
       let streak = 0
-      let currentDate = new Date(today)
+      const checkDate = new Date(today)
+      
+      console.log('📅 Starting streak calculation from:', todayStr)
 
-      for (const dateStr of learningDates) {
-        const sessionDate = new Date(dateStr)
-        const diffDays = Math.floor((currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24))
+      for (let i = 0; i < 30; i++) { // Check last 30 days
+        const checkDateStr = checkDate.getFullYear() + '-' + 
+          String(checkDate.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(checkDate.getDate()).padStart(2, '0')
         
-        if (diffDays === streak) {
+        if (learningDates.includes(checkDateStr)) {
           streak++
-          currentDate = sessionDate
+          console.log(`📅 Found activity on ${checkDateStr}, streak = ${streak}`)
+          checkDate.setDate(checkDate.getDate() - 1)
         } else {
+          console.log(`📅 No activity on ${checkDateStr}, stopping at streak = ${streak}`)
           break
         }
       }
 
+      console.log('📅 Final streak from quiz sessions:', streak)
       return streak
     } catch (fallbackError) {
       console.error('Error in fallback learning streak calculation:', fallbackError)

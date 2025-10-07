@@ -3,6 +3,7 @@ import { Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import ClientOnly from "@/components/ClientOnly";
 
 const inter = Inter({
@@ -37,11 +38,13 @@ export default function RootLayout({
         className={`${inter.variable} ${notoSansJP.variable} antialiased min-h-screen bg-background font-sans`}
       >
         <ClientOnly fallback={<div>Loading...</div>}>
-          <AuthProvider>
-            <UserProvider>
-              {children}
-            </UserProvider>
-          </AuthProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <UserProvider>
+                {children}
+              </UserProvider>
+            </AuthProvider>
+          </QueryProvider>
         </ClientOnly>
       </body>
     </html>

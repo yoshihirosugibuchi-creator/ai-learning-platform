@@ -24,7 +24,7 @@ import { aiAnalytics, LearningPattern, OptimalLearningTime, PersonalizedHints } 
 import IndustryAnalysisPage from '@/components/analytics/IndustryAnalysisPage'
 import { globalCache, useResourceMonitor } from '@/lib/performance-optimizer'
 import XPStatsCard from '@/components/xp/XPStatsCard'
-import { LearningAnalyticsDashboard } from '@/components/learning-analytics'
+import { CachedLearningDashboard } from '@/components/analytics/CachedLearningDashboard'
 
 // レーダーチャートコンポーネントを遅延読み込み
 const _SkillRadarChart = lazy(() => import('@/components/analytics/SkillRadarChart'))
@@ -175,7 +175,7 @@ export default function AnalyticsPage() {
           <TabsContent value="unified" className="space-y-6">
             {/* 統合学習分析ダッシュボード */}
             {user?.id && (
-              <LearningAnalyticsDashboard 
+              <CachedLearningDashboard 
                 userId={user.id}
                 className="w-full"
               />

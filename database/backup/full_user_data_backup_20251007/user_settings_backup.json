@@ -1,0 +1,919 @@
+{
+  "tableName": "user_settings",
+  "recordCount": 57,
+  "backupDate": "2025-10-07T09:43:38.992Z",
+  "data": [
+    {
+      "id": "5692ef6c-fae3-4502-8a05-4e1bcbff6f60",
+      "user_id": "82413077-a06d-4d9c-82bb-6fdb6a6b8e13",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_conclusion_first_conclusion_first_basics",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "conclusion_first",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "conclusion_first_basics",
+        "completedAt": "2025-10-06T01:39:15.598Z",
+        "lastAccessedAt": "2025-10-06T01:39:15.598Z"
+      },
+      "created_at": "2025-10-06T01:39:15.300165+00:00",
+      "updated_at": "2025-10-06T01:39:15.300165+00:00"
+    },
+    {
+      "id": "3dbb8893-4bb0-4893-aa73-f55feff9cc58",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_conclusion_first_conclusion_first_basics",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "conclusion_first",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "conclusion_first_basics",
+        "completedAt": "2025-10-07T07:23:35.297Z",
+        "lastAccessedAt": "2025-10-07T07:23:35.297Z"
+      },
+      "created_at": "2025-09-29T04:51:30.955871+00:00",
+      "updated_at": "2025-10-07T07:23:35.4092+00:00"
+    },
+    {
+      "id": "265de6ad-ade3-47e1-b21c-a9861dd31e50",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_ai_literacy_fundamentals_prompt_engineering_prompt_basics_prompt_optimization",
+      "setting_value": {
+        "genreId": "prompt_engineering",
+        "themeId": "prompt_basics",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "prompt_optimization",
+        "completedAt": "2025-10-07T07:48:46.850Z",
+        "lastAccessedAt": "2025-10-07T07:48:46.850Z"
+      },
+      "created_at": "2025-10-07T07:48:46.969082+00:00",
+      "updated_at": "2025-10-07T07:48:46.969082+00:00"
+    },
+    {
+      "id": "7d2792f2-b02f-45d2-877e-25fe85a755aa",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_so_what_why_so_so_what_basics",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "so_what_why_so",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "so_what_basics",
+        "completedAt": "2025-09-29T10:16:48.361Z",
+        "lastAccessedAt": "2025-09-29T10:16:48.361Z"
+      },
+      "created_at": "2025-09-29T10:16:48.346558+00:00",
+      "updated_at": "2025-09-29T10:16:48.346558+00:00"
+    },
+    {
+      "id": "9ea6d414-0ee8-46b2-9d18-287279374626",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_conclusion_first_conclusion_first_practice",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "conclusion_first",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "conclusion_first_practice",
+        "completedAt": "2025-10-07T07:30:01.048Z",
+        "lastAccessedAt": "2025-10-07T07:30:01.048Z"
+      },
+      "created_at": "2025-09-29T05:00:34.467666+00:00",
+      "updated_at": "2025-10-07T07:30:01.176882+00:00"
+    },
+    {
+      "id": "63e82fab-de30-49cb-8142-256bfab19d8b",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_ai_literacy_fundamentals_ai_fundamentals_ai_basic_concepts_what_is_ai",
+      "setting_value": {
+        "genreId": "ai_fundamentals",
+        "themeId": "ai_basic_concepts",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "what_is_ai",
+        "completedAt": "2025-10-07T07:47:56.692Z",
+        "lastAccessedAt": "2025-10-07T07:47:56.692Z"
+      },
+      "created_at": "2025-10-07T05:12:28.535916+00:00",
+      "updated_at": "2025-10-07T07:47:56.8339+00:00"
+    },
+    {
+      "id": "06509467-32f9-426d-a8c9-68b6e722e29a",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_so_what_why_so_so_what_practice",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "so_what_why_so",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "so_what_practice",
+        "completedAt": "2025-09-29T10:20:33.772Z",
+        "lastAccessedAt": "2025-09-29T10:20:33.772Z"
+      },
+      "created_at": "2025-09-29T10:20:33.774236+00:00",
+      "updated_at": "2025-09-29T10:20:33.774236+00:00"
+    },
+    {
+      "id": "46af2e3a-1db1-4950-8cb1-b407bc173471",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_conclusion_first_conclusion_first_application",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "conclusion_first",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "conclusion_first_application",
+        "completedAt": "2025-10-06T08:00:11.382Z",
+        "lastAccessedAt": "2025-10-06T08:00:11.382Z"
+      },
+      "created_at": "2025-09-29T05:09:26.348126+00:00",
+      "updated_at": "2025-10-06T08:00:11.437979+00:00"
+    },
+    {
+      "id": "db837e4a-5998-4bd5-ae26-63cbdfcb3a08",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_ai_literacy_fundamentals_ai_fundamentals_ai_basic_concepts_ai_business_applications",
+      "setting_value": {
+        "genreId": "ai_fundamentals",
+        "themeId": "ai_basic_concepts",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "ai_business_applications",
+        "completedAt": "2025-10-07T05:18:19.122Z",
+        "lastAccessedAt": "2025-10-07T05:18:19.122Z"
+      },
+      "created_at": "2025-10-07T05:18:19.154839+00:00",
+      "updated_at": "2025-10-07T05:18:19.154839+00:00"
+    },
+    {
+      "id": "9774a0cf-b8b0-4f56-830d-fa4c37d10eb1",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_ai_literacy_fundamentals_ai_fundamentals_ai_basic_concepts_ai_limitations_ethics",
+      "setting_value": {
+        "genreId": "ai_fundamentals",
+        "themeId": "ai_basic_concepts",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "ai_limitations_ethics",
+        "completedAt": "2025-10-07T05:38:16.241Z",
+        "lastAccessedAt": "2025-10-07T05:38:16.241Z"
+      },
+      "created_at": "2025-10-07T05:38:16.280876+00:00",
+      "updated_at": "2025-10-07T05:38:16.280876+00:00"
+    },
+    {
+      "id": "850aa28f-eced-47e6-85bd-6c4e17173073",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_consulting_thinking_basics_framework_application_3c_analysis_3c_basics",
+      "setting_value": {
+        "genreId": "framework_application",
+        "themeId": "3c_analysis",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "3c_basics",
+        "completedAt": "2025-10-07T07:21:46.432Z",
+        "lastAccessedAt": "2025-10-07T07:21:46.432Z"
+      },
+      "created_at": "2025-10-07T07:21:46.6059+00:00",
+      "updated_at": "2025-10-07T07:21:46.6059+00:00"
+    },
+    {
+      "id": "3ee627d7-ae80-47cd-b096-2c017bf37e09",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_ai_literacy_fundamentals_ai_fundamentals_ai_basic_concepts_what_is_ai",
+      "setting_value": {
+        "genreId": "ai_fundamentals",
+        "themeId": "ai_basic_concepts",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "what_is_ai",
+        "completedAt": "2025-09-24T01:45:12.874Z",
+        "lastAccessedAt": "2025-09-24T01:45:12.874Z"
+      },
+      "created_at": "2025-09-24T01:45:28.289889+00:00",
+      "updated_at": "2025-09-24T01:45:28.289889+00:00"
+    },
+    {
+      "id": "7ca9b804-530a-43e0-998c-dd488d77c2b6",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_conclusion_first_conclusion_first_basics",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "conclusion_first",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "conclusion_first_basics",
+        "completedAt": "2025-09-19T05:55:19.583Z",
+        "lastAccessedAt": "2025-09-19T05:55:19.583Z"
+      },
+      "created_at": "2025-09-19T05:55:24.907303+00:00",
+      "updated_at": "2025-09-19T05:55:24.907303+00:00"
+    },
+    {
+      "id": "dbba69a7-4664-4f2e-b72d-f51891b7c75a",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_conclusion_first_conclusion_first_practice",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "conclusion_first",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "conclusion_first_practice",
+        "completedAt": "2025-09-19T05:56:03.695Z",
+        "lastAccessedAt": "2025-09-19T05:56:03.695Z"
+      },
+      "created_at": "2025-09-19T05:56:08.570547+00:00",
+      "updated_at": "2025-09-19T05:56:08.570547+00:00"
+    },
+    {
+      "id": "0a2699b1-bc28-4c80-bdb4-3abbacbd77ce",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_conclusion_first_conclusion_first_application",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "conclusion_first",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "conclusion_first_application",
+        "completedAt": "2025-09-19T05:57:13.135Z",
+        "lastAccessedAt": "2025-09-19T05:57:13.135Z"
+      },
+      "created_at": "2025-09-19T05:57:17.994863+00:00",
+      "updated_at": "2025-09-19T05:57:17.994863+00:00"
+    },
+    {
+      "id": "bedba9d5-b0a9-4c90-8c1a-09e5a482c600",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_mece_thinking_mece_basics",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "mece_thinking",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "mece_basics",
+        "completedAt": "2025-09-19T05:58:00.797Z",
+        "lastAccessedAt": "2025-09-19T05:58:00.797Z"
+      },
+      "created_at": "2025-09-19T05:58:05.580812+00:00",
+      "updated_at": "2025-09-19T05:58:05.580812+00:00"
+    },
+    {
+      "id": "246f7a65-efe7-4372-be9b-edfb62d15192",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_mece_thinking_mece_practice",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "mece_thinking",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "mece_practice",
+        "completedAt": "2025-09-19T05:58:25.542Z",
+        "lastAccessedAt": "2025-09-19T05:58:25.542Z"
+      },
+      "created_at": "2025-09-19T05:58:30.355671+00:00",
+      "updated_at": "2025-09-19T05:58:30.355671+00:00"
+    },
+    {
+      "id": "4af334ff-2fbc-4b35-9846-264c6ad240e1",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_mece_thinking_mece_advanced",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "mece_thinking",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "mece_advanced",
+        "completedAt": "2025-09-19T05:58:55.701Z",
+        "lastAccessedAt": "2025-09-19T05:58:55.701Z"
+      },
+      "created_at": "2025-09-19T05:59:00.482394+00:00",
+      "updated_at": "2025-09-19T05:59:00.482394+00:00"
+    },
+    {
+      "id": "273a964b-fb81-481a-b3c2-d62f12f58787",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_so_what_why_so_so_what_basics",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "so_what_why_so",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "so_what_basics",
+        "completedAt": "2025-09-19T06:00:07.955Z",
+        "lastAccessedAt": "2025-09-19T06:00:07.955Z"
+      },
+      "created_at": "2025-09-19T06:00:12.855766+00:00",
+      "updated_at": "2025-09-19T06:00:12.855766+00:00"
+    },
+    {
+      "id": "c36dd420-3676-4053-8860-c73f627189f4",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_so_what_why_so_so_what_practice",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "so_what_why_so",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "so_what_practice",
+        "completedAt": "2025-09-19T06:00:41.198Z",
+        "lastAccessedAt": "2025-09-19T06:00:41.198Z"
+      },
+      "created_at": "2025-09-19T06:00:46.061247+00:00",
+      "updated_at": "2025-09-19T06:00:46.061247+00:00"
+    },
+    {
+      "id": "4cea8f45-4f1e-464a-aa7e-968018f42658",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_so_what_why_so_so_what_mastery",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "so_what_why_so",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "so_what_mastery",
+        "completedAt": "2025-09-19T06:01:03.558Z",
+        "lastAccessedAt": "2025-09-19T06:01:03.558Z"
+      },
+      "created_at": "2025-09-19T06:01:08.383323+00:00",
+      "updated_at": "2025-09-19T06:01:08.383323+00:00"
+    },
+    {
+      "id": "29f094cd-c83c-4686-a0b4-bed00666b5b8",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_consulting_thinking_basics_framework_application_3c_analysis_3c_basics",
+      "setting_value": {
+        "genreId": "framework_application",
+        "themeId": "3c_analysis",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "3c_basics",
+        "completedAt": "2025-09-19T06:01:39.509Z",
+        "lastAccessedAt": "2025-09-19T06:01:39.509Z"
+      },
+      "created_at": "2025-09-19T06:01:44.752857+00:00",
+      "updated_at": "2025-09-19T06:01:44.752857+00:00"
+    },
+    {
+      "id": "676ee52a-c73d-45a5-9d6a-2a5173db35b9",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_consulting_thinking_basics_framework_application_3c_analysis_3c_practice",
+      "setting_value": {
+        "genreId": "framework_application",
+        "themeId": "3c_analysis",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "3c_practice",
+        "completedAt": "2025-09-19T06:02:06.127Z",
+        "lastAccessedAt": "2025-09-19T06:02:06.127Z"
+      },
+      "created_at": "2025-09-19T06:02:10.984891+00:00",
+      "updated_at": "2025-09-19T06:02:10.984891+00:00"
+    },
+    {
+      "id": "db51d1c0-3287-49c0-bdeb-e80cbf0acf40",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_consulting_thinking_basics_framework_application_3c_analysis_3c_strategic_insights",
+      "setting_value": {
+        "genreId": "framework_application",
+        "themeId": "3c_analysis",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "3c_strategic_insights",
+        "completedAt": "2025-09-19T06:02:27.302Z",
+        "lastAccessedAt": "2025-09-19T06:02:27.302Z"
+      },
+      "created_at": "2025-09-19T06:02:32.129738+00:00",
+      "updated_at": "2025-09-19T06:02:32.129738+00:00"
+    },
+    {
+      "id": "bfa71967-2480-4a5f-bec5-f1fe28e066ca",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_ai_literacy_fundamentals_ai_fundamentals_ai_basic_concepts_ai_business_applications",
+      "setting_value": {
+        "genreId": "ai_fundamentals",
+        "themeId": "ai_basic_concepts",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "ai_business_applications",
+        "completedAt": "2025-09-24T01:46:09.065Z",
+        "lastAccessedAt": "2025-09-24T01:46:09.065Z"
+      },
+      "created_at": "2025-09-24T01:46:24.253105+00:00",
+      "updated_at": "2025-09-24T01:46:24.253105+00:00"
+    },
+    {
+      "id": "51e9bd90-7857-4639-b52c-ac54d44fc7d1",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_ai_literacy_fundamentals_ai_fundamentals_ai_basic_concepts_ai_limitations_ethics",
+      "setting_value": {
+        "genreId": "ai_fundamentals",
+        "themeId": "ai_basic_concepts",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "ai_limitations_ethics",
+        "completedAt": "2025-09-24T01:46:58.177Z",
+        "lastAccessedAt": "2025-09-24T01:46:58.177Z"
+      },
+      "created_at": "2025-09-24T01:47:13.38897+00:00",
+      "updated_at": "2025-09-24T01:47:13.38897+00:00"
+    },
+    {
+      "id": "b5562797-a547-42ad-973b-823fd6aad9aa",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_ai_literacy_fundamentals_prompt_engineering_prompt_basics_prompt_fundamentals",
+      "setting_value": {
+        "genreId": "prompt_engineering",
+        "themeId": "prompt_basics",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "prompt_fundamentals",
+        "completedAt": "2025-09-24T02:35:47.476Z",
+        "lastAccessedAt": "2025-09-24T02:35:47.476Z"
+      },
+      "created_at": "2025-09-24T02:36:03.073689+00:00",
+      "updated_at": "2025-09-24T02:36:03.073689+00:00"
+    },
+    {
+      "id": "44819684-3f17-49fc-946e-90279449ad6b",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_ai_literacy_fundamentals_prompt_engineering_prompt_basics_advanced_prompting",
+      "setting_value": {
+        "genreId": "prompt_engineering",
+        "themeId": "prompt_basics",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "advanced_prompting",
+        "completedAt": "2025-09-24T02:37:05.611Z",
+        "lastAccessedAt": "2025-09-24T02:37:05.611Z"
+      },
+      "created_at": "2025-09-24T02:37:21.236474+00:00",
+      "updated_at": "2025-09-24T02:37:21.236474+00:00"
+    },
+    {
+      "id": "c5cc0356-ce19-4369-956d-2d4bacefb7c8",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_ai_literacy_fundamentals_prompt_engineering_prompt_basics_prompt_optimization",
+      "setting_value": {
+        "genreId": "prompt_engineering",
+        "themeId": "prompt_basics",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "prompt_optimization",
+        "completedAt": "2025-09-24T02:37:47.738Z",
+        "lastAccessedAt": "2025-09-24T02:37:47.738Z"
+      },
+      "created_at": "2025-09-24T02:38:03.048204+00:00",
+      "updated_at": "2025-09-24T02:38:03.048204+00:00"
+    },
+    {
+      "id": "6edbb9e3-ae2f-4033-ad5d-ebf47ac36b63",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_ai_literacy_fundamentals_business_ai_practice_ai_workflow_integration_workflow_analysis",
+      "setting_value": {
+        "genreId": "business_ai_practice",
+        "themeId": "ai_workflow_integration",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "workflow_analysis",
+        "completedAt": "2025-09-24T02:38:49.427Z",
+        "lastAccessedAt": "2025-09-24T02:38:49.427Z"
+      },
+      "created_at": "2025-09-24T02:39:04.770439+00:00",
+      "updated_at": "2025-09-24T02:39:04.770439+00:00"
+    },
+    {
+      "id": "637b91e5-2d1e-49d0-8c4f-42a220f92342",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_ai_literacy_fundamentals_business_ai_practice_ai_workflow_integration_human_ai_collaboration",
+      "setting_value": {
+        "genreId": "business_ai_practice",
+        "themeId": "ai_workflow_integration",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "human_ai_collaboration",
+        "completedAt": "2025-09-24T02:39:53.866Z",
+        "lastAccessedAt": "2025-09-24T02:39:53.866Z"
+      },
+      "created_at": "2025-09-24T02:40:09.173825+00:00",
+      "updated_at": "2025-09-24T02:40:09.173825+00:00"
+    },
+    {
+      "id": "f4ba18c5-5754-4b2d-8157-598ac8c7ba63",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_ai_literacy_fundamentals_business_ai_practice_ai_workflow_integration_implementation_planning",
+      "setting_value": {
+        "genreId": "business_ai_practice",
+        "themeId": "ai_workflow_integration",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "implementation_planning",
+        "completedAt": "2025-09-24T02:40:30.666Z",
+        "lastAccessedAt": "2025-09-24T02:40:30.666Z"
+      },
+      "created_at": "2025-09-24T02:40:46.002061+00:00",
+      "updated_at": "2025-09-24T02:40:46.002061+00:00"
+    },
+    {
+      "id": "9f4ac3c2-1eda-49b7-ad1c-bb89f1ef6eea",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_ai_literacy_fundamentals_ai_evaluation_ethics_ai_performance_evaluation_evaluation_framework",
+      "setting_value": {
+        "genreId": "ai_evaluation_ethics",
+        "themeId": "ai_performance_evaluation",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "evaluation_framework",
+        "completedAt": "2025-09-24T02:41:34.083Z",
+        "lastAccessedAt": "2025-09-24T02:41:34.083Z"
+      },
+      "created_at": "2025-09-24T02:41:49.658548+00:00",
+      "updated_at": "2025-09-24T02:41:49.658548+00:00"
+    },
+    {
+      "id": "81822cb9-5de4-4471-b29b-97ed6e716a64",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_ai_literacy_fundamentals_ai_evaluation_ethics_ai_performance_evaluation_continuous_improvement",
+      "setting_value": {
+        "genreId": "ai_evaluation_ethics",
+        "themeId": "ai_performance_evaluation",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "continuous_improvement",
+        "completedAt": "2025-09-24T02:42:17.675Z",
+        "lastAccessedAt": "2025-09-24T02:42:17.675Z"
+      },
+      "created_at": "2025-09-24T02:42:33.192322+00:00",
+      "updated_at": "2025-09-24T02:42:33.192322+00:00"
+    },
+    {
+      "id": "42667b71-38fc-41a3-86ae-8af013700bb0",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_ai_literacy_fundamentals_ai_evaluation_ethics_ai_performance_evaluation_responsible_ai_practice",
+      "setting_value": {
+        "genreId": "ai_evaluation_ethics",
+        "themeId": "ai_performance_evaluation",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "responsible_ai_practice",
+        "completedAt": "2025-09-24T02:43:22.091Z",
+        "lastAccessedAt": "2025-09-24T02:43:22.091Z"
+      },
+      "created_at": "2025-09-24T02:43:37.414046+00:00",
+      "updated_at": "2025-09-24T02:43:37.414046+00:00"
+    },
+    {
+      "id": "08f60622-f5bc-43ed-8a63-991406106808",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_customer_understanding_customer_journey_mapping_journey_mapping_basics",
+      "setting_value": {
+        "genreId": "customer_understanding",
+        "themeId": "customer_journey_mapping",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "journey_mapping_basics",
+        "completedAt": "2025-09-24T03:17:44.316Z",
+        "lastAccessedAt": "2025-09-24T03:17:44.316Z"
+      },
+      "created_at": "2025-09-24T03:18:00.109474+00:00",
+      "updated_at": "2025-09-24T03:18:00.109474+00:00"
+    },
+    {
+      "id": "416cced7-c1c5-4327-a2cb-51f22f9e3c41",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_customer_understanding_customer_journey_mapping_journey_mapping_practice",
+      "setting_value": {
+        "genreId": "customer_understanding",
+        "themeId": "customer_journey_mapping",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "journey_mapping_practice",
+        "completedAt": "2025-09-24T03:18:18.763Z",
+        "lastAccessedAt": "2025-09-24T03:18:18.763Z"
+      },
+      "created_at": "2025-09-24T03:18:34.101336+00:00",
+      "updated_at": "2025-09-24T03:18:34.101336+00:00"
+    },
+    {
+      "id": "f706da9c-3b56-450e-9de0-dd5bfee46e3c",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_customer_understanding_customer_journey_mapping_journey_optimization",
+      "setting_value": {
+        "genreId": "customer_understanding",
+        "themeId": "customer_journey_mapping",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "journey_optimization",
+        "completedAt": "2025-09-24T03:18:50.381Z",
+        "lastAccessedAt": "2025-09-24T03:18:50.381Z"
+      },
+      "created_at": "2025-09-24T03:19:05.817849+00:00",
+      "updated_at": "2025-09-24T03:19:05.817849+00:00"
+    },
+    {
+      "id": "7d8b8151-b612-4ff5-a02f-8d42c94f97c3",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_customer_understanding_persona_development_persona_fundamentals",
+      "setting_value": {
+        "genreId": "customer_understanding",
+        "themeId": "persona_development",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "persona_fundamentals",
+        "completedAt": "2025-09-24T03:20:15.238Z",
+        "lastAccessedAt": "2025-09-24T03:20:15.238Z"
+      },
+      "created_at": "2025-09-24T03:20:30.695995+00:00",
+      "updated_at": "2025-09-24T03:20:30.695995+00:00"
+    },
+    {
+      "id": "6522ec26-2470-4613-8907-9e421c6a4880",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_customer_understanding_persona_development_persona_research",
+      "setting_value": {
+        "genreId": "customer_understanding",
+        "themeId": "persona_development",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "persona_research",
+        "completedAt": "2025-09-24T03:20:51.133Z",
+        "lastAccessedAt": "2025-09-24T03:20:51.133Z"
+      },
+      "created_at": "2025-09-24T03:21:06.527676+00:00",
+      "updated_at": "2025-09-24T03:21:06.527676+00:00"
+    },
+    {
+      "id": "29d42ebd-038d-4e9b-ad54-a82fd93eb3f9",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_customer_understanding_persona_development_persona_activation",
+      "setting_value": {
+        "genreId": "customer_understanding",
+        "themeId": "persona_development",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "persona_activation",
+        "completedAt": "2025-09-24T03:21:17.556Z",
+        "lastAccessedAt": "2025-09-24T03:21:17.556Z"
+      },
+      "created_at": "2025-09-24T03:21:32.907234+00:00",
+      "updated_at": "2025-09-24T03:21:32.907234+00:00"
+    },
+    {
+      "id": "a79bfb64-8cf6-4ee2-a8c7-4bb7ed073ae5",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_customer_understanding_market_segmentation_segmentation_strategy",
+      "setting_value": {
+        "genreId": "customer_understanding",
+        "themeId": "market_segmentation",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "segmentation_strategy",
+        "completedAt": "2025-09-24T03:23:28.342Z",
+        "lastAccessedAt": "2025-09-24T03:23:28.342Z"
+      },
+      "created_at": "2025-09-24T03:22:17.3717+00:00",
+      "updated_at": "2025-09-24T03:23:43.727875+00:00"
+    },
+    {
+      "id": "944648c6-e691-4682-9986-edc9438490b8",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_customer_understanding_market_segmentation_targeting_strategy",
+      "setting_value": {
+        "genreId": "customer_understanding",
+        "themeId": "market_segmentation",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "targeting_strategy",
+        "completedAt": "2025-09-24T03:23:37.645Z",
+        "lastAccessedAt": "2025-09-24T03:23:37.645Z"
+      },
+      "created_at": "2025-09-24T03:22:50.297541+00:00",
+      "updated_at": "2025-09-24T03:23:53.034327+00:00"
+    },
+    {
+      "id": "570b2ded-3565-4b2e-938e-446776a998d9",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_customer_understanding_market_segmentation_positioning_strategy",
+      "setting_value": {
+        "genreId": "customer_understanding",
+        "themeId": "market_segmentation",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "positioning_strategy",
+        "completedAt": "2025-09-24T03:23:44.003Z",
+        "lastAccessedAt": "2025-09-24T03:23:44.003Z"
+      },
+      "created_at": "2025-09-24T03:23:09.625973+00:00",
+      "updated_at": "2025-09-24T03:23:59.351012+00:00"
+    },
+    {
+      "id": "086be0fe-c54b-4870-921b-4e67657cb6a2",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_digital_marketing_content_marketing_content_strategy_foundation",
+      "setting_value": {
+        "genreId": "digital_marketing",
+        "themeId": "content_marketing",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "content_strategy_foundation",
+        "completedAt": "2025-09-24T03:31:52.080Z",
+        "lastAccessedAt": "2025-09-24T03:31:52.080Z"
+      },
+      "created_at": "2025-09-24T03:32:07.518773+00:00",
+      "updated_at": "2025-09-24T03:32:07.518773+00:00"
+    },
+    {
+      "id": "2bd078d6-b622-45f2-8ee1-fe8d79e066e6",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_digital_marketing_content_marketing_content_planning",
+      "setting_value": {
+        "genreId": "digital_marketing",
+        "themeId": "content_marketing",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "content_planning",
+        "completedAt": "2025-09-24T03:32:17.533Z",
+        "lastAccessedAt": "2025-09-24T03:32:17.533Z"
+      },
+      "created_at": "2025-09-24T03:32:33.495269+00:00",
+      "updated_at": "2025-09-24T03:32:33.495269+00:00"
+    },
+    {
+      "id": "9eb75818-bb09-4ea0-bcd2-744e4d6d803f",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_digital_marketing_content_marketing_content_distribution",
+      "setting_value": {
+        "genreId": "digital_marketing",
+        "themeId": "content_marketing",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "content_distribution",
+        "completedAt": "2025-09-24T03:32:57.103Z",
+        "lastAccessedAt": "2025-09-24T03:32:57.103Z"
+      },
+      "created_at": "2025-09-24T03:33:12.52778+00:00",
+      "updated_at": "2025-09-24T03:33:12.52778+00:00"
+    },
+    {
+      "id": "a313d891-6466-4a7b-bb9f-778f538afa5d",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_digital_marketing_social_media_marketing_social_platform_strategy",
+      "setting_value": {
+        "genreId": "digital_marketing",
+        "themeId": "social_media_marketing",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "social_platform_strategy",
+        "completedAt": "2025-09-24T03:33:40.997Z",
+        "lastAccessedAt": "2025-09-24T03:33:40.997Z"
+      },
+      "created_at": "2025-09-24T03:33:56.349147+00:00",
+      "updated_at": "2025-09-24T03:33:56.349147+00:00"
+    },
+    {
+      "id": "543b453e-b608-4768-92e3-b853f5a8fcd8",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_digital_marketing_social_media_marketing_engagement_building",
+      "setting_value": {
+        "genreId": "digital_marketing",
+        "themeId": "social_media_marketing",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "engagement_building",
+        "completedAt": "2025-09-24T03:34:12.812Z",
+        "lastAccessedAt": "2025-09-24T03:34:12.812Z"
+      },
+      "created_at": "2025-09-24T03:34:28.205784+00:00",
+      "updated_at": "2025-09-24T03:34:28.205784+00:00"
+    },
+    {
+      "id": "1ee0271d-4b0e-48d4-b2fa-2b91959a5c62",
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "setting_key": "lp_marketing_practice_digital_marketing_social_media_marketing_social_commerce",
+      "setting_value": {
+        "genreId": "digital_marketing",
+        "themeId": "social_media_marketing",
+        "courseId": "marketing_practice",
+        "completed": true,
+        "sessionId": "social_commerce",
+        "completedAt": "2025-09-24T03:35:10.868Z",
+        "lastAccessedAt": "2025-09-24T03:35:10.868Z"
+      },
+      "created_at": "2025-09-24T03:35:26.524843+00:00",
+      "updated_at": "2025-09-24T03:35:26.524843+00:00"
+    },
+    {
+      "id": "d97c9845-fd0b-412b-857b-a86051644e7a",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_consulting_thinking_basics_framework_application_3c_analysis_3c_practice",
+      "setting_value": {
+        "genreId": "framework_application",
+        "themeId": "3c_analysis",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "3c_practice",
+        "completedAt": "2025-10-07T07:25:31.968Z",
+        "lastAccessedAt": "2025-10-07T07:25:31.968Z"
+      },
+      "created_at": "2025-10-07T07:25:32.176372+00:00",
+      "updated_at": "2025-10-07T07:25:32.176372+00:00"
+    },
+    {
+      "id": "f8619050-1e2d-4431-bf5b-0f2874b9c445",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_mece_thinking_mece_basics",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "mece_thinking",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "mece_basics",
+        "completedAt": "2025-09-29T08:50:00.980Z",
+        "lastAccessedAt": "2025-09-29T08:50:00.980Z"
+      },
+      "created_at": "2025-09-29T08:50:01.048178+00:00",
+      "updated_at": "2025-09-29T08:50:01.048178+00:00"
+    },
+    {
+      "id": "224e6065-a8ed-4bc2-82e9-29b94b64b2c2",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_so_what_why_so_so_what_mastery",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "so_what_why_so",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "so_what_mastery",
+        "completedAt": "2025-09-30T18:28:52.134Z",
+        "lastAccessedAt": "2025-09-30T18:28:52.134Z"
+      },
+      "created_at": "2025-09-30T18:28:52.417931+00:00",
+      "updated_at": "2025-09-30T18:28:52.417931+00:00"
+    },
+    {
+      "id": "ebe77fed-cb26-4591-ad8f-c9ca52990d6e",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_ai_literacy_fundamentals_prompt_engineering_prompt_basics_prompt_fundamentals",
+      "setting_value": {
+        "genreId": "prompt_engineering",
+        "themeId": "prompt_basics",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "prompt_fundamentals",
+        "completedAt": "2025-10-07T07:34:53.725Z",
+        "lastAccessedAt": "2025-10-07T07:34:53.725Z"
+      },
+      "created_at": "2025-10-07T07:34:53.912501+00:00",
+      "updated_at": "2025-10-07T07:34:53.912501+00:00"
+    },
+    {
+      "id": "d892086f-284f-46d0-9ce9-0d4714fb1eef",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_mece_thinking_mece_practice",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "mece_thinking",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "mece_practice",
+        "completedAt": "2025-09-29T08:56:54.301Z",
+        "lastAccessedAt": "2025-09-29T08:56:54.301Z"
+      },
+      "created_at": "2025-09-29T08:56:54.327504+00:00",
+      "updated_at": "2025-09-29T08:56:54.327504+00:00"
+    },
+    {
+      "id": "6683c384-ff03-4e17-aab0-e0d39be003d7",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_ai_literacy_fundamentals_prompt_engineering_prompt_basics_advanced_prompting",
+      "setting_value": {
+        "genreId": "prompt_engineering",
+        "themeId": "prompt_basics",
+        "courseId": "ai_literacy_fundamentals",
+        "completed": true,
+        "sessionId": "advanced_prompting",
+        "completedAt": "2025-10-07T07:43:07.795Z",
+        "lastAccessedAt": "2025-10-07T07:43:07.795Z"
+      },
+      "created_at": "2025-10-07T07:43:07.909685+00:00",
+      "updated_at": "2025-10-07T07:43:07.909685+00:00"
+    },
+    {
+      "id": "7d42a94c-3c4e-4d92-b894-29aa1945d17a",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "setting_key": "lp_consulting_thinking_basics_thinking_foundation_mece_thinking_mece_advanced",
+      "setting_value": {
+        "genreId": "thinking_foundation",
+        "themeId": "mece_thinking",
+        "courseId": "consulting_thinking_basics",
+        "completed": true,
+        "sessionId": "mece_advanced",
+        "completedAt": "2025-09-29T10:06:52.441Z",
+        "lastAccessedAt": "2025-09-29T10:06:52.441Z"
+      },
+      "created_at": "2025-09-29T10:06:52.543032+00:00",
+      "updated_at": "2025-09-29T10:06:52.543032+00:00"
+    }
+  ]
+}

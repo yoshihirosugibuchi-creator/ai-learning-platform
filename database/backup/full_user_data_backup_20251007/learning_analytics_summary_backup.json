@@ -1,0 +1,47 @@
+{
+  "tableName": "learning_analytics_summary",
+  "recordCount": 2,
+  "backupDate": "2025-10-07T09:43:40.051Z",
+  "data": [
+    {
+      "id": "71b1caa5-ef97-4a78-907a-1992bb9b45b2",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "calculation_date": "2025-10-06",
+      "total_study_time_minutes": 0,
+      "session_count": 1,
+      "average_session_duration": 0,
+      "learning_streak_days": 1,
+      "overall_accuracy": 90,
+      "quiz_accuracy": 90,
+      "course_completion_rate": 0,
+      "total_xp": 0,
+      "xp_growth_rate": 0,
+      "current_level": 1,
+      "category_breakdown": {},
+      "time_pattern_analysis": {},
+      "weakness_analysis": {},
+      "created_at": "2025-10-06T06:12:54.521928+00:00",
+      "updated_at": "2025-10-06T06:12:54.521928+00:00"
+    },
+    {
+      "id": "41d1aae4-72de-47fe-855a-ce5695c7d59e",
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "calculation_date": "2025-10-07",
+      "total_study_time_minutes": 16,
+      "session_count": 2,
+      "average_session_duration": 8,
+      "learning_streak_days": 1,
+      "overall_accuracy": 80,
+      "quiz_accuracy": 80,
+      "course_completion_rate": 0,
+      "total_xp": 0,
+      "xp_growth_rate": 0,
+      "current_level": 1,
+      "category_breakdown": {},
+      "time_pattern_analysis": {},
+      "weakness_analysis": {},
+      "created_at": "2025-10-07T07:52:43.066056+00:00",
+      "updated_at": "2025-10-07T07:52:43.939234+00:00"
+    }
+  ]
+}

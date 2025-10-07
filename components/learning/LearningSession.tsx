@@ -75,6 +75,7 @@ export default function LearningSession({
   const [cardAcquired, setCardAcquired] = useState(false)
   const [badgeAwarded, setBadgeAwarded] = useState<UserBadge | null>(null)
   const [startTime] = useState(new Date())
+  const [quizStartTime, setQuizStartTime] = useState<Date | null>(null)
   const [currentSessionData, setCurrentSessionData] = useState<LearningSessionData | null>(null)
   const [isCompletingSession, setIsCompletingSession] = useState(false)
   const [_courseName, setCourseName] = useState<string>('Learning Course')
@@ -193,7 +194,7 @@ export default function LearningSession({
     }
   }
 
-  // Initialize learning session tracking on component mount
+  // Initialize learning session tracking on component mount (記録は完了時のみ)
   useEffect(() => {
     if (user?.id && !currentSessionData) {
       const sessionData: LearningSessionData = {
@@ -206,16 +207,7 @@ export default function LearningSession({
         completed: false
       }
       setCurrentSessionData(sessionData)
-      
-      // Save to Supabase
-      saveLearningSessionSupabase(sessionData).then((savedSession) => {
-        if (savedSession) {
-          setCurrentSessionData(savedSession)
-          console.log('📚 Learning session started:', savedSession.id)
-        }
-      }).catch(error => {
-        console.error('❌ Error saving learning session:', error)
-      })
+      console.log('📚 Learning session initialized (記録は完了時に実行):', sessionData)
     }
   }, [user?.id, courseId, genreId, themeId, session.id, startTime, currentSessionData])
 
@@ -228,6 +220,7 @@ export default function LearningSession({
     
     // Prevent scroll jump by not changing focus
     if (hasQuiz) {
+      setQuizStartTime(new Date()) // 理解度チェック開始時間記録
       setViewState('quiz')
       setCurrentQuizIndex(0)
       setQuizAnswers({})
@@ -292,6 +285,20 @@ export default function LearningSession({
         subcategoryIdEmpty: subcategoryId === '' || subcategoryId === null || subcategoryId === undefined
       })
       
+      // クイズ実行時間計算（理解度チェック開始～完了まで）
+      const quizTimeSpent = hasQuiz && quizStartTime 
+        ? Math.floor((endTime.getTime() - quizStartTime.getTime()) / 1000)
+        : 0
+      
+      console.log('⏱️ コース学習時間計算:', {
+        sessionStart: startTime.toISOString(),
+        sessionEnd: endTime.toISOString(),
+        totalDurationSeconds: Math.floor(duration / 1000),
+        quizStartTime: quizStartTime?.toISOString() || 'N/A',
+        quizTimeSpent,
+        hasQuiz
+      })
+      
       const courseSessionData = {
         session_id: session.id,
         course_id: courseId,
@@ -303,7 +310,8 @@ export default function LearningSession({
         is_first_completion: isFirstCompletion ?? false, // 事前判定した結果を使用（nullの場合はfalse）
         session_start_time: startTime.toISOString(),
         session_end_time: endTime.toISOString(),
-        duration_seconds: Math.floor(duration / 1000) // ミリ秒を秒に変換
+        duration_seconds: Math.floor(duration / 1000), // ミリ秒を秒に変換
+        quiz_time_spent: quizTimeSpent // 理解度チェック実行時間
       }
       
       const xpResult = await saveCourseSession(courseSessionData)
@@ -324,6 +332,14 @@ export default function LearningSession({
       // 並列実行でパフォーマンス改善: 学習進捗保存とセッション更新を同時実行
       const parallelOperations = []
       
+      console.log('🔍 重複問題デバッグ:', {
+        currentSessionDataExists: !!currentSessionData,
+        currentSessionDataHasId: !!currentSessionData?.id,
+        sessionId: currentSessionData?.id,
+        willCreateNew: currentSessionData && !currentSessionData.id,
+        willUpdate: currentSessionData?.id
+      })
+      
       // 学習進捗保存
       console.log('📝 Saving learning progress...', { userId: user.id, courseId, genreId, themeId, sessionId: session.id })
       parallelOperations.push(
@@ -334,9 +350,51 @@ export default function LearningSession({
           })
       )
       
-      // セッション更新
-      if (currentSessionData?.id) {
-        console.log('🔄 Updating learning session...', { sessionId: currentSessionData.id })
+      // 学習セッション記録（初回記録 - 重複問題解決のため完了時のみ記録）
+      if (currentSessionData && !currentSessionData.id) {
+        console.log('📝 Creating complete learning session record...', { sessionData: currentSessionData })
+        
+        // 完了データで新規作成
+        const completeSessionData: LearningSessionData = {
+          ...currentSessionData,
+          end_time: endTime.toISOString(),
+          duration,
+          completed: true,
+          quiz_score: hasQuiz ? getQuizScore() : undefined,
+          content_interactions: {
+            scrollDepth: 100, // 完了時は100%とみなす
+            timeOnSection: {}, // 学習セクションでの時間記録
+            clickEvents: [], // クリックイベント履歴
+            sessionType: 'course_learning',
+            hasQuiz: hasQuiz,
+            quizAnswers: hasQuiz ? Object.entries(quizAnswers).map(([index, answer]) => ({
+              questionIndex: parseInt(index),
+              selectedAnswer: answer,
+              isCorrect: quizResults[parseInt(index)] || false,
+              question: session.quiz?.[parseInt(index)]?.question || '',
+              correctAnswer: session.quiz?.[parseInt(index)]?.options[session.quiz?.[parseInt(index)]?.correct] || ''
+            })) : [],
+            quizScore: hasQuiz ? getQuizScore() : undefined,
+            totalQuestions: hasQuiz ? (session.quiz?.length || 0) : 0,
+            correctAnswers: hasQuiz ? Object.values(quizResults).filter(r => r).length : 0,
+            themeId,
+            genreId,
+            categoryId,
+            subcategoryId,
+            sessionId: session.id,
+            completedAt: endTime.toISOString()
+          }
+        }
+        
+        parallelOperations.push(
+          saveLearningSessionSupabase(completeSessionData).then(savedSession => {
+            console.log('✅ Complete session saved:', savedSession?.id)
+            return { type: 'session_create', result: savedSession }
+          })
+        )
+      } else if (currentSessionData?.id) {
+        // 既存セッションの更新（通常は実行されない想定）
+        console.log('🔄 Updating existing learning session...', { sessionId: currentSessionData.id })
         parallelOperations.push(
           updateLearningSession(currentSessionData.id, {
             end_time: endTime.toISOString(),
@@ -345,7 +403,7 @@ export default function LearningSession({
             quiz_score: hasQuiz ? getQuizScore() : undefined
           }).then(result => {
             console.log('🔄 Session update result:', result)
-            return { type: 'session', result }
+            return { type: 'session_update', result }
           })
         )
       }

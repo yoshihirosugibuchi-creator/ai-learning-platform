@@ -107,12 +107,30 @@ export async function POST(request: NextRequest) {
       errors.push('user_subcategory_xp_stats_v2: ' + (err as Error).message)
     }
 
-    // quiz_answers は quiz_sessions 削除時に外部キー制約で自動削除される
-    // 手動削除は不要（user_id カラムも存在しない）
-    console.log('ℹ️ quiz_answers は quiz_sessions 削除時に自動削除されます')
-    deletedTables.push('quiz_answers (auto-deleted)')
+    // 6. quiz_answers - クイズ回答データを削除（特別処理: user_id有無両方に対応）
+    try {
+      // user_id指定での削除
+      const { error: quizAnswersError } = await supabaseAdmin
+        .from('quiz_answers')
+        .delete()
+        .eq('user_id', userId)
 
-    // 6. course_session_completions - コースセッション完了履歴を削除
+      if (quizAnswersError) {
+        console.warn('⚠️ Error deleting quiz_answers with user_id:', quizAnswersError)
+        errors.push('quiz_answers (user_id): ' + quizAnswersError.message)
+      } else {
+        console.log('✅ quiz_answers (with user_id) deleted')
+        deletedTables.push('quiz_answers (with user_id)')
+      }
+
+      // 注意: user_idがNULLのレコード（96.5%）は個別ユーザーリセットでは削除されません
+      console.log('ℹ️ quiz_answersのuser_id=NULLレコードは削除されませんでした（全削除APIを使用してください）')
+      
+    } catch (err) {
+      errors.push('quiz_answers: ' + (err as Error).message)
+    }
+
+    // 7. course_session_completions - コースセッション完了履歴を削除
     try {
       const { error: courseSessionError } = await supabaseAdmin
         .from('course_session_completions')
@@ -130,7 +148,7 @@ export async function POST(request: NextRequest) {
       errors.push('course_session_completions: ' + (err as Error).message)
     }
 
-    // 7. course_theme_completions - コーステーマ完了履歴を削除
+    // 8. course_theme_completions - コーステーマ完了履歴を削除
     try {
       const { error: courseThemeError } = await supabaseAdmin
         .from('course_theme_completions')
@@ -148,7 +166,7 @@ export async function POST(request: NextRequest) {
       errors.push('course_theme_completions: ' + (err as Error).message)
     }
 
-    // 8. course_completions - コース完了履歴を削除
+    // 9. course_completions - コース完了履歴を削除
     try {
       const { error: courseCompletionError } = await supabaseAdmin
         .from('course_completions')
@@ -166,16 +184,16 @@ export async function POST(request: NextRequest) {
       errors.push('course_completions: ' + (err as Error).message)
     }
 
-    // 9. user_progress - レガシーテーブル（削除済み）
+    // 10. user_progress - レガシーテーブル（削除済み）
     // Note: user_progressテーブルは削除済みのため処理をスキップ
 
-    // 10. quiz_results - レガシーテーブル（削除済み）
+    // 11. quiz_results - レガシーテーブル（削除済み）
     // Note: quiz_resultsテーブルは削除済みのため処理をスキップ
 
-    // 11. detailed_quiz_data - レガシーテーブル（削除済み）
+    // 12. detailed_quiz_data - レガシーテーブル（削除済み）
     // Note: detailed_quiz_dataテーブルは削除済みのため処理をスキップ
 
-    // 12. knowledge_card_collection - ナレッジカード収集を削除
+    // 13. knowledge_card_collection - ナレッジカード収集を削除
     try {
       const { error: knowledgeCardError } = await supabaseAdmin
         .from('knowledge_card_collection')
@@ -193,7 +211,7 @@ export async function POST(request: NextRequest) {
       errors.push('knowledge_card_collection: ' + (err as Error).message)
     }
 
-    // 13. wisdom_card_collection - 格言カード収集を削除
+    // 14. wisdom_card_collection - 格言カード収集を削除
     try {
       const { error: wisdomCardError } = await supabaseAdmin
         .from('wisdom_card_collection')
@@ -211,7 +229,7 @@ export async function POST(request: NextRequest) {
       errors.push('wisdom_card_collection: ' + (err as Error).message)
     }
 
-    // 14. user_settings - ユーザー設定を削除
+    // 15. user_settings - ユーザー設定を削除
     try {
       const { error: userSettingsError } = await supabaseAdmin
         .from('user_settings')
@@ -229,7 +247,7 @@ export async function POST(request: NextRequest) {
       errors.push('user_settings: ' + (err as Error).message)
     }
 
-    // 15. SKP取引履歴を削除
+    // 16. SKP取引履歴を削除
     try {
       const { error: skpError } = await supabaseAdmin
         .from('skp_transactions')
@@ -247,7 +265,7 @@ export async function POST(request: NextRequest) {
       errors.push('skp_transactions: ' + (err as Error).message)
     }
 
-    // 16. daily_xp_records - 日別XP記録を削除（連続学習日数計算用）
+    // 17. daily_xp_records - 日別XP記録を削除（連続学習日数計算用）
     try {
       const { error: dailyXpError } = await supabaseAdmin
         .from('daily_xp_records')
@@ -265,7 +283,7 @@ export async function POST(request: NextRequest) {
       errors.push('daily_xp_records: ' + (err as Error).message)
     }
 
-    // 17. quiz_sessions - クイズセッション履歴を削除
+    // 18. quiz_sessions - クイズセッション履歴を削除
     try {
       const { error: quizError } = await supabaseAdmin
         .from('quiz_sessions')
@@ -281,6 +299,114 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       errors.push('quiz_sessions: ' + (err as Error).message)
+    }
+
+    // 19. learning_analytics_summary - 学習分析サマリーを削除
+    try {
+      const { error: analyticsError } = await supabaseAdmin
+        .from('learning_analytics_summary')
+        .delete()
+        .eq('user_id', userId)
+
+      if (analyticsError) {
+        console.warn('⚠️ Error deleting learning_analytics_summary:', analyticsError)
+        errors.push('learning_analytics_summary: ' + analyticsError.message)
+      } else {
+        console.log('✅ learning_analytics_summary deleted')
+        deletedTables.push('learning_analytics_summary')
+      }
+    } catch (err) {
+      errors.push('learning_analytics_summary: ' + (err as Error).message)
+    }
+
+    // 20. learning_effectiveness_tracking - 学習効果追跡データを削除
+    try {
+      const { error: effectivenessError } = await supabaseAdmin
+        .from('learning_effectiveness_tracking')
+        .delete()
+        .eq('user_id', userId)
+
+      if (effectivenessError) {
+        console.warn('⚠️ Error deleting learning_effectiveness_tracking:', effectivenessError)
+        errors.push('learning_effectiveness_tracking: ' + effectivenessError.message)
+      } else {
+        console.log('✅ learning_effectiveness_tracking deleted')
+        deletedTables.push('learning_effectiveness_tracking')
+      }
+    } catch (err) {
+      errors.push('learning_effectiveness_tracking: ' + (err as Error).message)
+    }
+
+    // 21. learning_recommendations - 学習推奨データを削除
+    try {
+      const { error: recommendationsError } = await supabaseAdmin
+        .from('learning_recommendations')
+        .delete()
+        .eq('user_id', userId)
+
+      if (recommendationsError) {
+        console.warn('⚠️ Error deleting learning_recommendations:', recommendationsError)
+        errors.push('learning_recommendations: ' + recommendationsError.message)
+      } else {
+        console.log('✅ learning_recommendations deleted')
+        deletedTables.push('learning_recommendations')
+      }
+    } catch (err) {
+      errors.push('learning_recommendations: ' + (err as Error).message)
+    }
+
+    // 22. unified_learning_session_analytics - 統合学習セッション分析データを削除
+    try {
+      const { error: unifiedAnalyticsError } = await supabaseAdmin
+        .from('unified_learning_session_analytics')
+        .delete()
+        .eq('user_id', userId)
+
+      if (unifiedAnalyticsError) {
+        console.warn('⚠️ Error deleting unified_learning_session_analytics:', unifiedAnalyticsError)
+        errors.push('unified_learning_session_analytics: ' + unifiedAnalyticsError.message)
+      } else {
+        console.log('✅ unified_learning_session_analytics deleted')
+        deletedTables.push('unified_learning_session_analytics')
+      }
+    } catch (err) {
+      errors.push('unified_learning_session_analytics: ' + (err as Error).message)
+    }
+
+    // 23. user_learning_profiles - ユーザー学習プロファイルを削除
+    try {
+      const { error: learningProfilesError } = await supabaseAdmin
+        .from('user_learning_profiles')
+        .delete()
+        .eq('user_id', userId)
+
+      if (learningProfilesError) {
+        console.warn('⚠️ Error deleting user_learning_profiles:', learningProfilesError)
+        errors.push('user_learning_profiles: ' + learningProfilesError.message)
+      } else {
+        console.log('✅ user_learning_profiles deleted')
+        deletedTables.push('user_learning_profiles')
+      }
+    } catch (err) {
+      errors.push('user_learning_profiles: ' + (err as Error).message)
+    }
+
+    // 24. spaced_repetition_schedule - 間隔反復学習スケジュールを削除
+    try {
+      const { error: spacedRepetitionError } = await supabaseAdmin
+        .from('spaced_repetition_schedule')
+        .delete()
+        .eq('user_id', userId)
+
+      if (spacedRepetitionError) {
+        console.warn('⚠️ Error deleting spaced_repetition_schedule:', spacedRepetitionError)
+        errors.push('spaced_repetition_schedule: ' + spacedRepetitionError.message)
+      } else {
+        console.log('✅ spaced_repetition_schedule deleted')
+        deletedTables.push('spaced_repetition_schedule')
+      }
+    } catch (err) {
+      errors.push('spaced_repetition_schedule: ' + (err as Error).message)
     }
 
     console.log('🎉 User data reset completed')

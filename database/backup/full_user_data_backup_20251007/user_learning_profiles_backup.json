@@ -1,0 +1,148 @@
+{
+  "tableName": "user_learning_profiles",
+  "recordCount": 3,
+  "backupDate": "2025-10-07T09:43:44.311Z",
+  "data": [
+    {
+      "user_id": "2a4849d1-7d6f-401b-bc75-4e9418e75c07",
+      "optimal_session_length": 25,
+      "peak_performance_hours": [
+        9,
+        10,
+        14,
+        15
+      ],
+      "fatigue_threshold": 60,
+      "recovery_time_needed": 10,
+      "difficulty_progression_rate": 1,
+      "learning_style_type": "balanced",
+      "chronotype": "unknown",
+      "cognitive_load_tolerance": 5,
+      "flow_state_preference": {
+        "goal_clarity": "high",
+        "feedback_frequency": "immediate",
+        "preferred_challenge_level": 0.7
+      },
+      "forgetting_curve_parameters": {
+        "decay_rate": 0.5,
+        "initial_retention": 0.9,
+        "consolidation_factor": 1
+      },
+      "optimal_review_intervals": [
+        1,
+        3,
+        7,
+        14,
+        30
+      ],
+      "attention_span_minutes": 25,
+      "motivation_factors": [
+        "progress_tracking",
+        "achievement_badges",
+        "social_comparison"
+      ],
+      "stress_indicators": {
+        "response_time_spike": 2,
+        "accuracy_drop_threshold": 0.15,
+        "error_pattern_sensitivity": 0.8
+      },
+      "last_analysis_update": "2025-10-02T05:29:20.955369+00:00",
+      "created_at": "2025-10-02T05:29:20.955369+00:00",
+      "updated_at": "2025-10-02T05:29:20.955369+00:00"
+    },
+    {
+      "user_id": "a3a66d73-05ad-4b5e-a5b5-8ba36ebc4a59",
+      "optimal_session_length": 25,
+      "peak_performance_hours": [
+        9,
+        10,
+        14,
+        15
+      ],
+      "fatigue_threshold": 60,
+      "recovery_time_needed": 10,
+      "difficulty_progression_rate": 1,
+      "learning_style_type": "balanced",
+      "chronotype": "unknown",
+      "cognitive_load_tolerance": 5,
+      "flow_state_preference": {
+        "goal_clarity": "high",
+        "feedback_frequency": "immediate",
+        "preferred_challenge_level": 0.7
+      },
+      "forgetting_curve_parameters": {
+        "decay_rate": 0.5,
+        "initial_retention": 0.9,
+        "consolidation_factor": 1
+      },
+      "optimal_review_intervals": [
+        1,
+        3,
+        7,
+        14,
+        30
+      ],
+      "attention_span_minutes": 25,
+      "motivation_factors": [
+        "progress_tracking",
+        "achievement_badges",
+        "social_comparison"
+      ],
+      "stress_indicators": {
+        "response_time_spike": 2,
+        "accuracy_drop_threshold": 0.15,
+        "error_pattern_sensitivity": 0.8
+      },
+      "last_analysis_update": "2025-10-03T05:27:54.681566+00:00",
+      "created_at": "2025-10-03T05:27:54.681566+00:00",
+      "updated_at": "2025-10-03T05:27:54.681566+00:00"
+    },
+    {
+      "user_id": "82413077-a06d-4d9c-82bb-6fdb6a6b8e13",
+      "optimal_session_length": 25,
+      "peak_performance_hours": [
+        9,
+        10,
+        14,
+        15
+      ],
+      "fatigue_threshold": 60,
+      "recovery_time_needed": 10,
+      "difficulty_progression_rate": 1,
+      "learning_style_type": "balanced",
+      "chronotype": "unknown",
+      "cognitive_load_tolerance": 5,
+      "flow_state_preference": {
+        "goal_clarity": "high",
+        "feedback_frequency": "immediate",
+        "preferred_challenge_level": 0.7
+      },
+      "forgetting_curve_parameters": {
+        "decay_rate": 0.5,
+        "initial_retention": 0.9,
+        "consolidation_factor": 1
+      },
+      "optimal_review_intervals": [
+        1,
+        3,
+        7,
+        14,
+        30
+      ],
+      "attention_span_minutes": 25,
+      "motivation_factors": [
+        "progress_tracking",
+        "achievement_badges",
+        "social_comparison"
+      ],
+      "stress_indicators": {
+        "response_time_spike": 2,
+        "accuracy_drop_threshold": 0.15,
+        "error_pattern_sensitivity": 0.8
+      },
+      "last_analysis_update": "2025-10-06T00:17:15.56674+00:00",
+      "created_at": "2025-10-06T00:17:15.56674+00:00",
+      "updated_at": "2025-10-06T00:17:15.56674+00:00"
+    }
+  ]
+}

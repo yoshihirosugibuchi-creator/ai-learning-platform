@@ -12,7 +12,7 @@ function makeRequest(path, method = 'GET') {
     
     const options = {
       hostname: 'localhost',
-      port: 3000,
+      port: 3001,
       path: path,
       method: method,
       headers: {

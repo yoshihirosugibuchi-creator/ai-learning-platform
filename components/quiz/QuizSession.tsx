@@ -33,6 +33,7 @@ import { UnifiedLearningAnalysisEngine } from '@/lib/unified-learning-analytics'
 interface QuizSessionProps {
   questions: Question[]
   category?: string
+  subCategory?: string
   level?: string | null
   difficulties?: string[]
   user: User
@@ -84,6 +85,7 @@ interface QuizSession {
 export default function QuizSession({
   questions,
   category,
+  subCategory,
   level,
   difficulties,
   user,
@@ -555,6 +557,9 @@ export default function QuizSession({
               console.log('🚀 Calling saveQuizSession (new XP system)...')
               const actualTotalQuestions = sessionQuestions.length || questionAnswers.length
               const quizSessionData = {
+                user_id: user.id,
+                category_id: quizCategory || category || 'logical_thinking_problem_solving',
+                subcategory_id: subCategory || 'general',
                 session_start_time: new Date(startTime).toISOString(),
                 session_end_time: new Date().toISOString(),
                 total_questions: actualTotalQuestions,

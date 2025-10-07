@@ -148,16 +148,12 @@ export class UnifiedLearningAnalysisEngine {
       engagement_score: sessionData.context.engagementScore
     }
 
-    // Temporary: Comment out until table is created
-    console.log('Would insert into unified_learning_session_analytics:', insertData)
-    // const { error } = await supabase
-    //   .from('unified_learning_session_analytics')
-    //   .insert(insertData)
+    // Use learning_analytics_summary instead of unified_learning_session_analytics
+    console.log('Recording learning session via real data aggregation:', insertData)
     
-    // if (error) {
-    //   console.error('Failed to record learning session:', error)
-    //   throw new Error(`Failed to record learning session: ${error.message}`)
-    // }
+    // Record to existing quiz_sessions or course_session_completions tables
+    // and update learning_analytics_summary
+    await this.updateAnalyticsSummary(sessionData)
 
     // Update cognitive load score if not provided
     if (sessionData.cognitive.loadScore === 0) {
@@ -187,7 +183,7 @@ export class UnifiedLearningAnalysisEngine {
     }
   }
 
-  // Get forgetting curve recommendations
+  // Get forgetting curve recommendations - based on real data
   async getForgettingCurveRecommendations(): Promise<{
     personalRetentionRate: number
     averageForgettingRate: number
@@ -196,15 +192,51 @@ export class UnifiedLearningAnalysisEngine {
     totalItemsToReview: number
     optimalReviewFrequency: number
   }> {
-    // Temporary implementation with mock data
-    console.log('Getting forgetting curve recommendations for user:', this.userId)
+    const supabase = await this.getSupabase()
+    
+    // Get category performance from real data
+    const { data: categoryStats } = await supabase
+      .from('user_category_xp_stats_v2')
+      .select('category_id, quiz_questions_correct, quiz_questions_answered, quiz_average_accuracy')
+      .eq('user_id', this.userId)
+    
+    const strongCategories: string[] = []
+    const weakCategories: string[] = []
+    
+    if (categoryStats) {
+      categoryStats.forEach(stat => {
+        if (stat.quiz_average_accuracy >= 80) {
+          strongCategories.push(stat.category_id)
+        } else if (stat.quiz_average_accuracy < 60) {
+          weakCategories.push(stat.category_id)
+        }
+      })
+    }
+    
+    // Calculate retention based on quiz performance over time
+    const { data: recentQuizzes } = await supabase
+      .from('quiz_answers')
+      .select(`
+        is_correct, 
+        created_at,
+        quiz_sessions!inner(user_id)
+      `)
+      .eq('quiz_sessions.user_id', this.userId)
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+    
+    let personalRetentionRate = 70 // default
+    if (recentQuizzes && recentQuizzes.length > 0) {
+      const correctCount = recentQuizzes.filter(q => q.is_correct).length
+      personalRetentionRate = Math.round((correctCount / recentQuizzes.length) * 100)
+    }
+    
     return {
-      personalRetentionRate: 72,
+      personalRetentionRate,
       averageForgettingRate: 0.5,
-      strongCategories: ['ビジネス戦略', 'マーケティング'],
-      weakCategories: ['データ分析', 'プログラミング'],
-      totalItemsToReview: 5,
-      optimalReviewFrequency: 7
+      strongCategories,
+      weakCategories,
+      totalItemsToReview: weakCategories.length,
+      optimalReviewFrequency: personalRetentionRate >= 80 ? 10 : 5
     }
   }
 
@@ -234,34 +266,55 @@ export class UnifiedLearningAnalysisEngine {
   }
 
 
-  // Get spaced repetition due items
+  // Get spaced repetition due items - based on weak performance areas
   async getDueReviews(limit: number = 20): Promise<SpacedRepetitionSchedule[]> {
-    // Temporary implementation with mock data
-    console.log('Getting due reviews for user:', this.userId, 'limit:', limit)
-    return [
-      {
-        id: 'rep1',
-        user_id: this.userId,
-        content_id: 'q1',
-        content_type: 'quiz_question',
-        category_id: 'business_strategy',
-        subcategory_id: 'strategic_planning',
-        initial_learning_date: '2025-09-20',
-        next_review_date: '2025-10-01',
-        mastery_level: 0.7,
-        priority_score: 8,
-        review_count: 2,
-        created_at: null,
-        difficulty_adjustment: null,
-        forgetting_curve_slope: null,
-        is_mastered: null,
-        last_review_date: null,
-        optimal_interval_days: null,
-        retention_strength: null,
-        scheduled_by: null,
-        updated_at: null
-      }
-    ]
+    const supabase = await this.getSupabase()
+    
+    // Get questions from weak categories for review
+    const { data: weakPerformance } = await supabase
+      .from('quiz_answers')
+      .select(`
+        question_id,
+        category_id,
+        subcategory_id,
+        is_correct,
+        created_at,
+        quiz_session_id,
+        quiz_sessions!inner(user_id)
+      `)
+      .eq('quiz_sessions.user_id', this.userId)
+      .eq('is_correct', false)
+      .gte('created_at', new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    
+    if (!weakPerformance || weakPerformance.length === 0) {
+      return []
+    }
+    
+    // Convert to SpacedRepetitionSchedule format
+    return weakPerformance.map((item, index) => ({
+      id: `review_${item.question_id}_${Date.now()}`,
+      user_id: this.userId,
+      content_id: item.question_id,
+      content_type: 'quiz_question' as const,
+      category_id: item.category_id,
+      subcategory_id: item.subcategory_id,
+      initial_learning_date: item.created_at ? item.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+      next_review_date: new Date(Date.now() + (index + 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      mastery_level: 0.3, // Low since it was incorrect
+      priority_score: 10 - index, // Higher priority for recent mistakes
+      review_count: 1,
+      created_at: null,
+      difficulty_adjustment: null,
+      forgetting_curve_slope: null,
+      is_mastered: null,
+      last_review_date: null,
+      optimal_interval_days: null,
+      retention_strength: null,
+      scheduled_by: null,
+      updated_at: null
+    }))
   }
 
   // Update review schedule after completion
@@ -354,12 +407,40 @@ export class UnifiedLearningAnalysisEngine {
     reviewDate: Date = new Date()
   ): Promise<{ id: string; success: boolean; message: string }> {
     try {
-      console.log('Recording review session:', { contentId, contentType, performance, reviewDate })
-      // Temporary mock implementation
+      const supabase = await this.getSupabase()
+      
+      // Record the review in learning_recommendations table
+      const { data, error } = await supabase
+        .from('learning_recommendations')
+        .insert({
+          user_id: this.userId,
+          recommendation_type: 'review_completed',
+          priority: 1,
+          title: `Reviewed ${contentType}`,
+          description: `Performance: ${performance}%`,
+          recommended_content_type: contentType,
+          recommended_content_id: contentId,
+          reasoning: `Review session completed with ${performance}% performance`,
+          confidence_score: performance / 100,
+          status: 'completed',
+          completed_at: reviewDate.toISOString()
+        })
+        .select()
+        .single()
+      
+      if (error) {
+        console.error('Error recording review session:', error)
+        return {
+          id: '',
+          success: false,
+          message: `Failed to record review session: ${error.message}`
+        }
+      }
+      
       return {
-        id: crypto.randomUUID(),
+        id: data.id,
         success: true,
-        message: 'Review session recorded successfully (mock)'
+        message: 'Review session recorded successfully'
       }
     } catch (error) {
       console.error('Error recording review session:', error)
@@ -551,9 +632,9 @@ export class UnifiedLearningAnalysisEngine {
   }
 
   private async analyzeTimePatterns() {
-    // const _supabaseClient = supabase  // Commented out unused variable
+    // Use actual quiz_sessions data instead of non-existent unified_learning_session_analytics
     const { data } = await supabase
-      .from('unified_learning_session_analytics')
+      .from('quiz_sessions')
       .select('*')
       .eq('user_id', this.userId)
       .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
@@ -579,8 +660,8 @@ export class UnifiedLearningAnalysisEngine {
         hourlyPerformance.set(hour, { total: 0, correct: 0, count: 0 })
       }
       const hourData = hourlyPerformance.get(hour)!
-      hourData.total += session.questions_total || 0
-      hourData.correct += session.questions_correct || 0
+      hourData.total += session.total_questions || 0
+      hourData.correct += session.correct_answers || 0
       hourData.count += 1
 
       // Day analysis
@@ -588,8 +669,8 @@ export class UnifiedLearningAnalysisEngine {
         dailyPerformance.set(day, { total: 0, correct: 0, count: 0 })
       }
       const dayData = dailyPerformance.get(day)!
-      dayData.total += session.questions_total || 0
-      dayData.correct += session.questions_correct || 0
+      dayData.total += session.total_questions || 0
+      dayData.correct += session.correct_answers || 0
       dayData.count += 1
     })
 
@@ -647,10 +728,10 @@ export class UnifiedLearningAnalysisEngine {
   }
 
   private async analyzeCognitiveLoad() {
-    // const _supabaseClient = supabase  // Commented out unused variable
+    // Use quiz_sessions for cognitive load analysis
     const { data } = await supabase
-      .from('unified_learning_session_analytics')
-      .select('cognitive_load_score, duration_seconds')
+      .from('quiz_sessions')
+      .select('session_start_time, session_end_time, total_questions, correct_answers')
       .eq('user_id', this.userId)
       .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
@@ -664,8 +745,19 @@ export class UnifiedLearningAnalysisEngine {
       }
     }
 
-    const avgLoad = data.reduce((sum, item) => sum + (item.cognitive_load_score || 0), 0) / data.length
-    const avgDuration = data.reduce((sum, item) => sum + ((item.duration_seconds || 0) / 60), 0) / data.length
+    // Calculate cognitive load based on session accuracy and duration
+    const avgLoad = data.reduce((sum, item) => {
+      const accuracy = item.total_questions > 0 ? (item.correct_answers / item.total_questions) : 0
+      return sum + (accuracy < 0.6 ? 7 : accuracy > 0.8 ? 3 : 5) // Load inversely related to accuracy
+    }, 0) / data.length
+    
+    const avgDuration = data.reduce((sum, item) => {
+      if (item.session_start_time && item.session_end_time) {
+        const duration = (new Date(item.session_end_time).getTime() - new Date(item.session_start_time).getTime()) / (1000 * 60)
+        return sum + duration
+      }
+      return sum + 15 // default session duration
+    }, 0) / data.length
 
     return {
       currentLoadLevel: avgLoad,
@@ -675,13 +767,16 @@ export class UnifiedLearningAnalysisEngine {
   }
 
   private async analyzeFlowState() {
-    // const _supabaseClient = supabase  // Commented out unused variable
+    // Use quiz_answers with difficulty and accuracy data
     const { data } = await supabase
-      .from('unified_learning_session_analytics')
-      .select('flow_state_index, difficulty_level, accuracy_rate')
-      .eq('user_id', this.userId)
+      .from('quiz_answers')
+      .select(`
+        difficulty,
+        is_correct,
+        quiz_sessions!inner(user_id, accuracy_rate)
+      `)
+      .eq('quiz_sessions.user_id', this.userId)
       .gte('created_at', new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString())
-      .not('flow_state_index', 'is', null)
 
     if (!data?.length) {
       return {
@@ -691,15 +786,20 @@ export class UnifiedLearningAnalysisEngine {
       }
     }
 
-    const avgFlow = data.reduce((sum, item) => sum + (item.flow_state_index || 0), 0) / data.length
+    // Calculate flow based on accuracy and difficulty correlation
+    const avgFlow = data.reduce((sum, item) => {
+      const flowScore = item.is_correct ? 0.7 : 0.3 // Simple flow estimation
+      return sum + flowScore
+    }, 0) / data.length
     
     // Find difficulty range with best flow
     const difficultyMap = new Map<string, number[]>()
-    data.forEach(session => {
-      if (!difficultyMap.has(session.difficulty_level)) {
-        difficultyMap.set(session.difficulty_level, [])
+    data.forEach(answer => {
+      if (!difficultyMap.has(answer.difficulty)) {
+        difficultyMap.set(answer.difficulty, [])
       }
-      difficultyMap.get(session.difficulty_level)!.push(session.flow_state_index || 0)
+      const flowScore = answer.is_correct ? 0.7 : 0.3
+      difficultyMap.get(answer.difficulty)!.push(flowScore)
     })
 
     const difficultyScores = Array.from(difficultyMap.entries())
@@ -730,6 +830,72 @@ export class UnifiedLearningAnalysisEngine {
       case 'advanced': return 7
       case 'expert': return 9
       default: return 5
+    }
+  }
+
+  // Update analytics summary based on real session data
+  private async updateAnalyticsSummary(sessionData: LearningSessionData): Promise<void> {
+    try {
+      const supabase = await this.getSupabase()
+      const today = new Date().toISOString().split('T')[0]
+      
+      // Get existing summary for today
+      const { data: existingSummary } = await supabase
+        .from('learning_analytics_summary')
+        .select('*')
+        .eq('user_id', this.userId)
+        .eq('calculation_date', today)
+        .single()
+      
+      const sessionDurationMinutes = Math.round(
+        (sessionData.endTime.getTime() - sessionData.startTime.getTime()) / (1000 * 60)
+      )
+      
+      if (existingSummary) {
+        // Update existing summary
+        const updatedData = {
+          total_study_time_minutes: existingSummary.total_study_time_minutes + sessionDurationMinutes,
+          session_count: existingSummary.session_count + 1,
+          average_session_duration: Math.round(
+            (existingSummary.total_study_time_minutes + sessionDurationMinutes) / 
+            (existingSummary.session_count + 1)
+          ),
+          overall_accuracy: sessionData.sessionType === 'quiz' 
+            ? Math.round((existingSummary.overall_accuracy + sessionData.performance.accuracyRate) / 2)
+            : existingSummary.overall_accuracy,
+          updated_at: new Date().toISOString()
+        }
+        
+        await supabase
+          .from('learning_analytics_summary')
+          .update(updatedData)
+          .eq('id', existingSummary.id)
+      } else {
+        // Create new summary
+        const newSummary = {
+          user_id: this.userId,
+          calculation_date: today,
+          total_study_time_minutes: sessionDurationMinutes,
+          session_count: 1,
+          average_session_duration: sessionDurationMinutes,
+          learning_streak_days: 1, // Will be updated by daily batch
+          overall_accuracy: sessionData.sessionType === 'quiz' ? sessionData.performance.accuracyRate : 0,
+          quiz_accuracy: sessionData.sessionType === 'quiz' ? sessionData.performance.accuracyRate : 0,
+          course_completion_rate: sessionData.sessionType === 'course' ? sessionData.performance.completionRate : 0,
+          total_xp: 0, // Will be populated from user_xp_stats_v2
+          xp_growth_rate: 0,
+          current_level: 1,
+          category_breakdown: {},
+          time_pattern_analysis: {},
+          weakness_analysis: {}
+        }
+        
+        await supabase
+          .from('learning_analytics_summary')
+          .insert(newSummary)
+      }
+    } catch (error) {
+      console.error('Failed to update analytics summary:', error)
     }
   }
 

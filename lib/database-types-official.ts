@@ -230,6 +230,8 @@ export type Database = {
           created_at: string | null
           date: string
           id: string
+          learning_quality_score: number | null
+          peak_study_hour: number | null
           quiz_sessions: number
           quiz_time_seconds: number | null
           quiz_xp_earned: number
@@ -246,6 +248,8 @@ export type Database = {
           created_at?: string | null
           date: string
           id?: string
+          learning_quality_score?: number | null
+          peak_study_hour?: number | null
           quiz_sessions?: number
           quiz_time_seconds?: number | null
           quiz_xp_earned?: number
@@ -262,6 +266,8 @@ export type Database = {
           created_at?: string | null
           date?: string
           id?: string
+          learning_quality_score?: number | null
+          peak_study_hour?: number | null
           quiz_sessions?: number
           quiz_time_seconds?: number | null
           quiz_xp_earned?: number
@@ -360,6 +366,69 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_analytics_summary: {
+        Row: {
+          average_session_duration: number
+          calculation_date: string
+          category_breakdown: Json | null
+          course_completion_rate: number
+          created_at: string | null
+          current_level: number
+          id: string
+          learning_streak_days: number
+          overall_accuracy: number
+          quiz_accuracy: number
+          session_count: number
+          time_pattern_analysis: Json | null
+          total_study_time_minutes: number
+          total_xp: number
+          updated_at: string | null
+          user_id: string
+          weakness_analysis: Json | null
+          xp_growth_rate: number
+        }
+        Insert: {
+          average_session_duration?: number
+          calculation_date: string
+          category_breakdown?: Json | null
+          course_completion_rate?: number
+          created_at?: string | null
+          current_level?: number
+          id?: string
+          learning_streak_days?: number
+          overall_accuracy?: number
+          quiz_accuracy?: number
+          session_count?: number
+          time_pattern_analysis?: Json | null
+          total_study_time_minutes?: number
+          total_xp?: number
+          updated_at?: string | null
+          user_id: string
+          weakness_analysis?: Json | null
+          xp_growth_rate?: number
+        }
+        Update: {
+          average_session_duration?: number
+          calculation_date?: string
+          category_breakdown?: Json | null
+          course_completion_rate?: number
+          created_at?: string | null
+          current_level?: number
+          id?: string
+          learning_streak_days?: number
+          overall_accuracy?: number
+          quiz_accuracy?: number
+          session_count?: number
+          time_pattern_analysis?: Json | null
+          total_study_time_minutes?: number
+          total_xp?: number
+          updated_at?: string | null
+          user_id?: string
+          weakness_analysis?: Json | null
+          xp_growth_rate?: number
+        }
+        Relationships: []
+      }
       learning_courses: {
         Row: {
           badge_data: Json | null
@@ -402,6 +471,48 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      learning_effectiveness_tracking: {
+        Row: {
+          after_metrics: Json | null
+          before_metrics: Json
+          created_at: string | null
+          id: string
+          improvement_score: number | null
+          intervention_at: string
+          intervention_data: Json
+          intervention_type: string
+          measurement_completed_at: string | null
+          measurement_period_days: number | null
+          user_id: string
+        }
+        Insert: {
+          after_metrics?: Json | null
+          before_metrics?: Json
+          created_at?: string | null
+          id?: string
+          improvement_score?: number | null
+          intervention_at: string
+          intervention_data?: Json
+          intervention_type: string
+          measurement_completed_at?: string | null
+          measurement_period_days?: number | null
+          user_id: string
+        }
+        Update: {
+          after_metrics?: Json | null
+          before_metrics?: Json
+          created_at?: string | null
+          id?: string
+          improvement_score?: number | null
+          intervention_at?: string
+          intervention_data?: Json
+          intervention_type?: string
+          measurement_completed_at?: string | null
+          measurement_period_days?: number | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -500,6 +611,63 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_recommendations: {
+        Row: {
+          completed_at: string | null
+          confidence_score: number
+          created_at: string | null
+          description: string
+          expected_improvement: Json | null
+          expires_at: string | null
+          id: string
+          presented_at: string | null
+          priority: number
+          reasoning: string
+          recommendation_type: string
+          recommended_content_id: string
+          recommended_content_type: string
+          status: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          confidence_score?: number
+          created_at?: string | null
+          description: string
+          expected_improvement?: Json | null
+          expires_at?: string | null
+          id?: string
+          presented_at?: string | null
+          priority?: number
+          reasoning: string
+          recommendation_type: string
+          recommended_content_id: string
+          recommended_content_type: string
+          status?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          confidence_score?: number
+          created_at?: string | null
+          description?: string
+          expected_improvement?: Json | null
+          expires_at?: string | null
+          id?: string
+          presented_at?: string | null
+          priority?: number
+          reasoning?: string
+          recommendation_type?: string
+          recommended_content_id?: string
+          recommended_content_type?: string
+          status?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       learning_sessions: {
         Row: {
           created_at: string | null
@@ -588,60 +756,72 @@ export type Database = {
       quiz_answers: {
         Row: {
           category_id: string
+          confidence_level: number | null
           course_id: string | null
           course_session_id: string | null
           created_at: string | null
           difficulty: string
           earned_xp: number
           genre_id: string | null
+          hint_used: boolean
           id: string
           is_correct: boolean
           is_timeout: boolean
           question_id: string
           quiz_session_id: string | null
+          review_needed: boolean
           session_type: string | null
           subcategory_id: string
           theme_id: string | null
           time_spent: number
           user_answer: number | null
+          user_id: string | null
         }
         Insert: {
           category_id: string
+          confidence_level?: number | null
           course_id?: string | null
           course_session_id?: string | null
           created_at?: string | null
           difficulty: string
           earned_xp?: number
           genre_id?: string | null
+          hint_used?: boolean
           id?: string
           is_correct?: boolean
           is_timeout?: boolean
           question_id: string
           quiz_session_id?: string | null
+          review_needed?: boolean
           session_type?: string | null
           subcategory_id: string
           theme_id?: string | null
           time_spent?: number
           user_answer?: number | null
+          user_id?: string | null
         }
         Update: {
           category_id?: string
+          confidence_level?: number | null
           course_id?: string | null
           course_session_id?: string | null
           created_at?: string | null
           difficulty?: string
           earned_xp?: number
           genre_id?: string | null
+          hint_used?: boolean
           id?: string
           is_correct?: boolean
           is_timeout?: boolean
           question_id?: string
           quiz_session_id?: string | null
+          review_needed?: boolean
           session_type?: string | null
           subcategory_id?: string
           theme_id?: string | null
           time_spent?: number
           user_answer?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -725,6 +905,7 @@ export type Database = {
           bonus_xp: number
           correct_answers: number
           created_at: string | null
+          duration_seconds: number | null
           id: string
           session_end_time: string | null
           session_start_time: string
@@ -740,6 +921,7 @@ export type Database = {
           bonus_xp?: number
           correct_answers?: number
           created_at?: string | null
+          duration_seconds?: number | null
           id?: string
           session_end_time?: string | null
           session_start_time?: string
@@ -755,6 +937,7 @@ export type Database = {
           bonus_xp?: number
           correct_answers?: number
           created_at?: string | null
+          duration_seconds?: number | null
           id?: string
           session_end_time?: string | null
           session_start_time?: string
@@ -1864,6 +2047,18 @@ export type Database = {
           urgency_score: number
         }[]
       }
+      get_question_history_stats: {
+        Args: { p_category_id: string; p_difficulty: string; p_user_id: string }
+        Returns: {
+          attempts_count: number
+          created_at: string
+          incorrect_count: number
+          is_correct: boolean
+          last_attempted_at: string
+          last_incorrect_at: string
+          question_id: string
+        }[]
+      }
       get_xp_setting: {
         Args: { setting_key: string }
         Returns: number
@@ -2174,3 +2369,13 @@ export type SpacedRepetitionScheduleUpdate = Database['public']['Tables']['space
 export type IndustryLevelTarget = Database['public']['Tables']['industry_level_targets']['Row']
 export type IndustryLevelTargetInsert = Database['public']['Tables']['industry_level_targets']['Insert']
 export type IndustryLevelTargetUpdate = Database['public']['Tables']['industry_level_targets']['Update']
+
+// Learning Analytics Summary types
+export type LearningAnalyticsSummary = Database['public']['Tables']['learning_analytics_summary']['Row']
+export type LearningAnalyticsSummaryInsert = Database['public']['Tables']['learning_analytics_summary']['Insert']
+export type LearningAnalyticsSummaryUpdate = Database['public']['Tables']['learning_analytics_summary']['Update']
+
+// Learning Effectiveness Tracking types
+export type LearningEffectivenessTracking = Database['public']['Tables']['learning_effectiveness_tracking']['Row']
+export type LearningEffectivenessTrackingInsert = Database['public']['Tables']['learning_effectiveness_tracking']['Insert']
+export type LearningEffectivenessTrackingUpdate = Database['public']['Tables']['learning_effectiveness_tracking']['Update']

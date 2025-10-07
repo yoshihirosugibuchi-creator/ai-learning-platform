@@ -1,0 +1,157 @@
+{
+  "totalTables": 21,
+  "matchingTables": 21,
+  "mismatchedTables": 0,
+  "missingFiles": 0,
+  "results": [
+    {
+      "tableName": "quiz_answers",
+      "backupRecords": 429,
+      "currentRecords": 429,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "quiz_sessions",
+      "backupRecords": 35,
+      "currentRecords": 35,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "learning_progress",
+      "backupRecords": 107,
+      "currentRecords": 107,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "user_xp_stats_v2",
+      "backupRecords": 3,
+      "currentRecords": 3,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "user_category_xp_stats_v2",
+      "backupRecords": 32,
+      "currentRecords": 32,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "user_subcategory_xp_stats_v2",
+      "backupRecords": 114,
+      "currentRecords": 114,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "daily_xp_records",
+      "backupRecords": 16,
+      "currentRecords": 16,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "course_session_completions",
+      "backupRecords": 29,
+      "currentRecords": 29,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "course_theme_completions",
+      "backupRecords": 0,
+      "currentRecords": 0,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "course_completions",
+      "backupRecords": 0,
+      "currentRecords": 0,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "user_badges",
+      "backupRecords": 0,
+      "currentRecords": 0,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "knowledge_card_collection",
+      "backupRecords": 18,
+      "currentRecords": 18,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "wisdom_card_collection",
+      "backupRecords": 21,
+      "currentRecords": 21,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "skp_transactions",
+      "backupRecords": 68,
+      "currentRecords": 68,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "user_settings",
+      "backupRecords": 57,
+      "currentRecords": 57,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "learning_analytics_summary",
+      "backupRecords": 2,
+      "currentRecords": 2,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "learning_effectiveness_tracking",
+      "backupRecords": 0,
+      "currentRecords": 0,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "learning_recommendations",
+      "backupRecords": 0,
+      "currentRecords": 0,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "unified_learning_session_analytics",
+      "backupRecords": 0,
+      "currentRecords": 0,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "user_learning_profiles",
+      "backupRecords": 3,
+      "currentRecords": 3,
+      "matches": true,
+      "backupFileExists": true
+    },
+    {
+      "tableName": "spaced_repetition_schedule",
+      "backupRecords": 0,
+      "currentRecords": 0,
+      "matches": true,
+      "backupFileExists": true
+    }
+  ],
+  "backupDirectory": "/home/yoshi/projects/quiz-game-app/ai-learning-platform-next/database/backup/full_user_data_backup_20251007",
+  "verificationTime": "2025-10-07T09:44:08.482Z"
+}
