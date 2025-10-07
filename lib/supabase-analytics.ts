@@ -146,7 +146,7 @@ async function calculateAnalyticsFromXP(
     const stats = xpStats as UserXPStatsV2
     const totalTimeSeconds = stats.total_learning_time_seconds || 0
     const totalSessions = stats.quiz_sessions_completed + stats.course_sessions_completed
-    averageSessionTime = totalSessions > 0 ? Math.round(totalTimeSeconds / totalSessions / 60) : 0 // 分に変換
+    averageSessionTime = totalSessions > 0 ? Math.round(totalTimeSeconds / totalSessions / 60) : 0 // 分に変換（四捨五入で統一）
     console.log('⏱️ Learning time calculation (fixed data):', {
       totalTimeSeconds,
       totalSessions,
@@ -223,7 +223,7 @@ async function calculateAnalytics(sessions: Array<Record<string, unknown>>, prog
     accuracy: Math.round(averageQuizScore),
     learningDays,
     streak,
-    averageSessionTime: Math.round(averageSessionTime / 1000 / 60), // 分に変換
+    averageSessionTime: Math.round(averageSessionTime / 1000 / 60), // 分に変換（四捨五入で統一）
     categoriesProgress,
     recentActivity,
     weeklyProgress
@@ -428,7 +428,7 @@ function calculateRecentActivity(sessions: Array<Record<string, unknown>>): Acti
       date: day.date as string,
       sessionsCompleted: day.sessionsCompleted as number,
       quizScore: (day.quizCount as number) > 0 ? Math.round((day.totalQuizScore as number) / (day.quizCount as number)) : 0,
-      timeSpent: Math.round((day.timeSpent as number) / 1000 / 60) // 分に変換
+      timeSpent: Math.round((day.timeSpent as number) / 1000 / 60) // 分に変換（四捨五入で統一）
     }))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 7) // 最近7日間

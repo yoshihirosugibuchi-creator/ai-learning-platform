@@ -28,12 +28,12 @@ const _getSubcategoryDisplayName = (subcategoryId: string): string => {
   return subcategoryId === 'category_level' ? '総合' : subcategoryId
 }
 
-// 学習時間フォーマット関数
+// 学習時間フォーマット関数（週間パフォーマンスと統一）
 const formatLearningTime = (seconds: number): string => {
   if (seconds === 0) return '0m'
   
   const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
+  const minutes = Math.round((seconds % 3600) / 60) // 四捨五入で週間パフォーマンスと統一
   
   if (hours > 0) {
     return `${hours}h${minutes > 0 ? ` ${minutes}m` : ''}`
