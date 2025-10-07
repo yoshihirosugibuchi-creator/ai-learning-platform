@@ -294,7 +294,7 @@ export async function POST(request: Request) {
     const updatedStats = {
       user_id: userId,
       total_xp: newTotalXP,
-      quiz_xp: (existingStats?.quiz_xp || 0) + totalXP,
+      quiz_xp: (existingStats?.quiz_xp || 0) + totalQuestionXP,  // 🔧 修正: ボーナスを除いた基本XPのみ加算
       course_xp: existingStats?.course_xp || 0,
       bonus_xp: (existingStats?.bonus_xp || 0) + bonusXP,
       // SKP関連フィールド追加
@@ -524,7 +524,7 @@ export async function POST(request: Request) {
           categoryXP
         })
 
-        if (categoryXP > 0) {
+        if (categoryTotalQuestions > 0) {  // 🔧 修正: XPではなく問題数で判定（不正解も統計に含める）
           // カテゴリー別統計取得（v2テーブル使用）
           const { data: existingCategoryStats } = await supabase
             .from('user_category_xp_stats_v2')
@@ -599,7 +599,7 @@ export async function POST(request: Request) {
             subcategoryXP
           })
 
-          if (subcategoryXP > 0) {
+          if (subcategoryTotalQuestions > 0) {  // 🔧 修正: XPではなく問題数で判定（不正解も統計に含める）
             // サブカテゴリー別統計取得（v2テーブル使用）
             const { data: existingSubcategoryStats } = await supabase
               .from('user_subcategory_xp_stats_v2')
