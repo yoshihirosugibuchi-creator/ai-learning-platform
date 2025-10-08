@@ -6,6 +6,14 @@ export function middleware(request: NextRequest) {
   const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true'
   const maintenanceMessage = process.env.MAINTENANCE_MESSAGE || 'システムメンテナンス中です'
   const maintenanceEndTime = process.env.MAINTENANCE_END_TIME
+  
+  // デバッグログ
+  console.log('🔍 Middleware Debug:', {
+    path: request.nextUrl.pathname,
+    maintenanceMode: process.env.MAINTENANCE_MODE,
+    isMaintenanceMode,
+    userAgent: request.headers.get('user-agent')?.substring(0, 50)
+  })
 
   // メンテナンスページへのアクセスは許可
   if (request.nextUrl.pathname === '/maintenance') {
