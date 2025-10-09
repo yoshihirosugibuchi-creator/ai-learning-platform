@@ -60,7 +60,7 @@ export default function QuizPage() {
     return <LoadingScreen message="認証を確認中..." />
   }
 
-  if (!user) {
+  if (!authLoading && !user) {
     router.push('/login')
     return <LoadingScreen message="ログインページに移動中..." />
   }
@@ -94,16 +94,18 @@ export default function QuizPage() {
       />
 
       <main className="container mx-auto px-4 py-6">
-        <QuizSession
-          questions={questions}
-          category={categoryParam || undefined}
-          level={null}
-          difficulties={difficulties}
-          user={user}
-          profile={profile}
-          onComplete={handleQuizComplete}
-          onExit={handleQuizExit}
-        />
+        {user && (
+          <QuizSession
+            questions={questions}
+            category={categoryParam || undefined}
+            level={null}
+            difficulties={difficulties}
+            user={user}
+            profile={profile}
+            onComplete={handleQuizComplete}
+            onExit={handleQuizExit}
+          />
+        )}
       </main>
     </div>
   )

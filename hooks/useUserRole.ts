@@ -20,7 +20,7 @@ export interface UserRoleData {
 // キャッシュ用のグローバル変数
 let cachedUserRole: UserRoleData | null = null
 let cacheExpiry: number = 0
-const CACHE_DURATION = 5 * 60 * 1000 // 5分間キャッシュ
+const CACHE_DURATION = 10 * 60 * 1000 // 10分間キャッシュ（延長でAPI呼び出し削減）
 
 export function useUserRole() {
   const { user } = useAuth()
@@ -51,8 +51,13 @@ export function useUserRole() {
         setError(null)
         console.log('🔄 Fetching fresh user role from API...')
 
-        // Get session token from Supabase directly
-        const { data: { session } } = await supabase.auth.getSession()
+        // Get session token from Supabase directly with faster timeout
+        const sessionPromise = supabase.auth.getSession()
+        const timeoutPromise: Promise<never> = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Session fetch timeout')), 3000)
+        )
+        
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise])
         
         if (!session?.access_token) {
           throw new Error('No session token available')
