@@ -52,6 +52,7 @@ if (!hasPermission) return NextResponse.json({error: 'Insufficient permissions'}
 - **ESLint**: `user_metadata.role`使用時にエラー発生
 - **型レベル**: TypeScriptで制約追加済み  
 - **ヘルパー関数**: 正しい方法を強制
+- **React Hook防止**: `react-hooks/exhaustive-deps` エラーレベル、無限ループ検知強化（2025.10.09追加）
 
 ### **📖 重要な背景情報**
 
@@ -703,6 +704,26 @@ npm run typecheck | grep -E "(supabase|database)"
 - 型定義優先の修正（実データ確認必須）
 - 認証・セキュリティ関連の安易な修正
 - データベーススキーマ変更時の影響度軽視
+```
+
+### **🔄 無限ループ防止（2025.10.09追記）**
+
+```markdown
+🚨 **React Hook無限ループ防止**:
+- useEffectの依存配列にstateを含める際は更新チェーンを必ず確認
+- プロファイル・認証関連コンポーネントは特に注意
+- state更新→useEffect実行→state更新のサイクルを避ける
+
+⚠️ **特に危険なパターン**:
+- AuthProviderでのprofile更新による無限ループ
+- useEffect([...deps])でdepsにstateが含まれ、useEffect内でそのstateを更新
+- 非同期でのプロファイル読み込み後のstate更新トリガー
+
+✅ **防止方法**:
+- useEffectの依存配列は必要最小限に
+- state更新がuseEffectを再トリガーしないか確認
+- プロファイル更新系は初期化時のみ実行するよう制御
+- ESLint警告を適切に抑制（// eslint-disable-line react-hooks/exhaustive-deps）
 ```
 
 ### **品質基準（常に維持）**

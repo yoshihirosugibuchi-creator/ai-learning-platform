@@ -38,7 +38,7 @@ const eslintConfig = [
           "caughtErrorsIgnorePattern": "^_"
         }
       ],
-      // 🚨 CRITICAL: Prohibit auth.users.user_metadata.role usage
+      // 🚨 CRITICAL: Prohibit auth.users.user_metadata.role usage & 無限ループ防止
       "no-restricted-syntax": [
         "error",
         {
@@ -48,8 +48,21 @@ const eslintConfig = [
         {
           "selector": "Literal[value='role'][parent.type='Property'][parent.parent.property.name='user_metadata']",
           "message": "🚨 FORBIDDEN: Never access 'role' from user_metadata! Always use users table role instead."
+        },
+        {
+          "selector": "CallExpression[callee.name='useEffect'] ArrayExpression[elements.*.name='profile']",
+          "message": "⚠️ INFINITE LOOP RISK: useEffect with 'profile' in dependencies may cause infinite loop if 'profile' is updated inside the effect. Consider removing 'profile' from dependencies. See CLAUDE.md for AuthProvider pattern."
         }
       ],
+      // 🔄 React Hook無限ループ防止ルール (2025.10.09追加)
+      "react-hooks/exhaustive-deps": [
+        "error",
+        {
+          "additionalHooks": "useCustomEffect|useAsyncEffect",
+          "enableDangerousAutofixThisMayCauseInfiniteLoops": false
+        }
+      ],
+      "react-hooks/rules-of-hooks": "error",
     },
   },
   {

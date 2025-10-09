@@ -67,25 +67,14 @@ export async function getCurrentUserRole(request: Request): Promise<{
 
     const token = authHeader.replace('Bearer ', '')
     
-    // Supabaseクライアント作成（他のAPIと同じパターン）
+    // Supabaseクライアント作成（他の成功APIと同じパターン）
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        },
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      }
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     
-    // ユーザー取得
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    // トークンを直接渡してユーザー取得
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
     if (userError || !user) {
       return { userId: null, role: null, error: 'Authentication failed' }
