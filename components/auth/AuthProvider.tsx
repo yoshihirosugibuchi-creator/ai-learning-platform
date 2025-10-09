@@ -67,9 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log('🔄 Attempting to load actual profile in background...')
         
-        // Much shorter timeout for background operation
+        // Timeout for background operation
         const profileTimeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Background profile loading timeout')), 1500)
+          setTimeout(() => reject(new Error('Background profile loading timeout')), 3000)
         )
         
         const userProfilePromise = getOrCreateUserProfile(user)
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null)
         setLoading(false)
       }
-    }, 2000) // 2秒タイムアウト（本番環境用短縮）
+    }, 5000) // 5秒タイムアウト（本番環境考慮）
 
     // Get initial session with faster error handling
     const initializeAuth = async () => {

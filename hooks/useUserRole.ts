@@ -54,7 +54,7 @@ export function useUserRole() {
         // Get session token from Supabase directly with faster timeout
         const sessionPromise = supabase.auth.getSession()
         const timeoutPromise: Promise<never> = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Session fetch timeout')), 3000)
+          setTimeout(() => reject(new Error('Session fetch timeout')), 5000)
         )
         
         const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise])
