@@ -31,6 +31,35 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   }
 })
 
+// グローバル認証エラーハンドラー
+supabase.auth.onAuthStateChange((event, session) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔐 Auth state change:', event, session?.user?.email || 'no user')
+  }
+  
+  // Refresh Token エラーの処理
+  if (event === 'TOKEN_REFRESHED' && !session) {
+    console.warn('⚠️ Token refresh failed, clearing session')
+    supabase.auth.signOut()
+  }
+})
+
+// エラーハンドリング用のラッパー関数
+export const handleSupabaseError = async (error: unknown) => {
+  // Refresh Token エラーの場合は自動ログアウト
+  const errorMessage = (error as Error)?.message || ''
+  if (errorMessage.includes('Invalid Refresh Token') || 
+      errorMessage.includes('Refresh Token Not Found')) {
+    console.warn('🔄 Invalid refresh token detected, signing out...')
+    await supabase.auth.signOut()
+    // ページリロードして認証状態をクリア
+    if (typeof window !== 'undefined') {
+      window.location.reload()
+    }
+  }
+  throw error
+}
+
 // Database types
 export interface User {
   id: string

@@ -7,6 +7,11 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import ClientOnly from "@/components/ClientOnly";
 import ErrorBoundary from "@/components/auth/ErrorBoundary";
 
+// 開発環境でのみ認証エラー回復ヘルパーを読み込み
+if (process.env.NODE_ENV === 'development') {
+  import("@/lib/dev-auth-helper");
+}
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",

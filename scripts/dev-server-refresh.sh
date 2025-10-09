@@ -90,9 +90,22 @@ echo ""
 
 # 開発サーバー起動
 echo "🔥 Launching development server..."
-npm run dev
+npm run dev &
+DEV_PID=$!
 
-# このスクリプトがCtrl+Cで終了された場合の処理
-trap 'echo ""; echo "🛑 Development server stopped"; exit 0' INT
+# 少し待機してサーバーの起動を確認
+sleep 2
 
-echo "✅ Development server refresh completed!"
+# サーバーが正常に起動したかチェック
+if kill -0 $DEV_PID 2>/dev/null; then
+    echo "✅ Development server started successfully!"
+    echo "🌐 Available at: http://localhost:3000"
+    echo "📊 Process ID: $DEV_PID"
+    echo "🛑 Use 'Ctrl+C' or 'pkill -f \"next dev\"' to stop"
+    echo "⚡ For faster restarts, use: npm run dev:refresh:quick"
+    echo ""
+    echo "✅ Development server refresh completed!"
+else
+    echo "❌ Failed to start development server"
+    exit 1
+fi
