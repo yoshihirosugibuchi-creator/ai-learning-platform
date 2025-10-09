@@ -719,8 +719,17 @@ function filterCategories(
     filtered = filtered.filter(cat => cat.type === options.type)
   }
   
-  // activeOnlyの場合、静的データでは全て有効とみなす
-  // DB データの場合は is_active フィールドがあることを前提とする
+  // activeOnlyフィルター - デフォルトはtrue（アクティブのみ）
+  if (options?.activeOnly !== false) {
+    filtered = filtered.filter(cat => {
+      // isActiveフィールドがある場合（DBデータ）はそれを使用
+      if ('isActive' in cat && cat.isActive !== undefined) {
+        return cat.isActive
+      }
+      // 静的データの場合は全て有効とみなす
+      return true
+    })
+  }
   
   return filtered
 }

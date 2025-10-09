@@ -92,6 +92,12 @@ export default function CategoryCard({
             </div>
           </div>
           
+          {/* Status Badge */}
+          {isComingSoon && (
+            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+              Coming Soon
+            </Badge>
+          )}
         </div>
       </CardHeader>
       

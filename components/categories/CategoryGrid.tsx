@@ -96,12 +96,15 @@ export default function CategoryGrid({
       const matchesSearch = category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            category.description?.toLowerCase().includes(searchTerm.toLowerCase())
       
-      // Hide suspended categories (isActive: false, isVisible: false)
-      const isVisible = category.isVisible !== false // Show active and coming soon, hide suspended
+      // カテゴリーステータス制御:
+      // - 有効: isActive=true, isVisible=true → 表示
+      // - Coming Soon: isActive=false, isVisible=true → 表示（Coming Soonバッジ付き）
+      // - 非表示: isActive=false, isVisible=false → 非表示
+      const shouldShow = category.isVisible === true // is_visible=trueのもののみ表示
       
       // For now, show all categories regardless of skill level
       // In real implementation, this would filter based on available content for that skill level
-      return matchesSearch && isVisible
+      return matchesSearch && shouldShow
     })
   }, [searchTerm])
 

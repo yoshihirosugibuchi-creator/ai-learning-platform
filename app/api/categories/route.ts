@@ -22,9 +22,11 @@ export async function GET(request: Request) {
         is_visible,
         activation_date
       `)
-      .eq('is_visible', true)
       .order('type')
       .order('display_order')
+    
+    // 一般ユーザー向けは常にis_visible=trueのみ表示
+    query = query.eq('is_visible', true)
 
     // タイプフィルター
     if (type) {
