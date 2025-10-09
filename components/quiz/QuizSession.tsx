@@ -257,7 +257,8 @@ export default function QuizSession({
     // 配分を計算して適用
     const difficultyDistribution = getDifficultyDistributionByAccuracy(accuracy)
     return optimizeByDistribution(questions, difficultyDistribution)
-  }, [category, optimizeByDistribution])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])  // 依存配列を空にして無限ループを防ぐ
 
   useEffect(() => {
     // 🚨 クイズ進行中の場合はリセットを防ぐ（タブ切り替え対策）
@@ -355,7 +356,8 @@ export default function QuizSession({
         totalQuestions: selectedQuestions.length
       }))
     }
-  }, [questions, category, level, difficulties, user.id, profile, currentQuestionIndex, isFinished, sessionQuestions.length, optimizeQuestionsForUser])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questions, category, level, difficulties, user.id, profile])
 
   // Helper functions for cognitive load and flow state calculation
   const calculateCognitiveLoad = useCallback((responseTime: number, isCorrect: boolean): number => {

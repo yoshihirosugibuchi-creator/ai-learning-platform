@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
   // 分析データの読み込み
   useEffect(() => {
     async function loadAnalytics() {
-      if (user?.id) {
+      if (user?.id && !loading) {
         setIsLoading(true)
         try {
           const cacheKey = `analytics_${user.id}`
@@ -105,7 +105,7 @@ export default function AnalyticsPage() {
     }
 
     loadAnalytics()
-  }, [user?.id])
+  }, [user?.id, loading])
 
   // 分析データの更新
   const refreshAnalytics = async () => {

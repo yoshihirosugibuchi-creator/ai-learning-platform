@@ -59,7 +59,7 @@ export default function UserManagementPage() {
         return
       }
       
-      const response = await fetch('/api/debug/current-user-v2', {
+      const response = await fetch('/api/auth/user', {
         headers: {
           'Authorization': `Bearer ${session.access_token}`
         }
