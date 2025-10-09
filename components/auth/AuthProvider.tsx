@@ -153,11 +153,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const errorMessage = refreshError && typeof refreshError === 'object' && 'message' in refreshError 
                   ? (refreshError as { message: string }).message 
                   : 'Unknown error'
-                console.error('❌ Session refresh failed, redirecting to login:', errorMessage)
+                console.error('❌ Session refresh failed, clearing all auth data:', errorMessage)
+                
+                // 🚨 CRITICAL: 完全にセッションをクリア
+                await supabase.auth.signOut()
                 setUser(null)
                 setProfile(null)
                 setLoading(false)
                 clearTimeout(loadingTimeout)
+                
+                // localStorage/sessionStorageも強制クリア
+                if (typeof window !== 'undefined') {
+                  localStorage.removeItem('supabase.auth.token')
+                  sessionStorage.clear()
+                }
+                
                 // ログインページへリダイレクト
                 window.location.href = '/login'
                 return
@@ -166,11 +176,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               console.log('✅ Session refreshed successfully')
               currentSession = refreshData.session as Session
             } catch (refreshErr) {
-              console.error('❌ Session refresh exception, redirecting to login:', refreshErr)
+              console.error('❌ Session refresh exception, clearing all auth data:', refreshErr)
+              
+              // 🚨 CRITICAL: 完全にセッションをクリア
+              await supabase.auth.signOut()
               setUser(null)
               setProfile(null)
               setLoading(false)
               clearTimeout(loadingTimeout)
+              
+              // localStorage/sessionStorageも強制クリア
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('supabase.auth.token')
+                sessionStorage.clear()
+              }
+              
               // ログインページへリダイレクト
               window.location.href = '/login'
               return
@@ -307,7 +327,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(loadingTimeout)
       clearInterval(sessionHealthCheck)
     }
-  }, [lastLoadedUserId, profile])
+  }, [lastLoadedUserId]) // eslint-disable-line react-hooks/exhaustive-deps
+  // profile を依存関係から除外して無限ループを防ぐ
 
   const signIn = async (email: string, password: string) => {
     console.log('🔐 AuthProvider: Starting signIn process...')
