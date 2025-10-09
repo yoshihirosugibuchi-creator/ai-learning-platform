@@ -357,7 +357,7 @@ export default function QuizSession({
       }))
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questions, category, level, difficulties, user.id, profile])
+  }, [questions, category, level, difficulties, user.id, profile?.id])
 
   // Helper functions for cognitive load and flow state calculation
   const calculateCognitiveLoad = useCallback((responseTime: number, isCorrect: boolean): number => {
