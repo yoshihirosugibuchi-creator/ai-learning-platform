@@ -112,29 +112,16 @@ const staticSkillLevels: SkillLevelDefinition[] = [
 ]
 
 // 🔄 DB同期済み: 静的フォールバック用メインカテゴリー定義  
-// Last sync: 2025-09-21T00:47:35.406Z
+// Last sync: 2025-10-09T17:40:00.000Z - DB構造対応（isActive/isVisible追加、サブカテゴリー145個対応）
 const staticMainCategories: MainCategory[] = [
-  {
-    "id": "communication_presentation",
-    "name": "コミュニケーション・プレゼンテーション",
-    "description": "効果的な情報伝達と説得技術",
-    "type": "main",
-    "displayOrder": 1,
-    "subcategories": [
-      "結論ファースト・構造化思考",
-      "資料作成・可視化技術",
-      "会議運営・ファシリテーション",
-      "交渉・説得技術"
-    ],
-    "icon": "💬",
-    "color": "#3B82F6"
-  },
   {
     "id": "logical_thinking_problem_solving",
     "name": "論理的思考・問題解決",
     "description": "体系的な思考法と分析技術",
     "type": "main",
-    "displayOrder": 2,
+    "displayOrder": 1,
+    "isActive": true,
+    "isVisible": true,
     "subcategories": [
       "構造化思考（MECE・ロジックツリー）",
       "仮説検証・本質追求",
@@ -150,7 +137,9 @@ const staticMainCategories: MainCategory[] = [
     "name": "戦略・経営",
     "description": "企業戦略と経営の基礎知識",
     "type": "main",
-    "displayOrder": 3,
+    "displayOrder": 2,
+    "isActive": true,
+    "isVisible": true,
     "subcategories": [
       "経営戦略・事業戦略",
       "競争戦略・フレームワーク",
@@ -161,11 +150,83 @@ const staticMainCategories: MainCategory[] = [
     "color": "#10B981"
   },
   {
+    "id": "ai_digital_utilization",
+    "name": "AI・デジタル活用",
+    "description": "AI時代のデジタル技術活用",
+    "type": "main",
+    "displayOrder": 3,
+    "isActive": true,
+    "isVisible": true,
+    "subcategories": [
+      "プロンプトエンジニアリング",
+      "AI・機械学習活用",
+      "DX戦略・デジタル変革",
+      "データドリブン経営",
+      "IoT・自動化技術"
+    ],
+    "icon": "🤖",
+    "color": "#8B5CF6"
+  },
+  {
+    "id": "business_process_analysis",
+    "name": "ビジネスプロセス・業務分析",
+    "description": "業務の理解と改善設計",
+    "type": "main",
+    "displayOrder": 4,
+    "isActive": true,
+    "isVisible": true,
+    "subcategories": [
+      "業務分析・要件定義",
+      "プロセス設計・最適化",
+      "サプライチェーン管理",
+      "業務システム設計",
+      "BPR・業務改革"
+    ],
+    "icon": "🔄",
+    "color": "#F97316"
+  },
+  {
+    "id": "project_operations",
+    "name": "プロジェクト・業務管理",
+    "description": "プロジェクト運営と業務効率化",
+    "type": "main",
+    "displayOrder": 5,
+    "isActive": true,
+    "isVisible": true,
+    "subcategories": [
+      "プロジェクト設計・WBS",
+      "スケジュール・リソース管理",
+      "ステークホルダー管理",
+      "業務効率化・時間管理"
+    ],
+    "icon": "📋",
+    "color": "#84CC16"
+  },
+  {
+    "id": "communication_presentation",
+    "name": "コミュニケーション・プレゼンテーション",
+    "description": "効果的な情報伝達と説得技術",
+    "type": "main",
+    "displayOrder": 6,
+    "isActive": true,
+    "isVisible": true,
+    "subcategories": [
+      "結論ファースト・構造化思考",
+      "資料作成・可視化技術",
+      "会議運営・ファシリテーション",
+      "交渉・説得技術"
+    ],
+    "icon": "💬",
+    "color": "#3B82F6"
+  },
+  {
     "id": "finance",
     "name": "財務・ファイナンス",
     "description": "財務分析と資金管理の知識",
     "type": "main",
-    "displayOrder": 4,
+    "displayOrder": 7,
+    "isActive": true,
+    "isVisible": true,
     "subcategories": [
       "財務分析・企業価値評価",
       "投資判断・リスク管理",
@@ -180,7 +241,9 @@ const staticMainCategories: MainCategory[] = [
     "name": "マーケティング・営業",
     "description": "顧客価値創造と市場戦略",
     "type": "main",
-    "displayOrder": 5,
+    "displayOrder": 8,
+    "isActive": true,
+    "isVisible": true,
     "subcategories": [
       "顧客分析・セグメンテーション",
       "ブランディング・ポジショニング",
@@ -195,7 +258,9 @@ const staticMainCategories: MainCategory[] = [
     "name": "リーダーシップ・人事",
     "description": "人材マネジメントと組織運営",
     "type": "main",
-    "displayOrder": 6,
+    "displayOrder": 9,
+    "isActive": true,
+    "isVisible": true,
     "subcategories": [
       "チームマネジメント・モチベーション",
       "タレントマネジメント・育成",
@@ -206,59 +271,13 @@ const staticMainCategories: MainCategory[] = [
     "color": "#06B6D4"
   },
   {
-    "id": "ai_digital_utilization",
-    "name": "AI・デジタル活用",
-    "description": "AI時代のデジタル技術活用",
-    "type": "main",
-    "displayOrder": 7,
-    "subcategories": [
-      "AI・機械学習活用",
-      "AI基礎・業務活用",
-      "プロンプトエンジニアリング", 
-      "DX戦略・デジタル変革",
-      "データドリブン経営",
-      "IoT・自動化技術"
-    ],
-    "icon": "🤖",
-    "color": "#8B5CF6"
-  },
-  {
-    "id": "project_operations",
-    "name": "プロジェクト・業務管理",
-    "description": "プロジェクト運営と業務効率化",
-    "type": "main",
-    "displayOrder": 8,
-    "subcategories": [
-      "プロジェクト設計・WBS",
-      "スケジュール・リソース管理",
-      "ステークホルダー管理",
-      "業務効率化・時間管理"
-    ],
-    "icon": "📋",
-    "color": "#84CC16"
-  },
-  {
-    "id": "business_process_analysis",
-    "name": "ビジネスプロセス・業務分析",
-    "description": "業務の理解と改善設計",
-    "type": "main",
-    "displayOrder": 9,
-    "subcategories": [
-      "業務分析・要件定義",
-      "プロセス設計・最適化",
-      "サプライチェーン管理",
-      "業務システム設計",
-      "BPR・業務改革"
-    ],
-    "icon": "🔄",
-    "color": "#F97316"
-  },
-  {
     "id": "risk_crisis_management",
     "name": "リスク・危機管理",
     "description": "リスクの予防と危機対応",
     "type": "main",
     "displayOrder": 10,
+    "isActive": true,
+    "isVisible": true,
     "subcategories": [
       "企業リスク管理",
       "危機管理・BCP",
@@ -272,17 +291,19 @@ const staticMainCategories: MainCategory[] = [
 ]
 
 // 🔄 DB同期済み: 静的フォールバック用業界カテゴリー定義
-// Last sync: 2025-09-21T00:47:35.406Z
+// Last sync: 2025-10-09T17:40:00.000Z - DB構造対応（isActive/isVisible追加、サブカテゴリー145個対応）
 const staticIndustryCategories: IndustryCategory[] = [
   {
-    "id": "consulting_industry" as IndustryCategoryId,
+    "id": "consulting_industry",
     "name": "コンサルティング業界",
     "description": "コンサルティング業界特有の知識とスキル",
     "type": "industry",
     "displayOrder": 1,
+    "isActive": true,
+    "isVisible": true,
     "subcategories": [
-      "ケース面接・構造化思考",
       "仮説思考・イシューツリー",
+      "ケース面接・構造化思考",
       "ストーリーライン構築",
       "ステークホルダー分析",
       "複数ステークホルダー調整",
@@ -303,11 +324,13 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#6366F1"
   },
   {
-    "id": "si_industry" as IndustryCategoryId,
+    "id": "si_industry",
     "name": "SI（システムインテグレーション）業界",
     "description": "SI業界特有のプロジェクト管理と技術コンサルティング",
     "type": "industry",
     "displayOrder": 2,
+    "isActive": true,
+    "isVisible": true,
     "subcategories": [
       "要件定義・業務分析",
       "IT戦略立案",
@@ -328,11 +351,13 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#0EA5E9"
   },
   {
-    "id": "trading_company_industry" as IndustryCategoryId,
+    "id": "trading_company_industry",
     "name": "商社業界",
     "description": "商社特有のトレーディング・事業投資・グローバル展開スキル",
     "type": "industry",
     "displayOrder": 3,
+    "isActive": true,
+    "isVisible": true,
     "subcategories": [
       "商品知識・市場分析",
       "商品先物・デリバティブ活用",
@@ -354,112 +379,200 @@ const staticIndustryCategories: IndustryCategory[] = [
     "color": "#059669"
   },
   {
-    "id": "financial_services_industry" as IndustryCategoryId,
-    "name": "金融・保険業界",
-    "description": "銀行、証券、保険、フィンテック企業特有の知識とスキル",
-    "type": "industry",
-    "displayOrder": 4,
-    "subcategories": [],
-    "icon": "🏦",
-    "color": "#1E40AF"
-  },
-  {
-    "id": "manufacturing_industry" as IndustryCategoryId,
-    "name": "製造業界",
-    "description": "製造業特有の生産管理、品質管理、サプライチェーン知識とスキル",
-    "type": "industry",
-    "displayOrder": 5,
-    "subcategories": [],
-    "icon": "🏭",
-    "color": "#DC2626"
-  },
-  {
-    "id": "saas_product_industry" as IndustryCategoryId,
+    "id": "saas_product_industry",
     "name": "SaaS・プロダクト業界",
     "description": "SaaS企業、プロダクト開発、テックスタートアップ特有の事業運営スキル",
     "type": "industry",
-    "displayOrder": 6,
-    "subcategories": [],
+    "displayOrder": 4,
+    "isActive": false,
+    "isVisible": true,
+    "subcategories": [
+      "プロダクトマネジメント",
+      "UX・UI設計",
+      "グロースマーケティング",
+      "カスタマーサクセス",
+      "サブスクリプション事業運営"
+    ],
     "icon": "💻",
     "color": "#7C3AED"
   },
   {
-    "id": "healthcare_industry" as IndustryCategoryId,
+    "id": "manufacturing_industry",
+    "name": "製造業界",
+    "description": "製造業特有の生産管理、品質管理、サプライチェーン知識とスキル",
+    "type": "industry",
+    "displayOrder": 5,
+    "isActive": false,
+    "isVisible": true,
+    "subcategories": [
+      "生産管理・計画",
+      "品質管理・保証",
+      "リーン生産・改善活動",
+      "スマートファクトリー・IoT",
+      "製造戦略・事業企画"
+    ],
+    "icon": "🏭",
+    "color": "#F59E0B"
+  },
+  {
+    "id": "financial_services_industry",
+    "name": "金融・保険業界",
+    "description": "銀行、証券、保険、フィンテック企業特有の知識とスキル",
+    "type": "industry",
+    "displayOrder": 6,
+    "isActive": false,
+    "isVisible": true,
+    "subcategories": [
+      "金融商品・サービス設計",
+      "金融規制・コンプライアンス",
+      "フィンテック・デジタル化",
+      "与信・リスク管理",
+      "保険・アンダーライティング"
+    ],
+    "icon": "🏦",
+    "color": "#1E40AF"
+  },
+  {
+    "id": "healthcare_industry",
     "name": "ヘルスケア・医療業界",
     "description": "医療機関、製薬、医療機器、ヘルステック企業の専門知識とスキル",
     "type": "industry",
     "displayOrder": 7,
-    "subcategories": [],
+    "isActive": false,
+    "isVisible": true,
+    "subcategories": [
+      "医療業務・臨床オペレーション",
+      "医療IT・電子カルテ",
+      "医薬品開発・薬事",
+      "医療経営・病院管理",
+      "医療機器・メドテック"
+    ],
     "icon": "🏥",
     "color": "#059669"
   },
   {
-    "id": "retail_consumer_industry" as IndustryCategoryId,
+    "id": "retail_consumer_industry",
     "name": "小売・消費財業界",
     "description": "小売、EC、消費財メーカー特有のマーケティング・販売戦略スキル",
     "type": "industry",
     "displayOrder": 8,
-    "subcategories": [],
+    "isActive": false,
+    "isVisible": true,
+    "subcategories": [
+      "店舗運営・小売業務",
+      "オムニチャネル戦略",
+      "マーチャンダイジング",
+      "消費者インサイト・市場調査",
+      "ブランド管理・マーケティング"
+    ],
     "icon": "🛍️",
     "color": "#EA580C"
   },
   {
-    "id": "real_estate_construction_industry" as IndustryCategoryId,
+    "id": "real_estate_construction_industry",
     "name": "不動産・建設業界",
     "description": "不動産開発、建設、不動産サービス業界の専門知識とスキル",
     "type": "industry",
     "displayOrder": 9,
-    "subcategories": [],
+    "isActive": false,
+    "isVisible": true,
+    "subcategories": [
+      "不動産開発・企画",
+      "建設プロジェクト管理",
+      "不動産管理・運営",
+      "不動産ファイナンス・投資",
+      "プロップテック・建設DX"
+    ],
     "icon": "🏗️",
     "color": "#92400E"
   },
   {
-    "id": "energy_infrastructure_industry" as IndustryCategoryId,
+    "id": "energy_infrastructure_industry",
     "name": "エネルギー・インフラ業界",
     "description": "エネルギー、電力、ガス、水道、交通インフラ業界の専門知識とスキル",
     "type": "industry",
     "displayOrder": 10,
-    "subcategories": [],
+    "isActive": false,
+    "isVisible": true,
+    "subcategories": [
+      "エネルギー戦略・政策",
+      "再生可能エネルギー",
+      "インフラ運営・管理",
+      "スマートグリッド・IoT",
+      "インフラ投資・事業開発"
+    ],
     "icon": "⚡",
     "color": "#0F766E"
   },
   {
-    "id": "education_training_industry" as IndustryCategoryId,
+    "id": "education_training_industry",
     "name": "教育・研修業界",
     "description": "教育機関、研修会社、EdTech企業の教育サービス提供スキル",
     "type": "industry",
     "displayOrder": 11,
-    "subcategories": [],
+    "isActive": false,
+    "isVisible": true,
+    "subcategories": [
+      "教育プログラム設計",
+      "学習技術・EdTech",
+      "企業研修・人材育成",
+      "教育評価・アセスメント",
+      "教育機関運営・管理"
+    ],
     "icon": "📚",
     "color": "#7C2D12"
   },
   {
-    "id": "media_entertainment_industry" as IndustryCategoryId,
+    "id": "media_entertainment_industry",
     "name": "メディア・エンタメ業界",
     "description": "メディア、広告、エンターテインメント、コンテンツ業界の専門スキル",
     "type": "industry",
     "displayOrder": 12,
-    "subcategories": [],
+    "isActive": false,
+    "isVisible": true,
+    "subcategories": [
+      "コンテンツ制作・企画",
+      "デジタルメディア・配信",
+      "広告・メディアプランニング",
+      "IP・著作権管理",
+      "エンタメ事業・興行"
+    ],
     "icon": "🎬",
     "color": "#BE185D"
   },
   {
-    "id": "logistics_transportation_industry" as IndustryCategoryId,
+    "id": "logistics_transportation_industry",
     "name": "物流・運輸業界",
     "description": "物流、運送、倉庫、航空・海運業界の物流最適化とサプライチェーン管理",
     "type": "industry",
     "displayOrder": 13,
-    "subcategories": [],
+    "isActive": false,
+    "isVisible": true,
+    "subcategories": [
+      "物流最適化・効率化",
+      "倉庫管理・自動化",
+      "輸送計画・ネットワーク設計",
+      "物流テック・DX",
+      "国際物流・貿易"
+    ],
     "icon": "🚛",
     "color": "#365314"
   },
   {
-    "id": "public_sector_industry" as IndustryCategoryId,
+    "id": "public_sector_industry",
     "name": "公共・行政業界",
     "description": "官公庁、自治体、公共機関における行政運営と公共サービス提供スキル",
     "type": "industry",
     "displayOrder": 14,
-    "subcategories": [],
+    "isActive": false,
+    "isVisible": true,
+    "subcategories": [
+      "政策立案・行政企画",
+      "公共サービス提供",
+      "デジタル行政・DX",
+      "公共財政・予算管理",
+      "地域振興・まちづくり"
+    ],
     "icon": "🏛️",
     "color": "#374151"
   }

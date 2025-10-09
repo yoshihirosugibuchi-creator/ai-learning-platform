@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
-import FastCategoryGrid from '@/components/categories/FastCategoryGrid'
+import CategoryGrid from '@/components/categories/CategoryGrid'
 import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function CategoriesPage() {
@@ -43,9 +43,12 @@ export default function CategoriesPage() {
       <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 
       <main className="container mx-auto px-4 py-6">
-        <FastCategoryGrid
+        <CategoryGrid
           title="学習カテゴリー"
           description="ALEで学ぶことができるスキルの一覧です"
+          showSearch={false}
+          showFilter={false}
+          showStats={false}
           onCategoryClick={handleCategoryClick}
         />
       </main>

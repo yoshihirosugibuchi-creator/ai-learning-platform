@@ -1,3 +1,28 @@
+/**
+ * ⚠️ **DEPRECATED - 使用非推奨**
+ * 
+ * 🚨 **重要な警告**: このコンポーネントは静的データを使用しており、
+ * 実際のデータベースの内容と乖離する可能性があります。
+ * 
+ * **問題点**:
+ * - 管理画面での更新が反映されない
+ * - サブカテゴリー数が実データと異なる（静的91個 vs 実145個）
+ * - 並び順がDB設定と異なる
+ * - メンテナンスが必要（手動更新）
+ * 
+ * **推奨代替案**: `CategoryGrid` を使用してください
+ * - DB → FB JSON → 静的データの4層フォールバック
+ * - 常に最新データを表示
+ * - 管理画面の更新が即座に反映
+ * 
+ * **使用する場合の条件**:
+ * - 🔴 緊急時のみ（システム障害など）
+ * - 🔴 使用前に静的データの最新化が必須
+ * - 🔴 使用後は速やかに CategoryGrid に戻す
+ * 
+ * @deprecated Use CategoryGrid instead for dynamic data
+ */
+
 'use client'
 
 import { useState } from 'react'
@@ -43,7 +68,7 @@ export default function FastCategoryGrid({
     }
   })
 
-  console.log('🚀 FastCategoryGrid: Rendered with static data')
+  console.warn('⚠️ DEPRECATED FastCategoryGrid: Using static data - Consider using CategoryGrid for dynamic data')
 
   return (
     <div className="space-y-6">

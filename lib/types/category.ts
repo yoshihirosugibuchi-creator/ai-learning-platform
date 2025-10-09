@@ -49,20 +49,26 @@ export interface Subcategory extends Category {
 
 // メインカテゴリー詳細
 export interface MainCategory extends Category {
-  id: MainCategoryId
+  id: string // DBに合わせて string に変更
   type: 'main'
-  subcategories: string[] // サブカテゴリーIDの配列
+  subcategories: string[] // サブカテゴリー名の配列
   icon?: string
   color?: string
+  isActive?: boolean
+  isVisible?: boolean
+  displayOrder: number
 }
 
 // 業界別カテゴリー詳細
 export interface IndustryCategory extends Category {
-  id: IndustryCategoryId
+  id: string // DBに合わせて string に変更  
   type: 'industry'
-  subcategories: string[] // サブカテゴリーIDの配列
+  subcategories: string[] // サブカテゴリー名の配列
   icon?: string
   color?: string
+  isActive?: boolean
+  isVisible?: boolean
+  displayOrder: number
 }
 
 // スキルレベル定義
