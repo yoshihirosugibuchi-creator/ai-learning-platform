@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { loadXPSettings, type XPSettings } from '@/lib/xp-settings'
+import { loadXPSettings, type XPSettings, calculateCourseXP, calculateSKP } from '@/lib/xp-settings'
 import { 
-  calculateCourseXP as calculateCourseXPUnified,
-  calculateCourseSKP as calculateCourseSKPUnified,
   mapDifficultyToEnglish
 } from '@/lib/xp-level-system'
 import type { 
@@ -162,14 +160,15 @@ export async function POST(request: Request) {
     // 3. 統合XP/SKP計算システム使用
     console.log('🔄 Using unified XP/SKP calculation system for course')
     
+    // XP設定をロード
     const xpSettings = await loadXPSettings(supabase)
     
     // 難易度を統合システム形式に変換
     const unifiedDifficulty = mapDifficultyToEnglish(courseDifficulty)
     
-    // 統合コースXP計算
+    // コースXP計算（テーブルベース）
     let earnedXP = isFirstCompletion && body.session_quiz_correct 
-      ? calculateCourseXPUnified(1)  // コースは正解数ベース
+      ? calculateCourseXP(unifiedDifficulty, xpSettings)  // コースは正解数ベース
       : 0
 
     // 統合コースSKP計算
@@ -177,15 +176,25 @@ export async function POST(request: Request) {
     let skpResult = { skpGained: 0, breakdown: { base: 0, bonus: 0, description: 'No SKP (review or not first completion)' } }
     
     if (isFirstCompletion) {
-      const isReview = false  // 初回完了の場合は復習ではない
+      const _isReview = false  // 初回完了の場合は復習ではない
       const isCompleted = body.session_quiz_correct  // 確認クイズ正解時のみ完了とみなす
       
-      skpResult = calculateCourseSKPUnified(
-        body.session_quiz_correct ? 1 : 0,  // 正解数
-        1,  // 総問題数（コース確認クイズは1問）
-        isCompleted,
-        isReview
-      )
+      // コースSKP計算（テーブルベース）
+      const correctAnswers = body.session_quiz_correct ? 1 : 0
+      const incorrectAnswers = body.session_quiz_correct ? 0 : 1
+      const skpTotal = calculateSKP(correctAnswers, incorrectAnswers, false, xpSettings)
+      
+      // コース完了ボーナス
+      const completionBonus = isCompleted ? xpSettings.skp.course_complete_bonus : 0
+      
+      skpResult = {
+        skpGained: skpTotal + completionBonus,
+        breakdown: {
+          base: skpTotal,
+          bonus: completionBonus,
+          description: `正解${correctAnswers}問・不正解${incorrectAnswers}問${completionBonus > 0 ? ` + コース完了ボーナス(${completionBonus}SKP)` : ''}`
+        }
+      }
       
       totalSKP = skpResult.skpGained
     }

@@ -1,5 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { loadXPSettings } from '@/lib/xp-settings'
+import { DATABASE_FALLBACK_SETTINGS } from '@/lib/xp-settings-fallback.generated'
+
+// 型定義
+interface QuizSessionData {
+  accuracy_rate: number | null
+  created_at: string | null
+}
+
+interface CategoryStatData {
+  category_id: string
+  total_xp: number
+  quiz_average_accuracy: number | null
+  current_level: number | null
+  quiz_questions_answered: number | null
+  quiz_questions_correct: number | null
+  updated_at: string | null
+}
+
+
+interface SessionData {
+  session_start_time: string
+  session_end_time: string | null
+  created_at: string | null
+  accuracy_rate: number | null
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     // Enhanced category analysis with progression tracking
     const categoryBreakdown = await Promise.all(
-      (categoryStats || []).map(async (stat) => {
+      (categoryStats || []).map(async (stat: CategoryStatData) => {
         // Get recent trend for this category
         const { data: categoryTrend } = await supabaseAdmin
           .from('quiz_sessions')
@@ -33,15 +59,22 @@ export async function GET(request: NextRequest) {
         // Calculate improvement trend
         const trend = categoryTrend && categoryTrend.length >= 3 ? 
           (() => {
-            const recent = categoryTrend.slice(-3).reduce((sum, s) => sum + (s.accuracy_rate || 0), 0) / 3
-            const earlier = categoryTrend.slice(0, 3).reduce((sum, s) => sum + (s.accuracy_rate || 0), 0) / 3
+            const recent = categoryTrend.slice(-3).reduce((sum: number, s: QuizSessionData) => sum + (s.accuracy_rate || 0), 0) / 3
+            const earlier = categoryTrend.slice(0, 3).reduce((sum: number, s: QuizSessionData) => sum + (s.accuracy_rate || 0), 0) / 3
             return recent - earlier
           })() : 0
 
-        // Determine mastery level with more nuanced calculation
+        // Determine mastery level with more nuanced calculation (dynamic threshold)
         const baseXP = stat.total_xp || 0
         const accuracyBonus = (stat.quiz_average_accuracy || 0) > 80 ? 1.2 : (stat.quiz_average_accuracy || 0) > 60 ? 1.0 : 0.8
-        const masteryLevel = Math.min(100, Math.round((baseXP / 500) * 100 * accuracyBonus))
+        let masteryThreshold
+        try {
+          const xpSettings = await loadXPSettings()
+          masteryThreshold = xpSettings.level.main_category_threshold
+        } catch {
+          masteryThreshold = DATABASE_FALLBACK_SETTINGS.level.main_category_threshold
+        }
+        const masteryLevel = Math.min(100, Math.round((baseXP / masteryThreshold) * 100 * accuracyBonus))
 
         // Determine skill level
         let skillLevel = 'beginner'
@@ -85,10 +118,10 @@ export async function GET(request: NextRequest) {
 
     if (recentSessions && recentSessions.length > 0) {
       totalSessions = recentSessions.length
-      totalAccuracy = recentSessions.reduce((sum, session) => sum + (session.accuracy_rate || 0), 0) / totalSessions
+      totalAccuracy = recentSessions.reduce((sum: number, session: SessionData) => sum + (session.accuracy_rate || 0), 0) / totalSessions
       
       // Analyze hourly performance patterns
-      recentSessions.forEach(session => {
+      recentSessions.forEach((session: SessionData) => {
         const hour = new Date(session.session_start_time).getHours()
         const dayOfWeek = new Date(session.session_start_time).getDay()
         
@@ -133,7 +166,7 @@ export async function GET(request: NextRequest) {
       dayName: ['日', '月', '火', '水', '木', '金', '土'][parseInt(day)]
     }))
 
-    const avgSessionDuration = (recentSessions || []).reduce((sum, session) => {
+    const avgSessionDuration = (recentSessions || []).reduce((sum: number, session: SessionData) => {
       if (session.session_start_time && session.session_end_time) {
         return sum + (new Date(session.session_end_time).getTime() - new Date(session.session_start_time).getTime()) / (1000 * 60)
       }

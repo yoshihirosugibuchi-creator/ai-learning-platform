@@ -38,6 +38,18 @@ const eslintConfig = [
           "caughtErrorsIgnorePattern": "^_"
         }
       ],
+      // 🚨 CRITICAL: Prohibit auth.users.user_metadata.role usage
+      "no-restricted-syntax": [
+        "error",
+        {
+          "selector": "MemberExpression[object.object.property.name='user_metadata'][property.name='role']",
+          "message": "🚨 FORBIDDEN: Never use auth.users.user_metadata.role! Always use users table role instead. See CLAUDE.md for details."
+        },
+        {
+          "selector": "Literal[value='role'][parent.type='Property'][parent.parent.property.name='user_metadata']",
+          "message": "🚨 FORBIDDEN: Never access 'role' from user_metadata! Always use users table role instead."
+        }
+      ],
     },
   },
   {

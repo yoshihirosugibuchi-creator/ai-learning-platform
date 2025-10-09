@@ -56,8 +56,221 @@ async function loadQuestionsFromJSON(): Promise<Question[]> {
     
   } catch (error) {
     console.error('❌ Error loading questions from JSON:', error)
-    return []
+    console.log('🔄 Falling back to static emergency questions...')
+    
+    // 最終的な静的フォールバック（実際のクイズデータから10問）
+    return getStaticEmergencyQuestions()
   }
+}
+
+/**
+ * 緊急時の静的問題（questions.jsonの最初の10問をベース）
+ * DB/JSONフォールバックが両方失敗した場合の最後の手段
+ * 10問でクイズセッションが完了するため、10問分を用意
+ */
+function getStaticEmergencyQuestions(): Question[] {
+  return [
+    {
+      id: 1,
+      category: "finance",
+      subcategory: "財務分析・企業価値評価",
+      subcategory_id: "financial_analysis_valuation",
+      question: "ROE（自己資本利益率）が15%の企業について、最も適切な解釈は？",
+      options: [
+        "売上高が業界平均より高い",
+        "従業員数が適正規模である", 
+        "設立年数が長く安定している",
+        "自己資本を効率的に活用して利益を創出している"
+      ],
+      correct: 3,
+      explanation: "ROE = 当期純利益 ÷ 自己資本 × 100で計算されます。15%は一般的に良好な数値で、投下した自己資本に対して効率的に利益を生み出していることを示しています。",
+      difficulty: "intermediate",
+      timeLimit: 45,
+      relatedTopics: ["ROA", "財務レバレッジ", "収益性分析"],
+      source: "日本公認会計士協会 財務分析ガイドライン",
+      deleted: false
+    },
+    {
+      id: 2,
+      category: "strategy_management", 
+      subcategory: "競争戦略・フレームワーク",
+      subcategory_id: "competitive_strategy_frameworks",
+      question: "3C分析のフレームワークを構成する3つの要素として正しい組み合わせは？",
+      options: [
+        "Customer（顧客）、Competitor（競合）、Company（自社）",
+        "Cost（コスト）、Channel（チャネル）、Campaign（キャンペーン）",
+        "Culture（文化）、Climate（環境）、Capacity（能力）",
+        "Capital（資本）、Communication（伝達）、Control（統制）"
+      ],
+      correct: 0,
+      explanation: "3C分析は、Customer（顧客）、Competitor（競合）、Company（自社）の3つの視点から事業環境を分析する代表的な戦略フレームワークです。顧客ニーズ、競合状況、自社の強みを包括的に分析することで効果的な戦略立案が可能になります。",
+      difficulty: "basic",
+      timeLimit: 30,
+      relatedTopics: ["SWOT分析", "5Forces", "戦略立案"],
+      source: "マッキンゼー戦略フレームワーク集",
+      deleted: false
+    },
+    {
+      id: 3,
+      category: "strategy_management",
+      subcategory: "category_level", 
+      subcategory_id: "category_level",
+      question: "顧客生涯価値（LTV）を向上させる最も効果的な施策の組み合わせは？",
+      options: [
+        "新規顧客獲得のみに注力",
+        "広告費の大幅削減",
+        "客単価向上と継続率向上の両方",
+        "商品価格の値下げ"
+      ],
+      correct: 2,
+      explanation: "LTV = 客単価 × 購買頻度 × 継続期間で算出されます。客単価と継続率の向上により、既存顧客からの収益を最大化できます。",
+      difficulty: "intermediate",
+      timeLimit: 40,
+      relatedTopics: ["CAC", "チャーンレート", "リテンション戦略"],
+      source: "デジタルマーケティング実践ガイド",
+      deleted: false
+    },
+    {
+      id: 4,
+      category: "communication_presentation",
+      subcategory: "資料作成・可視化技術",
+      subcategory_id: "document_visualization_tech", 
+      question: "プロジェクトで発生した予期しない技術的課題への最適な対応は？",
+      options: [
+        "スケジュール調整と代替案検討",
+        "課題を無視して進行",
+        "プロジェクト即座中止", 
+        "担当者のみで解決"
+      ],
+      correct: 0,
+      explanation: "技術的課題が発生した場合、まず影響度を評価し、スケジュール調整や代替案を検討することが重要です。ステークホルダーとの早期共有も必要です。",
+      difficulty: "intermediate",
+      timeLimit: 50,
+      relatedTopics: ["リスクアセスメント", "ステークホルダー管理", "変更管理"],
+      source: "PMI プロジェクト管理標準",
+      deleted: false
+    },
+    {
+      id: 5,
+      category: "leadership_hr",
+      subcategory: "チームマネジメント・モチベーション",
+      subcategory_id: "team_management_motivation",
+      question: "相関係数0.8が示す関係性について正しいのは？",
+      options: [
+        "強い正の相関",
+        "弱い正の相関",
+        "因果関係が確定",
+        "データに誤りがある"
+      ],
+      correct: 0,
+      explanation: "相関係数0.8は強い正の相関を示します（一般的に0.7以上が強い相関）。相関関係とは2種類のデータの関係性を示すもので、因果関係は異なることに注意が必要です。",
+      difficulty: "intermediate", 
+      timeLimit: 35,
+      relatedTopics: ["回帰分析", "統計的有意性", "データ解釈"],
+      source: "統計学実践ハンドブック",
+      deleted: false
+    },
+    {
+      id: 6,
+      category: "finance",
+      subcategory: "投資判断・リスク管理",
+      subcategory_id: "investment_risk_management",
+      question: "チームのモチベーション向上に最も効果的なアプローチは？",
+      options: [
+        "報酬額の大幅増額のみ",
+        "目標設定と成長機会の提供", 
+        "監視体制の強化",
+        "競争環境の徹底"
+      ],
+      correct: 1,
+      explanation: "内発的動機を高める目標設定と成長機会の提供が、持続的なモチベーション向上に最も効果的です。単純な金銭的報酬だけでは長期的な効果は限定的です。",
+      difficulty: "intermediate",
+      timeLimit: 40,
+      relatedTopics: ["動機理論", "目標設定理論", "チームビルディング"],
+      source: "ハーバードビジネスレビュー リーダーシップ論集",
+      deleted: false
+    },
+    {
+      id: 7,
+      category: "project_operations",
+      subcategory: "プロジェクト設計・WBS",
+      subcategory_id: "project_design_wbs",
+      question: "デザイン思考のプロセスで最初に行うべきステップは？",
+      options: [
+        "プロトタイプの作成",
+        "ユーザーニーズの共感的理解",
+        "アイデアの発散思考",
+        "市場分析とベンチマーク"
+      ],
+      correct: 1,
+      explanation: "デザイン思考では「共感（Empathize）」が最初のステップです。ユーザーの視点に立ち、真のニーズや課題を深く理解することから始まります。",
+      difficulty: "basic",
+      timeLimit: 35,
+      relatedTopics: ["人間中心設計", "ユーザーリサーチ", "ペルソナ設計"],
+      source: "スタンフォード大学 d.school デザイン思考ガイド",
+      deleted: false
+    },
+    {
+      id: 8,
+      category: "marketing_sales",
+      subcategory: "顧客分析・セグメンテーション",
+      subcategory_id: "customer_analysis_segmentation",
+      question: "企業のデジタル変革（DX）を成功させるための最重要要素は？",
+      options: [
+        "最新技術の全面導入",
+        "IT予算の大幅増額",
+        "外部コンサルタントへの委託",
+        "組織文化とマインドセットの変革"
+      ],
+      correct: 3,
+      explanation: "DXの成功には技術導入以上に、組織全体のマインドセット変革と変化を受け入れる文化の醸成が不可欠です。人的要素が最も重要な成功要因となります。",
+      difficulty: "intermediate",
+      timeLimit: 45,
+      relatedTopics: ["変更管理", "組織開発", "デジタルリテラシー"],
+      source: "経済産業省 DXレポート2.0",
+      deleted: false
+    },
+    {
+      id: 9,
+      category: "finance",
+      subcategory: "管理会計・KPI設計",
+      subcategory_id: "management_accounting_kpi",
+      question: "ESG経営において「E（環境）」「S（社会）」「G（ガバナンス）」のバランスを取る際の基本的な考え方は？",
+      options: [
+        "環境要素を最優先に考慮する",
+        "短期的利益を重視してバランスを調整",
+        "法的要求事項のみに対応する",
+        "ステークホルダーの期待に応じて統合的に推進"
+      ],
+      correct: 3,
+      explanation: "ESG経営では、投資家、従業員、顧客、地域社会などの多様なステークホルダーの期待を理解し、E・S・Gの各要素を統合的に推進することが重要です。",
+      difficulty: "advanced",
+      timeLimit: 50,
+      relatedTopics: ["ステークホルダー資本主義", "SDGs", "統合報告書"],
+      source: "日本取引所グループ ESG情報開示実践ハンドブック",
+      deleted: false
+    },
+    {
+      id: 10,
+      category: "communication_presentation",
+      subcategory: "会議運営・ファシリテーション",
+      subcategory_id: "meeting_facilitation",
+      question: "アジャイル組織の特徴として最も適切でないものは？",
+      options: [
+        "階層的な意思決定構造の維持",
+        "迅速な意思決定と実行力",
+        "顧客価値創造への集中",
+        "学習と適応の文化"
+      ],
+      correct: 0,
+      explanation: "アジャイル組織では階層的な意思決定構造ではなく、権限委譲と分散型の意思決定が重視されます。迅速性と柔軟性を確保するため、フラットな組織構造が基本となります。",
+      difficulty: "intermediate",
+      timeLimit: 40,
+      relatedTopics: ["権限委譲", "自律型チーム", "スクラム経営"],
+      source: "ハーバードビジネスレビュー アジャイル組織論",
+      deleted: false
+    }
+  ]
 }
 
 // カテゴリー別問題取得（オーバーロード対応）

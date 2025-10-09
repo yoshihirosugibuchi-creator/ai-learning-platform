@@ -48,6 +48,7 @@ export interface UserProfile {
   id: string
   email: string
   name?: string
+  role?: string // 権限管理用
   skill_level?: 'basic' | 'intermediate' | 'advanced'
   learning_style?: 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed'
   experience_level?: string | number // Allow both for compatibility
@@ -101,6 +102,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
       skill_level: data.skill_level as 'basic' | 'intermediate' | 'advanced' | undefined,
       learning_style: data.learning_style as 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed' | undefined,
       experience_level: data.experience_level || undefined,
+      role: data.role || 'user', // 重要: role フィールドを追加
       total_xp: data.total_xp || 0,
       current_level: data.current_level || 1,
       streak: data.streak || 0,
@@ -269,6 +271,7 @@ export async function getOrCreateUserProfile(user: SupabaseUser): Promise<UserPr
     id: user.id,
     email: user.email!,
     name: user.email?.split('@')[0] || 'User',
+    role: 'user', // 🚨 CRITICAL: role フィールドを追加
     skill_level: 'basic',
     learning_style: 'mixed',
     experience_level: 'basic',
@@ -292,10 +295,32 @@ export async function getOrCreateUserProfile(user: SupabaseUser): Promise<UserPr
       
       if (profile) {
         console.log('✅ Existing profile found:', profile)
+        // 🚨 CRITICAL: 実際のroleが取得できた場合はfallbackProfileのroleを更新
+        if (profile.role && profile.role !== 'user') {
+          fallbackProfile.role = profile.role
+          console.log('🔐 Updated fallback role to:', profile.role)
+        }
         return profile
       }
     } catch (fetchError) {
       console.warn('⚠️ Profile fetch failed or timed out:', fetchError)
+      
+      // 🚨 CRITICAL: プロファイル取得に失敗した場合でも権限だけは取得試行
+      try {
+        console.log('🔐 Attempting direct role fetch from users table...')
+        const { data: roleData, error: roleError } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        
+        if (!roleError && roleData?.role) {
+          fallbackProfile.role = roleData.role
+          console.log('✅ Direct role fetch successful:', roleData.role)
+        }
+      } catch (roleError) {
+        console.warn('⚠️ Direct role fetch also failed:', roleError)
+      }
     }
     
     // プロファイル作成を試行（非同期で実行、失敗してもフォールバックを返す）

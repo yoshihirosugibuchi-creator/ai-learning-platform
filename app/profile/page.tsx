@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { loadXPSettings, type XPSettings } from '@/lib/xp-settings'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -67,6 +68,7 @@ export default function ProfilePage() {
   const [_userBadges, _setUserBadges] = useState<UserBadge[]>([])
   // 新しいXPシステムのフック
   const { stats: xpStats, loading: xpLoading } = useXPStats()
+  const [xpSettings, setXpSettings] = useState<XPSettings | null>(null)
   
   // SKPフィルター状態
   const [skpFilter, setSkpFilter] = useState<'all' | 'earned' | 'spent'>('all')
@@ -74,6 +76,19 @@ export default function ProfilePage() {
   // サブカテゴリー展開状態
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   
+  // XP設定をロード
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await loadXPSettings()
+        setXpSettings(settings)
+      } catch (error) {
+        console.error('XP設定のロードに失敗:', error)
+      }
+    }
+    loadSettings()
+  }, [])
+
   // カテゴリーを動的に読み込み
   useEffect(() => {
     const loadCategories = async () => {
@@ -318,7 +333,7 @@ export default function ProfilePage() {
                   <Badge variant="outline" className="flex items-center space-x-1 text-xs">
                     <Trophy className="h-3 w-3" />
                     <span className="hidden sm:inline">レベル </span>
-                    <span>{xpStats ? Math.floor(xpStats.user.total_xp / 1000) + 1 : (profile?.current_level || 1)}</span>
+                    <span>{xpStats ? (profile?.current_level || 1) : (profile?.current_level || 1)}</span>
                   </Badge>
                   <Badge variant="outline" className="flex items-center space-x-1 text-xs">
                     <Flame className="h-3 w-3" />
@@ -631,7 +646,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
                     <Trophy className="h-8 w-8 mx-auto text-yellow-500 mb-2" />
-                    <div className="text-2xl font-bold">{xpStats ? Math.floor(xpStats.user.total_xp / 1000) + 1 : 1}</div>
+                    <div className="text-2xl font-bold">{xpStats ? (profile?.current_level || 1) : 1}</div>
                     <p className="text-sm text-muted-foreground">現在レベル</p>
                   </div>
                   <div className="text-center">
@@ -655,9 +670,13 @@ export default function ProfilePage() {
                 <div className="mt-6">
                   <div className="flex items-center justify-between text-sm mb-2">
                     <span>次のレベルまで</span>
-                    <span>{xpStats ? (1000 - (xpStats.user.total_xp % 1000)) : 1000}/1000 XP</span>
+                    <span>{xpStats && xpSettings ? 
+                      (xpSettings.level.overall_threshold - (xpStats.user.total_xp % xpSettings.level.overall_threshold)).toLocaleString() + `/${xpSettings.level.overall_threshold.toLocaleString()} XP`
+                      : 'ロード中...'}</span>
                   </div>
-                  <Progress value={xpStats ? (xpStats.user.total_xp % 1000) / 10 : 0} />
+                  <Progress value={xpStats && xpSettings ? 
+                    (xpStats.user.total_xp % xpSettings.level.overall_threshold) / (xpSettings.level.overall_threshold / 100) 
+                    : 0} />
                 </div>
               </CardContent>
             </Card>
@@ -685,7 +704,9 @@ export default function ProfilePage() {
                   ) : (
                     mainCategories.map((category) => {
                       const categoryXP = xpStats?.categories[category.id]?.total_xp || 0
-                      const categoryLevel = Math.floor(categoryXP / 500) + 1 // メインカテゴリーは500XP/レベル
+                      const categoryLevel = xpSettings ? 
+                        Math.floor(categoryXP / xpSettings.level.main_category_threshold) + 1 
+                        : 1
                       const isExpanded = expandedCategories.has(category.id)
                       
                       // このカテゴリーのサブカテゴリー統計を取得
@@ -743,7 +764,9 @@ export default function ProfilePage() {
                             <h5 className="text-sm font-medium text-gray-700 mb-3">サブカテゴリー統計</h5>
                             <div className="space-y-2">
                               {categorySubcategories.map((subcategory) => {
-                                const subcategoryLevel = Math.floor(subcategory.total_xp / 500) + 1
+                                const subcategoryLevel = xpSettings ? 
+                                  Math.floor(subcategory.total_xp / xpSettings.level.industry_subcategory_threshold) + 1 
+                                  : 1
                                 return (
                                   <div key={subcategory.compositeKey} className="flex items-center justify-between py-2 px-3 bg-white rounded border">
                                     <div>
@@ -798,7 +821,9 @@ export default function ProfilePage() {
                   ) : (
                     industryCategories.map((category) => {
                       const industryXP = xpStats?.categories[category.id]?.total_xp || 0
-                      const industryLevel = Math.floor(industryXP / 1000) + 1 // 業界カテゴリーは1000XP/レベル
+                      const industryLevel = xpSettings ? 
+                        Math.floor(industryXP / xpSettings.level.industry_category_threshold) + 1 
+                        : 1
                       const isExpanded = expandedCategories.has(category.id)
                       
                       // このカテゴリーのサブカテゴリー統計を取得
@@ -856,7 +881,9 @@ export default function ProfilePage() {
                             <h5 className="text-sm font-medium text-gray-700 mb-3">サブカテゴリー統計</h5>
                             <div className="space-y-2">
                               {categorySubcategories.map((subcategory) => {
-                                const subcategoryLevel = Math.floor(subcategory.total_xp / 500) + 1
+                                const subcategoryLevel = xpSettings ? 
+                                  Math.floor(subcategory.total_xp / xpSettings.level.industry_subcategory_threshold) + 1 
+                                  : 1
                                 return (
                                   <div key={subcategory.compositeKey} className="flex items-center justify-between py-2 px-3 bg-white rounded border">
                                     <div>

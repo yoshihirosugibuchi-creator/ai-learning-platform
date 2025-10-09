@@ -1,0 +1,1921 @@
+{
+  "courses": [],
+  "genres": [
+    {
+      "id": "ai_fundamentals",
+      "course_id": "ai_literacy_fundamentals",
+      "title": "AI基礎理解",
+      "description": "AIの基本概念とビジネスでの活用可能性を理解",
+      "category_id": "ai_digital_utilization",
+      "subcategory_id": "ai_ml_utilization",
+      "estimated_days": 7,
+      "display_order": 1,
+      "badge_data": {
+        "id": "ai_fundamentals_badge",
+        "icon": "🧠",
+        "color": "#7C3AED",
+        "title": "AI理解マスター",
+        "description": "AIの基礎知識とビジネス活用の全体像を習得"
+      },
+      "created_at": "2025-09-20T06:29:18.743816+00:00",
+      "updated_at": "2025-09-20T06:29:18.743816+00:00"
+    },
+    {
+      "id": "prompt_engineering",
+      "course_id": "ai_literacy_fundamentals",
+      "title": "プロンプトエンジニアリング入門",
+      "description": "生成AIから最適な回答を得るためのプロンプト設計技術",
+      "category_id": "ai_digital_utilization",
+      "subcategory_id": "prompt_engineering",
+      "estimated_days": 7,
+      "display_order": 2,
+      "badge_data": {
+        "id": "prompt_master_badge",
+        "icon": "💬",
+        "color": "#059669",
+        "title": "プロンプトマスター",
+        "description": "効果的なプロンプト設計で生成AIを最大限活用"
+      },
+      "created_at": "2025-09-20T06:29:18.743816+00:00",
+      "updated_at": "2025-09-20T06:29:18.743816+00:00"
+    },
+    {
+      "id": "business_ai_practice",
+      "course_id": "ai_literacy_fundamentals",
+      "title": "ビジネス活用実践",
+      "description": "実際の業務でのAI活用方法と導入プロセス",
+      "category_id": "ai_digital_utilization",
+      "subcategory_id": "ai_ml_utilization",
+      "estimated_days": 7,
+      "display_order": 3,
+      "badge_data": {
+        "id": "ai_practitioner_badge",
+        "icon": "🎯",
+        "color": "#DC2626",
+        "title": "AI活用実践者",
+        "description": "ビジネス現場でAIを効果的に活用し成果を出すスキル"
+      },
+      "created_at": "2025-09-20T06:29:18.743816+00:00",
+      "updated_at": "2025-09-20T06:29:18.743816+00:00"
+    },
+    {
+      "id": "ai_evaluation_ethics",
+      "course_id": "ai_literacy_fundamentals",
+      "title": "実践・評価・倫理",
+      "description": "AI活用の評価方法と責任あるAI利用",
+      "category_id": "ai_digital_utilization",
+      "subcategory_id": "dx_strategy_transformation",
+      "estimated_days": 7,
+      "display_order": 4,
+      "badge_data": {
+        "id": "responsible_ai_badge",
+        "icon": "⚖️",
+        "color": "#7C2D12",
+        "title": "責任あるAI実践者",
+        "description": "AI活用の効果を適切に評価し、倫理的配慮を持って活用するスキル"
+      },
+      "created_at": "2025-09-20T06:29:18.743816+00:00",
+      "updated_at": "2025-09-20T06:29:18.743816+00:00"
+    },
+    {
+      "id": "thinking_foundation",
+      "course_id": "consulting_thinking_basics",
+      "title": "思考の基盤",
+      "description": "論理的思考の基本原則とコンサル特有の思考法",
+      "category_id": "logical_thinking_problem_solving",
+      "subcategory_id": "structured_thinking_mece",
+      "estimated_days": 6,
+      "display_order": 1,
+      "badge_data": {
+        "id": "thinking_foundation_badge",
+        "icon": "🧩",
+        "color": "#8B5CF6",
+        "title": "論理思考マスター",
+        "description": "構造化思考と論理的思考の基礎を習得"
+      },
+      "created_at": "2025-09-20T06:29:17.723927+00:00",
+      "updated_at": "2025-09-20T06:29:17.723927+00:00"
+    },
+    {
+      "id": "framework_application",
+      "course_id": "consulting_thinking_basics",
+      "title": "フレームワーク活用",
+      "description": "戦略分析に必要な主要フレームワークの理解と応用",
+      "category_id": "strategy_management",
+      "subcategory_id": "competitive_strategy_frameworks",
+      "estimated_days": 8,
+      "display_order": 2,
+      "badge_data": {
+        "id": "framework_master_badge",
+        "icon": "🎯",
+        "color": "#10B981",
+        "title": "フレームワークマスター",
+        "description": "主要な戦略フレームワークを習得し実践応用できる"
+      },
+      "created_at": "2025-09-20T06:29:17.723927+00:00",
+      "updated_at": "2025-09-20T06:29:17.723927+00:00"
+    },
+    {
+      "id": "customer_understanding",
+      "course_id": "marketing_practice",
+      "title": "顧客理解",
+      "description": "データとインサイトに基づく顧客分析とセグメンテーション",
+      "category_id": "marketing_sales",
+      "subcategory_id": "customer_analysis_segmentation",
+      "estimated_days": 8,
+      "display_order": 1,
+      "badge_data": {
+        "id": "customer_expert_badge",
+        "icon": "👥",
+        "color": "#3B82F6",
+        "title": "顧客理解エキスパート",
+        "description": "データに基づく顧客分析とセグメンテーション技術を習得"
+      },
+      "created_at": "2025-09-20T06:29:18.20994+00:00",
+      "updated_at": "2025-09-20T06:29:18.20994+00:00"
+    },
+    {
+      "id": "digital_marketing",
+      "course_id": "marketing_practice",
+      "title": "デジタルマーケティング",
+      "description": "デジタルチャネルを活用した効果的なマーケティング施策",
+      "category_id": "marketing_sales",
+      "subcategory_id": "digital_marketing",
+      "estimated_days": 10,
+      "display_order": 2,
+      "badge_data": {
+        "id": "digital_marketing_badge",
+        "icon": "📱",
+        "color": "#8B5CF6",
+        "title": "デジタルマーケティング実践者",
+        "description": "デジタルチャネルを駆使した現代的マーケティング手法を習得"
+      },
+      "created_at": "2025-09-20T06:29:18.20994+00:00",
+      "updated_at": "2025-09-20T06:29:18.20994+00:00"
+    }
+  ],
+  "themes": [
+    {
+      "id": "ai_performance_evaluation",
+      "genre_id": "ai_evaluation_ethics",
+      "title": "AI成果評価と改善",
+      "description": "AI導入効果の測定と継続的改善プロセス",
+      "estimated_minutes": 27,
+      "display_order": 1,
+      "reward_card_data": {
+        "id": "ai_evaluation_card",
+        "icon": "📊",
+        "color": "#7C2D12",
+        "title": "AI成果評価",
+        "summary": "AI導入の効果を適切に測定し、継続的な改善につなげる評価技術",
+        "keyPoints": [
+          "定量・定性の両面での効果測定",
+          "KPI設定と継続的モニタリング",
+          "ROI計算と投資判断"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:18.840776+00:00",
+      "updated_at": "2025-09-20T06:29:18.840776+00:00"
+    },
+    {
+      "id": "ai_basic_concepts",
+      "genre_id": "ai_fundamentals",
+      "title": "AI基本概念",
+      "description": "人工知能の基礎知識とビジネスインパクト",
+      "estimated_minutes": 27,
+      "display_order": 1,
+      "reward_card_data": {
+        "id": "ai_basic_concepts_card",
+        "icon": "🤖",
+        "color": "#7C3AED",
+        "title": "AI基本概念",
+        "summary": "AIの定義から機械学習、ディープラーニングまで、基本概念を理解",
+        "keyPoints": [
+          "AI・機械学習・ディープラーニングの違い",
+          "AIの得意分野と限界の理解",
+          "ビジネスでのAI活用事例"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:18.840776+00:00",
+      "updated_at": "2025-09-20T06:29:18.840776+00:00"
+    },
+    {
+      "id": "ai_workflow_integration",
+      "genre_id": "business_ai_practice",
+      "title": "AI活用ワークフロー設計",
+      "description": "既存業務へのAI統合と効率化実現",
+      "estimated_minutes": 27,
+      "display_order": 1,
+      "reward_card_data": {
+        "id": "workflow_integration_card",
+        "icon": "⚙️",
+        "color": "#DC2626",
+        "title": "AIワークフロー設計",
+        "summary": "既存の業務プロセスにAIを効果的に組み込み、生産性向上を実現する設計技術",
+        "keyPoints": [
+          "業務プロセスの分析と改善点特定",
+          "AI適用領域の見極めと優先順位付け",
+          "人間とAIの役割分担設計"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:18.840776+00:00",
+      "updated_at": "2025-09-20T06:29:18.840776+00:00"
+    },
+    {
+      "id": "customer_journey_mapping",
+      "genre_id": "customer_understanding",
+      "title": "カスタマージャーニーマップ",
+      "description": "顧客の行動と感情を可視化し、タッチポイントを最適化",
+      "estimated_minutes": 9,
+      "display_order": 1,
+      "reward_card_data": {
+        "id": "customer_journey_card",
+        "icon": "🗺️",
+        "color": "#3B82F6",
+        "title": "カスタマージャーニーマップ",
+        "summary": "顧客の購買プロセス全体を可視化し、各段階での課題と機会を特定する手法",
+        "keyPoints": [
+          "認知→検討→購入→利用→推奨の各段階分析",
+          "タッチポイントと感情の変化を可視化",
+          "改善機会の優先順位付け"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:18.296122+00:00",
+      "updated_at": "2025-09-20T06:29:18.296122+00:00"
+    },
+    {
+      "id": "persona_development",
+      "genre_id": "customer_understanding",
+      "title": "ペルソナ開発",
+      "description": "データに基づく具体的な顧客像の構築と活用",
+      "estimated_minutes": 9,
+      "display_order": 2,
+      "reward_card_data": {
+        "id": "persona_card",
+        "icon": "👤",
+        "color": "#10B981",
+        "title": "ペルソナ開発",
+        "summary": "定量・定性データを統合し、マーケティング戦略の核となる具体的な顧客像を構築",
+        "keyPoints": [
+          "デモグラフィック＋心理的特性の統合",
+          "実データに基づく仮説構築",
+          "チーム内での顧客認識統一"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:18.296122+00:00",
+      "updated_at": "2025-09-20T06:29:18.296122+00:00"
+    },
+    {
+      "id": "market_segmentation",
+      "genre_id": "customer_understanding",
+      "title": "市場セグメンテーション",
+      "description": "効果的なターゲット選定と市場細分化戦略",
+      "estimated_minutes": 9,
+      "display_order": 3,
+      "reward_card_data": {
+        "id": "segmentation_card",
+        "icon": "🎯",
+        "color": "#F59E0B",
+        "title": "市場セグメンテーション",
+        "summary": "多様な顧客を意味のある塊に分類し、最適なターゲティング戦略を構築",
+        "keyPoints": [
+          "セグメンテーション軸の戦略的選択",
+          "セグメント評価とターゲット選定",
+          "セグメント別アプローチの最適化"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:18.296122+00:00",
+      "updated_at": "2025-09-20T06:29:18.296122+00:00"
+    },
+    {
+      "id": "content_marketing",
+      "genre_id": "digital_marketing",
+      "title": "コンテンツマーケティング",
+      "description": "価値あるコンテンツで顧客との関係性を構築",
+      "estimated_minutes": 9,
+      "display_order": 1,
+      "reward_card_data": {
+        "id": "content_marketing_card",
+        "icon": "📝",
+        "color": "#10B981",
+        "title": "コンテンツマーケティング",
+        "summary": "顧客の課題解決に役立つ価値あるコンテンツを通じて信頼関係を構築し、ビジネス成果につなげる手法",
+        "keyPoints": [
+          "顧客価値優先のコンテンツ設計",
+          "カスタマージャーニーに応じた配信戦略",
+          "効果測定と継続改善"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:18.296122+00:00",
+      "updated_at": "2025-09-20T06:29:18.296122+00:00"
+    },
+    {
+      "id": "social_media_marketing",
+      "genre_id": "digital_marketing",
+      "title": "ソーシャルメディアマーケティング",
+      "description": "SNSを活用したコミュニティ構築とエンゲージメント向上",
+      "estimated_minutes": 9,
+      "display_order": 2,
+      "reward_card_data": {
+        "id": "social_media_card",
+        "icon": "📱",
+        "color": "#8B5CF6",
+        "title": "ソーシャルメディアマーケティング",
+        "summary": "SNSプラットフォームの特性を活かし、顧客との双方向コミュニケーションを通じてブランド価値を向上させる手法",
+        "keyPoints": [
+          "プラットフォーム別の最適化戦略",
+          "コミュニティ構築とエンゲージメント",
+          "インフルエンサー・UGC活用"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:18.296122+00:00",
+      "updated_at": "2025-09-20T06:29:18.296122+00:00"
+    },
+    {
+      "id": "3c_analysis",
+      "genre_id": "framework_application",
+      "title": "3C分析",
+      "description": "Customer・Competitor・Companyの3視点による環境分析",
+      "estimated_minutes": 9,
+      "display_order": 1,
+      "reward_card_data": {
+        "id": "3c_analysis_card",
+        "icon": "🎪",
+        "color": "#3B82F6",
+        "title": "3C分析",
+        "summary": "Customer（顧客）・Competitor（競合）・Company（自社）の3つの視点から事業環境を分析",
+        "keyPoints": [
+          "顧客ニーズと市場動向の把握",
+          "競合他社の戦略と強み弱みの分析",
+          "自社の能力と資源の客観的評価"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:17.824249+00:00",
+      "updated_at": "2025-09-20T06:29:17.824249+00:00"
+    },
+    {
+      "id": "prompt_basics",
+      "genre_id": "prompt_engineering",
+      "title": "プロンプトの基本",
+      "description": "効果的なプロンプト作成の基礎技術",
+      "estimated_minutes": 27,
+      "display_order": 1,
+      "reward_card_data": {
+        "id": "prompt_basics_card",
+        "icon": "✍️",
+        "color": "#059669",
+        "title": "プロンプト基礎",
+        "summary": "明確で具体的なプロンプト設計により、生成AIから期待する回答を得る技術",
+        "keyPoints": [
+          "明確性・具体性・文脈情報の提供",
+          "ロール設定と出力形式の指定",
+          "Few-shotプロンプティングの活用"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:18.840776+00:00",
+      "updated_at": "2025-09-20T06:29:18.840776+00:00"
+    },
+    {
+      "id": "conclusion_first",
+      "genre_id": "thinking_foundation",
+      "title": "結論ファースト",
+      "description": "結論から話す思考法とコミュニケーション技術",
+      "estimated_minutes": 9,
+      "display_order": 1,
+      "reward_card_data": {
+        "id": "conclusion_first_card",
+        "icon": "🎯",
+        "color": "#3B82F6",
+        "title": "結論ファースト",
+        "summary": "まず結論、その後に根拠という情報構造でコミュニケーションの効率を上げる手法",
+        "keyPoints": [
+          "PREP法（Point・Reason・Example・Point）の活用",
+          "聞き手の理解負荷を軽減",
+          "説得力のあるプレゼンテーション"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:17.824249+00:00",
+      "updated_at": "2025-09-20T06:29:17.824249+00:00"
+    },
+    {
+      "id": "mece_thinking",
+      "genre_id": "thinking_foundation",
+      "title": "MECE思考",
+      "description": "漏れなく重複なく整理する思考技術",
+      "estimated_minutes": 9,
+      "display_order": 2,
+      "reward_card_data": {
+        "id": "mece_thinking_card",
+        "icon": "📊",
+        "color": "#10B981",
+        "title": "MECE思考",
+        "summary": "複雑な問題を「漏れなく重複なく」整理して全体像を把握する思考技術",
+        "keyPoints": [
+          "Mutually Exclusive（重複なく）",
+          "Collectively Exhaustive（漏れなく）",
+          "問題の全体像把握と優先順位付け"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:17.824249+00:00",
+      "updated_at": "2025-09-20T06:29:17.824249+00:00"
+    },
+    {
+      "id": "so_what_why_so",
+      "genre_id": "thinking_foundation",
+      "title": "So What?/Why So?",
+      "description": "深掘りと本質追求の思考技術",
+      "estimated_minutes": 9,
+      "display_order": 3,
+      "reward_card_data": {
+        "id": "so_what_card",
+        "icon": "🔍",
+        "color": "#EF4444",
+        "title": "So What?/Why So?",
+        "summary": "情報の本質を見抜き、deeper insightを得るための質問技術",
+        "keyPoints": [
+          "So What? - それで何が言えるのか？",
+          "Why So? - なぜそうなるのか？",
+          "表面的な情報から本質的な洞察への変換"
+        ]
+      },
+      "created_at": "2025-09-20T06:29:17.824249+00:00",
+      "updated_at": "2025-09-20T06:29:17.824249+00:00"
+    }
+  ],
+  "sessionContents": [
+    {
+      "id": "3c_basics_content_1",
+      "session_id": "3c_basics",
+      "content_type": "text",
+      "title": "3C分析とは",
+      "content": "3C分析は、Customer（顧客・市場）、Competitor（競合）、Company（自社）の3つの視点から事業環境を分析するフレームワークです。マッキンゼーの大前研一氏によって提唱され、戦略立案の基本として広く活用されています。3つのCを包括的に分析することで、成功要因（KSF：Key Success Factor）を特定できます。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "3c_basics_content_2",
+      "session_id": "3c_basics",
+      "content_type": "key_points",
+      "title": "3Cの構成要素",
+      "content": "• Customer: 市場規模、顧客ニーズ、購買行動、市場成長性\n• Competitor: 競合他社の戦略、強み・弱み、市場シェア\n• Company: 自社の経営資源、コアコンピタンス、バリューチェーン",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "3c_basics_content_3",
+      "session_id": "3c_basics",
+      "content_type": "example",
+      "title": "分析の目的と効果",
+      "content": "【目的】戦略オプションの明確化と優先順位付け\n【効果】\n✓ 市場機会の特定（Customer分析）\n✓ 競合脅威の把握（Competitor分析）\n✓ 自社の競争優位源泉の発見（Company分析）\n✓ 3C統合による戦略方向性の決定",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "3c_practice_content_1",
+      "session_id": "3c_practice",
+      "content_type": "text",
+      "title": "実践課題：カフェチェーンの戦略検討",
+      "content": "あなたは新興カフェチェーンの戦略企画担当者です。スターバックス、タリーズなどが競合の市場で差別化戦略を検討するため、3C分析を実施してください。各Cについて最重要な分析ポイントを3つずつ挙げてみましょう。",
+      "duration": 2,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "3c_practice_content_2",
+      "session_id": "3c_practice",
+      "content_type": "key_points",
+      "title": "効果的な分析のコツ",
+      "content": "• Customer: デモグラフィックだけでなく行動・心理も分析\n• Competitor: 直接競合だけでなく代替手段も考慮\n• Company: 強みだけでなく弱み・制約も正直に評価\n• 3Cの関係性と相互作用を重視",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "3c_strategic_insights_content_1",
+      "session_id": "3c_strategic_insights",
+      "content_type": "text",
+      "title": "3C統合分析の重要性",
+      "content": "3C分析の真価は、各Cを個別に分析するだけでなく、3つのCの交差点で戦略機会を発見することです。「顧客ニーズは高いが競合が対応できておらず、自社なら対応可能」な領域こそが、最大の戦略機会となります。このSweet Spotを見つけることが3C分析の最終目標です。",
+      "duration": 2,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "3c_strategic_insights_content_2",
+      "session_id": "3c_strategic_insights",
+      "content_type": "example",
+      "title": "成功事例：ニトリの戦略",
+      "content": "【Customer】価格志向の家具ニーズ拡大\n【Competitor】高級路線中心で低価格帯が手薄\n【Company】製造小売業の強みと海外生産体制\n→「お、ねだん以上。ニトリ」で低価格・高品質を実現し、家具業界のリーダーに",
+      "duration": 1,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "advanced_prompting_content_1",
+      "session_id": "advanced_prompting",
+      "content_type": "text",
+      "title": "Few-shotプロンプティング",
+      "content": "Few-shotプロンプティングは、期待する回答の例を示すことで、AIに求める出力パターンを学習させる技法です。特に特定のフォーマットや文体で回答してもらいたい場合に効果的です。例を2-3個示すだけで、回答の質が大幅に向上します。",
+      "duration": 3,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "advanced_prompting_content_2",
+      "session_id": "advanced_prompting",
+      "content_type": "example",
+      "title": "Chain of Thought（思考の連鎖）",
+      "content": "【通常】「売上を20%向上させるには？」\n【CoT】「売上向上のために、以下のステップで考えてください：\n1. 現状分析（売上構成要素の分解）\n2. 課題特定（ボトルネックの発見）\n3. 解決策の検討（各要素への対策）\n4. 優先順位付け（効果とコストの評価）\n5. 具体的アクションプラン」",
+      "duration": 3,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "advanced_prompting_content_3",
+      "session_id": "advanced_prompting",
+      "content_type": "key_points",
+      "title": "実践的技法",
+      "content": "• Zero-shot: 例なしで直接指示\n• One-shot: 1つの例を示す\n• Few-shot: 複数の例を示す\n• Chain of Thought: 思考プロセスを明示\n• Role prompting: 専門家の役割を設定\n• Template prompting: 決まったフォーマットを使用",
+      "duration": null,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "ai_business_applications_content_1",
+      "session_id": "ai_business_applications",
+      "content_type": "text",
+      "title": "業界別AI活用事例",
+      "content": "AIは様々な業界で実用化が進んでいます。金融業界では不正検知と与信判断、小売業界では需要予測と在庫最適化、製造業では品質管理と予知保全、医療分野では画像診断支援が代表的な活用例です。重要なのは、AIを導入すること自体ではなく、ビジネス課題解決にどう活用するかです。",
+      "duration": 4,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "ai_business_applications_content_2",
+      "session_id": "ai_business_applications",
+      "content_type": "example",
+      "title": "成功事例",
+      "content": "【Netflix】視聴履歴から好みを学習し、個人向けレコメンデーション\n【Amazon】購買データから需要を予測、配送最適化\n【トヨタ】生産ラインでの異常検知と品質向上\n【JPモルガン】契約書レビューを数秒で完了（従来は数時間）",
+      "duration": 3,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "ai_business_applications_content_3",
+      "session_id": "ai_business_applications",
+      "content_type": "key_points",
+      "title": "AI導入成功の鍵",
+      "content": "• 明確な課題設定とROI設計\n• 質の高いデータの準備\n• 段階的な導入とPDCAサイクル\n• 従業員のスキル向上と変革管理\n• 適切なベンダー選択と内製化バランス",
+      "duration": null,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "ai_limitations_ethics_content_1",
+      "session_id": "ai_limitations_ethics",
+      "content_type": "text",
+      "title": "AIの限界を理解する",
+      "content": "AIは万能ではありません。データの質と量に依存し、学習していないケースには対応できません。また、判断プロセスがブラックボックス化しやすく、バイアスを含んだデータから偏った結果を生み出すリスクもあります。AIの限界を理解し、人間の判断と適切に組み合わせることが重要です。",
+      "duration": 4,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "ai_limitations_ethics_content_2",
+      "session_id": "ai_limitations_ethics",
+      "content_type": "key_points",
+      "title": "AI活用の倫理的配慮",
+      "content": "• プライバシー保護とデータの適切な利用\n• アルゴリズムバイアスの排除\n• 透明性と説明可能性の確保\n• 人間の雇用への影響配慮\n• AIの決定に対する人間の最終責任",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "ai_limitations_ethics_content_3",
+      "session_id": "ai_limitations_ethics",
+      "content_type": "example",
+      "title": "責任あるAI活用",
+      "content": "【Microsoft】AI倫理委員会設立、公平性チェックツール開発\n【Google】AI原則公表「社会的利益・バイアス回避・説明責任・プライバシー保護」\n【IBM】Watson for Oncology停止（医師からの信頼性への懸念）\n→失敗から学び、より慎重なアプローチに転換",
+      "duration": 3,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "conclusion_first_application_content_1",
+      "session_id": "conclusion_first_application",
+      "content_type": "example",
+      "title": "コンサルティング現場での事例",
+      "content": "マッキンゼーの新人コンサルタントが学ぶ「エレベーターテスト」：エレベーターで偶然会った役員に30秒で重要な提案を伝えられるか？この訓練により結論ファーストが徹底される。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "conclusion_first_application_content_2",
+      "session_id": "conclusion_first_application",
+      "content_type": "key_points",
+      "title": "実践のコツ",
+      "content": "• 「結論から申し上げますと」「要点は3つあります」など導入フレーズを活用\n• 複数のポイントがある場合は番号を振る\n• 聞き手の反応を見て詳細レベルを調整\n• 質問時間を確保するため簡潔に",
+      "duration": 2,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "conclusion_first_basics_content_1",
+      "session_id": "conclusion_first_basics",
+      "content_type": "text",
+      "title": "結論ファーストとは",
+      "content": "結論ファーストとは、話の冒頭で結論や要点を明確に示し、その後に詳細な説明や根拠を提示するコミュニケーション手法です。ビジネスの現場では限られた時間で効率的に情報を伝える必要があり、この手法により聞き手の理解を促進できます。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "conclusion_first_basics_content_2",
+      "session_id": "conclusion_first_basics",
+      "content_type": "key_points",
+      "title": "PREP法の構造",
+      "content": "Point（結論）→ Reason（理由）→ Example（具体例）→ Point（結論の再確認）",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "conclusion_first_basics_content_3",
+      "session_id": "conclusion_first_basics",
+      "content_type": "example",
+      "title": "実例：業務報告での活用",
+      "content": "【悪い例】「今月の売上についてですが、様々な要因があって...（長い説明）...結果として目標を10%上回りました」\n【良い例】「今月の売上は目標を10%上回りました。主な要因は新商品の好調な売れ行きと既存顧客のリピート率向上です。具体的には...」",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "conclusion_first_practice_content_1",
+      "session_id": "conclusion_first_practice",
+      "content_type": "text",
+      "title": "実践シナリオ",
+      "content": "あなたは営業部のメンバーで、上司に今四半期の営業活動報告をする場面です。以下の情報を結論ファーストで整理してください：\n・新規顧客5社と契約締結\n・既存顧客からの追加注文が20%増加\n・競合他社の価格攻勢により一部案件が失注\n・全体として売上目標の108%を達成",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "conclusion_first_practice_content_2",
+      "session_id": "conclusion_first_practice",
+      "content_type": "key_points",
+      "title": "整理のポイント",
+      "content": "1. 最重要の結論を特定\n2. 根拠を重要度順に整理\n3. 具体例で説得力を強化\n4. 最後に結論を再確認",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "content_distribution_content_1",
+      "session_id": "content_distribution",
+      "content_type": "text",
+      "title": "効果的な配信戦略",
+      "content": "優れたコンテンツも、適切な配信戦略がなければ価値を発揮できません。オウンドメディア（自社サイト・ブログ）、アーンドメディア（PR・口コミ）、ペイドメディア（広告）を組み合わせ、ターゲット顧客が最もアクティブなチャネルで最適なタイミングにコンテンツを届ける戦略的アプローチが重要です。",
+      "duration": 2,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "content_distribution_content_2",
+      "session_id": "content_distribution",
+      "content_type": "example",
+      "title": "成果測定と改善事例",
+      "content": "【BtoB企業の事例】\n・課題：技術系ホワイトペーパーのダウンロード率低迷\n・分析：タイトルと導入部分の見直し実施\n・改善：具体的なメリットを前面に打ち出し\n・結果：ダウンロード率が3倍向上、営業案件化率も改善",
+      "duration": 1,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "content_planning_content_1",
+      "session_id": "content_planning",
+      "content_type": "text",
+      "title": "戦略的コンテンツ企画",
+      "content": "効果的なコンテンツ制作には、ターゲット顧客の深い理解と体系的な企画プロセスが不可欠です。顧客のカスタマージャーニーの各段階で必要な情報を整理し、検索キーワード調査、競合分析、自社の専門領域を組み合わせて、独自性のあるコンテンツテーマを発見します。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "content_planning_content_2",
+      "session_id": "content_planning",
+      "content_type": "key_points",
+      "title": "コンテンツカレンダーの要素",
+      "content": "• テーマ・トピック（顧客の関心事との整合性）\n• 配信日時（ターゲット層の行動パターン考慮）\n• 形式・媒体（コンテンツ特性と顧客の好み）\n• 目標指標（認知・検討・決定段階別の成果指標）",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "content_planning_content_3",
+      "session_id": "content_planning",
+      "content_type": "example",
+      "title": "質の高いコンテンツの特徴",
+      "content": "【実用性】具体的で実行可能なアドバイス\n【信頼性】データ・事例に基づく客観的な情報\n【独自性】自社ならではの視点や経験\n【読みやすさ】構造化された分かりやすい表現",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "content_strategy_foundation_content_1",
+      "session_id": "content_strategy_foundation",
+      "content_type": "text",
+      "title": "コンテンツマーケティングの本質",
+      "content": "コンテンツマーケティングは、顧客の課題解決や価値提供を最優先とし、売り込まずに顧客との信頼関係を構築するマーケティング手法です。短期的な売上よりも長期的な顧客関係を重視し、専門性と有用性の高いコンテンツを継続的に提供することで、顧客の購買意欲と忠誠心を自然に育成します。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "content_strategy_foundation_content_2",
+      "session_id": "content_strategy_foundation",
+      "content_type": "key_points",
+      "title": "主要コンテンツ形式",
+      "content": "• テキスト系：ブログ記事、ホワイトペーパー、ケーススタディ\n• ビジュアル系：インフォグラフィック、画像、スライド\n• 動画系：解説動画、ウェビナー、ライブ配信\n• インタラクティブ系：診断ツール、計算機、チェックリスト",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "content_strategy_foundation_content_3",
+      "session_id": "content_strategy_foundation",
+      "content_type": "example",
+      "title": "ビジネス効果",
+      "content": "【ブランド認知】専門性の高いコンテンツで業界での存在感向上\n【リード獲得】有用な情報と引き換えに見込客の連絡先獲得\n【顧客育成】段階的な情報提供で購買意欲を醸成\n【顧客満足】継続的な価値提供で既存顧客の満足度向上",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "continuous_improvement_content_1",
+      "session_id": "continuous_improvement",
+      "content_type": "text",
+      "title": "AI活用のPDCAサイクル",
+      "content": "AI活用は導入して終わりではありません。Plan（計画）→ Do（実行）→ Check（評価）→ Action（改善）のサイクルを継続的に回すことで、AI活用効果を最大化できます。特に、データの蓄積とともにAIの性能は向上するため、継続的なモニタリングと改善が重要です。",
+      "duration": 3,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "continuous_improvement_content_2",
+      "session_id": "continuous_improvement",
+      "content_type": "key_points",
+      "title": "改善のトリガー",
+      "content": "• 性能指標の低下（精度・速度・満足度）\n• ビジネス環境の変化（市場・競合・法規制）\n• 新しいデータパターンの出現\n• ユーザーからのフィードバック\n• 技術的な進歩や新ツールの登場\n• ROIの改善余地の発見",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "continuous_improvement_content_3",
+      "session_id": "continuous_improvement",
+      "content_type": "example",
+      "title": "改善事例：チャットボット最適化",
+      "content": "【課題発見】月次レポートで解決率が60%→45%に低下\n\n【原因分析】\n・新しいタイプの問い合わせ増加\n・既存の回答パターンとのミスマッチ\n\n【改善施策】\n・新しいFAQデータの追加学習\n・回答フローの見直し\n・エスカレーション基準の調整\n\n【結果】解決率が70%に向上",
+      "duration": 3,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "engagement_building_content_1",
+      "session_id": "engagement_building",
+      "content_type": "text",
+      "title": "エンゲージメント向上の戦略",
+      "content": "SNSでの成功は、単なるフォロワー数ではなく、コミュニティとの深いエンゲージメントによって決まります。一方的な情報発信ではなく、ユーザーとの双方向コミュニケーションを重視し、コメントへの返信、ユーザー生成コンテンツの活用、コミュニティイベントの開催などを通じて、熱量の高いファンベースを構築します。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "engagement_building_content_2",
+      "session_id": "engagement_building",
+      "content_type": "key_points",
+      "title": "エンゲージメント向上施策",
+      "content": "• 質問型投稿でユーザーの参加を促進\n• ユーザー生成コンテンツ（UGC）の積極活用\n• リアルタイム配信でライブ感演出\n• コミュニティ限定の特典・情報提供",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "engagement_building_content_3",
+      "session_id": "engagement_building",
+      "content_type": "example",
+      "title": "コミュニティ管理のベストプラクティス",
+      "content": "【迅速な応答】コメント・DM返信は24時間以内\n【価値提供】宣伝よりも有用な情報を優先\n【人間性表現】ブランドの向こうにいる人を感じられる投稿\n【一貫性維持】ブランドボイス・トーンの統一",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "evaluation_framework_content_1",
+      "session_id": "evaluation_framework",
+      "content_type": "text",
+      "title": "AI評価の多面的アプローチ",
+      "content": "AI導入の成功を正しく評価するには、技術的性能だけでなく、ビジネスインパクト、ユーザーエクスペリエンス、組織への影響など、多面的な評価が必要です。定量的指標と定性的評価を組み合わせることで、AI活用の真の価値を測定できます。",
+      "duration": 3,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "evaluation_framework_content_2",
+      "session_id": "evaluation_framework",
+      "content_type": "key_points",
+      "title": "AI評価のKPI分類",
+      "content": "【技術的KPI】\n• 予測精度・処理速度・可用性\n\n【ビジネスKPI】\n• 売上向上・コスト削減・生産性向上\n\n【ユーザーKPI】\n• 満足度・使いやすさ・採用率\n\n【組織KPI】\n• スキル向上・変革推進・競争力強化",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "evaluation_framework_content_3",
+      "session_id": "evaluation_framework",
+      "content_type": "example",
+      "title": "測定のベストプラクティス",
+      "content": "【Before/After比較】\n導入前：手作業で週40時間\n導入後：AI支援で週10時間（75%削減）\n\n【A/Bテスト】\nAI推薦あり：コンバージョン率3.5%\nAI推薦なし：コンバージョン率2.1%\n→67%の改善効果\n\n【継続的モニタリング】\n月次レポートで効果と課題を可視化",
+      "duration": 3,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "human_ai_collaboration_content_1",
+      "session_id": "human_ai_collaboration",
+      "content_type": "text",
+      "title": "効果的な協働モデル",
+      "content": "AIと人間が最も効果的に協働するには、それぞれの強みを活かした役割分担が重要です。AIは高速・大量処理と一定品質の維持が得意、人間は創造性・判断力・コミュニケーションが得意です。両者の特性を理解し、補完関係を築くことで1+1=3の効果を生み出せます。",
+      "duration": 3,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "human_ai_collaboration_content_2",
+      "session_id": "human_ai_collaboration",
+      "content_type": "key_points",
+      "title": "理想的な役割分担",
+      "content": "【AIの役割】\n• データ収集・前処理\n• パターン分析・異常検知\n• 初回ドラフト作成\n• ルーティンワーク実行\n\n【人間の役割】\n• 戦略・方針決定\n• 創造的なアイデア創出\n• 最終判断・品質チェック\n• ステークホルダーとのコミュニケーション",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "human_ai_collaboration_content_3",
+      "session_id": "human_ai_collaboration",
+      "content_type": "example",
+      "title": "協働事例：マーケティング企画",
+      "content": "【従来】企画者が1週間かけて市場分析→企画書作成\n\n【AI協働後】\n1. AI：競合分析・トレンド調査（30分）\n2. 人間：洞察抽出・戦略方向性決定（2時間）\n3. AI：企画書の初期ドラフト作成（15分）\n4. 人間：創造的要素追加・最終調整（1時間）\n\n結果：1週間→3.5時間（95%短縮）",
+      "duration": 3,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "implementation_planning_content_1",
+      "session_id": "implementation_planning",
+      "content_type": "text",
+      "title": "段階的導入アプローチ",
+      "content": "AI導入は段階的に進めることで、リスクを最小化し成功確率を高められます。まずはパイロットプロジェクトで小さく始め、効果を検証してから段階的に拡大します。各段階での学習を次の段階に活かすことで、組織全体のAI活用成熟度を向上させることができます。",
+      "duration": 3,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "implementation_planning_content_2",
+      "session_id": "implementation_planning",
+      "content_type": "key_points",
+      "title": "導入成功の要因",
+      "content": "• 経営層のコミットメントと投資\n• 明確なKPI設定と効果測定\n• 従業員の教育・研修プログラム\n• 段階的な導入とリスク管理\n• 継続的な改善とアップデート\n• 外部専門家との適切な連携",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "implementation_planning_content_3",
+      "session_id": "implementation_planning",
+      "content_type": "example",
+      "title": "実装ロードマップ例",
+      "content": "【Phase 1】準備期間（1-2ヶ月）\n・現状分析・課題特定・ROI試算\n\n【Phase 2】パイロット（3-6ヶ月）\n・限定的な領域でのテスト導入\n・効果測定・課題特定\n\n【Phase 3】拡大展開（6-12ヶ月）\n・成功事例の横展開\n・組織体制の整備\n\n【Phase 4】全社展開（12ヶ月以降）\n・戦略的活用・競争優位確立",
+      "duration": 3,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "journey_mapping_basics_content_1",
+      "session_id": "journey_mapping_basics",
+      "content_type": "text",
+      "title": "カスタマージャーニーマップとは",
+      "content": "カスタマージャーニーマップは、顧客が商品やサービスを認知してから購入・利用・推奨に至るまでの一連の体験を時系列で可視化したものです。各段階での顧客の行動、思考、感情を詳細に把握することで、顧客体験の改善点を発見し、マーケティング戦略を最適化できます。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "journey_mapping_basics_content_2",
+      "session_id": "journey_mapping_basics",
+      "content_type": "key_points",
+      "title": "ジャーニーの5段階",
+      "content": "• 認知（Awareness）：課題を認識し情報収集開始\n• 検討（Consideration）：選択肢を比較検討\n• 購入（Purchase）：決定と購買行動\n• 利用（Usage）：実際の使用体験\n• 推奨（Advocacy）：他者への推薦行動",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "journey_mapping_basics_content_3",
+      "session_id": "journey_mapping_basics",
+      "content_type": "example",
+      "title": "活用メリット",
+      "content": "【課題発見】各段階での離脱要因を特定\n【体験改善】顧客視点での改善優先度を明確化\n【部門連携】営業・CS・開発部門の共通認識を構築\n【投資判断】最大効果が見込める改善領域を特定",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "journey_mapping_practice_content_1",
+      "session_id": "journey_mapping_practice",
+      "content_type": "text",
+      "title": "実践ワーク：ECサイトのジャーニーマップ",
+      "content": "オンライン書籍ECサイトを例に、新規顧客のカスタマージャーニーを作成しましょう。認知から推奨まで各段階で、顧客がどのような行動を取り、どんな感情を持つかを整理してください。特に離脱しやすいポイントと改善機会に注目しましょう。",
+      "duration": 2,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "journey_mapping_practice_content_2",
+      "session_id": "journey_mapping_practice",
+      "content_type": "key_points",
+      "title": "作成時のチェックポイント",
+      "content": "• 実際の顧客データ・声に基づいているか\n• 各段階の感情の変化が明確か\n• タッチポイントが網羅されているか\n• 改善の優先順位が見えるか",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "journey_optimization_content_1",
+      "session_id": "journey_optimization",
+      "content_type": "text",
+      "title": "ジャーニー改善の戦略的アプローチ",
+      "content": "カスタマージャーニーの最適化は、単なる部分的改善ではなく、全体最適を目指す戦略的取り組みです。各段階での改善がどう連鎖し、最終的な顧客満足度とビジネス成果にどう影響するかを考慮して、改善の優先順位を決定することが重要です。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "journey_optimization_content_2",
+      "session_id": "journey_optimization",
+      "content_type": "example",
+      "title": "成功事例：SaaS企業のジャーニー改善",
+      "content": "【課題】トライアル→有料転換率が12%と低迷\n【分析】ジャーニーマップで「利用」段階での離脱多発を発見\n【施策】オンボーディング強化、プロダクトツアー改善\n【結果】転換率が28%に向上、顧客満足度も大幅改善",
+      "duration": 2,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "mece_advanced_content_1",
+      "session_id": "mece_advanced",
+      "content_type": "text",
+      "title": "ピラミッドストラクチャー",
+      "content": "MECEは単独で使うだけでなく、階層的に適用することで「ピラミッドストラクチャー」を構築できます。最上位の結論から、MECEに分解された複数の論点、さらにその下位にMECEな根拠を配置することで、論理的で説得力のある構造を作れます。",
+      "duration": 2,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "mece_advanced_content_2",
+      "session_id": "mece_advanced",
+      "content_type": "key_points",
+      "title": "よくある間違い",
+      "content": "• 完璧を求めすぎて分析が進まない\n• 形式的なMECEにこだわり本質を見失う\n• 分類の粒度が揃っていない\n• 相手に伝わらない専門的な分類",
+      "duration": 1,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "mece_basics_content_1",
+      "session_id": "mece_basics",
+      "content_type": "text",
+      "title": "MECEとは",
+      "content": "MECE（ミーシー）とは、Mutually Exclusive and Collectively Exhaustiveの略で、「相互に排他的で、全体として漏れがない」という意味です。問題や情報を整理する際の基本原則で、複雑な事象を体系的に理解するために不可欠な思考技術です。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "mece_basics_content_2",
+      "session_id": "mece_basics",
+      "content_type": "key_points",
+      "title": "MECE思考の効果",
+      "content": "• 問題の全体像を漏れなく把握\n• 重複した作業や分析を回避\n• 優先順位の明確化\n• チーム内での認識統一",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "mece_basics_content_3",
+      "session_id": "mece_basics",
+      "content_type": "example",
+      "title": "日常での活用例",
+      "content": "【売上低下の原因分析】\n❌悪い例: 「価格が高い、営業が弱い、商品力不足、宣伝不足、価格競争」（価格の重複）\n✅良い例: 「商品力（機能・デザイン）」「価格競争力」「販売力（営業・チャネル）」「マーケティング（認知・ブランド）」",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "mece_practice_content_1",
+      "session_id": "mece_practice",
+      "content_type": "text",
+      "title": "実践課題：新規事業検討",
+      "content": "あなたの会社が新規事業を検討する際の分析項目をMECEで整理してください。以下の要素を重複なく漏れなく分類しましょう：市場規模、競合状況、技術的実現性、収益性、リスク、投資額、人材確保、法規制、タイミング、自社の強み活用",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "mece_practice_content_2",
+      "session_id": "mece_practice",
+      "content_type": "key_points",
+      "title": "整理のフレームワーク例",
+      "content": "• 市場環境（外部要因）vs 社内要因（内部要因）\n• 定量的要因 vs 定性的要因\n• 現在の状況 vs 将来の予測",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "persona_activation_content_1",
+      "session_id": "persona_activation",
+      "content_type": "text",
+      "title": "ペルソナの戦略的活用",
+      "content": "作成したペルソナは、マーケティング戦略のあらゆる側面で活用できる強力なツールです。商品開発、コンテンツ制作、広告配信、営業アプローチなど、顧客との接点すべてにおいてペルソナを軸とした一貫性のある体験を設計することで、顧客満足度と事業成果を同時に向上させることができます。",
+      "duration": 2,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "persona_activation_content_2",
+      "session_id": "persona_activation",
+      "content_type": "example",
+      "title": "活用事例",
+      "content": "【商品開発】ペルソナのニーズに基づく機能優先順位付け\n【コンテンツ戦略】ペルソナの情報収集行動に合わせた配信\n【広告運用】ペルソナの属性・興味に基づくターゲティング\n【営業戦略】ペルソナの課題に響く提案ストーリー構築",
+      "duration": 1,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "persona_fundamentals_content_1",
+      "session_id": "persona_fundamentals",
+      "content_type": "text",
+      "title": "効果的なペルソナとは",
+      "content": "ペルソナは単なる顧客の典型例ではなく、実際のデータに基づいて作成された「戦略的な顧客モデル」です。デモグラフィック情報（年齢、職業など）と心理的特性（価値観、悩み、動機）を組み合わせ、チーム全員が同じ顧客イメージを共有できる具体的な人物像を作成します。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "persona_fundamentals_content_2",
+      "session_id": "persona_fundamentals",
+      "content_type": "key_points",
+      "title": "ペルソナの構成要素",
+      "content": "• 基本情報：年齢、職業、収入、家族構成\n• 行動パターン：情報収集方法、購買行動、利用シーン\n• 心理的特性：価値観、悩み、目標、動機\n• 情報接触：利用メディア、情報源、影響者",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "persona_fundamentals_content_3",
+      "session_id": "persona_fundamentals",
+      "content_type": "example",
+      "title": "よくある間違い",
+      "content": "【❌NG例】「20代女性、都内在住」のような曖昧な設定\n【✅OK例】「田中さん（28歳）、IT企業勤務、時短勤務で2歳の子育て中。効率重視で、SNSで情報収集し、レビューを重視する」",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "persona_research_content_1",
+      "session_id": "persona_research",
+      "content_type": "text",
+      "title": "データ収集の多角的アプローチ",
+      "content": "効果的なペルソナ作成には、定量データと定性データの両方が必要です。Webアナリティクス、顧客アンケート、購買データなどの定量情報で全体傾向を把握し、インタビューや行動観察などの定性調査で深層心理や文脈を理解します。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "persona_research_content_2",
+      "session_id": "persona_research",
+      "content_type": "key_points",
+      "title": "主要なデータソース",
+      "content": "• 定量データ：Webアナリティクス、購買履歴、アンケート統計\n• 定性データ：顧客インタビュー、観察調査、SNS分析\n• 内部データ：営業・CS部門の顧客接点情報\n• 外部データ：市場調査レポート、業界統計",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "persona_research_content_3",
+      "session_id": "persona_research",
+      "content_type": "example",
+      "title": "リサーチ実施のコツ",
+      "content": "【インタビュー】「なぜ？」を5回繰り返して本音を引き出す\n【アンケート】選択式で傾向把握、自由記述で深層理解\n【データ分析】異なるセグメントの行動差異に注目\n【継続更新】市場変化に応じて定期的にペルソナを見直し",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "positioning_strategy_content_1",
+      "session_id": "positioning_strategy",
+      "content_type": "text",
+      "title": "戦略的ポジショニング",
+      "content": "ポジショニングは、ターゲット顧客の頭の中で自社製品・サービスが占める位置を戦略的に設計することです。競合との差別化を図り、顧客にとって独自の価値を提供する明確なポジションを確立することで、価格競争を回避し、持続的な競争優位性を構築できます。",
+      "duration": 2,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "positioning_strategy_content_2",
+      "session_id": "positioning_strategy",
+      "content_type": "example",
+      "title": "成功事例：スターバックス",
+      "content": "【従来の喫茶店】「安くて美味しいコーヒー」\n【スターバックス】「第3の場所（サードプレイス）」\n【差別化ポイント】居心地の良い空間、カスタマイズ体験、ライフスタイル提案\n【結果】プレミアム価格でも選ばれるブランドを確立",
+      "duration": 1,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "prompt_fundamentals_content_1",
+      "session_id": "prompt_fundamentals",
+      "content_type": "text",
+      "title": "効果的なプロンプトの原則",
+      "content": "生成AIから期待する回答を得るには、明確で具体的なプロンプトが必要です。基本原則は「明確性」「具体性」「文脈情報」です。曖昧な指示では曖昧な回答しか得られません。また、AIにロールや人格を設定し、出力形式を指定することで、より実用的な結果を得ることができます。",
+      "duration": 3,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "prompt_fundamentals_content_2",
+      "session_id": "prompt_fundamentals",
+      "content_type": "example",
+      "title": "良いプロンプトvs悪いプロンプト",
+      "content": "【悪い例】「マーケティングについて教えて」\n【良い例】「BtoB SaaS企業の新規顧客獲得のためのデジタルマーケティング戦略を、予算500万円の中小企業向けに、具体的な施策と予算配分を含めて提案してください」\n\n違い：対象、条件、求める回答形式が明確",
+      "duration": 3,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "prompt_fundamentals_content_3",
+      "session_id": "prompt_fundamentals",
+      "content_type": "key_points",
+      "title": "プロンプトの基本構造",
+      "content": "1. ロール設定：「あなたは経験豊富なマーケティングコンサルタントです」\n2. 課題・背景：具体的な状況説明\n3. 制約条件：予算、期間、リソース等\n4. 求める出力形式：箇条書き、表形式、文字数等\n5. 追加指示：注意事項や重視すべきポイント",
+      "duration": null,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "prompt_optimization_content_1",
+      "session_id": "prompt_optimization",
+      "content_type": "text",
+      "title": "反復改善のプロセス",
+      "content": "プロンプトは一回で完璧になることは稀です。初回の結果を見て、不足している情報や曖昧な部分を特定し、段階的に改善していきます。「プロンプト→実行→評価→改善」のサイクルを回すことで、期待に近い結果を得ることができます。",
+      "duration": 3,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "prompt_optimization_content_2",
+      "session_id": "prompt_optimization",
+      "content_type": "key_points",
+      "title": "よくある失敗と対策",
+      "content": "• 曖昧な指示 → 具体的な条件を追加\n• 複数の質問を混在 → 1つずつ分割\n• 文脈情報不足 → 背景状況を詳しく説明\n• 出力形式未指定 → 求める形式を明示\n• 制約条件なし → 予算・期間等の制約を設定",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "prompt_optimization_content_3",
+      "session_id": "prompt_optimization",
+      "content_type": "example",
+      "title": "プロンプト最適化チェックリスト",
+      "content": "✅ ロールは適切に設定されているか？\n✅ 背景情報は十分に提供されているか？\n✅ 制約条件（予算、期間等）は明示されているか？\n✅ 求める出力形式は具体的に指定されているか？\n✅ 一度に複数のことを求めすぎていないか？\n✅ 専門用語の説明は必要ないか？",
+      "duration": 3,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "responsible_ai_practice_content_1",
+      "session_id": "responsible_ai_practice",
+      "content_type": "text",
+      "title": "AI活用における倫理的責任",
+      "content": "AI活用には大きな可能性がある一方で、バイアス、プライバシー、雇用への影響など、様々な倫理的課題も存在します。責任あるAI活用では、技術的効果だけでなく、社会への影響も考慮し、透明性、公平性、説明可能性を重視した導入・運用を行うことが重要です。",
+      "duration": 3,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "responsible_ai_practice_content_2",
+      "session_id": "responsible_ai_practice",
+      "content_type": "key_points",
+      "title": "責任あるAI活用の原則",
+      "content": "• 透明性：AIの判断プロセスを可能な限り説明\n• 公平性：偏見やバイアスの排除\n• プライバシー：個人情報の適切な保護\n• 人間中心：最終判断は人間が保持\n• 社会貢献：社会全体の利益を考慮\n• 継続的検証：定期的な倫理監査",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "responsible_ai_practice_content_3",
+      "session_id": "responsible_ai_practice",
+      "content_type": "example",
+      "title": "倫理的課題の事例と対策",
+      "content": "【事例1】採用AIのバイアス問題\n課題：特定の属性への偏見\n対策：多様なデータでの学習・定期的な公平性チェック\n\n【事例2】医療診断支援AI\n課題：誤診のリスクと責任の所在\n対策：医師の最終判断・セカンドオピニオンの導入\n\n【事例3】個人情報を使った推薦システム\n課題：プライバシーの侵害\n対策：データ匿名化・ユーザー同意の徹底",
+      "duration": 3,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "segmentation_strategy_content_1",
+      "session_id": "segmentation_strategy",
+      "content_type": "text",
+      "title": "戦略的セグメンテーション",
+      "content": "市場セグメンテーションは、多様な顧客を類似のニーズや特性を持つグループに分類する戦略的プロセスです。効果的なセグメンテーションにより、限られた経営資源を最も成果の見込める顧客層に集中投下し、競争優位性を構築できます。重要なのは、自社の強みと市場機会が交差するセグメントを発見することです。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "segmentation_strategy_content_2",
+      "session_id": "segmentation_strategy",
+      "content_type": "key_points",
+      "title": "セグメンテーション軸",
+      "content": "• 地理的：地域、気候、都市規模、人口密度\n• 人口統計的：年齢、性別、職業、所得、教育\n• 心理的：ライフスタイル、価値観、性格\n• 行動的：使用頻度、ブランド忠誠度、利用シーン",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "segmentation_strategy_content_3",
+      "session_id": "segmentation_strategy",
+      "content_type": "example",
+      "title": "セグメント評価の4基準",
+      "content": "【測定可能性】セグメントサイズや特性が測定可能か\n【到達可能性】効果的にリーチできるか\n【実質性】十分な市場規模と収益性があるか\n【実行可能性】自社リソースで対応可能か",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "so_what_basics_content_1",
+      "session_id": "so_what_basics",
+      "content_type": "text",
+      "title": "深掘り思考の重要性",
+      "content": "So What?（それで何が言えるのか？）とWhy So?（なぜそうなるのか？）は、表面的な情報から本質的な洞察を得るための質問技術です。データや事実をただ並べるだけでなく、その意味や背景を深く掘り下げることで、価値ある洞察や提案につなげることができます。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "so_what_basics_content_2",
+      "session_id": "so_what_basics",
+      "content_type": "key_points",
+      "title": "2つの質問の使い分け",
+      "content": "• So What? - 事実から洞察へ（上位概念・示唆の抽出）\n• Why So? - 現象から原因へ（下位要因・根本原因の探求）\n• 交互に使うことで多角的な分析が可能",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "so_what_basics_content_3",
+      "session_id": "so_what_basics",
+      "content_type": "example",
+      "title": "実例：売上データの分析",
+      "content": "【事実】「A商品の売上が前年比20%減少」\n【So What?】→「主力商品の競争力低下により事業基盤が揺らいでいる」\n【Why So?】→「競合の新商品投入」「顧客ニーズの変化」「価格競争力の低下」\n【So What?】→「抜本的な商品戦略見直しが急務」",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "so_what_mastery_content_1",
+      "session_id": "so_what_mastery",
+      "content_type": "text",
+      "title": "洞察力を高める技法",
+      "content": "優れた洞察を得るためには、多角的な視点が重要です。時間軸（過去・現在・未来）、立場の違い（顧客・競合・自社）、レベル感（戦略・戦術・オペレーション）などの切り口から So What?/Why So? を繰り返すことで、表面的でない深い理解が得られます。",
+      "duration": 2,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "so_what_mastery_content_2",
+      "session_id": "so_what_mastery",
+      "content_type": "key_points",
+      "title": "よくある間違いと対策",
+      "content": "• 事実の言い換えで終わる → 「だから何？」を5回繰り返す\n• 推測と事実を混同 → データで検証できることを明確化\n• 浅い分析で満足 → 「本当にそれだけ？」と自問\n• 一面的な見方 → 複数のステークホルダー視点で検討",
+      "duration": 1,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "so_what_practice_content_1",
+      "session_id": "so_what_practice",
+      "content_type": "text",
+      "title": "実践課題：顧客満足度調査結果",
+      "content": "以下の調査結果について、So What?とWhy So?を繰り返して深掘りしてください：\n「顧客満足度が85%で業界平均（80%）を上回ったが、リピート率は65%と業界平均（70%）を下回っている」",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "so_what_practice_content_2",
+      "session_id": "so_what_practice",
+      "content_type": "key_points",
+      "title": "分析プロセス",
+      "content": "1. 事実の整理と確認\n2. So What?で示唆を抽出\n3. Why So?で原因を探求\n4. さらにSo What?で対策の方向性を導出",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.021798+00:00"
+    },
+    {
+      "id": "social_commerce_content_1",
+      "session_id": "social_commerce",
+      "content_type": "text",
+      "title": "ソーシャルコマースの進化",
+      "content": "SNSプラットフォーム上での直接購買が可能になったソーシャルコマースは、発見から購入までのカスタマージャーニーを大幅に短縮します。Instagram Shopping、Facebook Shop、TikTok Shopなどの機能を活用し、魅力的なコンテンツとシームレスな購買体験を組み合わせることで、従来のECを超える新しい販売機会を創出できます。",
+      "duration": 2,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "social_commerce_content_2",
+      "session_id": "social_commerce",
+      "content_type": "example",
+      "title": "成功事例：D2Cブランド",
+      "content": "【戦略】Instagramを中心とした世界観構築\n【施策】インフルエンサーとのコラボ、UGC活用、ライブコマース\n【結果】従来EC売上の40%をSNS経由で獲得\n【学び】コンテンツ品質とコミュニティ醸成が成功の要因",
+      "duration": 1,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "social_platform_strategy_content_1",
+      "session_id": "social_platform_strategy",
+      "content_type": "text",
+      "title": "主要SNSプラットフォームの特徴",
+      "content": "各SNSプラットフォームには独自のユーザー属性、利用シーン、コンテンツ形式があります。Instagram（ビジュアル重視）、Twitter（リアルタイム性）、LinkedIn（ビジネス関係）、TikTok（エンターテイメント）など、プラットフォームの特性を理解し、ターゲット顧客の行動パターンに合わせた戦略的活用が成功の鍵となります。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "social_platform_strategy_content_2",
+      "session_id": "social_platform_strategy",
+      "content_type": "key_points",
+      "title": "プラットフォーム選定の基準",
+      "content": "• ターゲット顧客の利用状況（年齢、職業、利用時間）\n• 自社コンテンツとの親和性（画像、動画、テキスト）\n• ビジネス目標との適合性（認知、集客、売上）\n• 運用リソースとの整合性（頻度、工数、専門性）",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "social_platform_strategy_content_3",
+      "session_id": "social_platform_strategy",
+      "content_type": "example",
+      "title": "業界別プラットフォーム活用例",
+      "content": "【BtoB企業】LinkedIn中心でThought Leadership発信\n【小売・EC】Instagram/TikTokで商品の魅力的な見せ方\n【サービス業】TwitterでリアルタイムなCS対応\n【コンサル】複数プラットフォームで専門性アピール",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "targeting_strategy_content_1",
+      "session_id": "targeting_strategy",
+      "content_type": "text",
+      "title": "ターゲティング戦略の選択",
+      "content": "セグメンテーション後は、どのセグメントを標的とするかのターゲティング戦略を決定します。無差別マーケティング、差別化マーケティング、集中マーケティングの3つの基本戦略から、自社の状況に最適な手法を選択し、各セグメントに対する具体的なアプローチを設計します。",
+      "duration": 1,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "targeting_strategy_content_2",
+      "session_id": "targeting_strategy",
+      "content_type": "key_points",
+      "title": "3つのターゲティング戦略",
+      "content": "• 無差別：全セグメントに同一アプローチ（規模の経済）\n• 差別化：複数セグメントに個別アプローチ（多様なニーズ対応）\n• 集中：単一セグメントに特化（リソース集中）",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "targeting_strategy_content_3",
+      "session_id": "targeting_strategy",
+      "content_type": "example",
+      "title": "ターゲット選定の実例",
+      "content": "【スタートアップ】集中戦略でニッチセグメントを深堀り\n【成長企業】差別化戦略で複数セグメントを段階的攻略\n【大企業】無差別戦略でマス市場をカバー",
+      "duration": 1,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:18.506877+00:00"
+    },
+    {
+      "id": "what_is_ai_content_1",
+      "session_id": "what_is_ai",
+      "content_type": "text",
+      "title": "AIの定義と歴史",
+      "content": "人工知能（AI: Artificial Intelligence）は、人間の知的な活動をコンピューターで模倣する技術の総称です。1950年代から研究が始まり、近年のコンピューター性能向上とビッグデータの蓄積により、実用的なレベルに到達しました。現在のAIブームは「第3次AIブーム」と呼ばれています。",
+      "duration": 3,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "what_is_ai_content_2",
+      "session_id": "what_is_ai",
+      "content_type": "key_points",
+      "title": "AIの種類",
+      "content": "• 弱いAI（特化型AI）: 特定の分野に特化したAI（現在主流）\n• 強いAI（汎用AI）: 人間レベルの知能を持つAI（未来の目標）\n• 機械学習: データから自動的にパターンを学習する手法\n• ディープラーニング: 深層学習、人間の脳の仕組みを模倣",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "what_is_ai_content_3",
+      "session_id": "what_is_ai",
+      "content_type": "example",
+      "title": "ビジネスへの影響",
+      "content": "【業務効率化】文書作成、データ分析、顧客対応の自動化\n【意思決定支援】大量データから洞察を抽出、予測精度向上\n【新サービス創出】パーソナライゼーション、レコメンデーション\n【コスト削減】人手に依存していた作業の自動化",
+      "duration": 3,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "workflow_analysis_content_1",
+      "session_id": "workflow_analysis",
+      "content_type": "text",
+      "title": "業務プロセスのマッピング",
+      "content": "AI導入を成功させるには、まず現在の業務プロセスを詳細に把握することが重要です。各タスクの所要時間、頻度、難易度、エラー率を分析し、AIが効果を発揮できる領域を特定します。特に、繰り返し作業、判断業務、データ処理などはAIの得意分野です。",
+      "duration": 3,
+      "display_order": 1,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "workflow_analysis_content_2",
+      "session_id": "workflow_analysis",
+      "content_type": "key_points",
+      "title": "AI適用に適したタスク",
+      "content": "• 大量データの処理・分析\n• パターン認識（画像、音声、テキスト）\n• 繰り返し作業の自動化\n• 予測・予約・レコメンデーション\n• 文書作成・要約・翻訳\n• カスタマーサポート（チャットボット）",
+      "duration": null,
+      "display_order": 2,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    },
+    {
+      "id": "workflow_analysis_content_3",
+      "session_id": "workflow_analysis",
+      "content_type": "example",
+      "title": "ROI評価の考え方",
+      "content": "【コスト削減効果】\n・作業時間短縮: 8時間→2時間（75%削減）\n・人件費削減: 月200万円→50万円\n・エラー削減: クレーム対応コスト月30万円削減\n\n【導入コスト】\n・システム構築費: 500万円\n・月額運用費: 20万円\n\n【ROI計算】投資回収期間: 約4ヶ月",
+      "duration": 3,
+      "display_order": 3,
+      "created_at": "2025-09-20T06:29:19.025333+00:00"
+    }
+  ],
+  "sessionQuizzes": [
+    {
+      "id": "3c_basics_quiz_1",
+      "session_id": "3c_basics",
+      "question": "3C分析のCompetitor分析で最も重要な観点は？",
+      "options": "[\"競合他社の売上規模\",\"競合他社の戦略と差別化要因\",\"競合他社の社員数\",\"競合他社の本社所在地\"]",
+      "correct_answer": 1,
+      "explanation": "競合分析では、競合の戦略方向性と差別化要因を理解することで、自社の戦略を差別化する方向性を見出せます。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.117673+00:00"
+    },
+    {
+      "id": "3c_practice_quiz_1",
+      "session_id": "3c_practice",
+      "question": "カフェ業界のCustomer分析で最も重要な観点は？",
+      "options": "[\"年齢と性別の分布\",\"利用シーンと求める価値\",\"居住地域の分布\",\"年収レベル\"]",
+      "correct_answer": 1,
+      "explanation": "利用シーン（勉強、商談、憩い等）と求める価値（味、空間、利便性等）を理解することで、適切なポジショニングが可能になります。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.117673+00:00"
+    },
+    {
+      "id": "3c_strategic_insights_quiz_1",
+      "session_id": "3c_strategic_insights",
+      "question": "3C分析で最も価値の高い戦略機会とは？",
+      "options": "[\"自社の最も強い領域\",\"市場が最も大きい領域\",\"競合が最も弱い領域\",\"顧客ニーズがあり競合が弱く自社が強い領域\"]",
+      "correct_answer": 3,
+      "explanation": "3Cが交差する「Sweet Spot」で戦略機会を見つけることが、持続可能な競争優位につながります。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.117673+00:00"
+    },
+    {
+      "id": "advanced_prompting_quiz_1",
+      "session_id": "advanced_prompting",
+      "question": "Few-shotプロンプティングが最も効果的な場面は？",
+      "options": "[\"一般的な質問をする時\",\"特定のフォーマットで回答してほしい時\",\"簡単な計算をしてもらう時\",\"長い文章を要約してもらう時\"]",
+      "correct_answer": 1,
+      "explanation": "Few-shotプロンプティングは、特定のフォーマットや文体で回答してもらいたい時に最も効果的です。例を示すことで、AIが求められる出力パターンを理解できます。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:19.128488+00:00"
+    },
+    {
+      "id": "ai_business_applications_quiz_1",
+      "session_id": "ai_business_applications",
+      "question": "AI導入で最も重要な要素は？",
+      "options": "[\"最新の技術を使うこと\",\"大量のデータを集めること\",\"ビジネス課題を明確化すること\",\"高性能なコンピューターを用意すること\"]",
+      "correct_answer": 2,
+      "explanation": "AI導入で最も重要なのは、解決すべきビジネス課題を明確化することです。技術ありきではなく、課題解決のためのツールとしてAIを位置づけることが成功の鍵です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:19.128488+00:00"
+    },
+    {
+      "id": "ai_limitations_ethics_quiz_1",
+      "session_id": "ai_limitations_ethics",
+      "question": "AI活用における最も重要な倫理的配慮は？",
+      "options": "[\"AIを人間より優先すること\",\"全ての判断をAIに委ねること\",\"人間の最終判断と責任を保持すること\",\"AIの処理速度を最優先すること\"]",
+      "correct_answer": 2,
+      "explanation": "AIは強力なツールですが、最終的な判断と責任は人間が持つべきです。AIの提案を参考にしながらも、倫理的・社会的影響を考慮した人間の判断が不可欠です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:19.128488+00:00"
+    },
+    {
+      "id": "conclusion_first_application_quiz_1",
+      "session_id": "conclusion_first_application",
+      "question": "結論ファーストが特に効果的な場面として最も適切でないものは？",
+      "options": "[\"忙しい上司への報告\",\"顧客へのプレゼンテーション\",\"友人との雑談\",\"会議での提案\"]",
+      "correct_answer": 2,
+      "explanation": "友人との雑談では効率性より親密さや楽しさが重視されるため、必ずしも結論ファーストが適切とは限りません。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.117673+00:00"
+    },
+    {
+      "id": "conclusion_first_basics_quiz_1",
+      "session_id": "conclusion_first_basics",
+      "question": "PREP法における「P」が最初と最後に来る理由として最も適切なものは？",
+      "options": "[\"強調効果を高めるため\",\"聞き手の注意を引き、理解を確実にするため\",\"覚えやすくするため\",\"時間を稼ぐため\"]",
+      "correct_answer": 1,
+      "explanation": "最初のPで聞き手の注意を引いて要点を明確にし、最後のPで理解を確実にして印象に残すことが目的です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.117673+00:00"
+    },
+    {
+      "id": "conclusion_first_practice_quiz_1",
+      "session_id": "conclusion_first_practice",
+      "question": "上記のシナリオで最初に述べるべき結論として最も適切なものは？",
+      "options": "[\"新規顧客を5社獲得しました\",\"今四半期の売上目標を108%達成しました\",\"競合の価格攻勢に苦戦しています\",\"既存顧客からの注文が増えています\"]",
+      "correct_answer": 1,
+      "explanation": "最も重要で聞き手が知りたい全体結果から始めることで、その後の詳細説明の文脈が明確になります。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.117673+00:00"
+    },
+    {
+      "id": "content_distribution_quiz_1",
+      "session_id": "content_distribution",
+      "question": "コンテンツ配信で重視すべき要素は？",
+      "options": "[\"配信チャネルの数\",\"ターゲットとのタイミング適合\",\"コンテンツの長さ\",\"更新頻度\"]",
+      "correct_answer": 1,
+      "explanation": "ターゲット顧客が最もアクティブなタイミングで適切なチャネルから配信することが重要です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "content_planning_quiz_1",
+      "session_id": "content_planning",
+      "question": "コンテンツ企画で最も重要な起点は？",
+      "options": "[\"自社の商品・サービス\",\"競合他社の動向\",\"顧客のニーズと課題\",\"トレンドキーワード\"]",
+      "correct_answer": 2,
+      "explanation": "顧客のニーズと課題を起点とすることで、真に価値あるコンテンツを企画できます。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "content_strategy_foundation_quiz_1",
+      "session_id": "content_strategy_foundation",
+      "question": "コンテンツマーケティングの最優先事項は？",
+      "options": "[\"短期的な売上向上\",\"顧客への価値提供\",\"競合との差別化\",\"SEO効果の最大化\"]",
+      "correct_answer": 1,
+      "explanation": "顧客の課題解決と価値提供を最優先とすることで、長期的な信頼関係とビジネス成果を獲得できます。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "continuous_improvement_quiz_1",
+      "session_id": "continuous_improvement",
+      "question": "AI活用の継続的改善で最も重要なことは？",
+      "options": "[\"一度設定したら変更しない\",\"毎月必ず大幅な変更を行う\",\"定期的な評価と適切な改善のサイクル\",\"最新技術への常時アップデート\"]",
+      "correct_answer": 2,
+      "explanation": "AI活用の成功には、定期的な評価で課題を発見し、データに基づいた適切な改善を継続するPDCAサイクルが最も重要です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:19.128488+00:00"
+    },
+    {
+      "id": "engagement_building_quiz_1",
+      "session_id": "engagement_building",
+      "question": "SNSエンゲージメント向上で最も効果的なのは？",
+      "options": "[\"投稿頻度を増やす\",\"フォロワーとの双方向コミュニケーション\",\"商品宣伝を強化する\",\"有名人とのコラボ\"]",
+      "correct_answer": 1,
+      "explanation": "ユーザーとの双方向の対話を通じて信頼関係を構築することが、持続的なエンゲージメントにつながります。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "evaluation_framework_quiz_1",
+      "session_id": "evaluation_framework",
+      "question": "AI評価で最も重要な視点は？",
+      "options": "[\"技術的性能のみを重視する\",\"導入コストだけを評価する\",\"多面的な評価指標を組み合わせる\",\"ユーザー満足度のみを測定する\"]",
+      "correct_answer": 2,
+      "explanation": "AI評価では、技術性能・ビジネス効果・ユーザビリティ・組織インパクトなど、多面的な評価指標を組み合わせることで、真の価値を正しく測定できます。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:19.128488+00:00"
+    },
+    {
+      "id": "human_ai_collaboration_quiz_1",
+      "session_id": "human_ai_collaboration",
+      "question": "人間とAIの協働で最も重要な考え方は？",
+      "options": "[\"AIに全ての作業を任せる\",\"人間がAIを完全にコントロールする\",\"それぞれの強みを活かした補完関係を築く\",\"AIの判断を常に疑う\"]",
+      "correct_answer": 2,
+      "explanation": "AI活用の成功には、AIと人間がそれぞれの得意分野で力を発揮し、互いの弱点を補完する協働関係の構築が最も重要です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:19.128488+00:00"
+    },
+    {
+      "id": "implementation_planning_quiz_1",
+      "session_id": "implementation_planning",
+      "question": "AI導入で最も効果的なアプローチは？",
+      "options": "[\"全社一斉に大規模導入する\",\"パイロットから段階的に拡大する\",\"競合と同じシステムを導入する\",\"AI専門部署に全て任せる\"]",
+      "correct_answer": 1,
+      "explanation": "AI導入は、パイロットプロジェクトで小さく始めて効果を検証し、段階的に拡大するアプローチが最も成功確率が高く、リスクも最小化できます。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:19.128488+00:00"
+    },
+    {
+      "id": "journey_mapping_basics_quiz_1",
+      "session_id": "journey_mapping_basics",
+      "question": "カスタマージャーニーマップで最も重要な要素は？",
+      "options": "[\"美しいデザイン\",\"顧客の感情と行動の変化\",\"詳細な統計データ\",\"競合比較情報\"]",
+      "correct_answer": 1,
+      "explanation": "顧客の感情と行動の変化を可視化することで、真の課題と改善機会を発見できます。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "journey_mapping_practice_quiz_1",
+      "session_id": "journey_mapping_practice",
+      "question": "ECサイトで「検討」段階の主要な顧客行動は？",
+      "options": "[\"SNSでの口コミ投稿\",\"商品比較と口コミ確認\",\"友人への推薦\",\"カスタマーサポートへの感謝\"]",
+      "correct_answer": 1,
+      "explanation": "検討段階では、複数の選択肢を比較し、他者の評価を確認する行動が中心となります。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "journey_optimization_quiz_1",
+      "session_id": "journey_optimization",
+      "question": "ジャーニー最適化で最も重要な考え方は？",
+      "options": "[\"各段階の個別最適化\",\"全体最適の視点\",\"コスト削減優先\",\"競合模倣\"]",
+      "correct_answer": 1,
+      "explanation": "各段階の改善が全体にどう影響するかを考慮した全体最適の視点が重要です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "mece_advanced_quiz_1",
+      "session_id": "mece_advanced",
+      "question": "MECEな分類を作る際に最も重要なことは？",
+      "options": "[\"完璧な分類体系を作ること\",\"目的に応じた実用的な分類をすること\",\"学術的に正確な分類をすること\",\"できるだけ細かく分類すること\"]",
+      "correct_answer": 1,
+      "explanation": "MECEは問題解決のツールであり、目的達成に役立つ実用的な分類が最も重要です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.117673+00:00"
+    },
+    {
+      "id": "mece_basics_quiz_1",
+      "session_id": "mece_basics",
+      "question": "MECEの「CE」が意味するものは？",
+      "options": "[\"完全排他的\",\"包括的網羅性\",\"効率的実行\",\"継続的改善\"]",
+      "correct_answer": 1,
+      "explanation": "CE = Collectively Exhaustive（包括的網羅性）で、全体を漏れなく覆っているという意味です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.117673+00:00"
+    },
+    {
+      "id": "mece_practice_quiz_1",
+      "session_id": "mece_practice",
+      "question": "「市場規模」「競合状況」「法規制」はどのMECE分類が最も適切？",
+      "options": "[\"社内要因\",\"市場環境（外部要因）\",\"定量的要因\",\"将来予測\"]",
+      "correct_answer": 1,
+      "explanation": "これらは全て自社の外部環境に関する要因であり、市場環境（外部要因）として分類するのが適切です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.117673+00:00"
+    },
+    {
+      "id": "persona_activation_quiz_1",
+      "session_id": "persona_activation",
+      "question": "ペルソナ活用で最も重要なことは？",
+      "options": "[\"詳細な設定の記録\",\"全部門での一貫した活用\",\"定期的な更新作業\",\"競合との差別化\"]",
+      "correct_answer": 1,
+      "explanation": "全部門がペルソナを共通認識として活用することで、一貫性のある顧客体験を提供できます。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "persona_fundamentals_quiz_1",
+      "session_id": "persona_fundamentals",
+      "question": "効果的なペルソナに必須の要素は？",
+      "options": "[\"詳細すぎる個人情報\",\"実データに基づく具体性\",\"理想的な顧客像\",\"競合企業の模倣\"]",
+      "correct_answer": 1,
+      "explanation": "実際の顧客データに基づいた具体的な人物像が、戦略立案に有効なペルソナとなります。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "persona_research_quiz_1",
+      "session_id": "persona_research",
+      "question": "ペルソナリサーチで「なぜ？」を繰り返す目的は？",
+      "options": "[\"データ量を増やすため\",\"顧客の本音と深層動機を理解するため\",\"競合分析の精度向上\",\"コスト削減\"]",
+      "correct_answer": 1,
+      "explanation": "表面的な回答の奥にある真の動機や価値観を理解することで、より効果的なマーケティング戦略を立案できます。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "positioning_strategy_quiz_1",
+      "session_id": "positioning_strategy",
+      "question": "効果的なポジショニングの条件は？",
+      "options": "[\"価格の安さ\",\"顧客にとっての独自価値\",\"多機能性\",\"市場シェア\"]",
+      "correct_answer": 1,
+      "explanation": "顧客にとって他にはない独自の価値を提供することが、強力なポジショニングの基盤となります。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "prompt_fundamentals_quiz_1",
+      "session_id": "prompt_fundamentals",
+      "question": "プロンプト作成で最も重要な要素は？",
+      "options": "[\"長い文章で詳しく説明すること\",\"専門用語を多用すること\",\"明確性と具体性を持たせること\",\"複数の質問を同時に含めること\"]",
+      "correct_answer": 2,
+      "explanation": "効果的なプロンプトの最重要要素は明確性と具体性です。AIが理解しやすい明確な指示と、具体的な条件や求める結果を示すことで、期待に近い回答を得ることができます。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:19.128488+00:00"
+    },
+    {
+      "id": "prompt_optimization_quiz_1",
+      "session_id": "prompt_optimization",
+      "question": "プロンプト改善で最も効果的なアプローチは？",
+      "options": "[\"一度に大幅に変更する\",\"段階的に反復改善する\",\"最初から完璧を目指す\",\"他人のプロンプトをそのまま使う\"]",
+      "correct_answer": 1,
+      "explanation": "プロンプト改善は段階的な反復改善が最も効果的です。初回結果を評価し、不足部分を特定して改善するサイクルを回すことで、期待に近い結果を得られます。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:19.128488+00:00"
+    },
+    {
+      "id": "responsible_ai_practice_quiz_1",
+      "session_id": "responsible_ai_practice",
+      "question": "責任あるAI活用で最も重要な原則は？",
+      "options": "[\"AIの高い性能を追求すること\",\"最新技術を常に導入すること\",\"透明性と人間の最終判断権の確保\",\"コスト削減効果の最大化\"]",
+      "correct_answer": 2,
+      "explanation": "責任あるAI活用では、技術的性能だけでなく、AIの判断プロセスの透明性と、最終的な責任と判断権を人間が持つことが最も重要です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:19.128488+00:00"
+    },
+    {
+      "id": "segmentation_strategy_quiz_1",
+      "session_id": "segmentation_strategy",
+      "question": "セグメンテーションで最も重要な視点は？",
+      "options": "[\"セグメント数の最大化\",\"自社リソースとの適合性\",\"競合との差別化\",\"データ収集の容易さ\"]",
+      "correct_answer": 1,
+      "explanation": "自社の強みとリソースに適合し、実際に実行可能なセグメンテーションが重要です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "so_what_basics_quiz_1",
+      "session_id": "so_what_basics",
+      "question": "「今四半期の営業利益率が5%改善した」という事実に対する適切な\"So What?\"は？",
+      "options": "[\"売上が増加した\",\"効率性向上により競争力が強化された\",\"コストが削減された\",\"前年より良い結果だった\"]",
+      "correct_answer": 1,
+      "explanation": "So What?では事実から得られる洞察や意味を抽出します。効率性向上による競争力強化は本質的な示唆です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.117673+00:00"
+    },
+    {
+      "id": "so_what_mastery_quiz_1",
+      "session_id": "so_what_mastery",
+      "question": "深い洞察を得るために最も重要なことは？",
+      "options": "[\"データを詳細に分析すること\",\"多角的視点で繰り返し問い直すこと\",\"業界知識を豊富に持つこと\",\"複雑な分析手法を使うこと\"]",
+      "correct_answer": 1,
+      "explanation": "様々な角度から So What?/Why So? を繰り返すことで、表面的でない本質的な洞察が得られます。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.117673+00:00"
+    },
+    {
+      "id": "so_what_practice_quiz_1",
+      "session_id": "so_what_practice",
+      "question": "上記の状況で最初に問うべき\"Why So?\"として最も適切なのは？",
+      "options": "[\"なぜ顧客満足度が高いのか？\",\"なぜ満足度は高いのにリピート率が低いのか？\",\"なぜ業界平均と差があるのか？\",\"なぜ調査を実施したのか？\"]",
+      "correct_answer": 1,
+      "explanation": "矛盾する2つの指標（高い満足度vs低いリピート率）の関係性を探ることが最も重要な論点です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.117673+00:00"
+    },
+    {
+      "id": "social_commerce_quiz_1",
+      "session_id": "social_commerce",
+      "question": "ソーシャルコマース成功の要因は？",
+      "options": "[\"商品価格の安さ\",\"魅力的なコンテンツと購買体験の融合\",\"広告費の大量投入\",\"商品ラインナップの多様性\"]",
+      "correct_answer": 1,
+      "explanation": "質の高いコンテンツとスムーズな購買体験の組み合わせが、ソーシャルコマース成功の鍵です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "social_platform_strategy_quiz_1",
+      "session_id": "social_platform_strategy",
+      "question": "SNSプラットフォーム選定で最も重要な要素は？",
+      "options": "[\"フォロワー数の多さ\",\"ターゲット顧客の利用状況\",\"競合他社の動向\",\"運用の簡単さ\"]",
+      "correct_answer": 1,
+      "explanation": "ターゲット顧客がアクティブに利用するプラットフォームを選択することが最重要です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "targeting_strategy_quiz_1",
+      "session_id": "targeting_strategy",
+      "question": "リソースが限られたスタートアップに最適な戦略は？",
+      "options": "[\"無差別マーケティング\",\"差別化マーケティング\",\"集中マーケティング\",\"全戦略の同時実行\"]",
+      "correct_answer": 2,
+      "explanation": "限られたリソースを特定セグメントに集中投下する集中マーケティングが効果的です。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:18.595935+00:00"
+    },
+    {
+      "id": "what_is_ai_quiz_1",
+      "session_id": "what_is_ai",
+      "question": "現在主流の「弱いAI」の特徴として最も適切なものは？",
+      "options": "[\"人間と同等の汎用的な知能を持つ\",\"特定分野に特化して高い性能を発揮する\",\"感情を持ち人間のように考える\",\"全ての問題を自動的に解決する\"]",
+      "correct_answer": 1,
+      "explanation": "現在のAIは特定の分野（画像認識、自然言語処理等）に特化した「弱いAI」が主流で、その分野では人間を上回る性能を示すことも多くあります。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:19.128488+00:00"
+    },
+    {
+      "id": "workflow_analysis_quiz_1",
+      "session_id": "workflow_analysis",
+      "question": "AI導入のROIを最大化するために最初に行うべきことは？",
+      "options": "[\"最新のAIツールを導入する\",\"現在の業務プロセスを詳細分析する\",\"AI専門人材を大量採用する\",\"競合他社の事例を真似する\"]",
+      "correct_answer": 1,
+      "explanation": "AI導入成功の鍵は、現在の業務プロセスを詳細に分析し、AIが最も効果を発揮できる領域を特定することです。闇雲にAIを導入しても期待した効果は得られません。",
+      "quiz_type": "single_choice",
+      "display_order": 0,
+      "created_at": "2025-09-20T06:29:19.128488+00:00"
+    }
+  ],
+  "metadata": {
+    "generatedAt": "2025-10-09T05:03:22.515Z",
+    "sourceRecordCount": 163,
+    "breakdown": {
+      "courses": 0,
+      "genres": 8,
+      "themes": 13,
+      "sessionContents": 103,
+      "sessionQuizzes": 39
+    },
+    "databaseSource": "learning_courses, learning_genres, learning_themes, session_contents, session_quizzes",
+    "generatorScript": "scripts/sync-all-fallback-data.ts"
+  }
+}

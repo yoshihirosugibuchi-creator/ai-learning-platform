@@ -2,8 +2,63 @@
 
 **対象**: Claude Code AI Assistant  
 **目的**: 開発・修正・デバッグ作業時の必須プロセス・参照ドキュメント  
-**最終更新**: 2025年10月6日  
+**最終更新**: 2025年10月8日  
 **重要**: XP/SKP計算停止問題の再発防止システム導入
+
+---
+
+## ⛔ **絶対禁止事項（NEVER DO THIS）**
+
+### **🚨 CRITICAL: auth.users.user_metadata.role 使用絶対禁止**
+
+```typescript
+// ❌ 絶対に禁止 - どんな理由があっても使用禁止
+user.user_metadata?.role
+authUser.user_metadata.role
+user.user_metadata['role']
+
+// ❌ これらのパターンも全て禁止
+const role = user.user_metadata?.role || 'user'
+if (user.user_metadata?.role === 'admin') { ... }
+const userRole = user.user_metadata?.role
+
+// 🚨 理由: Supabaseの仕様でauth.usersのroleは削除不可能
+// しかし、usersテーブルが正式な権限管理システム
+```
+
+### **✅ 必須：正しい権限取得方法**
+
+```typescript
+// ✅ 必ず lib/auth-helpers.ts のヘルパー関数を使用
+import { 
+  getCurrentUserRole, 
+  getUserRoleFromUsersTable,
+  checkUserPermission,
+  isAdmin,
+  isSystemAdmin 
+} from '@/lib/auth-helpers'
+
+// ✅ APIルートでの正しい実装
+const { userId, role: userRole } = await getCurrentUserRole(request)
+if (!userId) return NextResponse.json({error: 'Auth required'}, {status: 401})
+
+// ✅ 権限チェック
+const { hasPermission } = await checkUserPermission(userId, ['admin', 'system_admin'])
+if (!hasPermission) return NextResponse.json({error: 'Insufficient permissions'}, {status: 403})
+```
+
+### **🛡️ 自動防止システム**
+
+- **ESLint**: `user_metadata.role`使用時にエラー発生
+- **型レベル**: TypeScriptで制約追加済み  
+- **ヘルパー関数**: 正しい方法を強制
+
+### **📖 重要な背景情報**
+
+1. **auth.users.user_metadata.role**: Supabaseの仕様で削除不可（残存するが使用禁止）
+2. **users.role**: 正式な権限管理フィールド（必ずこちらを使用）
+3. **RLS政策**: usersテーブルベースに変更済み
+4. **システム動作**: 完全にusersテーブルベースで稼働中
 
 ---
 
@@ -329,30 +384,200 @@ echo "SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:0:30}..."
 # SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
-### **database-types-official.ts 再生成手順**
+### **database-types-official.ts 再生成手順（完全版・絶対に省略禁止）**
 
+**🚨 データベーススキーマ変更時は必ず実行 - 手作業厳禁**
+
+#### **事前確認（必須）**
 ```bash
-# 🚨 型定義更新が必要な場合（DBスキーマ変更時）
+# プロジェクト内の必須ファイル確認
+ls -la SUPABASE_ACCESS_TOKENS.md  # トークンファイル存在確認
+ls -la .env.local                  # 環境変数ファイル確認
+ls -la lib/database-types-official.ts  # 現在の型定義確認
+```
 
-# 1. Supabase CLIログイン確認
-supabase status  # プロジェクト接続確認
-# ログインが必要な場合:
-supabase login   # ブラウザで認証
+#### **Step 1: バックアップ作成（絶対に省略禁止）**
+```bash
+# タイムスタンプ付きバックアップ作成
+cp lib/database-types-official.ts lib/database-types-official-backup-$(date +%Y%m%d_%H%M%S).ts
+echo "✅ バックアップ作成完了"
+ls -la lib/database-types-official-backup-*
+```
 
-# 2. プロジェクト接続確認
-supabase projects list  # プロジェクト一覧表示
-supabase link --project-ref YOUR_PROJECT_REF  # 必要に応じて
+#### **Step 2: Supabase CLI確認・セットアップ**
+```bash
+# CLI存在確認（npx経由で使用）
+npx supabase --version
+# ↑ エラーの場合: npm install -g @supabase/cli
 
-# 3. 型定義生成
-supabase gen types typescript --local > lib/database-types-official-new.ts
+# CLIの場所確認
+which supabase || find . -name "*supabase*" | grep bin | head -3
+```
 
-# 4. 型定義確認・マージ
-diff lib/database-types-official.ts lib/database-types-official-new.ts
-# 確認後、新しいファイルを本体にリネーム
+#### **Step 3: アクセストークン設定（重要）**
+```bash
+# 🔑 プロジェクト保存トークン使用（推奨）
+export SUPABASE_ACCESS_TOKEN=$(grep "sbp_" SUPABASE_ACCESS_TOKENS.md | cut -d'`' -f2 | head -1)
+echo "使用するトークン: ${SUPABASE_ACCESS_TOKEN:0:10}..."
+
+# 🔑 代替方法: 直接指定（SUPABASE_ACCESS_TOKENS.mdから取得）
+# export SUPABASE_ACCESS_TOKEN="sbp_3151368112d1b4d80c7a7633407fc3d581668199"
+```
+
+#### **Step 4: 型定義生成（本番データベース直接取得）**
+```bash
+# 🚨 重要: npx経由でSupabase CLI実行
+SUPABASE_ACCESS_TOKEN="$(grep 'sbp_' SUPABASE_ACCESS_TOKENS.md | cut -d'`' -f2 | head -1)" \
+npx supabase gen types typescript --project-id bddqkmnbbvllpvsynklr > lib/database-types-official-new.ts
+
+# 生成確認
+wc -l lib/database-types-official-new.ts
+echo "✅ 新しい型定義生成完了"
+```
+
+#### **Step 5: 既存エイリアス型保持（必須）**
+```bash
+# 既存のエイリアス型定義を確認
+echo "=== 既存のエイリアス型定義 ==="
+tail -50 lib/database-types-official.ts | grep "export type"
+
+# エイリアス型を新しいファイルに追加
+echo "
+// ============= Existing Type Aliases (preserved from backup) =============
+export type UserXPStatsV2 = Database['public']['Tables']['user_xp_stats_v2']['Row']
+export type SKPTransaction = Database['public']['Tables']['skp_transactions']['Row']
+export type CourseSessionCompletion = Database['public']['Tables']['course_session_completions']['Row']
+export type LearningGenre = Database['public']['Tables']['learning_genres']['Row']
+export type LearningTheme = Database['public']['Tables']['learning_themes']['Row']
+export type LearningSession = Database['public']['Tables']['learning_sessions']['Row']
+export type QuizQuestion = Database['public']['Tables']['quiz_questions']['Row']
+export type QuizSession = Database['public']['Tables']['quiz_sessions']['Row']
+export type CategoryStats = Database['public']['Views']['category_stats']['Row']
+export type SkillLevel = Database['public']['Tables']['skill_levels']['Row']
+export type UserXPStatsV2Insert = Database['public']['Tables']['user_xp_stats_v2']['Insert']
+export type UserXPStatsV2Update = Database['public']['Tables']['user_xp_stats_v2']['Update']
+export type SKPTransactionInsert = Database['public']['Tables']['skp_transactions']['Insert']
+export type QuizQuestionInsert = Database['public']['Tables']['quiz_questions']['Insert']
+export type QuizSessionInsert = Database['public']['Tables']['quiz_sessions']['Insert']
+export type WisdomCardCollectionInsert = Database['public']['Tables']['wisdom_card_collection']['Insert']
+export type UnifiedLearningSessionAnalytics = Database['public']['Tables']['unified_learning_session_analytics']['Row']
+export type UnifiedLearningSessionAnalyticsInsert = Database['public']['Tables']['unified_learning_session_analytics']['Insert']
+export type UnifiedLearningSessionAnalyticsUpdate = Database['public']['Tables']['unified_learning_session_analytics']['Update']
+export type UserLearningProfile = Database['public']['Tables']['user_learning_profiles']['Row']
+export type UserLearningProfileInsert = Database['public']['Tables']['user_learning_profiles']['Insert']
+export type UserLearningProfileUpdate = Database['public']['Tables']['user_learning_profiles']['Update']
+export type SpacedRepetitionSchedule = Database['public']['Tables']['spaced_repetition_schedule']['Row']
+export type SpacedRepetitionScheduleInsert = Database['public']['Tables']['spaced_repetition_schedule']['Insert']
+export type SpacedRepetitionScheduleUpdate = Database['public']['Tables']['spaced_repetition_schedule']['Update']
+export type IndustryLevelTarget = Database['public']['Tables']['industry_level_targets']['Row']
+export type IndustryLevelTargetInsert = Database['public']['Tables']['industry_level_targets']['Insert']
+export type IndustryLevelTargetUpdate = Database['public']['Tables']['industry_level_targets']['Update']
+export type LearningAnalyticsSummary = Database['public']['Tables']['learning_analytics_summary']['Row']
+export type LearningAnalyticsSummaryInsert = Database['public']['Tables']['learning_analytics_summary']['Insert']
+export type LearningAnalyticsSummaryUpdate = Database['public']['Tables']['learning_analytics_summary']['Update']
+export type LearningEffectivenessTracking = Database['public']['Tables']['learning_effectiveness_tracking']['Row']
+export type LearningEffectivenessTrackingInsert = Database['public']['Tables']['learning_effectiveness_tracking']['Insert']
+export type LearningEffectivenessTrackingUpdate = Database['public']['Tables']['learning_effectiveness_tracking']['Update']
+export type SystemAlert = Database['public']['Tables']['system_alerts']['Row']
+export type SystemAlertInsert = Database['public']['Tables']['system_alerts']['Insert']
+export type SystemAlertUpdate = Database['public']['Tables']['system_alerts']['Update']
+export type SystemConfigMonitoring = Database['public']['Tables']['system_config_monitoring']['Row']
+export type SystemConfigMonitoringInsert = Database['public']['Tables']['system_config_monitoring']['Insert']
+export type SystemConfigMonitoringUpdate = Database['public']['Tables']['system_config_monitoring']['Update']
+export type SystemHealthLog = Database['public']['Tables']['system_health_logs']['Row']
+export type SystemHealthLogInsert = Database['public']['Tables']['system_health_logs']['Insert']
+export type SystemHealthLogUpdate = Database['public']['Tables']['system_health_logs']['Update']
+" >> lib/database-types-official-new.ts
+
+echo "✅ エイリアス型定義追加完了"
+```
+
+#### **Step 6: 差分確認・置き換え**
+```bash
+# 差分確認（オプション）
+diff lib/database-types-official.ts lib/database-types-official-new.ts | head -20
+
+# ファイル置き換え
 mv lib/database-types-official-new.ts lib/database-types-official.ts
+echo "✅ 型定義ファイル更新完了"
+```
 
-# 5. TypeScript確認
-npm run typecheck  # エラー0確認必須
+#### **Step 7: 品質確認（必須）**
+```bash
+# TypeScript確認（エラー0必須）
+npm run typecheck
+if [ $? -eq 0 ]; then
+  echo "✅ TypeScriptエラー: 0個"
+else
+  echo "❌ TypeScriptエラー発生 - 修正が必要"
+fi
+
+# ESLint確認
+npm run lint
+if [ $? -eq 0 ]; then
+  echo "✅ ESLintエラー: 0個"
+else
+  echo "❌ ESLintエラー発生 - 修正が必要"
+fi
+
+echo "✅ database-types-official.ts更新完了"
+echo "📁 バックアップファイル: lib/database-types-official-backup-*"
+```
+
+---
+
+### **🚨 重要なファイル・トークン情報**
+
+#### **必須ファイル場所**
+```bash
+# Supabaseアクセストークン
+SUPABASE_ACCESS_TOKENS.md  # プロジェクトルート
+# 内容: sbp_3151368112d1b4d80c7a7633407fc3d581668199
+
+# 環境変数
+.env.local  # プロジェクトルート
+
+# 型定義ファイル
+lib/database-types-official.ts  # メインファイル
+lib/database-types-official-backup-*  # バックアップファイル群
+```
+
+#### **Supabase CLIアクセス方法**
+```bash
+# 1. プロジェクト内のnpx経由（推奨）
+npx supabase --version
+
+# 2. ローカルnode_modules内
+./node_modules/.bin/supabase --version
+
+# 3. npm cache内（最後の手段）
+find /home -name "*supabase*" | grep bin 2>/dev/null | head -1
+```
+
+#### **プロジェクト固有情報**
+```bash
+# プロジェクトID: bddqkmnbbvllpvsynklr
+# アクセストークン: SUPABASE_ACCESS_TOKENS.mdから取得
+# プロジェクトURL: https://bddqkmnbbvllpvsynklr.supabase.co
+```
+
+---
+
+### **⚠️ 絶対に避けるべき行為**
+
+```markdown
+🚫 **禁止事項**:
+- 手作業での型定義修正
+- 「CLIがない」での作業停止
+- 「トークンがない」での推測作業
+- バックアップなしでの型定義変更
+- エイリアス型定義の削除・忘れ
+
+✅ **必須確認事項**:
+- SUPABASE_ACCESS_TOKENS.mdファイル存在
+- npx supabase --versionでCLI確認
+- バックアップファイル作成確認
+- TypeScript/ESLintエラー0確認
 ```
 
 ### **データベーストークン・権限**

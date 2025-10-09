@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/components/auth/AuthProvider'
 
 interface XPStats {
   user: {
@@ -132,6 +133,7 @@ interface CourseSaveResponse {
  * const { stats, loading, error, refetch, saveQuizSession } = useXPStats()
  */
 export function useXPStats(): UseXPStatsReturn {
+  const { user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState<XPStats | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -147,7 +149,10 @@ export function useXPStats(): UseXPStatsReturn {
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.access_token || !session?.user?.id) {
-        throw new Error('認証トークンがありません。ログインしてください。')
+        // ⚠️ 認証なしの場合は静かに処理終了（エラーを投げない）
+        console.log('⚠️ No authentication session - skipping XP stats fetch')
+        setLoading(false)
+        return
       }
       
       // 一時的に管理者APIを使用（RLS問題回避）
@@ -325,8 +330,11 @@ export function useXPStats(): UseXPStatsReturn {
 
   // 初回読み込み
   useEffect(() => {
-    fetchStats()
-  }, [fetchStats])
+    // 認証完了 かつ ユーザーが存在する場合のみ統計を取得
+    if (!authLoading && user) {
+      fetchStats()
+    }
+  }, [fetchStats, authLoading, user])
 
   return {
     stats,

@@ -5,6 +5,7 @@ import {
   getCourseDetailsFromDB, 
   getAvailableCoursesFromDB 
 } from './supabase-data'
+import type { Database } from '@/lib/database-types-official'
 
 /**
  * 学習コンテンツデータ読み込み関数
@@ -93,54 +94,110 @@ async function loadLearningCoursesFromJSON(): Promise<{
   try {
     console.log('📄 Loading learning courses from JSON fallback')
     
-    // まずコース一覧を取得
-    const response = await fetch('/learning-data/courses.json')
+    // 新しいフォールバックファイルパスを使用
+    const response = await fetch('/data/learning-courses-fallback.json')
     if (!response.ok) {
-      throw new Error(`JSON file request failed: ${response.status}`)
+      // 古いパスもフォールバックとして試行
+      console.log('🔄 Trying legacy fallback path...')
+      const legacyResponse = await fetch('/learning-data/courses.json')
+      if (!legacyResponse.ok) {
+        throw new Error(`Both fallback paths failed: ${response.status}, ${legacyResponse.status}`)
+      }
+      const legacyData = await legacyResponse.json()
+      return await processLegacyCoursesData(legacyData)
     }
+    
     const data = await response.json()
     
-    // 各コースについて詳細データからジャンル情報を取得
-    const coursesWithGenres = await Promise.all(
-      data.courses.map(async (course: {
-        id: string
-        title: string
-        description: string
-        estimatedDays: number
-        difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
-        icon: string
-        color: string
-        displayOrder: number
-        genreCount: number
-        themeCount: number
-        status: 'available' | 'coming_soon' | 'draft'
-        genres?: unknown[]
-      }) => {
-        if (course.status === 'available') {
-          try {
-            const detailResponse = await fetch(`/learning-data/${course.id}.json`)
-            if (detailResponse.ok) {
-              const detailData = await detailResponse.json() as { genres: unknown[] }
-              return {
-                ...course,
-                genres: detailData.genres
-              }
-            }
-          } catch (error) {
-            console.warn(`Failed to fetch genre data for course ${course.id}:`, error)
-          }
-        }
-        return course
-      })
-    )
+    // 新しいフォールバック形式の処理
+    if (data.genres && Array.isArray(data.genres)) {
+      console.log(`✅ New fallback format: ${data.genres.length} genres found`)
+      
+      // genresからcoursesを構築（一時的な変換処理）
+      const coursesFromGenres = data.genres.map((genre: Database['public']['Tables']['learning_genres']['Row'], index: number) => ({
+        id: genre.course_id || `course_${genre.id}`,
+        title: genre.title,
+        description: genre.description,
+        estimatedDays: genre.estimated_days || 7,
+        difficulty: 'intermediate' as const,
+        icon: (genre.badge_data as { icon?: string; color?: string } | null)?.icon || '📚',
+        color: (genre.badge_data as { icon?: string; color?: string } | null)?.color || '#7C3AED',
+        displayOrder: genre.display_order || index + 1,
+        genreCount: 1,
+        themeCount: data.themes?.filter((t: Database['public']['Tables']['learning_themes']['Row']) => t.genre_id === genre.id).length || 0,
+        status: 'available' as const,
+        genres: [genre]
+      }))
+      
+      console.log(`✅ Learning courses loaded from new fallback: ${coursesFromGenres.length} courses`)
+      return coursesFromGenres
+    }
     
-    console.log(`✅ Learning courses loaded from JSON: ${coursesWithGenres.length} courses`)
-    return coursesWithGenres
+    // 古い形式との互換性
+    return await processLegacyCoursesData(data)
     
   } catch (error) {
     console.error('❌ Error loading learning courses from JSON:', error)
     return []
   }
+}
+
+// 古い形式のコースデータ処理（レガシー互換）
+async function processLegacyCoursesData(data: Record<string, unknown>): Promise<{
+  id: string
+  title: string
+  description: string
+  estimatedDays: number
+  difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+  icon: string
+  color: string
+  displayOrder: number
+  genreCount: number
+  themeCount: number
+  status: 'available' | 'coming_soon' | 'draft'
+  genres?: unknown[]
+}[]> {
+  if (!data.courses || !Array.isArray(data.courses)) {
+    console.warn('⚠️ No courses array found in legacy data')
+    return []
+  }
+
+  // 各コースについて詳細データからジャンル情報を取得
+  const coursesWithGenres = await Promise.all(
+    data.courses.map(async (course: {
+      id: string
+      title: string
+      description: string
+      estimatedDays: number
+      difficulty: 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert'
+      icon: string
+      color: string
+      displayOrder: number
+      genreCount: number
+      themeCount: number
+      status: 'available' | 'coming_soon' | 'draft'
+      genres?: unknown[]
+    }) => {
+      if (course.status === 'available') {
+        try {
+          const detailResponse = await fetch(`/learning-data/${course.id}.json`)
+          if (detailResponse.ok) {
+            const detailData = await detailResponse.json() as { genres: unknown[] }
+            return {
+              ...course,
+              genres: detailData.genres
+            }
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch genre data for course ${course.id}:`, error)
+        }
+      }
+      return course
+    })
+  )
+  
+  console.log(`✅ Learning courses loaded from legacy JSON: ${coursesWithGenres.length} courses`)
+  return coursesWithGenres
 }
 
 // 特定コースの詳細データ取得 - DB API使用版 with JSONフォールバック

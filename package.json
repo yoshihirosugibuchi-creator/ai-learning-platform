@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:refresh": "bash scripts/dev-server-refresh.sh",
+    "dev:refresh:quick": "pkill -f 'next dev' 2>/dev/null; rm -rf .next; npm run dev",
+    "dev:refresh:check": "DEV_REFRESH_CHECK_CODE=true bash scripts/dev-server-refresh.sh",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
@@ -36,6 +38,8 @@
     "ensure:static-data": "tsx scripts/ensure-static-data.ts",
     "generate:category-mapping": "npx tsx scripts/generate-category-mapping.ts",
     "test:category-cache": "npx tsx scripts/test-simple-cache.ts",
+    "sync:all-fallback": "NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY npx tsx scripts/sync-all-fallback-data.ts",
+    "sync:xp-fallback": "NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY npx tsx scripts/generate-xp-fallback.ts",
     "pre-deploy:check": "npm run generate:category-mapping && npx tsc --noEmit"
   },
   "dependencies": {

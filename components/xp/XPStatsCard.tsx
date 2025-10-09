@@ -43,7 +43,7 @@ const formatLearningTime = (seconds: number): string => {
 
 export default function XPStatsCard({ showDetailedStats = false, className }: XPStatsCardProps) {
   const { stats, loading, error, refetch } = useXPStats()
-  const [, setLevelThreshold] = useState(1000) // デフォルト値
+  const [levelThreshold, setLevelThreshold] = useState<number | null>(null) // テーブルベース設定
   const [isRecalculating, setIsRecalculating] = useState(false)
 
   // 統計再計算機能
@@ -166,9 +166,9 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
   
   // DBから直接レベルを取得
   const currentLevel = user.current_level
-  // 次のレベルまでのXP計算は後で実装予定。今はシンプルな表示で代替
-  const nextLevelXP = 1000 - (user.total_xp % 1000) // 仮の計算
-  const progressPercentage = (user.total_xp % 1000) / 10 // 仮の進捗
+  // 次のレベルまでのXP計算（テーブルベース設定使用）
+  const nextLevelXP = levelThreshold ? (levelThreshold - (user.total_xp % levelThreshold)) : 0
+  const progressPercentage = levelThreshold ? ((user.total_xp % levelThreshold) / (levelThreshold / 100)) : 0
 
   return (
     <Card className={className}>

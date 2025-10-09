@@ -239,10 +239,23 @@ export async function getUserStats(userId: string) {
     .from('user_xp_stats_v2')
     .select('quiz_questions_answered, quiz_questions_correct, quiz_sessions_completed, quiz_average_accuracy, quiz_learning_time_seconds')
     .eq('user_id', userId)
-    .single()
+    .maybeSingle() // single()ではなくmaybeSingle()を使用
 
   if (userStatsError) {
     console.error('Error fetching user stats:', userStatsError)
+    return {
+      totalQuestions: 0,
+      correctAnswers: 0,
+      accuracy: 0,
+      totalQuizzes: 0,
+      averageScore: 0,
+      totalTimeSpent: 0
+    }
+  }
+
+  // データが存在しない場合（新規ユーザーなど）
+  if (!userStats) {
+    console.log(`No user stats found for user ${userId}, returning defaults`)
     return {
       totalQuestions: 0,
       correctAnswers: 0,

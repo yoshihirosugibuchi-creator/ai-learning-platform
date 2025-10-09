@@ -1,4 +1,6 @@
 // Browser storage utilities for user data persistence
+// 動的フォールバック設定をインポート（ローカルストレージレベル計算用）
+import { DATABASE_FALLBACK_SETTINGS } from './xp-settings-fallback.generated'
 
 // Storage key constants
 const USER_STORAGE_KEY = 'ai_learning_user_data'
@@ -622,7 +624,8 @@ export function updateUserProgress(
         existingProgress.correctAnswers += scores.correct
         existingProgress.totalAnswers += scores.total
         existingProgress.totalXP += categoryXP
-        existingProgress.currentLevel = Math.floor(existingProgress.totalXP / 500) + 1 // 500XPでレベルアップ
+        // テーブルベース設定でレベル計算（ローカルストレージ用DEFAULT値）
+        existingProgress.currentLevel = Math.floor(existingProgress.totalXP / DATABASE_FALLBACK_SETTINGS.level.main_category_threshold) + 1
         existingProgress.lastAnsweredAt = new Date().toISOString()
         console.log(`📊 New progress for ${categoryId}:`, existingProgress)
       } else {
@@ -631,7 +634,7 @@ export function updateUserProgress(
           correctAnswers: scores.correct,
           totalAnswers: scores.total,
           totalXP: categoryXP,
-          currentLevel: Math.floor(categoryXP / 500) + 1,
+          currentLevel: Math.floor(categoryXP / DATABASE_FALLBACK_SETTINGS.level.main_category_threshold) + 1,
           lastAnsweredAt: new Date().toISOString()
         }
         console.log(`🆕 Creating new progress for ${categoryId}:`, newProgress)
@@ -657,8 +660,8 @@ export function updateUserProgress(
     lastActiveAt: new Date().toISOString()
   }
   
-  // Update level based on XP
-  updatedUser.progress.currentLevel = Math.floor(updatedUser.progress.totalXP / 1000) + 1
+  // テーブルベース設定でレベル計算（ローカルストレージ用DEFAULT値）
+  updatedUser.progress.currentLevel = Math.floor(updatedUser.progress.totalXP / DATABASE_FALLBACK_SETTINGS.level.overall_threshold) + 1
   
   saveUserData(updatedUser)
   return updatedUser

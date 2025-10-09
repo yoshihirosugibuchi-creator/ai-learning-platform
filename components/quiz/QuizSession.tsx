@@ -12,7 +12,7 @@ import { getRandomQuestions } from '@/lib/questions'
 // import { useAuth } from '@/components/auth/AuthProvider'
 // Removed old saveQuizResultSupabase - now using new XP system's saveQuizSession
 import { useXPStats } from '@/hooks/useXPStats'
-import { UserProfile, UserProfileWithProgress } from '@/lib/supabase-user'
+import { UserProfileWithProgress } from '@/lib/supabase-user'
 import type { User } from '@supabase/supabase-js'
 import { getRandomWisdomCard, WisdomCard as WisdomCardType } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
@@ -37,7 +37,7 @@ interface QuizSessionProps {
   level?: string | null
   difficulties?: string[]
   user: User
-  profile: UserProfile | null
+  profile: UserProfileWithProgress | null
   onComplete: (results: QuizResults) => void
   onExit: () => void
 }
@@ -161,6 +161,28 @@ export default function QuizSession({
   //   }
   // }, [isFinished, challengeQuizUpdateData, category]);
 
+  // 難易度配分に基づく問題選択ヘルパー関数
+  const optimizeByDistribution = useCallback((questions: Question[], distribution: Record<string, number>): Question[] => {
+    const optimized: Question[] = []
+    
+    for (const [difficulty, count] of Object.entries(distribution)) {
+      const difficultyQuestions = questions.filter(q => q.difficulty === difficulty)
+      optimized.push(...getRandomQuestions(difficultyQuestions, count))
+    }
+    
+    // 不足分をランダムで補完
+    if (optimized.length < 10) {
+      const remaining = questions.filter(q => !optimized.includes(q))
+      optimized.push(...getRandomQuestions(remaining, 10 - optimized.length))
+    }
+    
+    console.log(`🎯 Applied difficulty distribution:`, 
+      Object.entries(distribution).map(([d, c]) => `${d}:${c}`).join(', ')
+    )
+    
+    return optimized.slice(0, 10)
+  }, [])
+
   // 学習履歴に基づく問題最適化関数（ランダムクイズ対応）
   const optimizeQuestionsForUser = useCallback((
     questions: Question[], 
@@ -235,32 +257,15 @@ export default function QuizSession({
     // 配分を計算して適用
     const difficultyDistribution = getDifficultyDistributionByAccuracy(accuracy)
     return optimizeByDistribution(questions, difficultyDistribution)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category])
-
-  // 難易度配分に基づく問題選択ヘルパー関数
-  const optimizeByDistribution = useCallback((questions: Question[], distribution: Record<string, number>): Question[] => {
-    const optimized: Question[] = []
-    
-    for (const [difficulty, count] of Object.entries(distribution)) {
-      const difficultyQuestions = questions.filter(q => q.difficulty === difficulty)
-      optimized.push(...getRandomQuestions(difficultyQuestions, count))
-    }
-    
-    // 不足分をランダムで補完
-    if (optimized.length < 10) {
-      const remaining = questions.filter(q => !optimized.includes(q))
-      optimized.push(...getRandomQuestions(remaining, 10 - optimized.length))
-    }
-    
-    console.log(`🎯 Applied difficulty distribution:`, 
-      Object.entries(distribution).map(([d, c]) => `${d}:${c}`).join(', ')
-    )
-    
-    return optimized.slice(0, 10)
-  }, [])
+  }, [category, optimizeByDistribution])
 
   useEffect(() => {
+    // 🚨 クイズ進行中の場合はリセットを防ぐ（タブ切り替え対策）
+    if (sessionQuestions.length > 0 && currentQuestionIndex > 0 && !isFinished) {
+      console.log('⚠️ Quiz in progress - preventing reset to avoid tab-switch issues')
+      return
+    }
+
     // クイズ開始時の状態リセット
     setIsFinished(false)
     setIsCompleting(false)
@@ -350,7 +355,7 @@ export default function QuizSession({
         totalQuestions: selectedQuestions.length
       }))
     }
-  }, [questions, category, level, difficulties, user.id, profile, optimizeQuestionsForUser])
+  }, [questions, category, level, difficulties, user.id, profile, currentQuestionIndex, isFinished, sessionQuestions.length, optimizeQuestionsForUser])
 
   // Helper functions for cognitive load and flow state calculation
   const calculateCognitiveLoad = useCallback((responseTime: number, isCorrect: boolean): number => {

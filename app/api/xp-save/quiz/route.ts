@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { loadXPSettings, calculateBonusXP } from '@/lib/xp-settings'
+import { loadXPSettings, calculateQuizXP, calculateBonusXP, calculateSKP } from '@/lib/xp-settings'
 import { 
-  calculateQuizXP as calculateQuizXPUnified,
-  calculateQuizSKP as calculateQuizSKPUnified,
   mapDifficultyToEnglish
 } from '@/lib/xp-level-system'
 
@@ -157,12 +155,23 @@ export async function POST(request: Request) {
       ? mapDifficultyToEnglish(body.answers[0].difficulty)
       : 'basic'
     
-    // 統合XP計算
-    const unifiedXP = calculateQuizXPUnified(body.correct_answers, body.total_questions, unifiedDifficulty)
+    // テーブル参照XP計算
+    const unifiedXP = body.correct_answers * calculateQuizXP(unifiedDifficulty, xpSettings)
     
-    // 統合SKP計算
+    // 統合SKP計算（テーブルベース）
     const isPerfect = body.accuracy_rate >= 100.0
-    const unifiedSKPResult = calculateQuizSKPUnified(body.correct_answers, body.total_questions, isPerfect)
+    const correctAnswers = body.correct_answers
+    const incorrectAnswers = body.total_questions - body.correct_answers
+    const skpTotal = calculateSKP(correctAnswers, incorrectAnswers, isPerfect, xpSettings)
+    
+    const unifiedSKPResult = {
+      skpGained: skpTotal,
+      breakdown: {
+        base: correctAnswers * xpSettings.skp.quiz_correct + incorrectAnswers * xpSettings.skp.quiz_incorrect,
+        bonus: isPerfect ? xpSettings.skp.quiz_perfect_bonus : 0,
+        description: `正解${correctAnswers}問・不正解${incorrectAnswers}問${isPerfect ? ` + 全問正解ボーナス(${xpSettings.skp.quiz_perfect_bonus}SKP)` : ''}`
+      }
+    }
     
     console.log('🎯 Unified calculation results:', {
       difficulty: unifiedDifficulty,
@@ -191,9 +200,9 @@ export async function POST(request: Request) {
       let earnedXP = 0
       
       if (answer.is_correct) {
-        // 統合XP計算（1問あたりのXP）
+        // テーブル参照XP計算（1問あたりのXP）
         const questionDifficulty = mapDifficultyToEnglish(answer.difficulty)
-        earnedXP = calculateQuizXPUnified(1, 1, questionDifficulty)
+        earnedXP = calculateQuizXP(questionDifficulty, xpSettings)
       }
 
       answerInserts.push({
@@ -289,7 +298,8 @@ export async function POST(request: Request) {
 
     // 新規または更新（アプリケーションレベルでレベル計算）
     const newTotalXP = (existingStats?.total_xp || 0) + totalXP
-    const newCurrentLevel = Math.floor(newTotalXP / 1000) + 1  // 1000XP = 1レベル
+    // テーブルベース設定からレベル計算（ハードコード値削除）
+    const newCurrentLevel = Math.floor(newTotalXP / xpSettings.level.overall_threshold) + 1
 
     const updatedStats = {
       user_id: userId,
@@ -551,7 +561,7 @@ export async function POST(request: Request) {
               quiz_xp: newQuizXP,
               course_xp: existingCourseXP, // 既存のコースXPを保持
               total_xp: calculatedTotalXP, // total = quiz + course
-              current_level: Math.floor(calculatedTotalXP / 500) + 1, // メインカテゴリーは500XP/レベル
+              current_level: Math.floor(calculatedTotalXP / xpSettings.level.main_category_threshold) + 1,
               quiz_sessions_completed: (existingCategoryStats?.quiz_sessions_completed || 0) + 1,
               quiz_questions_answered: newQuestionsCategoryAnswered,
               quiz_questions_correct: newQuestionsCategoryCorrect,
@@ -628,7 +638,7 @@ export async function POST(request: Request) {
                 quiz_xp: newSubcategoryQuizXP,
                 course_xp: existingSubcategoryCourseXP, // 既存のコースXPを保持
                 total_xp: calculatedSubcategoryTotalXP, // total = quiz + course
-                current_level: Math.floor(calculatedSubcategoryTotalXP / 500) + 1, // サブカテゴリーも500XP/レベル
+                current_level: Math.floor(calculatedSubcategoryTotalXP / xpSettings.level.industry_subcategory_threshold) + 1,
                 quiz_sessions_completed: (existingSubcategoryStats?.quiz_sessions_completed || 0) + 1,
                 quiz_questions_answered: newQuestionsSubcategoryAnswered,
                 quiz_questions_correct: newQuestionsSubcategoryCorrect,

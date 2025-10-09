@@ -18,7 +18,7 @@ export async function GET(request: Request) {
       .from('user_xp_stats_v2')
       .select('*')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle()
 
     console.log('User stats result:', { userStats, userStatsError })
 
@@ -123,10 +123,12 @@ export async function GET(request: Request) {
       totalXP: response.user.total_xp,
       categoriesCount: Object.keys(response.categories).length,
       subcategoriesCount: Object.keys(response.subcategories).length,
-      // 学習時間フィールドの確認
-      quiz_time_seconds: response.user.quiz_learning_time_seconds,
-      course_time_seconds: response.user.course_learning_time_seconds,
-      total_learning_time_seconds: response.user.total_learning_time_seconds
+      // 学習時間フィールドの確認（userStatsが存在する場合のみ）
+      ...(userStats && {
+        quiz_time_seconds: userStats.quiz_learning_time_seconds,
+        course_time_seconds: userStats.course_learning_time_seconds,
+        total_learning_time_seconds: userStats.total_learning_time_seconds
+      })
     })
 
     return NextResponse.json(response)

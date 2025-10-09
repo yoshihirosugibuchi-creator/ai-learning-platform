@@ -1247,6 +1247,123 @@ export type Database = {
           },
         ]
       }
+      system_alerts: {
+        Row: {
+          alert_type: string
+          context: Json | null
+          created_at: string | null
+          id: string
+          message: string
+          resolution_notes: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          alert_type: string
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          message: string
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          alert_type?: string
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      system_config_monitoring: {
+        Row: {
+          change_reason: string | null
+          changed_by: string | null
+          config_type: string
+          created_at: string | null
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          setting_key: string
+          validated: boolean | null
+          validation_errors: Json | null
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_by?: string | null
+          config_type: string
+          created_at?: string | null
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          setting_key: string
+          validated?: boolean | null
+          validation_errors?: Json | null
+        }
+        Update: {
+          change_reason?: string | null
+          changed_by?: string | null
+          config_type?: string
+          created_at?: string | null
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          setting_key?: string
+          validated?: boolean | null
+          validation_errors?: Json | null
+        }
+        Relationships: []
+      }
+      system_health_logs: {
+        Row: {
+          check_type: string
+          created_at: string | null
+          details: string | null
+          id: string
+          metrics: Json
+          status: string
+          thresholds: Json | null
+        }
+        Insert: {
+          check_type: string
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          metrics: Json
+          status: string
+          thresholds?: Json | null
+        }
+        Update: {
+          check_type?: string
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          metrics?: Json
+          status?: string
+          thresholds?: Json | null
+        }
+        Relationships: []
+      }
       unified_learning_session_analytics: {
         Row: {
           accuracy_rate: number | null
@@ -1746,6 +1863,7 @@ export type Database = {
           name: string | null
           position_level: string | null
           profile_completed_at: string | null
+          role: string | null
           selected_categories: Json | null
           selected_industry_categories: Json | null
           skill_level: string | null
@@ -1773,6 +1891,7 @@ export type Database = {
           name?: string | null
           position_level?: string | null
           profile_completed_at?: string | null
+          role?: string | null
           selected_categories?: Json | null
           selected_industry_categories?: Json | null
           skill_level?: string | null
@@ -1800,6 +1919,7 @@ export type Database = {
           name?: string | null
           position_level?: string | null
           profile_completed_at?: string | null
+          role?: string | null
           selected_categories?: Json | null
           selected_industry_categories?: Json | null
           skill_level?: string | null
@@ -2314,68 +2434,48 @@ export const Constants = {
   },
 } as const
 
-// Type aliases for easier use (from previous database-types.ts)
-export type CourseCompletion = Database['public']['Tables']['course_completions']['Row']
-export type CourseThemeCompletion = Database['public']['Tables']['course_theme_completions']['Row']
-export type KnowledgeCardCollection = Database['public']['Tables']['knowledge_card_collection']['Row']
-export type UserBadge = Database['public']['Tables']['user_badges']['Row']
+// ============= Existing Type Aliases (preserved from backup) =============
 export type UserXPStatsV2 = Database['public']['Tables']['user_xp_stats_v2']['Row']
 export type SKPTransaction = Database['public']['Tables']['skp_transactions']['Row']
 export type CourseSessionCompletion = Database['public']['Tables']['course_session_completions']['Row']
-
-// Learning structure types
 export type LearningGenre = Database['public']['Tables']['learning_genres']['Row']
 export type LearningTheme = Database['public']['Tables']['learning_themes']['Row']
 export type LearningSession = Database['public']['Tables']['learning_sessions']['Row']
-
-// Quiz types
 export type QuizQuestion = Database['public']['Tables']['quiz_questions']['Row']
 export type QuizSession = Database['public']['Tables']['quiz_sessions']['Row']
-
-// Additional types
 export type CategoryStats = Database['public']['Views']['category_stats']['Row']
 export type SkillLevel = Database['public']['Tables']['skill_levels']['Row']
-export type WisdomCardCollection = Database['public']['Tables']['wisdom_card_collection']['Row']
-
-// Insert types
-export type CourseCompletionInsert = Database['public']['Tables']['course_completions']['Insert']
-export type CourseThemeCompletionInsert = Database['public']['Tables']['course_theme_completions']['Insert']
-export type KnowledgeCardCollectionInsert = Database['public']['Tables']['knowledge_card_collection']['Insert']
-export type UserBadgeInsert = Database['public']['Tables']['user_badges']['Insert']
+export type UserXPStatsV2Insert = Database['public']['Tables']['user_xp_stats_v2']['Insert']
 export type UserXPStatsV2Update = Database['public']['Tables']['user_xp_stats_v2']['Update']
 export type SKPTransactionInsert = Database['public']['Tables']['skp_transactions']['Insert']
-
-// Additional insert types
 export type QuizQuestionInsert = Database['public']['Tables']['quiz_questions']['Insert']
 export type QuizSessionInsert = Database['public']['Tables']['quiz_sessions']['Insert']
 export type WisdomCardCollectionInsert = Database['public']['Tables']['wisdom_card_collection']['Insert']
-
-// Unified Learning Analytics types
 export type UnifiedLearningSessionAnalytics = Database['public']['Tables']['unified_learning_session_analytics']['Row']
 export type UnifiedLearningSessionAnalyticsInsert = Database['public']['Tables']['unified_learning_session_analytics']['Insert']
 export type UnifiedLearningSessionAnalyticsUpdate = Database['public']['Tables']['unified_learning_session_analytics']['Update']
-
-// User Learning Profile types
 export type UserLearningProfile = Database['public']['Tables']['user_learning_profiles']['Row']
 export type UserLearningProfileInsert = Database['public']['Tables']['user_learning_profiles']['Insert']
 export type UserLearningProfileUpdate = Database['public']['Tables']['user_learning_profiles']['Update']
-
-// Spaced Repetition Schedule types
 export type SpacedRepetitionSchedule = Database['public']['Tables']['spaced_repetition_schedule']['Row']
 export type SpacedRepetitionScheduleInsert = Database['public']['Tables']['spaced_repetition_schedule']['Insert']
 export type SpacedRepetitionScheduleUpdate = Database['public']['Tables']['spaced_repetition_schedule']['Update']
-
-// Industry Level Targets types
 export type IndustryLevelTarget = Database['public']['Tables']['industry_level_targets']['Row']
 export type IndustryLevelTargetInsert = Database['public']['Tables']['industry_level_targets']['Insert']
 export type IndustryLevelTargetUpdate = Database['public']['Tables']['industry_level_targets']['Update']
-
-// Learning Analytics Summary types
 export type LearningAnalyticsSummary = Database['public']['Tables']['learning_analytics_summary']['Row']
 export type LearningAnalyticsSummaryInsert = Database['public']['Tables']['learning_analytics_summary']['Insert']
 export type LearningAnalyticsSummaryUpdate = Database['public']['Tables']['learning_analytics_summary']['Update']
-
-// Learning Effectiveness Tracking types
 export type LearningEffectivenessTracking = Database['public']['Tables']['learning_effectiveness_tracking']['Row']
 export type LearningEffectivenessTrackingInsert = Database['public']['Tables']['learning_effectiveness_tracking']['Insert']
 export type LearningEffectivenessTrackingUpdate = Database['public']['Tables']['learning_effectiveness_tracking']['Update']
+export type SystemAlert = Database['public']['Tables']['system_alerts']['Row']
+export type SystemAlertInsert = Database['public']['Tables']['system_alerts']['Insert']
+export type SystemAlertUpdate = Database['public']['Tables']['system_alerts']['Update']
+export type SystemConfigMonitoring = Database['public']['Tables']['system_config_monitoring']['Row']
+export type SystemConfigMonitoringInsert = Database['public']['Tables']['system_config_monitoring']['Insert']
+export type SystemConfigMonitoringUpdate = Database['public']['Tables']['system_config_monitoring']['Update']
+export type SystemHealthLog = Database['public']['Tables']['system_health_logs']['Row']
+export type SystemHealthLogInsert = Database['public']['Tables']['system_health_logs']['Insert']
+export type SystemHealthLogUpdate = Database['public']['Tables']['system_health_logs']['Update']
+

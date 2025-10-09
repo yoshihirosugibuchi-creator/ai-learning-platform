@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { loadXPSettings, type XPSettings } from '@/lib/xp-settings'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -95,6 +96,20 @@ interface IndustryData {
 
 export function CachedLearningDashboard({ userId, className }: CachedLearningDashboardProps) {
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d')
+  const [xpSettings, setXpSettings] = useState<XPSettings | null>(null)
+  
+  // XP設定をロード
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await loadXPSettings()
+        setXpSettings(settings)
+      } catch (error) {
+        console.error('XP設定のロードに失敗:', error)
+      }
+    }
+    loadSettings()
+  }, [])
   
   const { 
     overview, 
@@ -189,7 +204,7 @@ export function CachedLearningDashboard({ userId, className }: CachedLearningDas
           <CardContent>
             <div className="text-2xl font-bold">{metrics?.totalXP?.toLocaleString() || 0}</div>
             <p className="text-xs text-muted-foreground">
-              レベル {Math.floor((metrics?.totalXP || 0) / 1000) + 1}
+              レベル {xpSettings ? Math.floor((metrics?.totalXP || 0) / xpSettings.level.overall_threshold) + 1 : 1}
             </p>
           </CardContent>
         </Card>

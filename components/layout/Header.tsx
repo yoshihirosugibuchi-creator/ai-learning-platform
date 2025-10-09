@@ -15,6 +15,7 @@ import {
 import { useAuth } from '@/components/auth/AuthProvider'
 import { getUserSKPBalance } from '@/lib/supabase-learning'
 import { useXPStats } from '@/hooks/useXPStats'
+import { useUserRole } from '@/hooks/useUserRole'
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void
@@ -32,6 +33,7 @@ export default function Header({
   const [displaySKP, setDisplaySKP] = useState(0)
   const loadingRef = useRef(false)
   const { stats: xpStats } = useXPStats()
+  const { isAdmin } = useUserRole()
 
   // ユーザーデータ取得（SKPのみ）
   const loadUserData = useCallback(async () => {
@@ -209,12 +211,14 @@ export default function Header({
                         <span>マイページ</span>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin" className="flex items-center">
-                        <Shield className="mr-2 h-4 w-4" />
-                        <span>管理者</span>
-                      </Link>
-                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="flex items-center">
+                          <Shield className="mr-2 h-4 w-4" />
+                          <span>管理者</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem asChild>
                       <Link href="/settings" className="flex items-center">
                         <Settings className="mr-2 h-4 w-4" />

@@ -1,6 +1,14 @@
 import { supabaseAdmin } from './supabase-admin'
 import { getUserLearningStreak } from './supabase-learning'
 
+// セッションデータの型定義
+interface SessionAnalysisData {
+  session_start_time: string
+  accuracy_rate: number | null
+  total_questions: number | null
+  correct_answers: number | null
+}
+
 // Real-time analytics pipeline for processing learning events
 export class LearningAnalyticsPipeline {
   constructor(private userId: string) {}
@@ -148,9 +156,9 @@ export class LearningAnalyticsPipeline {
     // Analyze performance patterns
     const patterns = {
       recentAccuracyTrend: this.calculateAccuracyTrend(sessions),
-      studyTimeConsistency: this.calculateStudyConsistency(sessions.map(s => ({created_at: s.session_start_time}))),
+      studyTimeConsistency: this.calculateStudyConsistency(sessions.map((s: SessionAnalysisData) => ({created_at: s.session_start_time}))),
       optimalStudyTime: `${currentHour}:00 - ${currentHour + 1}:00`,
-      weeklyConsistency: this.calculateStudyConsistency(sessions.map(s => ({created_at: s.session_start_time}))) * 100,
+      weeklyConsistency: this.calculateStudyConsistency(sessions.map((s: SessionAnalysisData) => ({created_at: s.session_start_time}))) * 100,
       studyStreakQuality: this.calculateAccuracyTrend(sessions) > 70 ? 'excellent' : this.calculateAccuracyTrend(sessions) > 60 ? 'good' : 'needs_improvement',
       optimalStudyHour: currentHour, // Will be refined with more data
       difficultyProgression: sessionData.difficulty,

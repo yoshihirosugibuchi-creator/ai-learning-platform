@@ -1,6 +1,21 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-// Database type not used in this route
+
+// 実際のselect結果に合わせたインターフェース
+interface CategoryData {
+  category_id: string
+  name: string
+  description: string | null
+  type: string
+  icon: string | null
+  color: string | null
+  display_order: number
+  is_active: boolean
+  is_visible: boolean
+  activation_date: string | null
+  created_at: string | null
+  updated_at: string | null
+}
 
 export async function GET(request: Request) {
   try {
@@ -69,7 +84,7 @@ export async function GET(request: Request) {
       last_updated: string | null;
     }
     const categoriesWithStats: CategoryWithStats[] = await Promise.all(
-      (categories || []).map(async (category) => {
+      (categories || []).map(async (category: CategoryData) => {
         // サブカテゴリー数を取得
         const { count: subcategoriesCount, error: subError } = await supabaseAdmin
           .from('subcategories')

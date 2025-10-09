@@ -8,7 +8,8 @@ interface UserContextType {
   user: StorageUser | null
   isLoading: boolean
   updateUser: (updates: Partial<StorageUser>) => void
-  updateProgress: (questionsAnswered: number, correctAnswers: number, xpGained: number, categoryScores?: Record<string, { correct: number; total: number }>) => number
+  // updateProgress: 削除済み（使用されていない古いシステム）
+  // 現在は/api/xp-save/quiz/と/api/xp-save/course/が正式なXP/SKPシステム
   updateStreak: () => void
   logout: () => void
   refreshUser: () => void // 強制的にユーザーデータを再読み込み

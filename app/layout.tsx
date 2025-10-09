@@ -5,6 +5,7 @@ import { UserProvider } from "@/contexts/UserContext";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import ClientOnly from "@/components/ClientOnly";
+import ErrorBoundary from "@/components/auth/ErrorBoundary";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -37,15 +38,17 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${notoSansJP.variable} antialiased min-h-screen bg-background font-sans`}
       >
-        <ClientOnly fallback={<div>Loading...</div>}>
-          <QueryProvider>
-            <AuthProvider>
-              <UserProvider>
-                {children}
-              </UserProvider>
-            </AuthProvider>
-          </QueryProvider>
-        </ClientOnly>
+        <ErrorBoundary>
+          <ClientOnly fallback={<div>Loading...</div>}>
+            <QueryProvider>
+              <AuthProvider>
+                <UserProvider>
+                  {children}
+                </UserProvider>
+              </AuthProvider>
+            </QueryProvider>
+          </ClientOnly>
+        </ErrorBoundary>
       </body>
     </html>
   );

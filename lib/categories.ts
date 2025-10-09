@@ -7,6 +7,7 @@ import {
   MainCategoryId,
   IndustryCategoryId 
 } from './types/category'
+import type { Database } from './database-types-official'
 
 // フロントエンド用APIクライアント（クライアントサイドで使用）
 const API_BASE_URL = process.env.NODE_ENV === 'production' ? '' : ''
@@ -15,11 +16,11 @@ const API_BASE_URL = process.env.NODE_ENV === 'production' ? '' : ''
 interface DBCategory {
   category_id: string
   name: string
-  description?: string
-  type: 'main' | 'industry'
+  description?: string | null
+  type: string
   display_order?: number
-  icon?: string
-  color?: string
+  icon?: string | null
+  color?: string | null
   is_active?: boolean
   is_visible?: boolean
 }
@@ -27,19 +28,19 @@ interface DBCategory {
 interface DBSkillLevel {
   id: string
   name: string
-  description?: string
-  target_experience?: string
+  description?: string | null
+  target_experience?: string | null
   display_order?: number
-  color?: string
+  color?: string | null
 }
 
 interface DBSubcategory {
   subcategory_id: string
   name: string
-  description?: string
+  description?: string | null
   parent_category_id: string
   display_order?: number
-  icon?: string
+  icon?: string | null
 }
 
 // DBから取得したデータをキャッシュ
@@ -465,6 +466,44 @@ const staticIndustryCategories: IndustryCategory[] = [
 ]
 
 /**
+ * JSONファイルからカテゴリーを読み込み（フォールバック用）
+ */
+async function loadCategoriesFromJSON(): Promise<(MainCategory | IndustryCategory)[]> {
+  try {
+    console.log('📄 Loading categories from JSON fallback')
+    const response = await fetch('/data/categories-fallback.json')
+    
+    if (!response.ok) {
+      throw new Error(`JSON file request failed: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    const categories = data.categories || []
+    
+    console.log(`✅ Categories loaded from JSON: ${categories.length} categories`)
+    
+    // DB形式からローカル形式に変換
+    return categories.map((dbCategory: Database['public']['Tables']['categories']['Row']) => 
+      transformDBCategoryToLocal({
+        category_id: dbCategory.category_id,
+        name: dbCategory.name,
+        description: dbCategory.description,
+        type: dbCategory.type,
+        display_order: dbCategory.display_order,
+        icon: dbCategory.icon,
+        color: dbCategory.color,
+        is_active: dbCategory.is_active,
+        is_visible: dbCategory.is_visible
+      }, [])
+    )
+    
+  } catch (error) {
+    console.error('❌ Error loading categories from JSON:', error)
+    return []
+  }
+}
+
+/**
  * DB APIを使用してカテゴリーを取得（フォールバック付き）
  */
 export async function getCategories(options?: {
@@ -509,10 +548,23 @@ export async function getCategories(options?: {
       return filterCategories(categories, options)
     }
   } catch (error) {
-    console.warn('DB category fetch failed, using static fallback:', error)
+    console.warn('DB category fetch failed, trying JSON fallback:', error)
   }
 
-  // フォールバック: 静的データを使用（すべて有効として扱う）
+  // JSONフォールバック層を追加
+  try {
+    const jsonCategories = await loadCategoriesFromJSON()
+    if (jsonCategories.length > 0) {
+      cachedCategories = jsonCategories
+      cacheTimestamp = now
+      return filterCategories(jsonCategories, options)
+    }
+  } catch (error) {
+    console.warn('JSON category fetch failed, using static fallback:', error)
+  }
+
+  // 最終フォールバック: 静的データを使用（すべて有効として扱う）
+  console.log('🔄 Using static categories fallback')
   const staticCategories = [...staticMainCategories, ...staticIndustryCategories].map(cat => ({
     ...cat,
     isActive: true,
@@ -561,6 +613,41 @@ function filterCategories(
 }
 
 /**
+ * JSONファイルからスキルレベルを読み込み（フォールバック用）
+ */
+async function loadSkillLevelsFromJSON(): Promise<SkillLevelDefinition[]> {
+  try {
+    console.log('📄 Loading skill levels from JSON fallback')
+    const response = await fetch('/data/skill-levels-fallback.json')
+    
+    if (!response.ok) {
+      throw new Error(`JSON file request failed: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    const skillLevels = data.skillLevels || []
+    
+    console.log(`✅ Skill levels loaded from JSON: ${skillLevels.length} skill levels`)
+    
+    // DB形式からローカル形式に変換
+    return skillLevels.map((dbSkillLevel: Database['public']['Tables']['skill_levels']['Row']) => 
+      transformDBSkillLevelToLocal({
+        id: dbSkillLevel.id,
+        name: dbSkillLevel.name,
+        description: dbSkillLevel.description,
+        target_experience: dbSkillLevel.target_experience,
+        display_order: dbSkillLevel.display_order,
+        color: dbSkillLevel.color
+      })
+    )
+    
+  } catch (error) {
+    console.error('❌ Error loading skill levels from JSON:', error)
+    return []
+  }
+}
+
+/**
  * スキルレベルを取得（DB API + フォールバック）
  */
 export async function getSkillLevels(): Promise<SkillLevelDefinition[]> {
@@ -582,10 +669,23 @@ export async function getSkillLevels(): Promise<SkillLevelDefinition[]> {
       return skillLevels
     }
   } catch (error) {
-    console.warn('DB skill levels fetch failed, using static fallback:', error)
+    console.warn('DB skill levels fetch failed, trying JSON fallback:', error)
   }
 
-  // フォールバック: 静的データを使用
+  // JSONフォールバック層を追加
+  try {
+    const jsonSkillLevels = await loadSkillLevelsFromJSON()
+    if (jsonSkillLevels.length > 0) {
+      cachedSkillLevels = jsonSkillLevels
+      cacheTimestamp = now
+      return jsonSkillLevels
+    }
+  } catch (error) {
+    console.warn('JSON skill levels fetch failed, using static fallback:', error)
+  }
+
+  // 最終フォールバック: 静的データを使用
+  console.log('🔄 Using static skill levels fallback')
   return staticSkillLevels
 }
 
@@ -599,6 +699,48 @@ function transformDBSkillLevelToLocal(dbSkillLevel: DBSkillLevel): SkillLevelDef
     description: dbSkillLevel.description || '',
     targetExperience: dbSkillLevel.target_experience || '',
     displayOrder: dbSkillLevel.display_order || 1
+  }
+}
+
+/**
+ * JSONファイルからサブカテゴリーを読み込み（フォールバック用）
+ */
+async function loadSubcategoriesFromJSON(parentCategoryId?: string): Promise<Subcategory[]> {
+  try {
+    console.log('📄 Loading subcategories from JSON fallback')
+    const response = await fetch('/data/subcategories-fallback.json')
+    
+    if (!response.ok) {
+      throw new Error(`JSON file request failed: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    const subcategories = data.subcategories || []
+    
+    console.log(`✅ Subcategories loaded from JSON: ${subcategories.length} subcategories`)
+    
+    // DB形式からローカル形式に変換
+    let transformed = subcategories.map((dbSubcategory: Database['public']['Tables']['subcategories']['Row']) => 
+      transformDBSubcategoryToLocal({
+        subcategory_id: dbSubcategory.id,
+        name: dbSubcategory.name,
+        description: dbSubcategory.description,
+        parent_category_id: dbSubcategory.parent_category_id,
+        display_order: dbSubcategory.display_order,
+        icon: dbSubcategory.icon
+      })
+    )
+    
+    // 特定の親カテゴリーIDでフィルター
+    if (parentCategoryId) {
+      transformed = transformed.filter((sub: Subcategory) => sub.parentId === parentCategoryId)
+    }
+    
+    return transformed
+    
+  } catch (error) {
+    console.error('❌ Error loading subcategories from JSON:', error)
+    return []
   }
 }
 
@@ -621,10 +763,20 @@ export async function getSubcategories(parentCategoryId?: string, activeOnly = f
       return transformed
     }
   } catch (error) {
-    console.warn('🚨 DB subcategories fetch failed, using static fallback:', error)
+    console.warn('🚨 DB subcategories fetch failed, trying JSON fallback:', error)
   }
 
-  // フォールバック: 静的データから生成
+  // JSONフォールバック層を追加
+  try {
+    const jsonSubcategories = await loadSubcategoriesFromJSON(parentCategoryId)
+    if (jsonSubcategories.length > 0) {
+      return jsonSubcategories
+    }
+  } catch (error) {
+    console.warn('JSON subcategories fetch failed, using static fallback:', error)
+  }
+
+  // 最終フォールバック: 静的データから生成
   if (parentCategoryId) {
     return getSubcategoriesByParent(parentCategoryId)
   }

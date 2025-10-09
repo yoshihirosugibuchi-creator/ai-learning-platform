@@ -43,7 +43,7 @@ export default function AnalyticsPage() {
   const [aiPatterns, setAiPatterns] = useState<LearningPattern | null>(null)
   const [optimalTime, setOptimalTime] = useState<OptimalLearningTime | null>(null)
   const [hints, setHints] = useState<PersonalizedHints | null>(null)
-  const { user, loading } = useAuth()
+  const { user, profile, loading } = useAuth()
 
   // パフォーマンス監視（開発環境のみ）
   useResourceMonitor()
@@ -164,12 +164,14 @@ export default function AnalyticsPage() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto lg:h-10 gap-1 p-1">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">概要</TabsTrigger>
-            <TabsTrigger value="unified" className="text-xs sm:text-sm py-2">統合AI分析</TabsTrigger>
-            <TabsTrigger value="patterns" className="text-xs sm:text-sm py-2">学習パターン</TabsTrigger>
+          <TabsList className={`grid w-full ${profile?.role === 'system_admin' ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'} h-auto lg:h-10 gap-1 p-1`}>
+            <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">基本統計</TabsTrigger>
             <TabsTrigger value="industry" className="text-xs sm:text-sm py-2">業界分析</TabsTrigger>
-            <TabsTrigger value="insights" className="text-xs sm:text-sm py-2">インサイト</TabsTrigger>
+            <TabsTrigger value="patterns" className="text-xs sm:text-sm py-2">学習パターン（AI）</TabsTrigger>
+            <TabsTrigger value="insights" className="text-xs sm:text-sm py-2">インサイト（AI）</TabsTrigger>
+            {profile?.role === 'system_admin' && (
+              <TabsTrigger value="unified" className="text-xs sm:text-sm py-2">統合AI分析</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="unified" className="space-y-6">

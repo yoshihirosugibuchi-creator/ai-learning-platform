@@ -9,7 +9,7 @@ export async function GET() {
       NODE_ENV: process.env.NODE_ENV,
       VERCEL_ENV: process.env.VERCEL_ENV,
     })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Environment check failed' }, { status: 500 })
   }
 }

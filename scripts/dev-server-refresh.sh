@@ -53,9 +53,9 @@ fi
 # Step 5: TypeScript/ESLint確認（オプション）
 echo ""
 echo "🔍 Step 5: Code quality check (optional)..."
-read -p "   Run TypeScript/ESLint check before starting? (y/N): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+
+# 環境変数でコード品質チェックを制御（デフォルトはスキップ）
+if [ "${DEV_REFRESH_CHECK_CODE:-}" = "true" ]; then
     echo "   🔍 Running TypeScript check..."
     npm run typecheck
     if [ $? -eq 0 ]; then
@@ -68,13 +68,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
             echo "   ⚠️  ESLint warnings found (continuing anyway)"
         fi
     else
-        echo "   ❌ TypeScript errors found"
-        read -p "   Continue anyway? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "   🛑 Aborting refresh"
-            exit 1
-        fi
+        echo "   ❌ TypeScript errors found (continuing anyway)"
     fi
 else
     echo "   ⏭️  Skipping code quality check"

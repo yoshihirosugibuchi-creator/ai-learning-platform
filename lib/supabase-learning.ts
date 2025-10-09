@@ -1,4 +1,6 @@
-import { supabaseAdmin } from './supabase-admin'
+import { supabase } from './supabase-admin'
+import { loadXPSettings } from './xp-settings'
+import { DATABASE_FALLBACK_SETTINGS } from './xp-settings-fallback.generated'
 
 // Learning Session Types
 export interface LearningSession {
@@ -98,7 +100,7 @@ export async function saveLearningSession(session: Omit<LearningSession, 'id' | 
     duration_seconds: session.duration ? Math.floor(session.duration / 1000) : null
   }
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabase
     .from('learning_progress')
     .insert([progressData])
     .select()
@@ -132,7 +134,7 @@ export async function saveLearningSession(session: Omit<LearningSession, 'id' | 
 
 export async function getUserLearningSessions(userId: string): Promise<LearningSession[]> {
   // learning_progressテーブルから進捗データを取得
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabase
     .from('learning_progress')
     .select('*')
     .eq('user_id', userId)
@@ -184,7 +186,7 @@ export async function updateLearningSession(sessionId: string, updates: Partial<
   
   progressUpdates.updated_at = new Date().toISOString()
 
-  const { error } = await supabaseAdmin
+  const { error } = await supabase
     .from('learning_progress')
     .update(progressUpdates)
     .eq('id', sessionId)
@@ -199,7 +201,7 @@ export async function updateLearningSession(sessionId: string, updates: Partial<
 
 // SKP Transaction Functions
 export async function saveSKPTransaction(transaction: Omit<SKPTransaction, 'id' | 'created_at'>): Promise<SKPTransaction | null> {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabase
     .from('skp_transactions')
     .insert([transaction])
     .select()
@@ -224,7 +226,7 @@ export async function saveSKPTransaction(transaction: Omit<SKPTransaction, 'id' 
 }
 
 export async function getUserSKPTransactions(userId: string): Promise<SKPTransaction[]> {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabase
     .from('skp_transactions')
     .select('*')
     .eq('user_id', userId)
@@ -258,7 +260,7 @@ export async function getUserSKPBalance(userId: string): Promise<number> {
 
 // Category Progress Functions
 export async function getCategoryProgress(userId: string): Promise<CategoryProgress[]> {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabase
     .from('user_category_xp_stats_v2')
     .select(`
       id,
@@ -306,7 +308,7 @@ export async function updateCategoryProgress(
   console.log(`📊 updateCategoryProgress: userId=${userId}, categoryId=${categoryId}, correctAnswers=${correctAnswers}, totalAnswers=${totalAnswers}, xpGained=${xpGained}`)
   
   // Get existing progress from v2 table
-  const { data: existing } = await supabaseAdmin
+  const { data: existing } = await supabase
     .from('user_category_xp_stats_v2')
     .select('*')
     .eq('user_id', userId)
@@ -324,8 +326,14 @@ export async function updateCategoryProgress(
     const newCorrectAnswers = existing.quiz_questions_correct + correctAnswers
     const newTotalAnswers = existing.quiz_questions_answered + totalAnswers
     
-    // Calculate level using new system (main category threshold: 500XP)
-    const newLevel = Math.floor(newTotalXP / 500) + 1
+    // テーブルベース設定でレベル計算（フォールバック付き）
+    let newLevel = 1
+    try {
+      const xpSettings = await loadXPSettings()
+      newLevel = Math.floor(newTotalXP / xpSettings.level.main_category_threshold) + 1
+    } catch {
+      newLevel = Math.floor(newTotalXP / DATABASE_FALLBACK_SETTINGS.level.main_category_threshold) + 1
+    }
     
     // Calculate accuracy
     const newAccuracy = newTotalAnswers > 0 ? Math.round((newCorrectAnswers / newTotalAnswers) * 100) : 0
@@ -342,7 +350,7 @@ export async function updateCategoryProgress(
     
     console.log(`📈 Updating v2 progress: old_xp=${existing.total_xp} + ${xpGained} = ${newTotalXP}, level=${newLevel}`)
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('user_category_xp_stats_v2')
       .update(updatedData)
       .eq('id', existing.id)
@@ -368,8 +376,14 @@ export async function updateCategoryProgress(
       updated_at: data.updated_at || undefined
     }
   } else {
-    // Create new progress record in v2 table
-    const newLevel = Math.floor(xpGained / 500) + 1
+    // テーブルベース設定でレベル計算（フォールバック付き）
+    let newLevel = 1
+    try {
+      const xpSettings = await loadXPSettings()
+      newLevel = Math.floor(xpGained / xpSettings.level.main_category_threshold) + 1
+    } catch {
+      newLevel = Math.floor(xpGained / DATABASE_FALLBACK_SETTINGS.level.main_category_threshold) + 1
+    }
     const accuracy = totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0
     
     const newProgress = {
@@ -392,7 +406,7 @@ export async function updateCategoryProgress(
     
     console.log(`📝 Creating new v2 progress: xp=${xpGained}, level=${newLevel}`)
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('user_category_xp_stats_v2')
       .insert([newProgress])
       .select()
@@ -467,18 +481,7 @@ export async function saveLearningProgressSupabase(
 
     console.log('📋 Attempting to save progress data:', progressData)
 
-    // Check authentication and table access before attempting upsert
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.getUser()
-    console.log('🔐 Auth check:', { user: authUser?.user?.id, error: authError })
-    
-    // Test table access with a simple query first
-    const { data: testData, error: testError } = await supabaseAdmin
-      .from('user_settings')
-      .select('id')
-      .limit(1)
-    console.log('🔍 Table access test:', { data: testData, error: testError })
-
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('user_settings')
       .upsert(progressData, {
         onConflict: 'user_id,setting_key'
@@ -553,7 +556,7 @@ export async function saveLearningProgressSupabase(
 
 export async function getLearningProgressSupabase(userId: string): Promise<Record<string, unknown>> {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('user_settings')
       .select('setting_key, setting_value')
       .eq('user_id', userId)
@@ -650,7 +653,7 @@ export async function getLearningProgressSupabase(userId: string): Promise<Recor
 // Analytics Functions
 // Personalization Settings Functions
 export async function savePersonalizationSettings(userId: string, settingKey: string, settingValue: unknown): Promise<boolean> {
-  const { error } = await supabaseAdmin
+  const { error } = await supabase
     .from('user_settings')
     .upsert({
       setting_key: settingKey,
@@ -666,7 +669,7 @@ export async function savePersonalizationSettings(userId: string, settingKey: st
 }
 
 export async function getPersonalizationSettings(userId: string, settingKey?: string): Promise<Record<string, unknown> | unknown> {
-  let query = supabaseAdmin
+  let query = supabase
     .from('user_settings')
     .select('setting_key, setting_value')
     .eq('user_id', userId)
@@ -699,10 +702,9 @@ export async function getPersonalizationSettings(userId: string, settingKey?: st
 export async function getUserLearningStreak(userId: string): Promise<number> {
   try {
     // XPシステムのdaily_xp_recordsテーブルから連続日数を計算
-    const { supabaseAdmin } = await import('./supabase-admin')
     
     // XP統計とdaily_xp_recordsを取得
-    const { data: userStats } = await supabaseAdmin
+    const { data: userStats } = await supabase
       .from('user_xp_stats_v2')
       .select('*')
       .eq('user_id', userId)
@@ -714,7 +716,7 @@ export async function getUserLearningStreak(userId: string): Promise<number> {
     }
     
     // recent_activityを取得
-    const { data: activities } = await supabaseAdmin
+    const { data: activities } = await supabase
       .from('daily_xp_records')
       .select('*')
       .eq('user_id', userId)
@@ -806,7 +808,7 @@ export async function getUserLearningStreak(userId: string): Promise<number> {
       console.log('📅 Fallback: Using quiz_sessions for streak calculation')
       
       // quiz_sessionsテーブルから直接取得
-      const { data: quizSessions, error: quizError } = await supabaseAdmin
+      const { data: quizSessions, error: quizError } = await supabase
         .from('quiz_sessions')
         .select('created_at')
         .eq('user_id', userId)

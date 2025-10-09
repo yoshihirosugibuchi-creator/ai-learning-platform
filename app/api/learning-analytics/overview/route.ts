@@ -1,6 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getUserLearningStreak } from '@/lib/supabase-learning'
+import { loadXPSettings } from '@/lib/xp-settings'
+import { DATABASE_FALLBACK_SETTINGS } from '@/lib/xp-settings-fallback.generated'
+
+// 型定義
+interface QuizSessionOverview {
+  accuracy_rate: number | null
+  session_start_time: string
+  session_end_time: string | null
+  created_at: string | null
+}
+
+interface DailyXPRecord {
+  date: string
+  quiz_xp_earned: number | null
+  course_xp_earned: number | null
+}
+
+interface CourseCompletion {
+  id: string
+  user_id: string
+  course_id: string
+  created_at: string | null
+}
+
+interface CategoryStats {
+  category_id: string
+  total_xp: number | null
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -58,17 +86,17 @@ export async function GET(request: NextRequest) {
     const totalCourseCompletions = courseCompletions?.length || 0
     
     const averageAccuracy = quizSessions && quizSessions.length > 0
-      ? quizSessions.reduce((sum, session) => sum + (session.accuracy_rate || 0), 0) / quizSessions.length
+      ? quizSessions.reduce((sum: number, session: QuizSessionOverview) => sum + (session.accuracy_rate || 0), 0) / quizSessions.length
       : 0
 
     // Calculate total study time from sessions
-    const totalStudyTimeMinutes = (quizSessions || []).reduce((total, session) => {
+    const totalStudyTimeMinutes = (quizSessions || []).reduce((total: number, session: QuizSessionOverview) => {
       if (session.session_start_time && session.session_end_time) {
         const duration = (new Date(session.session_end_time).getTime() - new Date(session.session_start_time).getTime()) / (1000 * 60)
         return total + duration
       }
       return total + 15 // Default quiz session duration
-    }, 0) + (courseCompletions || []).reduce((total, _completion) => {
+    }, 0) + (courseCompletions || []).reduce((total: number, _completion: CourseCompletion) => {
       // Estimate 10 minutes per course session
       return total + 10
     }, 0)
@@ -81,7 +109,7 @@ export async function GET(request: NextRequest) {
       .gte('date', startDate.toISOString().split('T')[0])
       .order('date', { ascending: true })
 
-    const dailyXPProgress = (dailyXP || []).map(record => ({
+    const dailyXPProgress = (dailyXP || []).map((record: DailyXPRecord) => ({
       date: record.date,
       xp: (record.quiz_xp_earned || 0) + (record.course_xp_earned || 0)
     }))
@@ -93,16 +121,25 @@ export async function GET(request: NextRequest) {
       .eq('user_id', userId)
       .order('total_xp', { ascending: false })
 
-    const categoryProgress = (categoryStats || []).map(stat => ({
+    // Get XP settings for dynamic progress calculation
+    let progressThreshold
+    try {
+      const xpSettings = await loadXPSettings()
+      progressThreshold = xpSettings.level.main_category_threshold
+    } catch {
+      progressThreshold = DATABASE_FALLBACK_SETTINGS.level.main_category_threshold
+    }
+    
+    const categoryProgress = (categoryStats || []).map((stat: CategoryStats) => ({
       category: stat.category_id,
-      progress: Math.min(100, Math.round((stat.total_xp || 0) / 500 * 100)) // 500 XP = 100%
+      progress: Math.min(100, Math.round((stat.total_xp || 0) / progressThreshold * 100)) // Dynamic threshold = 100%
     }))
 
     // Get accuracy trend
     const accuracyTrend = (quizSessions || [])
       .slice(0, 10) // Last 10 sessions
       .reverse()
-      .map((session, _index) => ({
+      .map((session: QuizSessionOverview, _index: number) => ({
         date: session.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
         accuracy: session.accuracy_rate || 0
       }))

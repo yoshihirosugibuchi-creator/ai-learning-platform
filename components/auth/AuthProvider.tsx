@@ -38,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [, setIsHydrated] = useState(false)
+  const [lastLoadedUserId, setLastLoadedUserId] = useState<string | null>(null)
 
   const loadUserProfile = async (user: User | null) => {
     if (user) {
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: user.id,
         email: user.email!,
         name: user.email?.split('@')[0] || 'User',
+        role: 'user', // 🚨 CRITICAL: role フィールドを追加
         skill_level: 'basic' as const,
         learning_style: 'mixed' as const,
         experience_level: 'basic',
@@ -183,6 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Load user profile without blocking the loading state
         if (user) {
           console.log('📖 AuthProvider: Loading user profile...')
+          setLastLoadedUserId(user.id) // 初期化時にユーザーIDを設定
           loadUserProfile(user).catch(error => {
             console.error('❌ Error loading user profile during init:', error)
           })
@@ -222,9 +225,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(user)
           
           if (user) {
-            await loadUserProfile(user)
+            // プロファイルの再読み込みが必要な条件をより厳密にチェック
+            const needsReload = (
+              event === 'TOKEN_REFRESHED' || 
+              !profile || 
+              (event === 'SIGNED_IN' && lastLoadedUserId !== user.id)
+            )
+            
+            // INITIAL_SESSIONは初期化で既に処理済みなのでスキップ
+            const skipEvents = ['INITIAL_SESSION']
+            
+            if (skipEvents.includes(event)) {
+              console.log('⏭️ Skipping profile reload for skip event:', event)
+            } else if (needsReload) {
+              console.log('🔄 Profile reload needed for event:', event, 'user changed:', lastLoadedUserId !== user.id)
+              await loadUserProfile(user)
+              setLastLoadedUserId(user.id)
+            } else {
+              console.log('⏭️ Skipping profile reload for event:', event, 'same user:', user.id)
+            }
           } else {
             setProfile(null)
+            setLastLoadedUserId(null)
           }
         } catch (error) {
           console.error('❌ Auth state change error:', error)
@@ -285,7 +307,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(loadingTimeout)
       clearInterval(sessionHealthCheck)
     }
-  }, [])
+  }, [lastLoadedUserId, profile])
 
   const signIn = async (email: string, password: string) => {
     console.log('🔐 AuthProvider: Starting signIn process...')

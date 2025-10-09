@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import type { Database } from '@/lib/database-types-official'
 
+// サブカテゴリー型定義（実際のselect結果に合わせる）
+interface _SubcategoryData {
+  subcategory_id: string
+  name: string
+  is_active: boolean
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ category_id: string }> }
@@ -160,7 +167,7 @@ export async function GET(
       subcategories: subcategories || [],
       meta: {
         subcategory_count: subcategories?.length || 0,
-        active_subcategory_count: subcategories?.filter(sub => sub.is_active).length || 0,
+        active_subcategory_count: subcategories?.filter((sub) => sub.is_active).length || 0,
         status_history: {
           created_at: category.created_at,
           last_updated: category.updated_at,

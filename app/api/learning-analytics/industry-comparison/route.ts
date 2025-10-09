@@ -1,6 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
+// ユーザー統計データの型定義
+interface UserStatsData {
+  category_id: string
+  total_xp: number
+  quiz_average_accuracy: number | null
+  quiz_questions_answered: number | null
+  quiz_questions_correct: number | null
+}
+
+// スキル比較結果の型定義
+interface SkillComparisonData {
+  categoryId: string
+  categoryName: string
+  userXP: number
+  userAccuracy: number
+  userLevel: string
+  industryPercentile: number
+  nextLevel: string
+  nextLevelXP: number
+  gapXP: number
+  gapPercentage: number
+  estimatedTimeToNextLevel: number
+  benchmark: {
+    beginner: number
+    intermediate: number
+    advanced: number
+    expert: number
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -40,7 +70,7 @@ export async function GET(request: NextRequest) {
     const targetBenchmarks = industryBenchmarks[targetRole as keyof typeof industryBenchmarks] || industryBenchmarks.frontend_developer
 
     // Calculate user's position vs industry
-    const skillComparison = (userStats || []).map(stat => {
+    const skillComparison: SkillComparisonData[] = (userStats || []).map((stat: UserStatsData) => {
       const categoryKey = stat.category_id.toLowerCase()
       let benchmark = targetBenchmarks[categoryKey as keyof typeof targetBenchmarks]
       
@@ -109,14 +139,14 @@ export async function GET(request: NextRequest) {
 
     // Calculate overall career readiness
     const totalSkills = skillComparison.length
-    const expertSkills = skillComparison.filter(s => s.userLevel === 'expert').length
-    const advancedSkills = skillComparison.filter(s => s.userLevel === 'advanced').length
-    const intermediateSkills = skillComparison.filter(s => s.userLevel === 'intermediate').length
+    const expertSkills = skillComparison.filter((s: SkillComparisonData) => s.userLevel === 'expert').length
+    const advancedSkills = skillComparison.filter((s: SkillComparisonData) => s.userLevel === 'advanced').length
+    const intermediateSkills = skillComparison.filter((s: SkillComparisonData) => s.userLevel === 'intermediate').length
 
     const careerReadiness = {
       targetRole: targetRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
       overallPercentile: Math.round(
-        skillComparison.reduce((sum, s) => sum + s.industryPercentile, 0) / Math.max(1, totalSkills)
+        skillComparison.reduce((sum: number, s: SkillComparisonData) => sum + s.industryPercentile, 0) / Math.max(1, totalSkills)
       ),
       skillDistribution: {
         expert: expertSkills,
@@ -128,10 +158,10 @@ export async function GET(request: NextRequest) {
         (expertSkills * 100 + advancedSkills * 75 + intermediateSkills * 50) / (totalSkills * 100) * 100
       ),
       topStrengths: skillComparison
-        .filter(s => s.userLevel === 'expert' || s.industryPercentile >= 80)
-        .sort((a, b) => b.industryPercentile - a.industryPercentile)
+        .filter((s: SkillComparisonData) => s.userLevel === 'expert' || s.industryPercentile >= 80)
+        .sort((a: SkillComparisonData, b: SkillComparisonData) => b.industryPercentile - a.industryPercentile)
         .slice(0, 3)
-        .map(s => ({
+        .map((s: SkillComparisonData) => ({
           skill: s.categoryName,
           level: s.userLevel,
           percentile: s.industryPercentile

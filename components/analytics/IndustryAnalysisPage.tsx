@@ -9,10 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import IndustryRadarChart from './IndustryRadarChart'
 import IndustryProgressBar from './IndustryProgressBar'
-import { getUserIndustryAnalysis, type IndustryAnalysisData } from '@/lib/industry-xp-analytics'
+import { type IndustryAnalysisData } from '@/lib/industry-xp-analytics'
 import { industryCategories } from '@/lib/categories'
 import { Building2, TrendingUp, Target, AlertCircle, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { supabase } from '@/lib/supabase'
 
 export default function IndustryAnalysisPage() {
   const { user } = useAuth()
@@ -43,11 +44,36 @@ export default function IndustryAnalysisPage() {
     try {
       console.log('📊 Loading industry analysis...', { selectedIndustry, selectedLevel })
       
-      const data = await getUserIndustryAnalysis(
-        user.id,
-        selectedIndustry || undefined,
-        selectedLevel
-      )
+      // 認証トークンを取得
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        throw new Error('認証が必要です')
+      }
+      
+      // APIエンドポイントを呼び出し
+      const params = new URLSearchParams({
+        level: selectedLevel
+      })
+      if (selectedIndustry) {
+        params.append('industry_id', selectedIndustry)
+      }
+      
+      const response = await fetch(`/api/analytics/industry-analysis?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.details || 'Failed to fetch analysis data')
+      }
+      
+      const data = result.data
 
       console.log('✅ Analysis data loaded:', data.length, 'industries')
       console.log('📊 Analysis data details:', data)

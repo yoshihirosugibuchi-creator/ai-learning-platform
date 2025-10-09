@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { StorageUser, getUserData, saveUserData, updateUserProgress, migrateUserData, logoutUser, initializeUserSpecificData } from '@/lib/storage'
+import { StorageUser, getUserData, saveUserData, migrateUserData, logoutUser, initializeUserSpecificData } from '@/lib/storage'
 
 export function useUser() {
   const [user, setUser] = useState<StorageUser | null>(null)
@@ -54,32 +54,11 @@ export function useUser() {
     saveUserData(updatedUser)
   }
 
-  const updateProgress = (questionsAnswered: number, correctAnswers: number, xpGained: number, categoryScores?: Record<string, { correct: number; total: number }>) => {
-    if (!user) return 0
-
-    const updatedUser = updateUserProgress(user, questionsAnswered, correctAnswers, xpGained, categoryScores)
-    
-    // UserContextの状態を即座に更新（saveUserDataは既にupdateUserProgressで実行済み）
-    setUser(updatedUser)
-    setUpdateTrigger(prev => prev + 1)
-    
-    // 状態を同期
-    setTimeout(() => {
-      refreshUser()
-    }, 100)
-    
-    // SKP獲得量を計算して返す
-    const baseSkpPerCorrect = 5
-    const perfectBonus = correctAnswers === questionsAnswered && questionsAnswered >= 3 ? 10 : 0
-    const streakBonus = user.progress.streak >= 3 ? Math.min(user.progress.streak, 10) : 0
-    const skpGained = (correctAnswers * baseSkpPerCorrect) + perfectBonus + streakBonus
-    
-    
-    return skpGained
-  }
+  // updateProgress関数は削除済み（使用されていない古いシステム）
+  // 現在はapi/xp-save/quiz/route.tsとapi/xp-save/course/route.tsが正式なXP/SKPシステム
 
   const updateStreak = () => {
-    // updateStreak は updateProgress の一部として処理されるため無効化
+    // updateStreak は現在使用されていない（古いシステム）
     return
   }
 
@@ -100,7 +79,7 @@ export function useUser() {
     user,
     isLoading,
     updateUser,
-    updateProgress,
+    // updateProgress: 削除済み（古いシステム）,
     updateStreak,
     logout,
     refreshUser,
