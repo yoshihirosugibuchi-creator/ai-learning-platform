@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') // 'main', 'industry', or null (all)
-    const activeOnly = searchParams.get('active_only') !== 'false' // デフォルトでアクティブのみ
+    const activeOnly = searchParams.get('active_only') === 'true' // デフォルトで全カテゴリー表示（Coming Soon含む）
 
     // クエリ構築
     let query = supabase
