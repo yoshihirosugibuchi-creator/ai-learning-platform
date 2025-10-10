@@ -520,8 +520,8 @@ export default function AdminXPVerificationPage() {
 
             <TabsContent value="stats" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <XPStatsCard showDetailedStats={false} />
-                <XPStatsCard showDetailedStats={true} />
+                <XPStatsCard showDetailedStats={false} deferLoading={false} />
+                <XPStatsCard showDetailedStats={true} deferLoading={false} />
               </div>
             </TabsContent>
 
