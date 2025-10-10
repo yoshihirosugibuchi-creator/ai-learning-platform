@@ -9,7 +9,6 @@ import { Switch } from '@/components/ui/switch'
 import { SimpleSelect, SimpleSelectItem } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
-  getIndustryLevelTargets, 
   updateIndustryLevelTarget, 
   type IndustryLevelTarget 
 } from '@/lib/industry-xp-analytics'
@@ -46,20 +45,45 @@ export default function IndustryTargetManagement() {
     setError(null)
 
     try {
-      console.log('📋 Loading targets...', { selectedIndustry, selectedLevel })
+      console.log('📋 Loading targets via API...', { selectedIndustry, selectedLevel })
       
-      const data = await getIndustryLevelTargets(
-        selectedIndustry || undefined,
-        selectedLevel
-      )
+      // 認証トークン取得
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('認証が必要です。ログインしてください。')
+      }
+      
+      // APIエンドポイント経由でデータ取得
+      const params = new URLSearchParams()
+      if (selectedIndustry) params.append('industryId', selectedIndustry)
+      if (selectedLevel) params.append('level', selectedLevel)
+      
+      const response = await fetch(`/api/admin/industry-targets?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`)
+      }
+      
+      const result = await response.json()
+      
+      if (!result.success) {
+        throw new Error(result.error || 'API request failed')
+      }
 
-      const editableData = data.map(target => ({
+      const editableData = result.targets.map((target: IndustryLevelTarget) => ({
         ...target,
         hasChanges: false
       }))
 
       setTargets(editableData)
-      console.log('✅ Targets loaded:', data.length)
+      console.log('✅ Targets loaded via API:', result.targets.length)
 
     } catch (err) {
       console.error('❌ Error loading targets:', err)
