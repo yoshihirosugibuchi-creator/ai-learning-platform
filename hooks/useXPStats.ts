@@ -131,9 +131,8 @@ interface CourseSaveResponse {
  * 
  * 使用例:
  * const { stats, loading, error, refetch, saveQuizSession } = useXPStats()
- * const { stats, loading, error, refetch, saveQuizSession } = useXPStats({ deferLoading: true })
  */
-export function useXPStats(options: { deferLoading?: boolean } = {}): UseXPStatsReturn {
+export function useXPStats(): UseXPStatsReturn {
   const { user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState<XPStats | null>(null)
   const [loading, setLoading] = useState(false)
@@ -331,11 +330,11 @@ export function useXPStats(options: { deferLoading?: boolean } = {}): UseXPStats
 
   // 初回読み込み
   useEffect(() => {
-    // 認証完了 かつ ユーザーが存在する場合のみ統計を取得（遅延フラグチェック）
-    if (!authLoading && user && !options.deferLoading) {
+    // 認証完了 かつ ユーザーが存在する場合のみ統計を取得
+    if (!authLoading && user) {
       fetchStats()
     }
-  }, [fetchStats, authLoading, user, options.deferLoading])
+  }, [fetchStats, authLoading, user])
 
   return {
     stats,

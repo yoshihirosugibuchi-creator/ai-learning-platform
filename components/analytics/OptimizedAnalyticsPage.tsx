@@ -184,22 +184,8 @@ export default function OptimizedAnalyticsPage() {
           await loadInsightsData(true)
           break
         case 'industry':
-          // IndustryAnalysisPageコンポーネントの更新を強制
-          setTabCache(prev => ({
-            ...prev,
-            industry: { loaded: true, lastRefresh: Date.now() }
-          }))
-          // カスタムイベントをディスパッチして業界分析ページに更新を通知
-          window.dispatchEvent(new CustomEvent('industryAnalysisRefresh'))
-          break
         case 'unified':
-          // CachedLearningDashboardコンポーネントの更新を強制
-          setTabCache(prev => ({
-            ...prev,
-            unified: { loaded: true, lastRefresh: Date.now() }
-          }))
-          // カスタムイベントをディスパッチして統合ダッシュボードに更新を通知
-          window.dispatchEvent(new CustomEvent('unifiedDashboardRefresh'))
+          // 他のタブは個別に更新機能がある
           break
       }
     } finally {
@@ -211,10 +197,7 @@ export default function OptimizedAnalyticsPage() {
   useEffect(() => {
     if (user?.id && !loading && !isInitialized.current) {
       isInitialized.current = true
-      // 基本統計は即座にXPStatsCardが表示されるので、週間データは後から読み込み
-      setTimeout(() => {
-        loadOverviewData() // 週間パフォーマンスデータのみ遅延読み込み
-      }, 1000) // 1秒後に週間データを読み込み
+      loadOverviewData() // 最初は基本統計のみ読み込み
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, loading])
@@ -253,26 +236,8 @@ export default function OptimizedAnalyticsPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* XP統計カード - 遅延読み込み */}
-          {isTabLoading ? (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <span className="h-5 w-5 bg-gray-200 rounded animate-pulse"></span>
-                  学習統計
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="animate-pulse space-y-3">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <XPStatsCard showDetailedStats={true} className="mb-6" deferLoading={false} />
-          )}
+          {/* XP統計カード */}
+          <XPStatsCard showDetailedStats={true} className="mb-6" />
 
           {/* 週間パフォーマンス */}
           <Card>

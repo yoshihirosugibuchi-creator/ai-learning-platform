@@ -776,6 +776,43 @@ npm run dev
 
 ---
 
+## 📂 **バックアップファイル管理規則**
+
+### **バックアップファイル保存場所**
+
+```bash
+# バックアップファイルの保存場所
+backups/[元のディレクトリ構造]/[ファイル名].bak
+
+# 例:
+# 元ファイル: components/analytics/OptimizedAnalyticsPage.tsx
+# バックアップ: backups/components/analytics/OptimizedAnalyticsPage-broken-YYYYMMDD_HHMMSS.bak
+```
+
+### **命名規則**
+
+- **拡張子**: `.bak` （TypeScriptエラー回避のため）
+- **タイムスタンプ**: `YYYYMMDD_HHMMSS` 形式
+- **状態表記**: `-broken-`, `-backup-`, `-restore-` など
+
+### **TypeScript回避設定**
+
+```json
+// tsconfig.json exclude設定
+"exclude": [
+  "node_modules",
+  "backups/**/*"
+]
+```
+
+### **保存手順**
+
+1. **ディレクトリ作成**: `mkdir -p backups/[元のパス]`
+2. **ファイル移動**: `mv [元ファイル] backups/[元のパス]/[ファイル名].bak`
+3. **記録**: 何のバックアップか、なぜ作成したかを記録
+
+---
+
 ## 🤖 **AI Assistant向け特別指示**
 
 ### **作業パターン別ガイダンス**
