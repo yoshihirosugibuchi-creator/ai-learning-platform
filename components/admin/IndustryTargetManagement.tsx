@@ -9,7 +9,6 @@ import { Switch } from '@/components/ui/switch'
 import { SimpleSelect, SimpleSelectItem } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
-  updateIndustryLevelTarget, 
   type IndustryLevelTarget 
 } from '@/lib/industry-xp-analytics'
 import { industryCategories } from '@/lib/categories'
@@ -137,13 +136,38 @@ export default function IndustryTargetManagement() {
     setError(null)
 
     try {
-      const success = await updateIndustryLevelTarget(target.id, {
-        target_xp: target.target_xp,
-        importance_weight: target.importance_weight,
-        display_in_radar: target.display_in_radar
+      // 認証トークン取得
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('認証が必要です。ログインしてください。')
+      }
+
+      // API経由で更新
+      const response = await fetch('/api/admin/industry-targets', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          targetId: target.id,
+          updates: {
+            target_xp: target.target_xp,
+            importance_weight: target.importance_weight,
+            display_in_radar: target.display_in_radar
+          }
+        })
       })
 
-      if (success) {
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`)
+      }
+
+      const result = await response.json()
+
+      if (result.success) {
         setTargets(prev => prev.map(t => 
           t.id === target.id 
             ? { ...t, hasChanges: false }
@@ -152,7 +176,7 @@ export default function IndustryTargetManagement() {
         setSuccessMessage('目標設定を更新しました')
         setTimeout(() => setSuccessMessage(null), 3000)
       } else {
-        throw new Error('更新に失敗しました')
+        throw new Error(result.error || '更新に失敗しました')
       }
 
     } catch (err) {
@@ -172,23 +196,45 @@ export default function IndustryTargetManagement() {
     setError(null)
 
     try {
-      const promises = changedTargets.map(target => 
-        updateIndustryLevelTarget(target.id, {
-          target_xp: target.target_xp,
-          importance_weight: target.importance_weight,
-          display_in_radar: target.display_in_radar
+      // 認証トークン取得
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('認証が必要です。ログインしてください。')
+      }
+
+      // API経由で一括更新
+      const response = await fetch('/api/admin/industry-targets', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          targets: changedTargets.map(target => ({
+            id: target.id,
+            updates: {
+              target_xp: target.target_xp,
+              importance_weight: target.importance_weight,
+              display_in_radar: target.display_in_radar
+            }
+          }))
         })
-      )
+      })
 
-      const results = await Promise.all(promises)
-      const successCount = results.filter(Boolean).length
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`)
+      }
 
-      if (successCount === changedTargets.length) {
+      const result = await response.json()
+
+      if (result.success) {
         setTargets(prev => prev.map(t => ({ ...t, hasChanges: false })))
-        setSuccessMessage(`${successCount}件の目標設定を更新しました`)
+        setSuccessMessage(`${result.successCount || changedTargets.length}件の目標設定を更新しました`)
         setTimeout(() => setSuccessMessage(null), 3000)
       } else {
-        throw new Error(`${successCount}/${changedTargets.length}件の更新が成功しました`)
+        throw new Error(result.error || `${result.successCount || 0}/${changedTargets.length}件の更新が成功しました`)
       }
 
     } catch (err) {

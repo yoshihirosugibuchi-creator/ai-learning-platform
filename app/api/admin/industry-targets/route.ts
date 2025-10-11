@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getIndustryLevelTargets } from '@/lib/industry-xp-analytics'
+import { getIndustryLevelTargets, updateIndustryLevelTarget } from '@/lib/industry-xp-analytics'
 import { getCurrentUserRole } from '@/lib/auth-helpers'
 
 /**
@@ -64,21 +64,48 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { targets } = body
+    const { targetId, updates } = body
 
-    if (!targets || !Array.isArray(targets)) {
-      return NextResponse.json({ error: 'Invalid targets data' }, { status: 400 })
+    // 単一目標更新の場合
+    if (targetId && updates) {
+      console.log('💾 Updating single industry target via API...', { targetId, updates })
+      
+      const success = await updateIndustryLevelTarget(targetId, updates)
+      
+      if (success) {
+        return NextResponse.json({
+          success: true,
+          message: 'Industry target updated successfully'
+        })
+      } else {
+        return NextResponse.json({
+          success: false,
+          error: 'Failed to update industry target'
+        }, { status: 500 })
+      }
     }
 
-    console.log('💾 Updating industry targets via API...', { count: targets.length })
+    // 複数目標一括更新の場合
+    const { targets } = body
+    if (!targets || !Array.isArray(targets)) {
+      return NextResponse.json({ error: 'Invalid request format. Expected targetId+updates or targets array' }, { status: 400 })
+    }
 
-    // TODO: 業界目標データ更新処理を実装
-    // const updatedTargets = await updateIndustryLevelTargets(targets)
+    console.log('💾 Batch updating industry targets via API...', { count: targets.length })
+
+    const results = await Promise.all(
+      targets.map(async (target: { id: string; updates: any }) => {
+        return await updateIndustryLevelTarget(target.id, target.updates)
+      })
+    )
+
+    const successCount = results.filter(Boolean).length
 
     return NextResponse.json({
-      success: true,
-      message: 'Industry targets updated successfully',
-      // updatedTargets
+      success: successCount === targets.length,
+      message: `${successCount}/${targets.length} targets updated successfully`,
+      successCount,
+      totalCount: targets.length
     })
 
   } catch (error) {

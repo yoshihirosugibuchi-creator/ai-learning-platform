@@ -19,7 +19,6 @@ import { useState, useEffect } from 'react'
 interface XPStatsCardProps {
   showDetailedStats?: boolean
   className?: string
-  deferLoading?: boolean // 遅延読み込みフラグ
 }
 
 // サブカテゴリーの表示名を取得するヘルパー関数
@@ -40,8 +39,8 @@ const formatLearningTime = (seconds: number): string => {
   return `${minutes}m`
 }
 
-export default function XPStatsCard({ showDetailedStats = false, className, deferLoading = false }: XPStatsCardProps) {
-  const { stats, loading, error } = useXPStats({ deferLoading })
+export default function XPStatsCard({ showDetailedStats = false, className }: XPStatsCardProps) {
+  const { stats, loading, error, refetch: _refetch } = useXPStats()
   const [levelThreshold, setLevelThreshold] = useState<number | null>(null) // テーブルベース設定
 
   // XP設定からレベル閾値を取得
