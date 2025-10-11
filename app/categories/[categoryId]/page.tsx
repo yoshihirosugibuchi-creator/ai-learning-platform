@@ -149,8 +149,6 @@ export default function CategoryDetailPage() {
     <div className="min-h-screen bg-background">
       <Header 
         onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)}
-        showBackButton={true}
-        onBackClick={() => router.back()}
       />
       <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 
