@@ -97,43 +97,41 @@ export async function POST(request: Request) {
     // 1. セキュリティ重視：フロントエンド判定 + バックエンド二重チェック
     const clientSideFirstCompletion = body.is_first_completion ?? false
     
-    // サーバーサイドでの検証
-    const progressKey = `${body.course_id}_${body.genre_id}_${body.theme_id}_${body.session_id}`
-    const { data: settingData, error: checkError } = await supabase
-      .from('user_settings')
-      .select('setting_value, updated_at')
+    // サーバーサイドでの検証（新システム：course_session_completions ベース）
+    const { data: existingCompletion, error: checkError } = await supabase
+      .from('course_session_completions')
+      .select('is_first_completion, created_at')
       .eq('user_id', userId)
-      .eq('setting_key', `lp_${progressKey}`)
+      .eq('session_id', body.session_id)
       .single()
 
     if (checkError && checkError.code !== 'PGRST116') {
-      console.warn(`⚠️ User settings check warning: ${checkError.message}`)
+      console.warn(`⚠️ Course session completion check warning: ${checkError.message}`)
     }
 
-    // サーバーサイドでの初回完了判定
-    const progressData = settingData?.setting_value as { completed?: boolean } | null
-    const serverSideFirstCompletion = !progressData?.completed
+    // サーバーサイドでの初回完了判定（新システムベース）
+    const serverSideFirstCompletion = !existingCompletion
     
     // セキュリティチェック：クライアントとサーバーの判定不整合を検出
     if (clientSideFirstCompletion !== serverSideFirstCompletion) {
-      const timeSinceUpdate = settingData?.updated_at 
-        ? (Date.now() - new Date(settingData.updated_at).getTime()) / 1000 
+      const timeSinceUpdate = existingCompletion?.created_at 
+        ? (Date.now() - new Date(existingCompletion.created_at).getTime()) / 1000 
         : null
       
       console.warn('⚠️ Client-Server completion status mismatch:', {
         client: clientSideFirstCompletion,
         server: serverSideFirstCompletion,
-        timeSinceLastUpdate: timeSinceUpdate,
-        progressData,
+        timeSinceLastCompletion: timeSinceUpdate,
+        existingCompletion,
         userId: userId.substring(0, 8) + '...'
       })
     }
     
-    // セキュリティのためサーバーサイド判定を優先（後で重複チェックにより変更可能）
+    // セキュリティのためサーバーサイド判定を優先（新システムベース）
     let isFirstCompletion = serverSideFirstCompletion
     
     console.log(`🔍 Completion status (security-first):`, { 
-      progressKey: `lp_${progressKey}`,
+      sessionId: body.session_id,
       clientSide: clientSideFirstCompletion,
       serverSide: serverSideFirstCompletion,
       finalDecision: isFirstCompletion,

@@ -1,65 +1,84 @@
 {
-  "lastUpdated": "2025-09-25T17:26:51.229Z",
-  "source": "deploy_sync",
-  "totalCourses": 6,
   "courses": [
     {
       "id": "consulting_thinking_basics",
       "title": "コンサル思考法基礎コース",
       "description": "論理的思考とフレームワーク活用で問題解決力を身につける",
-      "difficulty": "basic",
       "estimatedDays": 14,
-      "genreCount": 2
+      "difficulty": "basic",
+      "icon": "🧠",
+      "color": "#6366F1",
+      "displayOrder": 1,
+      "genreCount": 2,
+      "themeCount": 0,
+      "status": "available"
+    },
+    {
+      "id": "marketing_practice",
+      "title": "マーケティング実践コース",
+      "description": "顧客理解から戦略立案、施策実行まで体系的に学ぶ",
+      "estimatedDays": 18,
+      "difficulty": "intermediate",
+      "icon": "📈",
+      "color": "#EF4444",
+      "displayOrder": 2,
+      "genreCount": 2,
+      "themeCount": 0,
+      "status": "available"
     },
     {
       "id": "business_numbers_mastery",
       "title": "ビジネス数字力強化コース",
       "description": "財務分析と数字に基づく意思決定力を身につける",
-      "difficulty": "intermediate",
       "estimatedDays": 12,
-      "genreCount": 2
-    },
-    {
-      "id": "marketing_practice",
-      "title": "マーケティング実践コース",
-      "description": "顧客理解からブランド戦略まで実践的マーケティングスキル",
       "difficulty": "intermediate",
-      "estimatedDays": 10,
-      "genreCount": 0
+      "icon": "📊",
+      "color": "#F59E0B",
+      "displayOrder": 3,
+      "genreCount": 0,
+      "themeCount": 0,
+      "status": "coming_soon"
     },
     {
       "id": "team_leader_basics",
       "title": "チームリーダー基礎コース",
       "description": "チーム運営と人材育成の基本スキルを習得",
-      "difficulty": "basic",
       "estimatedDays": 8,
-      "genreCount": 0
+      "difficulty": "basic",
+      "icon": "👥",
+      "color": "#06B6D4",
+      "displayOrder": 4,
+      "genreCount": 0,
+      "themeCount": 0,
+      "status": "coming_soon"
     },
     {
       "id": "dx_introduction",
       "title": "DX推進入門コース",
       "description": "デジタル変革の基礎知識とデータ活用スキル",
-      "difficulty": "basic",
       "estimatedDays": 8,
-      "genreCount": 0
+      "difficulty": "basic",
+      "icon": "🚀",
+      "color": "#8B5CF6",
+      "displayOrder": 5,
+      "genreCount": 0,
+      "themeCount": 0,
+      "status": "coming_soon"
     },
     {
       "id": "ai_literacy_fundamentals",
       "title": "AI活用リテラシー基礎コース",
       "description": "ビジネスでのAI活用、プロンプト入門から実践まで体系的に学習",
-      "difficulty": "basic",
       "estimatedDays": 28,
-      "genreCount": 4
+      "difficulty": "basic",
+      "icon": "🤖",
+      "color": "#7C3AED",
+      "displayOrder": 6,
+      "genreCount": 4,
+      "themeCount": 0,
+      "status": "available"
     }
   ],
-  "syncStatus": {
-    "expectedFiles": 7,
-    "existingFiles": 4,
-    "missingFiles": [
-      "business_numbers_mastery.json",
-      "team_leader_basics.json",
-      "dx_introduction.json"
-    ],
-    "extraFiles": []
-  }
+  "lastUpdated": "2025-10-12T09:52:55.453Z",
+  "source": "database_sync"
 }

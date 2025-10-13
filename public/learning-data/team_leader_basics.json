@@ -1,0 +1,14 @@
+{
+  "id": "team_leader_basics",
+  "title": "チームリーダー基礎コース",
+  "description": "チーム運営と人材育成の基本スキルを習得",
+  "estimatedDays": 8,
+  "difficulty": "basic",
+  "icon": "👥",
+  "color": "#06B6D4",
+  "displayOrder": 4,
+  "status": "coming_soon",
+  "genres": [],
+  "lastUpdated": "2025-10-12T09:52:55.454Z",
+  "source": "database_sync"
+}

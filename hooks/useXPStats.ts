@@ -122,6 +122,8 @@ interface CourseSaveResponse {
   earned_xp?: number
   is_first_completion?: boolean
   quiz_correct?: boolean
+  theme_completed?: boolean
+  course_completed?: boolean
   message?: string
   error?: string
 }

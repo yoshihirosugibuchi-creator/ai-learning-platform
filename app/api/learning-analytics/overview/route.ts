@@ -9,6 +9,7 @@ interface QuizSessionOverview {
   accuracy_rate: number | null
   session_start_time: string
   session_end_time: string | null
+  duration_seconds: number | null
   created_at: string | null
 }
 
@@ -22,6 +23,9 @@ interface CourseCompletion {
   id: string
   user_id: string
   course_id: string
+  session_start_time: string | null
+  session_end_time: string | null
+  duration_seconds: number | null
   created_at: string | null
 }
 
@@ -66,7 +70,7 @@ export async function GET(request: NextRequest) {
     // Get quiz sessions for the period
     const { data: quizSessions, error: quizError } = await supabaseAdmin
       .from('quiz_sessions')
-      .select('*')
+      .select('accuracy_rate, session_start_time, session_end_time, duration_seconds, created_at')
       .eq('user_id', userId)
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: false })
@@ -76,7 +80,7 @@ export async function GET(request: NextRequest) {
     // Get course completions for the period
     const { data: courseCompletions } = await supabaseAdmin
       .from('course_session_completions')
-      .select('*')
+      .select('id, user_id, course_id, session_start_time, session_end_time, duration_seconds, created_at')
       .eq('user_id', userId)
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: false })
@@ -89,16 +93,29 @@ export async function GET(request: NextRequest) {
       ? quizSessions.reduce((sum: number, session: QuizSessionOverview) => sum + (session.accuracy_rate || 0), 0) / quizSessions.length
       : 0
 
-    // Calculate total study time from sessions
+    // Calculate total study time from actual duration data
     const totalStudyTimeMinutes = (quizSessions || []).reduce((total: number, session: QuizSessionOverview) => {
+      if (session.duration_seconds) {
+        // Use actual duration_seconds data
+        return total + (session.duration_seconds / 60)
+      }
+      // Fallback: calculate from timestamps if available
       if (session.session_start_time && session.session_end_time) {
         const duration = (new Date(session.session_end_time).getTime() - new Date(session.session_start_time).getTime()) / (1000 * 60)
         return total + duration
       }
-      return total + 15 // Default quiz session duration
-    }, 0) + (courseCompletions || []).reduce((total: number, _completion: CourseCompletion) => {
-      // Estimate 10 minutes per course session
-      return total + 10
+      return total + 15 // Default quiz session duration (last resort)
+    }, 0) + (courseCompletions || []).reduce((total: number, completion: CourseCompletion) => {
+      if (completion.duration_seconds) {
+        // Use actual duration_seconds data
+        return total + (completion.duration_seconds / 60)
+      }
+      // Fallback: calculate from timestamps if available
+      if (completion.session_start_time && completion.session_end_time) {
+        const duration = (new Date(completion.session_end_time).getTime() - new Date(completion.session_start_time).getTime()) / (1000 * 60)
+        return total + duration
+      }
+      return total + 10 // Default course session duration (last resort)
     }, 0)
 
     // Get daily XP progress for charts

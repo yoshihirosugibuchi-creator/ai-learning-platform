@@ -128,13 +128,16 @@ export type Database = {
           completion_time: string
           course_id: string
           created_at: string | null
+          duration_seconds: number | null
           earned_xp: number
           genre_id: string
           id: string
           is_first_completion: boolean
           review_count: number
+          session_end_time: string | null
           session_id: string
           session_quiz_correct: boolean
+          session_start_time: string | null
           subcategory_id: string
           theme_id: string
           user_id: string
@@ -144,13 +147,16 @@ export type Database = {
           completion_time?: string
           course_id: string
           created_at?: string | null
+          duration_seconds?: number | null
           earned_xp?: number
           genre_id: string
           id?: string
           is_first_completion?: boolean
           review_count?: number
+          session_end_time?: string | null
           session_id: string
           session_quiz_correct?: boolean
+          session_start_time?: string | null
           subcategory_id: string
           theme_id: string
           user_id: string
@@ -160,13 +166,16 @@ export type Database = {
           completion_time?: string
           course_id?: string
           created_at?: string | null
+          duration_seconds?: number | null
           earned_xp?: number
           genre_id?: string
           id?: string
           is_first_completion?: boolean
           review_count?: number
+          session_end_time?: string | null
           session_id?: string
           session_quiz_correct?: boolean
+          session_start_time?: string | null
           subcategory_id?: string
           theme_id?: string
           user_id?: string
@@ -2478,4 +2487,3 @@ export type SystemConfigMonitoringUpdate = Database['public']['Tables']['system_
 export type SystemHealthLog = Database['public']['Tables']['system_health_logs']['Row']
 export type SystemHealthLogInsert = Database['public']['Tables']['system_health_logs']['Insert']
 export type SystemHealthLogUpdate = Database['public']['Tables']['system_health_logs']['Update']
-

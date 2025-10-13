@@ -460,6 +460,26 @@ export function CachedLearningDashboard({ userId, className }: CachedLearningDas
                       </div>
                     )}
                   </>
+                ) : recommendations.isError ? (
+                  <div className="text-center py-8">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                      <Brain className="mx-auto h-12 w-12 text-blue-500 mb-4" />
+                      <h3 className="text-lg font-medium text-blue-900 mb-2">🚧 AIレコメンデーション機能 開発中</h3>
+                      <p className="text-blue-700 mb-4">
+                        個人化された学習提案機能を開発中です。<br />
+                        近日中にリリース予定です。
+                      </p>
+                      <div className="text-sm text-blue-600 bg-white rounded p-3 border border-blue-100">
+                        <p className="font-medium mb-2">📋 予定機能：</p>
+                        <ul className="text-left list-disc list-inside space-y-1">
+                          <li>個人の学習パターンに基づく最適化提案</li>
+                          <li>弱点カテゴリーの優先度付きスキル強化プラン</li>
+                          <li>継続性向上のための学習スケジュール提案</li>
+                          <li>上級スキル開発のためのロードマップ</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <p className="text-center text-muted-foreground py-8">
                     現在レコメンデーションはありません。学習を続けるとAIが最適な学習提案を行います。

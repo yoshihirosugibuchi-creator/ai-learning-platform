@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,21 +10,20 @@ import { ArrowLeft, Play, Clock, CheckCircle, Circle, Award, Star, Tag } from 'l
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
-import { getLearningCourseDetails, getLearningProgress } from '@/lib/learning/data'
-import { LearningCourse, DifficultyLabels, SessionTypeLabels } from '@/lib/types/learning'
+import { getLearningCourseDetails } from '@/lib/learning/data'
+import { LearningCourse, LearningGenre, LearningTheme, LearningSession, DifficultyLabels, SessionTypeLabels } from '@/lib/types/learning'
 import { getCategoryInfoForCourse, getCategoryInfoForGenre } from '@/lib/learning/category-integration'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { supabase } from '@/lib/supabase'
+import { MainCategory } from '@/lib/types/category'
 
-// Type definitions for category information
-interface MainCategoryInfo {
-  color?: string
-  name?: string  
-  icon?: string
-}
-
-interface CategoryData {
-  mainCategory: MainCategoryInfo
-  subcategory?: string
+// 新設計: セッション完了データ型
+interface SessionCompletion {
+  session_id: string
+  theme_id: string
+  genre_id: string
+  is_first_completion: boolean
+  created_at: string | null
 }
 
 export default function CourseDetailPage() {
@@ -34,10 +33,47 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState<LearningCourse | null>(null)
   const [loading, setLoading] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [userProgress, setUserProgress] = useState<Record<string, unknown>>({})
-  const [categoryInfo, setCategoryInfo] = useState<Record<string, unknown> | null>(null)
+  const [sessionCompletions, setSessionCompletions] = useState<SessionCompletion[]>([])
+  const [categoryInfo, setCategoryInfo] = useState<{
+    categories: Array<{
+      genreId: string
+      genreTitle: string
+      mainCategory: MainCategory | null
+      subcategory: string | null
+    }>
+    uniqueMainCategories: MainCategory[]
+  } | null>(null)
 
   const courseId = params.courseId as string
+
+  // 新設計: course_session_completions テーブルから完了状態を取得
+  const loadSessionCompletions = useCallback(async (userId: string) => {
+    try {
+      console.log('📊 Loading session completions from course_session_completions table...')
+      
+      const { data: completions, error } = await supabase
+        .from('course_session_completions')
+        .select('session_id, theme_id, genre_id, is_first_completion, created_at')
+        .eq('user_id', userId)
+        .eq('course_id', courseId)
+        .eq('is_first_completion', true) // 初回完了のみ
+
+      if (error) {
+        console.error('❌ Error loading session completions:', error)
+        return
+      }
+
+      console.log('✅ Session completions loaded:', completions?.length || 0)
+      setSessionCompletions(completions || [])
+    } catch (error) {
+      console.error('❌ Error in loadSessionCompletions:', error)
+    }
+  }, [courseId])
+
+  // 新設計: セッション完了状態の判定
+  const isSessionCompleted = (sessionId: string): boolean => {
+    return sessionCompletions.some(completion => completion.session_id === sessionId)
+  }
 
   useEffect(() => {
     const loadCourseData = async () => {
@@ -46,11 +82,8 @@ export default function CourseDetailPage() {
       try {
         console.log('📚 Loading course data for:', courseId)
         
-        // コースデータと進捗を並列で取得
-        const coursePromise = getLearningCourseDetails(courseId)
-        const progressPromise = user?.id ? getLearningProgress(user.id) : Promise.resolve({})
-        
-        const [courseData, progress] = await Promise.all([coursePromise, progressPromise])
+        // コースデータを取得
+        const courseData = await getLearningCourseDetails(courseId)
         
         if (!courseData) {
           console.error('❌ Course data not found for:', courseId)
@@ -65,10 +98,9 @@ export default function CourseDetailPage() {
         const catInfo = getCategoryInfoForCourse(courseData)
         setCategoryInfo(catInfo)
 
-        // 進捗データを設定
+        // 完了状態データの読み込み
         if (user?.id) {
-          console.log('📈 Progress data loaded, sessions:', Object.keys(progress).length)
-          setUserProgress(progress)
+          await loadSessionCompletions(user.id)
         }
       } catch (error) {
         console.error('❌ Failed to load course details:', error)
@@ -78,35 +110,27 @@ export default function CourseDetailPage() {
     }
 
     loadCourseData()
-  }, [courseId, user?.id])
+  }, [courseId, user?.id, loadSessionCompletions])
 
   const handleStartSession = (genreId: string, themeId: string, sessionId: string) => {
     router.push(`/learning/${courseId}/${genreId}/${themeId}/${sessionId}`)
   }
 
-  const isSessionCompleted = (genreId: string, themeId: string, sessionId: string) => {
-    const key = `${courseId}_${genreId}_${themeId}_${sessionId}`
-    const progressItem = userProgress[key] as { completed?: boolean } | undefined
-    const isCompleted = progressItem?.completed || false
-    console.log(`🔍 Checking session completion: ${key} -> ${isCompleted}`)
-    return isCompleted
-  }
-
-  const getThemeProgress = (genreId: string, themeId: string, sessions: { id: string }[]) => {
+  const getThemeProgress = (genreId: string, themeId: string, sessions: LearningSession[]) => {
     const completed = sessions.filter(session => 
-      isSessionCompleted(genreId, themeId, session.id)
+      isSessionCompleted(session.id)
     ).length
     return { completed, total: sessions.length }
   }
 
-  const getGenreProgress = (genre: { id: string; themes: { id: string; sessions: { id: string }[] }[] }) => {
+  const getGenreProgress = (genre: LearningGenre) => {
     let totalSessions = 0
     let completedSessions = 0
     
-    genre.themes.forEach((theme) => {
+    genre.themes.forEach((theme: LearningTheme) => {
       totalSessions += theme.sessions.length
-      theme.sessions.forEach((session) => {
-        if (isSessionCompleted(genre.id, theme.id, session.id)) {
+      theme.sessions.forEach((session: LearningSession) => {
+        if (isSessionCompleted(session.id)) {
           completedSessions++
         }
       })
@@ -114,6 +138,7 @@ export default function CourseDetailPage() {
     
     return { completed: completedSessions, total: totalSessions }
   }
+
 
   if (loading) {
     return <LoadingScreen message={`コース詳細を読み込んでいます... (${courseId})`} />
@@ -185,29 +210,28 @@ export default function CourseDetailPage() {
               </p>
               
               {/* カテゴリー情報 */}
-              {categoryInfo && (categoryInfo.uniqueMainCategories as unknown[])?.length > 0 && (
+              {categoryInfo && categoryInfo.uniqueMainCategories.length > 0 && (
                 <div className="mt-4 space-y-2">
                   <div className="text-sm font-medium text-muted-foreground flex items-center space-x-1">
                     <Tag className="h-4 w-4" />
                     <span>関連カテゴリー</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {(categoryInfo.categories as CategoryData[]).map((cat: CategoryData, index: number) => {
-                      const mainCategory = cat.mainCategory
-                      return mainCategory && (
+                    {categoryInfo.categories.map((cat, index) => (
+                      cat.mainCategory && (
                         <Badge 
                           key={index}
                           variant="outline" 
                           className="text-xs"
                           style={{ 
-                            borderColor: mainCategory.color,
-                            color: mainCategory.color 
+                            borderColor: cat.mainCategory.color,
+                            color: cat.mainCategory.color
                           }}
                         >
-                          {mainCategory.icon} {cat.subcategory || mainCategory.name}
+                          {cat.mainCategory.icon} {cat.subcategory || cat.mainCategory.name}
                         </Badge>
                       )
-                    })}
+                    ))}
                   </div>
                 </div>
               )}
@@ -217,13 +241,10 @@ export default function CourseDetailPage() {
           {/* Course Content */}
           <div className="space-y-6">
             {course.genres.map((genre) => {
-              const genreProgress = getGenreProgress(genre as { id: string; themes: { id: string; sessions: { id: string }[] }[] })
+              const genreProgress = getGenreProgress(genre)
               const genreProgressPercentage = genreProgress.total > 0 
                 ? Math.round((genreProgress.completed / genreProgress.total) * 100) 
                 : 0
-
-              // ジャンル単位のカテゴリー情報を取得
-              const genreCategoryInfo = getCategoryInfoForGenre(genre)
 
               return (
                 <Card key={genre.id} className="overflow-hidden">
@@ -241,22 +262,25 @@ export default function CourseDetailPage() {
                         </p>
                         
                         {/* ジャンル別カテゴリー情報表示 */}
-                        {genreCategoryInfo.mainCategory && (
-                          <div className="flex items-center space-x-2">
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs px-2 py-0.5"
-                              style={{ 
-                                borderColor: genreCategoryInfo.mainCategory.color + '40',
-                                color: genreCategoryInfo.mainCategory.color,
-                                backgroundColor: genreCategoryInfo.mainCategory.color + '10'
-                              }}
-                            >
-                              <Tag className="h-2.5 w-2.5 mr-1" />
-                              {genreCategoryInfo.subcategory || genreCategoryInfo.mainCategory.name}
-                            </Badge>
-                          </div>
-                        )}
+                        {(() => {
+                          const genreCategoryInfo = getCategoryInfoForGenre(genre)
+                          return genreCategoryInfo.mainCategory && (
+                            <div className="flex items-center space-x-2">
+                              <Badge 
+                                variant="outline" 
+                                className="text-xs px-2 py-0.5"
+                                style={{ 
+                                  borderColor: genreCategoryInfo.mainCategory.color + '40',
+                                  color: genreCategoryInfo.mainCategory.color,
+                                  backgroundColor: genreCategoryInfo.mainCategory.color + '10'
+                                }}
+                              >
+                                <Tag className="h-2.5 w-2.5 mr-1" />
+                                {genreCategoryInfo.subcategory || genreCategoryInfo.mainCategory.name}
+                              </Badge>
+                            </div>
+                          )
+                        })()}
                       </div>
                       <Badge 
                         variant={genreProgressPercentage === 100 ? "default" : "outline"}
@@ -282,7 +306,7 @@ export default function CourseDetailPage() {
                   <CardContent className="p-0">
                     <div className="space-y-0">
                       {genre.themes.map((theme) => {
-                        const themeProgress = getThemeProgress(genre.id, theme.id, theme.sessions as { id: string }[])
+                        const themeProgress = getThemeProgress(genre.id, theme.id, theme.sessions)
                         const themeProgressPercentage = themeProgress.total > 0 
                           ? Math.round((themeProgress.completed / themeProgress.total) * 100) 
                           : 0
@@ -324,7 +348,7 @@ export default function CourseDetailPage() {
                               {/* Sessions */}
                               <div className="grid gap-2">
                                 {theme.sessions.map((session, index) => {
-                                  const isCompleted = isSessionCompleted(genre.id, theme.id, session.id)
+                                  const isCompleted = isSessionCompleted(session.id)
                                   
                                   return (
                                     <div 

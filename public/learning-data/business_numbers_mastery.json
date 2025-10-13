@@ -1,0 +1,14 @@
+{
+  "id": "business_numbers_mastery",
+  "title": "ビジネス数字力強化コース",
+  "description": "財務分析と数字に基づく意思決定力を身につける",
+  "estimatedDays": 12,
+  "difficulty": "intermediate",
+  "icon": "📊",
+  "color": "#F59E0B",
+  "displayOrder": 3,
+  "status": "coming_soon",
+  "genres": [],
+  "lastUpdated": "2025-10-12T09:52:55.454Z",
+  "source": "database_sync"
+}

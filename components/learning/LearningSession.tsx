@@ -18,11 +18,8 @@ import {
   Award
 } from 'lucide-react'
 import { LearningSession as LearningSessionType, SessionTypeLabels, UserBadge } from '@/lib/types/learning'
-import { saveLearningProgressSupabase, saveLearningSession as saveLearningSessionSupabase, updateLearningSession, LearningSession as LearningSessionData } from '@/lib/supabase-learning'
-import { addKnowledgeCardToCollection } from '@/lib/supabase-cards'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useXPStats } from '@/hooks/useXPStats'
-import { checkAndAwardCourseBadge } from '@/lib/course-completion'
 import { supabase } from '@/lib/supabase'
 
 interface LearningSessionProps {
@@ -48,6 +45,19 @@ interface LearningSessionProps {
 
 type ViewState = 'content' | 'quiz' | 'completed'
 
+// 新設計: セッション完了APIレスポンス型
+interface CourseSessionResponse {
+  success: boolean
+  session_id?: string
+  earned_xp?: number
+  is_first_completion?: boolean
+  quiz_correct?: boolean
+  theme_completed?: boolean
+  course_completed?: boolean
+  message?: string
+  error?: string
+}
+
 export default function LearningSession({
   courseId,
   genreId,
@@ -65,25 +75,29 @@ export default function LearningSession({
 }: LearningSessionProps) {
   const _router = useRouter()
   const { user } = useAuth()
-  const { saveCourseSession } = useXPStats()
+  const { saveCourseSession: _saveCourseSession } = useXPStats()
   const [viewState, setViewState] = useState<ViewState>('content')
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0)
   const [quizAnswers, setQuizAnswers] = useState<{ [key: number]: string }>({})
   const [quizResults, setQuizResults] = useState<{ [key: number]: boolean }>({})
   const [showQuizResult, setShowQuizResult] = useState(false)
   const [sessionCompleted, setSessionCompleted] = useState(false)
-  const [cardAcquired, setCardAcquired] = useState(false)
-  const [badgeAwarded, setBadgeAwarded] = useState<UserBadge | null>(null)
+  const [_cardAcquired, setCardAcquired] = useState(false)
+  const [_badgeAwarded, _setBadgeAwarded] = useState<UserBadge | null>(null)
   const [startTime] = useState(new Date())
-  const [quizStartTime, setQuizStartTime] = useState<Date | null>(null)
-  const [currentSessionData, setCurrentSessionData] = useState<LearningSessionData | null>(null)
+  const [_quizStartTime, setQuizStartTime] = useState<Date | null>(null)
   const [isCompletingSession, setIsCompletingSession] = useState(false)
   const [_courseName, setCourseName] = useState<string>('Learning Course')
   const [isFirstCompletion, setIsFirstCompletion] = useState<boolean | null>(null)
-  const [isThemeCompleted, setIsThemeCompleted] = useState<boolean>(false)
+  const [_isThemeCompleted, setIsThemeCompleted] = useState<boolean>(false)
 
   const hasQuiz = session.quiz && session.quiz.length > 0
-  const isLastSession = currentSessionIndex === totalSessions - 1
+  const _isLastSession = currentSessionIndex === totalSessions - 1
+  
+  // 完了状態
+  const [showThemeCompletion, setShowThemeCompletion] = useState(false)
+  const [showCourseCompletion, setShowCourseCompletion] = useState(false)
+  const [earnedXP, setEarnedXP] = useState(0)
   
   // Fetch course name
   useEffect(() => {
@@ -99,117 +113,55 @@ export default function LearningSession({
     }
     fetchCourseName()
   }, [courseId])
-  
-  // Pre-determine if this is a first completion (before any user_settings updates)
+
+  // 初回完了判定
   useEffect(() => {
     const checkFirstCompletion = async () => {
       if (!user?.id) return
       
       try {
-        const progressKey = `${courseId}_${genreId}_${themeId}_${session.id}`
-        const { data: settingData } = await supabase
-          .from('user_settings')
-          .select('setting_value')
+        console.log('🔍 Checking if this is first completion...', {
+          userId: user.id.substring(0, 8) + '...',
+          sessionId: session.id
+        })
+        
+        const { data: existingCompletion, error } = await supabase
+          .from('course_session_completions')
+          .select('id, is_first_completion')
           .eq('user_id', user.id)
-          .eq('setting_key', `lp_${progressKey}`)
+          .eq('session_id', session.id)
+          .eq('is_first_completion', true)
           .single()
         
-        const progressData = settingData?.setting_value as { completed?: boolean } | null
-        const isFirst = !progressData?.completed
+        if (error && error.code !== 'PGRST116') {
+          console.error('❌ Error checking first completion:', error)
+          return
+        }
+        
+        const isFirst = !existingCompletion
         setIsFirstCompletion(isFirst)
-        console.log(`🔍 Pre-determined completion status: isFirstCompletion=${isFirst}`, {
-          progressKey: `lp_${progressKey}`,
-          progressData
-        })
+        console.log(`✅ First completion determination: ${isFirst}`)
       } catch (error) {
-        // エラー = 記録なし = 初回完了
-        setIsFirstCompletion(true)
-        console.log(`🔍 Pre-determined completion status: isFirstCompletion=true (no record)`, error)
+        console.error('❌ Error in checkFirstCompletion:', error)
       }
     }
     
     checkFirstCompletion()
-  }, [user?.id, courseId, genreId, themeId, session.id])
+  }, [user?.id, session.id])
 
-  // Check if all sessions in the theme are completed
-  const checkThemeCompletion = async () => {
-    if (!user?.id) return false
+  const renderProgressBar = () => {
+    const progress = ((currentSessionIndex + 1) / totalSessions) * 100
     
-    try {
-      // Get all sessions in the current theme
-      const { data: courseData, error: courseError } = await supabase
-        .from('learning_courses')
-        .select(`
-          genres:learning_genres!inner(
-            themes:learning_themes!inner(
-              sessions:learning_sessions(id)
-            )
-          )
-        `)
-        .eq('id', courseId)
-        .eq('genres.themes.id', themeId)
-        .single()
-
-      if (courseError || !courseData) {
-        console.error('❌ Error fetching theme sessions:', courseError)
-        return false
-      }
-
-      // Extract all session IDs in this theme
-      const themeSessions = courseData.genres?.[0]?.themes?.[0]?.sessions || []
-      const sessionIds = themeSessions.map((s: { id: string }) => s.id)
-      
-      if (sessionIds.length === 0) {
-        console.warn('⚠️ No sessions found in theme')
-        return false
-      }
-
-      console.log(`🔍 Theme ${themeId} has ${sessionIds.length} sessions:`, sessionIds)
-
-      // Check completion status for all sessions in the theme
-      const completionChecks = await Promise.all(
-        sessionIds.map(async (sessionId: string) => {
-          const progressKey = `${courseId}_${genreId}_${themeId}_${sessionId}`
-          const { data: settingData } = await supabase
-            .from('user_settings')
-            .select('setting_value')
-            .eq('user_id', user.id)
-            .eq('setting_key', `lp_${progressKey}`)
-            .single()
-          
-          const progressData = settingData?.setting_value as { completed?: boolean } | null
-          const isCompleted = !!progressData?.completed
-          console.log(`  Session ${sessionId}: completed=${isCompleted}`)
-          return isCompleted
-        })
-      )
-
-      const allCompleted = completionChecks.every(completed => completed)
-      console.log(`🎯 Theme completion check: ${completionChecks.filter(c => c).length}/${sessionIds.length} sessions completed (all completed: ${allCompleted})`)
-      
-      return allCompleted
-    } catch (error) {
-      console.error('❌ Error checking theme completion:', error)
-      return false
-    }
+    return (
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm text-gray-600">
+          <span>学習進捗</span>
+          <span>{currentSessionIndex + 1}/{totalSessions} セッション</span>
+        </div>
+        <Progress value={progress} className="h-2" />
+      </div>
+    )
   }
-
-  // Initialize learning session tracking on component mount (記録は完了時のみ)
-  useEffect(() => {
-    if (user?.id && !currentSessionData) {
-      const sessionData: LearningSessionData = {
-        user_id: user.id,
-        session_id: session.id,
-        course_id: courseId,
-        genre_id: genreId,
-        theme_id: themeId,
-        start_time: startTime.toISOString(),
-        completed: false
-      }
-      setCurrentSessionData(sessionData)
-      console.log('📚 Learning session initialized (記録は完了時に実行):', sessionData)
-    }
-  }, [user?.id, courseId, genreId, themeId, session.id, startTime, currentSessionData])
 
   const handleStartQuiz = async () => {
     // 初回完了判定が完了するまで待機
@@ -257,6 +209,69 @@ export default function LearningSession({
     }
   }
 
+  // 新設計: session_quiz_correctの計算
+  const calculateQuizCorrect = () => {
+    if (!hasQuiz) {
+      return true // クイズがない場合は正解扱い
+    }
+    
+    const correctCount = Object.values(quizResults).filter(result => result).length
+    const totalQuestions = session.quiz!.length
+    const accuracy = correctCount / totalQuestions
+    
+    return accuracy >= 0.7 // 70%以上で正解扱い
+  }
+
+  // 新設計: コース学習セッション完了API呼び出し
+  const saveSessionProgress = async (): Promise<CourseSessionResponse> => {
+    if (!user) {
+      throw new Error('Authentication required')
+    }
+
+    const endTime = new Date()
+    const durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000)
+    const quizCorrect = calculateQuizCorrect()
+
+    const requestBody = {
+      session_id: session.id,
+      course_id: courseId,
+      theme_id: themeId,
+      genre_id: genreId,
+      category_id: categoryId,
+      subcategory_id: subcategoryId,
+      session_quiz_correct: quizCorrect,
+      completion_time: endTime.toISOString(),
+      session_start_time: startTime.toISOString(),
+      session_end_time: endTime.toISOString(),
+      duration_seconds: durationSeconds,
+      quiz_time_spent: hasQuiz ? durationSeconds : undefined
+    }
+
+    console.log('💾 Saving course session progress:', requestBody)
+
+    // Supabaseセッションからトークンを取得
+    const { data: { session: authSession } } = await supabase.auth.getSession()
+    
+    const response = await fetch('/api/xp-save/course', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authSession?.access_token || ''}`
+      },
+      body: JSON.stringify(requestBody)
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`API Error: ${response.status} - ${errorText}`)
+    }
+
+    const result: CourseSessionResponse = await response.json()
+    console.log('✅ Course session API response:', result)
+
+    return result
+  }
+
   const completeSession = async () => {
     if (!user?.id || sessionCompleted || isCompletingSession) {
       console.error('❌ Cannot complete session: missing user or session already completed or in progress')
@@ -266,9 +281,6 @@ export default function LearningSession({
     console.log('🚀 Starting session completion...')
     setIsCompletingSession(true)
 
-    const endTime = new Date()
-    const duration = endTime.getTime() - startTime.getTime()
-
     try {
       // 🚀 パフォーマンス改善: UIを即座に更新
       setSessionCompleted(true)
@@ -276,223 +288,48 @@ export default function LearningSession({
       onComplete(session.id)
       console.log('⚡ UI updated immediately for better UX')
       
-      // XP system integration: Save course session data FIRST (初回・復習問わず記録）
-      console.log(`💾 Saving course session to XP system... (clientSideFirstCompletion: ${isFirstCompletion})`)
-      
-      // デバッグ: サブカテゴリーID確認
-      console.log('🔍 Course session data debug:', {
-        courseId,
-        genreId,
-        themeId,
-        categoryId,
-        subcategoryId,
-        subcategoryIdType: typeof subcategoryId,
-        subcategoryIdLength: subcategoryId?.length || 0,
-        subcategoryIdEmpty: subcategoryId === '' || subcategoryId === null || subcategoryId === undefined
-      })
-      
-      // クイズ実行時間計算（理解度チェック開始～完了まで）
-      const quizTimeSpent = hasQuiz && quizStartTime 
-        ? Math.floor((endTime.getTime() - quizStartTime.getTime()) / 1000)
-        : 0
-      
-      console.log('⏱️ コース学習時間計算:', {
-        sessionStart: startTime.toISOString(),
-        sessionEnd: endTime.toISOString(),
-        totalDurationSeconds: Math.floor(duration / 1000),
-        quizStartTime: quizStartTime?.toISOString() || 'N/A',
-        quizTimeSpent,
-        hasQuiz
-      })
-      
-      const courseSessionData = {
-        session_id: session.id,
-        course_id: courseId,
-        theme_id: themeId,
-        genre_id: genreId,
-        category_id: categoryId,
-        subcategory_id: subcategoryId,
-        session_quiz_correct: hasQuiz ? getQuizScore() === 100 : true, // Perfect score or no quiz means correct
-        is_first_completion: isFirstCompletion ?? false, // 事前判定した結果を使用（nullの場合はfalse）
-        session_start_time: startTime.toISOString(),
-        session_end_time: endTime.toISOString(),
-        duration_seconds: Math.floor(duration / 1000), // ミリ秒を秒に変換
-        quiz_time_spent: quizTimeSpent // 理解度チェック実行時間
-      }
-      
-      // ⚡ XP保存のみ待機（最重要データ）
-      const xpResult = await saveCourseSession(courseSessionData)
-      
-      if (!xpResult.success) {
-        console.error('❌ Course session save failed:', xpResult.error)
-        // UIは既に更新済みなので、エラー表示のみ
-        console.error('XP保存に失敗しましたが、セッションは完了として処理されました')
-      } else {
-        console.log('✅ Course session saved:', {
-          earned_xp: xpResult.earned_xp,
-          session_id: xpResult.session_id
-        })
-      }
+      // APIを呼び出してレスポンスを取得
+      const apiResult = await saveSessionProgress()
 
-      // 🔥 その他の処理は全て非同期で実行（UIブロックしない）
-      executeBackgroundTasks(endTime, duration).catch(error => {
-        console.error('❌ Background tasks failed (UI not affected):', error)
-      })
-      
-      console.log('✅ Session completed successfully with optimized performance')
+      if (apiResult.success) {
+        // 獲得XPの表示
+        if (apiResult.earned_xp) {
+          setEarnedXP(apiResult.earned_xp)
+        }
+
+        // 完了状態の表示
+        if (apiResult.theme_completed) {
+          setShowThemeCompletion(true)
+          setCardAcquired(true)
+          setIsThemeCompleted(true)
+          console.log('🎊 Theme completed!')
+        }
+
+        if (apiResult.course_completed) {
+          setShowCourseCompletion(true)
+          console.log('🏆 Course completed!')
+        }
+
+        console.log('✅ Session completion processing finished')
+      } else {
+        console.error('❌ API returned error:', apiResult.error)
+      }
     } catch (error) {
-      console.error('❌ Error completing session:', error)
-      // UI更新は既に完了しているため、エラーが発生してもユーザー体験に影響なし
+      console.error('❌ Error in session completion:', error)
     } finally {
       setIsCompletingSession(false)
     }
   }
 
-  // 🚀 バックグラウンド処理を分離してパフォーマンス改善
-  const executeBackgroundTasks = async (endTime: Date, duration: number) => {
-    console.log('🔥 Executing background tasks (non-blocking)...')
-
-    // 並列実行でパフォーマンス最大化
-    const backgroundTasks = []
-
-    // 学習進捗保存
-    backgroundTasks.push(
-      saveLearningProgressSupabase(user!.id, courseId, genreId, themeId, session.id, true)
-        .then(result => {
-          console.log('📝 Progress saved in background:', result)
-        })
-        .catch(error => {
-          console.error('❌ Progress save failed (background):', error)
-        })
-    )
-
-    // 学習セッション記録
-    if (currentSessionData && !currentSessionData.id) {
-      const completeSessionData: LearningSessionData = {
-        ...currentSessionData,
-        end_time: endTime.toISOString(),
-        duration,
-        completed: true,
-        quiz_score: hasQuiz ? getQuizScore() : undefined,
-        content_interactions: {
-          scrollDepth: 100,
-          timeOnSection: {},
-          clickEvents: [],
-          sessionType: 'course_learning',
-          hasQuiz: hasQuiz,
-          quizAnswers: hasQuiz ? Object.entries(quizAnswers).map(([index, answer]) => ({
-            questionIndex: parseInt(index),
-            selectedAnswer: answer,
-            isCorrect: quizResults[parseInt(index)] || false,
-            question: session.quiz?.[parseInt(index)]?.question || '',
-            correctAnswer: session.quiz?.[parseInt(index)]?.options[session.quiz?.[parseInt(index)]?.correct] || ''
-          })) : [],
-          quizScore: hasQuiz ? getQuizScore() : undefined,
-          totalQuestions: hasQuiz ? (session.quiz?.length || 0) : 0,
-          correctAnswers: hasQuiz ? Object.values(quizResults).filter(r => r).length : 0,
-          themeId,
-          genreId,
-          categoryId,
-          subcategoryId,
-          sessionId: session.id,
-          completedAt: endTime.toISOString()
-        }
-      }
-      
-      backgroundTasks.push(
-        saveLearningSessionSupabase(completeSessionData)
-          .then(savedSession => {
-            console.log('✅ Session saved in background:', savedSession?.id)
-          })
-          .catch(error => {
-            console.error('❌ Session save failed (background):', error)
-          })
-      )
-    } else if (currentSessionData?.id) {
-      backgroundTasks.push(
-        updateLearningSession(currentSessionData.id, {
-          end_time: endTime.toISOString(),
-          duration,
-          completed: true,
-          quiz_score: hasQuiz ? getQuizScore() : undefined
-        }).then(result => {
-          console.log('🔄 Session updated in background:', result)
-        }).catch(error => {
-          console.error('❌ Session update failed (background):', error)
-        })
-      )
-    }
-
-    // テーマ完了チェック & 報酬処理
-    backgroundTasks.push(
-      checkThemeCompletion()
-        .then(themeCompleted => {
-          setIsThemeCompleted(themeCompleted && (isFirstCompletion ?? false))
-          console.log(`🎯 Theme completion (background): ${themeCompleted}`)
-          
-          // カード獲得処理
-          if (themeCompleted && themeRewardCard && isFirstCompletion) {
-            return addKnowledgeCardToCollection(user!.id, themeRewardCard.id)
-              .then(result => {
-                setCardAcquired(result.isNew)
-                console.log('🎯 Card acquired in background:', result)
-              })
-          }
-        })
-        .catch(error => {
-          console.error('❌ Theme completion/card acquisition failed (background):', error)
-        })
-    )
-
-    // バッジ処理
-    if (isFirstCompletion) {
-      backgroundTasks.push(
-        checkAndAwardCourseBadge(user!.id, courseId, genreId, themeId, session.id)
-          .then(badgeResult => {
-            if (badgeResult.completed && badgeResult.badge) {
-              console.log('🎉 Badge awarded in background:', badgeResult.badge)
-              setBadgeAwarded(badgeResult.badge)
-            }
-          })
-          .catch(error => {
-            console.error('❌ Badge award failed (background):', error)
-          })
-      )
-    }
-
-    // 全てのバックグラウンドタスクを並列実行
-    await Promise.allSettled(backgroundTasks)
-    console.log('🔥 Background tasks completed')
-  }
-
-
   const getQuizScore = () => {
-    if (!hasQuiz) return 100
-    const correctAnswers = Object.values(quizResults).filter(result => result).length
-    return Math.round((correctAnswers / session.quiz!.length) * 100)
+    const correct = Object.values(quizResults).filter(r => r).length
+    const total = session.quiz?.length || 1
+    return Math.round((correct / total) * 100)
   }
 
   const handleContinue = () => {
-    if (isLastSession) {
-      onExit()
-    } else {
-      onNext()
-    }
+    onNext()
   }
-
-  const renderProgressBar = () => (
-    <div className="space-y-2">
-      <div className="flex justify-between text-sm">
-        <span className="text-muted-foreground">
-          セッション {currentSessionIndex + 1} / {totalSessions}
-        </span>
-        <span className="font-medium">
-          {Math.round(((currentSessionIndex + 1) / totalSessions) * 100)}%
-        </span>
-      </div>
-      <Progress value={((currentSessionIndex + 1) / totalSessions) * 100} className="h-2" />
-    </div>
-  )
 
   const renderContentView = () => (
     <div className="space-y-6">
@@ -592,7 +429,6 @@ export default function LearningSession({
             )}
           </div>
 
-
           {/* Action Button - Fixed at bottom with proper spacing */}
           <div className="sticky bottom-0 bg-background pt-4 mt-6 border-t">
             <div className="flex justify-center">
@@ -689,47 +525,30 @@ export default function LearningSession({
               })}
             </div>
 
-            {/* Quiz Result */}
+            {/* 正解不正解のパネルは取り除く（要求通り） */}
             {showQuizResult && (
-              <div className="mt-6 p-4 rounded-lg bg-gray-50">
-                <div className={`flex items-center space-x-2 mb-3 ${
-                  quizResults[currentQuizIndex] ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {quizResults[currentQuizIndex] ? (
-                    <Check className="h-5 w-5" />
+              <div className="flex justify-center">
+                <Button 
+                  onClick={handleNextQuizQuestion}
+                  disabled={isCompletingSession}
+                >
+                  {isCompletingSession && currentQuizIndex === session.quiz!.length - 1 ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                      処理中...
+                    </>
+                  ) : currentQuizIndex === session.quiz!.length - 1 ? (
+                    <>
+                      <Check className="h-4 w-4 mr-2" />
+                      セッション完了
+                    </>
                   ) : (
-                    <X className="h-5 w-5" />
+                    <>
+                      <ArrowRight className="h-4 w-4 mr-2" />
+                      次の問題
+                    </>
                   )}
-                  <span className="font-semibold">
-                    {quizResults[currentQuizIndex] ? '正解！' : '不正解'}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {currentQuiz.explanation}
-                </p>
-                <div className="flex justify-center">
-                  <Button 
-                    onClick={handleNextQuizQuestion}
-                    disabled={isCompletingSession}
-                  >
-                    {isCompletingSession && currentQuizIndex === session.quiz!.length - 1 ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                        処理中...
-                      </>
-                    ) : currentQuizIndex === session.quiz!.length - 1 ? (
-                      <>
-                        <Check className="h-4 w-4 mr-2" />
-                        セッション完了
-                      </>
-                    ) : (
-                      <>
-                        <ArrowRight className="h-4 w-4 mr-2" />
-                        次の問題
-                      </>
-                    )}
-                  </Button>
-                </div>
+                </Button>
               </div>
             )}
           </CardContent>
@@ -751,6 +570,18 @@ export default function LearningSession({
             「{session.title}」を完了しました
           </p>
         </div>
+
+        {earnedXP > 0 && (
+          <Card className="max-w-md mx-auto">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-center space-x-2">
+                <Star className="w-5 h-5 text-yellow-500" />
+                <span className="text-lg font-semibold">{earnedXP} XP</span>
+                <span className="text-gray-600">獲得</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Quiz Score */}
         {hasQuiz && (
@@ -778,15 +609,13 @@ export default function LearningSession({
           </Card>
         )}
 
-        {/* Reward Card */}
-        {isThemeCompleted && themeRewardCard && (
+        {/* テーマ完了表示 */}
+        {showThemeCompletion && themeRewardCard && (
           <Card className="max-w-md mx-auto bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200">
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center space-x-2">
                 <Star className="h-5 w-5 text-yellow-500" />
-                <span>
-                  {cardAcquired ? 'ナレッジカードを獲得！' : 'ナレッジカード獲得済み'}
-                </span>
+                <span>ナレッジカードを獲得！</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center space-y-2">
@@ -795,50 +624,31 @@ export default function LearningSession({
               <div className="text-sm text-muted-foreground">
                 {themeRewardCard.description || 'テーマ完了の証として獲得'}
               </div>
-              {cardAcquired && (
-                <div className="mt-2 p-2 bg-green-100 rounded text-sm text-green-800">
-                  🎉 新しいナレッジカードを獲得しました！<br/>
-                  コレクションで確認できます。
-                </div>
-              )}
+              <div className="mt-2 p-2 bg-green-100 rounded text-sm text-green-800">
+                🎉 新しいナレッジカードを獲得しました！<br/>
+                コレクションで確認できます。
+              </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Badge Award Notification */}
-        {badgeAwarded && (
+        {/* コース完了表示 */}
+        {showCourseCompletion && (
           <Card className="max-w-md mx-auto bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center space-x-2">
                 <Award className="h-5 w-5 text-purple-500" />
-                <span>
-                  {new Date(badgeAwarded.earnedAt).toDateString() === new Date().toDateString() 
-                    ? '修了証を獲得！' 
-                    : '修了証を確認'
-                  }
-                </span>
+                <span>修了証を獲得！</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center space-y-2">
               <div className="text-4xl">🏆</div>
-              <div className="font-semibold text-purple-800">{badgeAwarded.badge.title}</div>
+              <div className="font-semibold text-purple-800">コース修了証</div>
               <div className="text-sm text-purple-700">
-                {badgeAwarded.badge.description}
+                コース完了の証として獲得
               </div>
-              <div className="text-xs text-purple-600">
-                獲得日: {badgeAwarded.earnedAt.toLocaleDateString('ja-JP')}
-              </div>
-              {badgeAwarded.expiresAt && (
-                <div className="text-xs text-purple-600">
-                  有効期限: {badgeAwarded.expiresAt.toLocaleDateString('ja-JP')}
-                </div>
-              )}
               <div className="mt-3 p-3 bg-purple-100 rounded text-sm text-purple-800">
-                {new Date(badgeAwarded.earnedAt).toDateString() === new Date().toDateString() ? (
-                  <div>🎉 コース完了おめでとうございます！<br/>修了証はコレクションで確認できます。</div>
-                ) : (
-                  <div>📋 既に修了済みのコースです。<br/>修了証はコレクションで確認できます。</div>
-                )}
+                🎉 コース完了おめでとうございます！<br/>修了証はコレクションで確認できます。
               </div>
             </CardContent>
           </Card>
@@ -846,7 +656,7 @@ export default function LearningSession({
 
         {/* Navigation Buttons */}
         <div className="flex justify-center space-x-4">
-          {!isLastSession && (
+          {currentSessionIndex < totalSessions - 1 && (
             <Button onClick={handleContinue} size="lg">
               <ArrowRight className="h-4 w-4 mr-2" />
               次のセッション
@@ -858,7 +668,7 @@ export default function LearningSession({
           </Button>
         </div>
 
-        {isThemeCompleted && (
+        {showThemeCompletion && (
           <div className="text-center space-y-4">
             <div className="p-4 bg-green-50 rounded-lg">
               <div className="text-green-800 font-semibold mb-2">

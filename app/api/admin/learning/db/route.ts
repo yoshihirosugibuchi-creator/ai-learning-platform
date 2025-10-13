@@ -14,7 +14,7 @@ export async function GET() {
       supabaseAdmin.from('learning_genres').select('*').order('display_order'),
       supabaseAdmin.from('learning_themes').select('*').order('display_order'),
       supabaseAdmin.from('learning_sessions').select('*').order('display_order'),
-      supabaseAdmin.from('session_contents').select('*').order('content_order'),
+      supabaseAdmin.from('session_contents').select('*').order('display_order'),
       supabaseAdmin.from('session_quizzes').select('*')
     ])
 
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
                         title: content.title,
                         description: content.description,
                         content: content.content_data,
-                        order: content.content_order
+                        order: content.display_order
                       })),
                       quiz: sessionQuizzes.length > 0 ? {
                         id: sessionQuizzes[0].id,
