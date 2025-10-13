@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/components/auth/AuthProvider'
+// WisdomCard型をインポート（同期処理のため復活）
+import { WisdomCard } from '@/lib/cards'
+
+type WisdomCardType = WisdomCard
 
 interface XPStats {
   user: {
@@ -101,6 +105,10 @@ interface QuizSaveResponse {
   total_xp?: number
   bonus_xp?: number
   wisdom_cards_awarded?: number
+  // カード関連プロパティを復活（同期処理）
+  awarded_card?: WisdomCardType
+  is_new_card?: boolean
+  card_count?: number
   message?: string
   error?: string
 }

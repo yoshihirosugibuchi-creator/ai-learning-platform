@@ -75,18 +75,24 @@ export async function getUserWisdomCards(userId: string): Promise<WisdomCardColl
 }
 
 export async function addWisdomCardToCollection(userId: string, cardId: number): Promise<{ count: number; isNew: boolean }> {
+  console.log('🔍 Starting addWisdomCardToCollection:', { userId: userId.substring(0, 8) + '...', cardId })
+  
   // Check if card already exists
+  const selectStartTime = performance.now()
   const { data: existing } = await supabase
     .from('wisdom_card_collection')
     .select('*')
     .eq('user_id', userId)
     .eq('card_id', cardId)
     .single()
+  const selectTime = performance.now() - selectStartTime
+  console.log('⏱️ SELECT query time:', `${selectTime.toFixed(2)}ms`)
 
   const now = new Date().toISOString()
 
   if (existing) {
     // Update existing card count
+    const updateStartTime = performance.now()
     const { data, error } = await supabase
       .from('wisdom_card_collection')
       .update({
@@ -96,15 +102,19 @@ export async function addWisdomCardToCollection(userId: string, cardId: number):
       .eq('id', existing.id)
       .select()
       .single()
+    const updateTime = performance.now() - updateStartTime
+    console.log('⏱️ UPDATE query time:', `${updateTime.toFixed(2)}ms`)
 
     if (error) {
       console.error('Error updating wisdom card:', error)
       return { count: existing.count || 0, isNew: false }
     }
 
+    console.log('✅ Card updated successfully:', { newCount: data.count, totalTime: `${(selectTime + updateTime).toFixed(2)}ms` })
     return { count: data.count || 0, isNew: false }
   } else {
     // Add new card
+    const insertStartTime = performance.now()
     const { data: _data, error } = await supabase
       .from('wisdom_card_collection')
       .insert([{
@@ -116,12 +126,15 @@ export async function addWisdomCardToCollection(userId: string, cardId: number):
       }])
       .select()
       .single()
+    const insertTime = performance.now() - insertStartTime
+    console.log('⏱️ INSERT query time:', `${insertTime.toFixed(2)}ms`)
 
     if (error) {
       console.error('Error adding wisdom card:', error)
       return { count: 0, isNew: false }
     }
 
+    console.log('✅ New card added successfully:', { totalTime: `${(selectTime + insertTime).toFixed(2)}ms` })
     return { count: 1, isNew: true }
   }
 }

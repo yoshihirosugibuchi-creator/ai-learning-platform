@@ -14,7 +14,7 @@ import { getRandomQuestions } from '@/lib/questions'
 import { useXPStats } from '@/hooks/useXPStats'
 import { UserProfileWithProgress } from '@/lib/supabase-user'
 import type { User } from '@supabase/supabase-js'
-import { getRandomWisdomCard, WisdomCard as WisdomCardType } from '@/lib/cards'
+import { WisdomCard as WisdomCardType } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
 import { getCategoryDisplayName } from '@/lib/category-mapping'
 import { isValidCategoryId, getDifficultyDisplayName, getMainCategoryIds } from '@/lib/categories'
@@ -24,8 +24,9 @@ import {
   getDifficultyDistributionByAccuracy,
   getDefaultDifficultyDistribution 
 } from '@/lib/accuracy-calculator'
-import { addWisdomCardToCollection } from '@/lib/supabase-cards'
+// Removed: import { addWisdomCardToCollection } from '@/lib/supabase-cards' - moved to server
 import { UnifiedLearningAnalysisEngine } from '@/lib/unified-learning-analytics'
+// import { supabase } from '@/lib/supabase' // 不要（API分離取りやめのため）
 // import { saveDetailedQuizData } from '@/lib/supabase-learning' // 未使用のためコメントアウト
 // import { updateProgressAfterQuiz, calculateChallengeQuizRewards, saveChallengeQuizProgressToDatabase } from '@/lib/xp-level-system'
 // import { getSubcategoryId } from '@/lib/categories'
@@ -54,7 +55,8 @@ interface QuizResults {
   correctAnswers: number
   timeSpent: number
   categoryScores: Record<string, { correct: number; total: number }>
-  rewardedCard?: WisdomCardType
+  // カード関連フィールド復活（サーバーから受信）
+  rewardedCard?: WisdomCardType // サーバーから受け取ったカード情報
   isNewCard?: boolean
   cardCount?: number
 }
@@ -96,6 +98,76 @@ export default function QuizSession({
   const _router = useRouter()
   // New XP System Hook
   const { saveQuizSession } = useXPStats()
+  
+  // 堅牢な非同期保存メソッド  
+  interface QuizDataWithCard {
+    user_id: string
+    category_id: string
+    subcategory_id: string
+    session_start_time: string
+    session_end_time?: string
+    total_questions: number
+    correct_answers: number
+    accuracy_rate: number
+    answers: Array<{
+      question_id: string
+      user_answer: number | null
+      is_correct: boolean
+      time_spent: number
+      is_timeout: boolean
+      category_id: string
+      subcategory_id: string
+      difficulty: string
+    }>
+    selected_card?: {
+      id: number
+      author: string
+      quote: string
+      rarity: string
+      accuracy_rate: number
+    }
+  }
+  
+  const saveQuizWithRetry = async (
+    quizData: QuizDataWithCard,
+    saveFunction: typeof saveQuizSession,
+    maxRetries = 3
+  ) => {
+    let attempt = 0
+    while (attempt < maxRetries) {
+      try {
+        console.log(`🔄 Background save attempt ${attempt + 1}/${maxRetries}`)
+        const result = await saveFunction(quizData)
+        
+        if (result.success) {
+          console.log('✅ Background save successful:', result.session_id)
+          return result
+        } else {
+          throw new Error(result.error || 'Save failed')
+        }
+      } catch (error) {
+        attempt++
+        console.warn(`⚠️ Background save attempt ${attempt} failed:`, error)
+        
+        if (attempt >= maxRetries) {
+          console.error('❌ All background save attempts failed')
+          // ローカルストレージにバックアップ保存
+          try {
+            localStorage.setItem(`quiz_backup_${Date.now()}`, JSON.stringify(quizData))
+            console.log('💾 Quiz data backed up to localStorage')
+          } catch (storageError) {
+            console.error('❌ localStorage backup failed:', storageError)
+          }
+          break
+        }
+        
+        // 指数バックオフでリトライ
+        const delay = Math.pow(2, attempt) * 1000
+        console.log(`⏳ Retrying in ${delay}ms...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+    }
+  }
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
   const [showResult, setShowResult] = useState(false)
@@ -561,7 +633,35 @@ export default function QuizSession({
                 completed_at: new Date().toISOString()
               })
               
-              console.log('🚀 Calling saveQuizSession (new XP system)...')
+              console.log('🚀 Processing quiz results (new client-first approach)...')
+              
+              // UI応答時間測定開始
+              const uiResponseStartTime = performance.now()
+              console.log('🚨 CLIENT: UI PROCESSING START TIME:', new Date().toISOString())
+              
+              // クライアント側でカード判定・選択を即座に実行
+              const accuracyRate = (finalResults.correctAnswers / finalResults.totalQuestions) * 100
+              let selectedCard: WisdomCardType | undefined = undefined
+              let isNewCard = false
+              let cardCount = 0
+              
+              if (accuracyRate >= 70) {
+                // カード選択をクライアント側で実行（将来のカードDB化も考慮）
+                try {
+                  const { getRandomWisdomCard } = await import('@/lib/cards')
+                  selectedCard = getRandomWisdomCard(accuracyRate)
+                  isNewCard = true // デフォルトで新規扱い
+                  cardCount = 1
+                  console.log('⚡ CLIENT: Card selected instantly:', {
+                    cardId: selectedCard.id,
+                    author: selectedCard.author,
+                    accuracy: accuracyRate
+                  })
+                } catch (cardError) {
+                  console.error('❌ CLIENT: Card selection error:', cardError)
+                }
+              }
+              
               const actualTotalQuestions = sessionQuestions.length || questionAnswers.length
               const quizSessionData = {
                 user_id: user.id,
@@ -593,12 +693,51 @@ export default function QuizSession({
                 questionAnswers_length: questionAnswers.length
               })
               
-              const saveResult = await saveQuizSession(quizSessionData)
-              quizResult = {
-                id: saveResult.session_id || 'new-system-' + Date.now(),
-                success: saveResult.success
+              // 選択されたカード情報をAPIデータに含める
+              const quizSessionDataWithCard = {
+                ...quizSessionData,
+                selected_card: selectedCard ? {
+                  id: selectedCard.id,
+                  author: selectedCard.author,
+                  quote: selectedCard.quote,
+                  rarity: selectedCard.rarity,
+                  accuracy_rate: accuracyRate
+                } : undefined
               }
-              console.log('✅ Quiz result saved successfully:', quizResult?.id)
+              
+              // 非同期でバックグラウンド保存（UIをブロックしない）
+              saveQuizWithRetry(quizSessionDataWithCard, saveQuizSession).catch(error => {
+                console.error('❌ Background save failed completely:', error)
+              })
+              
+              // 即座にクライアント側で生成したセッションIDを使用
+              quizResult = {
+                id: 'client-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                success: true
+              }
+              
+              // UI応答時間測定終了
+              const uiResponseEndTime = performance.now()
+              const uiResponseDuration = uiResponseEndTime - uiResponseStartTime
+              console.log('🚨 CLIENT: API MOVED TO BACKGROUND')
+              console.log('🚨 CLIENT: UI RESPONSE TIME:', `${uiResponseDuration.toFixed(2)}ms`)
+              console.log('✅ Quiz result generated instantly:', quizResult?.id)
+              
+              // 最終結果をカード情報と共に設定
+              const finalResultsWithCard: QuizResults = {
+                ...finalResults,
+                rewardedCard: selectedCard,
+                isNewCard,
+                cardCount
+              }
+              
+              console.log('🚨 CLIENT: Results with card set instantly')
+              setResults(finalResultsWithCard)
+              
+              const resultsUpdateEndTime = performance.now()
+              const resultsUpdateDuration = resultsUpdateEndTime - uiResponseStartTime
+              console.log('🚨 CLIENT: RESULTS UPDATE END TIME:', new Date().toISOString())
+              console.log('🚨 CLIENT: RESULTS UPDATE DURATION:', `${resultsUpdateDuration.toFixed(2)}ms`)
 
               // Save unified learning analytics data
               try {
@@ -723,41 +862,16 @@ export default function QuizSession({
       }
       
       // 🚀 即座に結果画面を表示（UX最優先）
-      console.log('⚡ Setting final results immediately for instant display...')
+      console.log('⚡ Setting completion state for instant display...')
       console.log('🔍 Debug: Setting isFinished to true for completion screen')
       console.log('📊 Final results:', finalResults)
-      setResults(finalResults)
+      // setResults は カード処理内で実行するため、ここでは実行しない
       setIsFinished(true)
       completionInProgress.current = false
       onComplete(finalResults)
       
-      // 🎴 格言カード処理を非同期で実行（画面表示を妨げない）
-      const accuracyRate = (finalResults.correctAnswers / finalResults.totalQuestions) * 100
-      
-      if (accuracyRate >= 70) {
-        // バックグラウンドで格言カード処理
-        setTimeout(async () => {
-          try {
-            console.log('🎴 Processing wisdom card reward in background...')
-            const randomCard = getRandomWisdomCard(accuracyRate)
-            const cardResult = await addWisdomCardToCollection(user.id, randomCard.id)
-            
-            // 結果を更新（カード情報付き）
-            const updatedResults = {
-              ...finalResults,
-              rewardedCard: randomCard,
-              isNewCard: cardResult.isNew,
-              cardCount: cardResult.count
-            }
-            
-            console.log(`🂺 Card processed in background:`, { cardId: randomCard.id, isNew: cardResult.isNew })
-            setResults(updatedResults) // 非同期でカード情報を追加表示
-          } catch (error) {
-            console.error('❌ Background card processing error:', error)
-            // エラーでも画面表示は既に完了しているので問題なし
-          }
-        }, 50) // 50ms遅延で画面描画を確実に優先
-      }
+      // 🎴 格言カード処理はサーバーサイド（API）で実行されるため、クライアントでの処理は削除
+      console.log('✅ Quiz completed, card processing handled by server API')
     }
   }
 
@@ -880,19 +994,6 @@ export default function QuizSession({
                 <Button variant="outline" size="sm" asChild>
                   <a href="/collection">コレクションで確認</a>
                 </Button>
-              </div>
-            </div>
-          ) : accuracyRate < 70 ? (
-            <div className="space-y-3 border-t pt-4">
-              <div className="text-center">
-                <h4 className="font-semibold text-lg mb-2 flex items-center justify-center space-x-2">
-                  <Target className="h-5 w-5 text-gray-500" />
-                  <span>もう少し頑張りましょう</span>
-                </h4>
-                <p className="text-sm text-gray-600 mb-4">
-                  正答率70%以上で格言カードを獲得できます<br />
-                  現在の正答率: {accuracyRate}%
-                </p>
               </div>
             </div>
           ) : null}

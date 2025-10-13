@@ -4,6 +4,9 @@ import { loadXPSettings, calculateQuizXP, calculateBonusXP, calculateSKP } from 
 import { 
   mapDifficultyToEnglish
 } from '@/lib/xp-level-system'
+// カード処理をXP APIに統合（同期処理のため）
+import { getRandomWisdomCard } from '@/lib/cards'
+import { addWisdomCardToCollection } from '@/lib/supabase-cards'
 
 // リクエストヘッダーから認証情報を取得してSupabaseクライアントを作成
 function getSupabaseWithAuth(request: Request) {
@@ -252,9 +255,14 @@ export async function POST(request: Request) {
     let accuracyBonus = 0
     if (body.accuracy_rate >= 100.0) {
       accuracyBonus = calculateBonusXP('quiz_accuracy_100', xpSettings)
-      wisdomCards = 1 // 格言カード
     } else if (body.accuracy_rate >= 80.0) {
       accuracyBonus = calculateBonusXP('quiz_accuracy_80', xpSettings)
+    }
+
+    // 格言カード統計カウンター（実際の処理は /api/cards/wisdom で実行）
+    if (body.accuracy_rate >= 70.0) {
+      wisdomCards = 1 // 統計カウンター更新のみ
+      console.log('📊 Wisdom card counter updated for accuracy:', body.accuracy_rate)
     }
 
     bonusXP = accuracyBonus
@@ -783,6 +791,35 @@ export async function POST(request: Request) {
       // エラーが発生してもクイズ保存は成功として扱う
     }
 
+    // カード処理（70%以上で付与）
+    let awardedCard = null
+    let isNewCard = false
+    let cardCount = 0
+    
+    const accuracyRate = (body.correct_answers / body.total_questions) * 100
+    
+    if (accuracyRate >= 70) {
+      try {
+        console.log('🎴 Processing wisdom card (accuracy >= 70%)...')
+        const randomCard = getRandomWisdomCard(accuracyRate)
+        const cardResult = await addWisdomCardToCollection(userId, randomCard.id)
+        
+        awardedCard = randomCard
+        isNewCard = cardResult.isNew
+        cardCount = cardResult.count
+        
+        console.log('✅ Wisdom card awarded:', {
+          cardId: randomCard.id,
+          author: randomCard.author,
+          isNew: cardResult.isNew,
+          count: cardResult.count
+        })
+      } catch (cardError) {
+        console.error('❌ Card processing error (non-critical):', cardError)
+        // カードエラーでもクイズ保存は成功として扱う
+      }
+    }
+
     console.log(`✅ Quiz XP Save Success: Session ${sessionId}, Total XP: ${updatedSession.total_xp}`)
 
     return NextResponse.json({
@@ -792,6 +829,10 @@ export async function POST(request: Request) {
       bonus_xp: updatedSession.bonus_xp,
       wisdom_cards_awarded: updatedSession.wisdom_cards_awarded,
       streak_bonus: streakBonusResult,
+      // カード情報を統合（同期処理）
+      awarded_card: awardedCard,
+      is_new_card: isNewCard,
+      card_count: cardCount,
       message: 'Quiz session saved and XP calculated successfully'
     })
 
