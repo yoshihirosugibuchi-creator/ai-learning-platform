@@ -5,7 +5,32 @@
 
 import { supabase } from '@/lib/supabase'
 import { LearningCourse, LearningGenre } from '@/lib/types/learning'
-import { globalCache } from '@/lib/performance-optimizer'
+// Server-side cache implementation for supabase-data
+class ServerCache {
+  private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>()
+
+  set(key: string, data: unknown, ttl: number): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    })
+  }
+
+  get(key: string): unknown | null {
+    const item = this.cache.get(key)
+    if (!item) return null
+
+    if (Date.now() - item.timestamp > item.ttl) {
+      this.cache.delete(key)
+      return null
+    }
+
+    return item.data
+  }
+}
+
+const serverCache = new ServerCache()
 
 // ===== 型定義 =====
 
@@ -52,7 +77,7 @@ export async function getCoursesFromDB(): Promise<{
   const cacheKey = 'learning_courses_db_list'
   
   // キャッシュから取得を試行
-  const cached = globalCache.get(cacheKey)
+  const cached = serverCache.get(cacheKey)
   if (cached) {
     console.log('🚀 DB Courses loaded from cache')
     return cached as {
@@ -149,7 +174,7 @@ export async function getCoursesFromDB(): Promise<{
     )
     
     // キャッシュに保存（5分間）
-    globalCache.set(cacheKey, coursesWithCounts, 5 * 60 * 1000)
+    serverCache.set(cacheKey, coursesWithCounts, 5 * 60 * 1000)
     console.log('✅ DB Courses loaded and cached, count:', coursesWithCounts.length)
     
     return coursesWithCounts as {
@@ -178,7 +203,7 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
   const cacheKey = `course_details_db_${courseId}`
   
   // キャッシュから取得を試行
-  const cached = globalCache.get(cacheKey)
+  const cached = serverCache.get(cacheKey)
   if (cached) {
     console.log('🚀 DB Course details loaded from cache:', courseId)
     return cached as LearningCourse
@@ -315,7 +340,7 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
     }
     
     // キャッシュに保存（10分間）
-    globalCache.set(cacheKey, courseDetails, 10 * 60 * 1000)
+    serverCache.set(cacheKey, courseDetails, 10 * 60 * 1000)
     console.log('✅ DB Course details loaded and cached:', courseId)
     
     return courseDetails
@@ -330,7 +355,7 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
 export async function getSessionDetailsFromDB(sessionId: string) {
   const cacheKey = `session_details_db_${sessionId}`
   
-  const cached = globalCache.get(cacheKey)
+  const cached = serverCache.get(cacheKey)
   if (cached) {
     console.log('🚀 DB Session details loaded from cache:', sessionId)
     return cached
@@ -385,7 +410,7 @@ export async function getSessionDetailsFromDB(sessionId: string) {
     }
     
     // キャッシュに保存（15分間）
-    globalCache.set(cacheKey, sessionDetails, 15 * 60 * 1000)
+    serverCache.set(cacheKey, sessionDetails, 15 * 60 * 1000)
     console.log('✅ DB Session details loaded and cached:', sessionId)
     
     return sessionDetails

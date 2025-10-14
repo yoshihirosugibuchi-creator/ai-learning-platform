@@ -6,9 +6,11 @@ import QuizSession from '@/components/quiz/QuizSession'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
+import SettingsPromptModal from '@/components/quiz/SettingsPromptModal'
 import { Question } from '@/lib/types'
 import { getAllQuestions } from '@/lib/questions'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { getUserQuizSettings, isDefaultSettings } from '@/lib/user-quiz-settings'
 
 export default function QuizPage() {
   const searchParams = useSearchParams()
@@ -22,12 +24,22 @@ export default function QuizPage() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [showSettingsPrompt, setShowSettingsPrompt] = useState(false)
+  const [proceedWithQuiz, setProceedWithQuiz] = useState(false)
 
   useEffect(() => {
     const loadQuestions = async () => {
       try {
         const questionsData = await getAllQuestions()
         setQuestions(questionsData)
+        
+        // セルフパーソナライズクイズの場合、設定をチェック
+        if (mode === 'self-personalized' && user) {
+          const settings = await getUserQuizSettings(user.id)
+          if (isDefaultSettings(settings)) {
+            setShowSettingsPrompt(true)
+          }
+        }
       } catch (error) {
         console.error('Failed to load questions:', error)
       } finally {
@@ -36,7 +48,7 @@ export default function QuizPage() {
     }
 
     loadQuestions()
-  }, [])
+  }, [mode, user])
 
   const handleQuizComplete = (results: { 
     score: number
@@ -55,6 +67,16 @@ export default function QuizPage() {
     router.push(returnToParam || '/')
   }
 
+  const handleConfigureSettings = () => {
+    // プロフィール画面の基本情報タブに遷移（クイズ設定がある場所）
+    router.push('/profile?tab=basic&openSettings=true')
+  }
+
+  const handleSkipToQuiz = () => {
+    setShowSettingsPrompt(false)
+    setProceedWithQuiz(true)
+  }
+
   // 認証ガード
   if (authLoading) {
     return <LoadingScreen message="認証を確認中..." />
@@ -66,7 +88,8 @@ export default function QuizPage() {
   }
 
   // パラメータチェック：適切なクイズ開始条件があるかを確認
-  const hasValidParams = mode === 'random' || categoryParam
+  // ai-personalizedはrandomと同じ処理（将来のAI機能実装まではエイリアスとして扱う）
+  const hasValidParams = mode === 'random' || mode === 'ai-personalized' || mode === 'self-personalized' || categoryParam
   
   if (!hasValidParams) {
     // パラメータが不適切な場合はホームにリダイレクト
@@ -94,7 +117,7 @@ export default function QuizPage() {
       />
 
       <main className="container mx-auto px-4 py-6">
-        {user && (
+        {user && (mode !== 'self-personalized' || proceedWithQuiz || !showSettingsPrompt) && (
           <QuizSession
             questions={questions}
             category={categoryParam || undefined}
@@ -107,6 +130,14 @@ export default function QuizPage() {
           />
         )}
       </main>
+
+      {/* 設定誘導モーダル */}
+      <SettingsPromptModal
+        isOpen={showSettingsPrompt}
+        onClose={() => setShowSettingsPrompt(false)}
+        onConfigureSettings={handleConfigureSettings}
+        onSkipToQuiz={handleSkipToQuiz}
+      />
     </div>
   )
 }

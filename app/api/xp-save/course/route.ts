@@ -4,6 +4,7 @@ import { loadXPSettings, type XPSettings, calculateCourseXP, calculateSKP } from
 import { 
   mapDifficultyToEnglish
 } from '@/lib/xp-level-system'
+import { getLearningCourseDetails } from '@/lib/learning/data'
 import type { 
   Database,
   UserXPStatsV2Update,
@@ -54,6 +55,9 @@ interface CourseSessionRequest {
   session_end_time?: string
   duration_seconds?: number
   quiz_time_spent?: number  // 理解度チェック実測時間
+  // Client-side completion detection results
+  client_theme_completed?: boolean
+  client_course_completed?: boolean
 }
 
 // コース学習セッション完了時のXP保存API
@@ -617,25 +621,42 @@ export async function POST(request: Request) {
       }
     }
 
-    // 10. 効率的なテーマ・コース完了チェック（初回完了のみ）
+    // 10. クライアント側判定に基づくテーマ・コース完了処理（初回完了のみ）
+    let themeCompleted = false
+    let courseCompleted = false
+    
     if (isFirstCompletion) {
-      // 非同期で効率的な完了チェックを実行
-      Promise.resolve().then(async () => {
-        try {
-          console.log('🎯 Starting efficient theme/course completion check (async)')
-          
-          // ステップ1: テーマ完了チェック
-          await checkAndRecordThemeCompletion(supabase, userId, body, xpSettings)
-          
-          // ステップ2: コース完了チェック  
-          await checkAndRecordCourseCompletion(supabase, userId, body, xpSettings)
-          
-        } catch (error) {
-          console.warn('⚠️ Theme/Course completion check error (async):', error)
+      try {
+        console.log('🎯 Processing client-side completion results')
+        
+        // クライアント側の判定結果を受け取り
+        const clientThemeCompleted = body.client_theme_completed || false
+        const clientCourseCompleted = body.client_course_completed || false
+        
+        console.log('📱 Client completion judgments:', {
+          theme: clientThemeCompleted,
+          course: clientCourseCompleted,
+          sessionId: body.session_id,
+          themeId: body.theme_id,
+          courseId: body.course_id
+        })
+        
+        // テーマ完了処理（クライアント判定に基づく）
+        if (clientThemeCompleted) {
+          themeCompleted = await recordThemeCompletion(supabase, userId, body, xpSettings)
         }
-      }).catch(error => {
-        console.warn('⚠️ Theme/Course completion async processing failed:', error)
-      })
+        
+        // コース完了処理（クライアント判定に基づく）
+        // クライアント判定でコース完了の場合は、テーマ完了の成功に関係なく実行
+        if (clientCourseCompleted) {
+          courseCompleted = await recordCourseCompletion(supabase, userId, body, xpSettings)
+        }
+        
+        console.log('✅ Database completion recording results:', { themeCompleted, courseCompleted })
+        
+      } catch (error) {
+        console.warn('⚠️ Completion recording error:', error)
+      }
     }
 
     // 11. セッション完了記録は既に保存済みのため、追加取得は不要
@@ -718,6 +739,8 @@ export async function POST(request: Request) {
       earned_xp: earnedXP,
       is_first_completion: isFirstCompletion,
       quiz_correct: body.session_quiz_correct,
+      theme_completed: themeCompleted,
+      course_completed: courseCompleted,
       streak_bonus: streakBonusResult,
       message: responseMessage
     })
@@ -814,13 +837,13 @@ export async function PUT(request: Request) {
   }
 }
 
-// 効率的なテーマ完了チェック＆記録関数
-async function checkAndRecordThemeCompletion(
+// テーマ完了記録関数（クライアント判定に基づく）
+async function recordThemeCompletion(
   supabase: ReturnType<typeof createClient<Database>>,
   userId: string,
   body: CourseSessionRequest,
   _xpSettings: XPSettings
-): Promise<void> {
+): Promise<boolean> {
   try {
     // 1. 既にテーマ完了記録があるかチェック（重複防止）
     const { data: existingThemeCompletion } = await supabase
@@ -832,36 +855,32 @@ async function checkAndRecordThemeCompletion(
       .single()
 
     if (existingThemeCompletion) {
-      console.log('ℹ️ Theme already completed, skipping theme completion check')
-      return
+      console.log('ℹ️ Theme already completed, returning true')
+      return true
     }
 
-    // 2. テーマ内の全セッション数とユーザー完了セッション数を効率的に取得
-    const [themeSessionsResult, completedSessionsResult] = await Promise.all([
-      // テーマの全セッション数を取得
-      Promise.resolve({ data: 10, error: null }),
-      // このテーマで完了したセッション数を取得
-      supabase
-        .from('course_session_completions')
-        .select('session_id')
-        .eq('user_id', userId)
-        .eq('course_id', body.course_id)
-        .eq('theme_id', body.theme_id)
-        .eq('is_first_completion', true)
-    ])
+    // 2. クライアント判定に基づいてテーマ完了記録を作成
+    console.log(`🎉 Recording theme completion based on client judgment: ${body.theme_id}`)
 
-    const totalThemeSessions = themeSessionsResult.data || 0
-    const completedSessions = completedSessionsResult.data || []
-    const uniqueSessionIds = new Set(completedSessions.map((s: { session_id: string }) => s.session_id))
-    const completedCount = uniqueSessionIds.size
+    // テーマのセッション数を取得（統計用）
+    let totalThemeSessions = 0
+    try {
+      const courseDetails = await getLearningCourseDetails(body.course_id)
+      if (courseDetails) {
+        for (const genre of courseDetails.genres) {
+          const theme = genre.themes.find(t => t.id === body.theme_id)
+          if (theme) {
+            totalThemeSessions = theme.sessions.length
+            break
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to get theme session count:', error)
+      totalThemeSessions = 1
+    }
 
-    console.log(`🎨 Theme ${body.theme_id}: ${completedCount}/${totalThemeSessions} sessions completed`)
-
-    // 3. テーマ完了判定
-    if (completedCount >= (totalThemeSessions as number) && (totalThemeSessions as number) > 0) {
-      console.log(`🎉 Theme completed! Recording theme completion: ${body.theme_id}`)
-
-      // 4. テーマ完了記録を作成
+    // 3. テーマ完了記録を作成
       const themeCompletionData = {
         user_id: userId,
         course_id: body.course_id,
@@ -869,8 +888,8 @@ async function checkAndRecordThemeCompletion(
         genre_id: body.genre_id,
         category_id: body.category_id,
         subcategory_id: body.subcategory_id,
-        completed_sessions: completedCount,
-        total_sessions: totalThemeSessions as number,
+        completed_sessions: totalThemeSessions, // クライアント判定で完了なので全セッション完了
+        total_sessions: totalThemeSessions,
         knowledge_cards_awarded: 1
       }
       
@@ -880,40 +899,81 @@ async function checkAndRecordThemeCompletion(
 
       if (themeCompletionError) {
         console.error('❌ Theme completion record error:', themeCompletionError)
-        return
-      }
-
-      // 5. ナレッジカード付与
-      const knowledgeCardData = {
-        user_id: userId,
-        card_id: Math.abs(`theme_${body.theme_id}`.split('').reduce((a, b) => a + b.charCodeAt(0), 0)),
-        obtained_at: new Date().toISOString()
+        console.error('❌ Theme completion data attempted:', themeCompletionData)
+        return false
       }
       
-      const { error: knowledgeCardError } = await supabase
-        .from('knowledge_card_collection')
-        .insert(knowledgeCardData)
+      console.log('✅ Theme completion recorded successfully:', themeCompletionData)
 
-      if (knowledgeCardError) {
-        console.warn('⚠️ Knowledge card award error:', knowledgeCardError)
+      // 4. ナレッジカード付与（クライアント側で既に処理済みだが、DB整合性のため実行）
+      const cardId = Math.abs(`theme_${body.theme_id}`.split('').reduce((a, b) => a + b.charCodeAt(0), 0))
+      
+      // 既存のナレッジカードをチェック
+      const { data: existingCard } = await supabase
+        .from('knowledge_card_collection')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('card_id', cardId)
+        .single()
+      
+      let knowledgeCardError = null
+
+      if (existingCard) {
+        // 既存の場合はカウントを増やす（通常はクライアント側で追加済み）
+        const { error } = await supabase
+          .from('knowledge_card_collection')
+          .update({
+            count: (existingCard.count || 0) + 1,
+            last_obtained_at: new Date().toISOString()
+          })
+          .eq('id', existingCard.id)
+        
+        knowledgeCardError = error
+        
+        if (knowledgeCardError) {
+          console.warn('⚠️ Knowledge card update error:', knowledgeCardError)
+        } else {
+          console.log('🃏 Knowledge card count updated (DB sync)')
+        }
       } else {
-        console.log('🃏 Knowledge card awarded for theme completion')
+        // クライアント側で追加されていない場合の新規作成
+        const knowledgeCardData = {
+          user_id: userId,
+          card_id: cardId,
+          count: 1,
+          obtained_at: new Date().toISOString(),
+          last_obtained_at: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        }
+        
+        const { error } = await supabase
+          .from('knowledge_card_collection')
+          .insert(knowledgeCardData)
+        
+        knowledgeCardError = error
+        
+        if (knowledgeCardError) {
+          console.warn('⚠️ Knowledge card insert error (backup):', knowledgeCardError)
+        } else {
+          console.log('🃏 Knowledge card awarded (DB backup)')
+        }
       }
 
-      console.log('✅ Theme completion recorded and knowledge card awarded')
-    }
+      console.log('✅ Theme completion recorded')
+      return true
   } catch (error) {
     console.error('❌ Theme completion check error:', error)
+    return false
   }
 }
 
-// 効率的なコース完了チェック＆記録関数
-async function checkAndRecordCourseCompletion(
+// コース完了記録関数（クライアント判定に基づく）
+async function recordCourseCompletion(
   supabase: ReturnType<typeof createClient<Database>>,
   userId: string,
   body: CourseSessionRequest,
   xpSettings: XPSettings
-): Promise<void> {
+): Promise<boolean> {
   try {
     // 1. 既にコース完了記録があるかチェック（重複防止）
     const { data: existingCourseCompletion } = await supabase
@@ -924,47 +984,33 @@ async function checkAndRecordCourseCompletion(
       .single()
 
     if (existingCourseCompletion) {
-      console.log('ℹ️ Course already completed, skipping course completion check')
-      return
+      console.log('ℹ️ Course already completed, returning true')
+      return true
     }
 
-    // 2. コース内の全テーマ数とユーザー完了テーマ数を効率的に取得
-    const [courseThemesResult, completedThemesResult] = await Promise.all([
-      // コースの全テーマ数を取得
-      Promise.resolve({ data: 5, error: null }),
-      // このコースで完了したテーマ数を取得
-      supabase
-        .from('course_theme_completions')
-        .select('theme_id')
-        .eq('user_id', userId)
-        .eq('course_id', body.course_id)
-    ])
+    // 2. クライアント判定に基づいてコース完了記録を作成
+    console.log(`🎉 Recording course completion based on client judgment: ${body.course_id}`)
 
-    const totalCourseThemes = courseThemesResult.data || 0
-    const completedThemes = completedThemesResult.data || []
-    const uniqueThemeIds = new Set(completedThemes.map((t: { theme_id: string }) => t.theme_id))
-    const completedThemeCount = uniqueThemeIds.size
+    // コースのテーマ数を取得（統計用）
+    let totalCourseThemes = 0
+    try {
+      const courseDetails = await getLearningCourseDetails(body.course_id)
+      if (courseDetails) {
+        totalCourseThemes = courseDetails.genres.reduce((total, genre) => total + genre.themes.length, 0)
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to get course theme count:', error)
+      totalCourseThemes = 1
+    }
 
-    console.log(`📚 Course ${body.course_id}: ${completedThemeCount}/${totalCourseThemes} themes completed`)
-
-    // 3. コース完了判定
-    if (completedThemeCount >= (totalCourseThemes as number) && (totalCourseThemes as number) > 0) {
-      console.log(`🎉 Course completed! Recording course completion: ${body.course_id}`)
-
-      const courseCompletionBonus = xpSettings.xp_bonus.course_completion || 100
-      const courseCompletionSKPBonus = xpSettings.skp.course_complete_bonus || 200
-
-      // 4. コース完了記録を作成
+    // 3. コース完了記録を作成（XP/SKPは別テーブルで管理）
       const courseCompletionData = {
         user_id: userId,
         course_id: body.course_id,
-        completed_sessions: completedThemeCount,
-        completed_themes: completedThemeCount,
-        total_sessions: totalCourseThemes as number,
-        total_themes: totalCourseThemes as number,
-        completion_bonus_xp: courseCompletionBonus,
-        completion_bonus_skp: courseCompletionSKPBonus,
-        certificate_awarded: true,
+        completed_sessions: totalCourseThemes, // クライアント判定で完了なので全テーマ完了
+        completed_themes: totalCourseThemes, // クライアント判定で完了なので全テーマ完了
+        total_sessions: totalCourseThemes,
+        total_themes: totalCourseThemes,
         badges_awarded: 1
       }
       
@@ -974,8 +1020,11 @@ async function checkAndRecordCourseCompletion(
 
       if (courseCompletionError) {
         console.error('❌ Course completion record error:', courseCompletionError)
-        return
+        console.error('❌ Course completion data attempted:', courseCompletionData)
+        return false
       }
+      
+      console.log('✅ Course completion recorded successfully:', courseCompletionData)
 
       // 5. 修了証バッジ付与
       const badgeData = {
@@ -999,7 +1048,10 @@ async function checkAndRecordCourseCompletion(
         console.log('🏆 Course completion badge awarded')
       }
 
-      // 6. コース完了ボーナスXP・SKP付与
+      // 6. コース完了ボーナスXP・SKP付与（既存システム使用）
+      const courseCompletionBonus = xpSettings.xp_bonus.course_completion || 100
+      const courseCompletionSKPBonus = xpSettings.skp.course_complete_bonus || 200
+      
       // まず現在の統計を取得
       const { data: currentStats } = await supabase
         .from('user_xp_stats_v2')
@@ -1045,8 +1097,10 @@ async function checkAndRecordCourseCompletion(
       }
 
       console.log(`🎊 Course completion recorded: +${courseCompletionBonus}XP, +${courseCompletionSKPBonus}SKP, +1 Badge`)
-    }
+      return true
+    
   } catch (error) {
-    console.error('❌ Course completion check error:', error)
+    console.error('❌ Course completion recording error:', error)
+    return false
   }
 }

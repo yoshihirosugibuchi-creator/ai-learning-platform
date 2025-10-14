@@ -237,8 +237,8 @@ export default function CollectionPage() {
           genreId: 'thinking_foundation', 
           themeId: 'conclusion_first'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('conclusion_first_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('conclusion_first_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_conclusion_first')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_conclusion_first'))?.obtained_at
       },
       {
         id: 'mece_thinking_card',
@@ -258,8 +258,8 @@ export default function CollectionPage() {
           genreId: 'thinking_foundation',
           themeId: 'mece_thinking'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('mece_thinking_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('mece_thinking_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_mece_thinking')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_mece_thinking'))?.obtained_at
       },
       {
         id: 'so_what_card',
@@ -279,8 +279,8 @@ export default function CollectionPage() {
           genreId: 'thinking_foundation',
           themeId: 'so_what_why_so'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('so_what_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('so_what_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_so_what_why_so')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_so_what_why_so'))?.obtained_at
       },
       {
         id: 'logical_tree_card',
@@ -300,8 +300,8 @@ export default function CollectionPage() {
           genreId: 'thinking_foundation',
           themeId: 'logical_tree'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('logical_tree_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('logical_tree_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_logical_tree')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_logical_tree'))?.obtained_at
       },
       {
         id: 'hypothesis_thinking_card',
@@ -321,8 +321,8 @@ export default function CollectionPage() {
           genreId: 'problem_solving',
           themeId: 'hypothesis_thinking'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('hypothesis_thinking_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('hypothesis_thinking_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_hypothesis_thinking')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_hypothesis_thinking'))?.obtained_at
       },
       {
         id: '3c_analysis_card',
@@ -342,8 +342,8 @@ export default function CollectionPage() {
           genreId: 'framework_application',
           themeId: '3c_analysis'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('3c_analysis_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('3c_analysis_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_3c_analysis')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_3c_analysis'))?.obtained_at
       },
       {
         id: 'market_analysis_card',
@@ -363,8 +363,8 @@ export default function CollectionPage() {
           genreId: 'strategy_analysis',
           themeId: 'market_analysis'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('market_analysis_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('market_analysis_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_market_analysis')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_market_analysis'))?.obtained_at
       },
       {
         id: 'value_chain_card',
@@ -384,8 +384,8 @@ export default function CollectionPage() {
           genreId: 'strategy_analysis',
           themeId: 'value_chain'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('value_chain_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('value_chain_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_value_chain')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_value_chain'))?.obtained_at
       },
       {
         id: 'communication_basics_card',
@@ -405,8 +405,8 @@ export default function CollectionPage() {
           genreId: 'basic_communication',
           themeId: 'communication_basics'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('communication_basics_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('communication_basics_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_communication_basics')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_communication_basics'))?.obtained_at
       },
       {
         id: 'presentation_structure_card',
@@ -426,8 +426,8 @@ export default function CollectionPage() {
           genreId: 'advanced_presentation',
           themeId: 'presentation_structure'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('presentation_structure_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('presentation_structure_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_presentation_structure')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_presentation_structure'))?.obtained_at
       },
       {
         id: 'data_visualization_card',
@@ -447,8 +447,8 @@ export default function CollectionPage() {
           genreId: 'visualization',
           themeId: 'data_visualization'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('data_visualization_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('data_visualization_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_data_visualization')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_data_visualization'))?.obtained_at
       },
       {
         id: 'project_management_card',
@@ -468,8 +468,8 @@ export default function CollectionPage() {
           genreId: 'pm_basics',
           themeId: 'project_fundamentals'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('project_management_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('project_management_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_project_fundamentals')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_project_fundamentals'))?.obtained_at
       },
       // マーケティング実践コース
       {
@@ -490,8 +490,8 @@ export default function CollectionPage() {
           genreId: 'customer_understanding',
           themeId: 'customer_journey_mapping'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('customer_journey_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('customer_journey_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_customer_journey_mapping')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_customer_journey_mapping'))?.obtained_at
       },
       {
         id: 'persona_card',
@@ -511,8 +511,8 @@ export default function CollectionPage() {
           genreId: 'customer_understanding',
           themeId: 'persona_development'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('persona_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('persona_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_persona_development')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_persona_development'))?.obtained_at
       },
       {
         id: 'segmentation_card',
@@ -532,8 +532,8 @@ export default function CollectionPage() {
           genreId: 'customer_understanding',
           themeId: 'market_segmentation'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('segmentation_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('segmentation_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_market_segmentation')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_market_segmentation'))?.obtained_at
       },
       {
         id: 'content_marketing_card',
@@ -553,8 +553,8 @@ export default function CollectionPage() {
           genreId: 'digital_marketing',
           themeId: 'content_marketing'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('content_marketing_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('content_marketing_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_content_marketing')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_content_marketing'))?.obtained_at
       },
       {
         id: 'social_media_card',
@@ -574,8 +574,8 @@ export default function CollectionPage() {
           genreId: 'digital_marketing',
           themeId: 'social_media_marketing'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('social_media_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('social_media_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_social_media_marketing')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_social_media_marketing'))?.obtained_at
       },
       // AI活用リテラシー基礎コースのカード
       {
@@ -596,8 +596,8 @@ export default function CollectionPage() {
           genreId: 'ai_fundamentals',
           themeId: 'ai_basic_concepts'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('ai_basic_concepts_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('ai_basic_concepts_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_ai_basic_concepts')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_ai_basic_concepts'))?.obtained_at
       },
       {
         id: 'ai_business_applications_card',
@@ -615,10 +615,10 @@ export default function CollectionPage() {
         source: {
           courseId: 'ai_literacy_fundamentals',
           genreId: 'ai_fundamentals',
-          themeId: 'ai_basic_concepts'
+          themeId: 'ai_business_applications'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('ai_business_applications_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('ai_business_applications_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_ai_business_applications')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_ai_business_applications'))?.obtained_at
       },
       {
         id: 'ai_limitations_ethics_card',
@@ -638,8 +638,8 @@ export default function CollectionPage() {
           genreId: 'ai_fundamentals',
           themeId: 'ai_limitations_ethics'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('ai_limitations_ethics_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('ai_limitations_ethics_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_ai_limitations_ethics')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_ai_limitations_ethics'))?.obtained_at
       },
       {
         id: 'prompt_basics_card',
@@ -659,8 +659,8 @@ export default function CollectionPage() {
           genreId: 'prompt_engineering',
           themeId: 'prompt_basics'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('prompt_basics_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('prompt_basics_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_prompt_basics')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_prompt_basics'))?.obtained_at
       },
       {
         id: 'workflow_integration_card',
@@ -680,8 +680,8 @@ export default function CollectionPage() {
           genreId: 'business_practice',
           themeId: 'ai_workflow_integration'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('workflow_integration_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('workflow_integration_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_ai_workflow_integration')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_ai_workflow_integration'))?.obtained_at
       },
       {
         id: 'ai_evaluation_card',
@@ -701,8 +701,8 @@ export default function CollectionPage() {
           genreId: 'evaluation_ethics',
           themeId: 'ai_performance_evaluation'
         },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('ai_evaluation_card')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('ai_evaluation_card'))?.obtained_at
+        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_ai_performance_evaluation')),
+        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_ai_performance_evaluation'))?.obtained_at
       }
     ]
     

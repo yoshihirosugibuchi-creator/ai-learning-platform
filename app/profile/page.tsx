@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { loadXPSettings, type XPSettings } from '@/lib/xp-settings'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -28,7 +29,8 @@ import {
   Minus,
   Filter,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Settings
 } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
@@ -42,8 +44,11 @@ import { getSubcategories, getCategories, clearCategoriesCache, mainCategories a
 import type { Subcategory, IndustryCategory, MainCategory } from '@/lib/types/category'
 import { useXPStats } from '@/hooks/useXPStats'
 import ProfileEditModal from '@/components/profile/ProfileEditModal'
+import QuizSettingsModal from '@/components/profile/QuizSettingsModal'
 
 export default function ProfilePage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user, profile, loading, refreshProfile } = useAuth()
   const [activeTab, setActiveTab] = useState('basic')
@@ -87,6 +92,31 @@ export default function ProfilePage() {
       }
     }
     loadSettings()
+  }, [])
+
+  // クエリパラメータ処理（クイズ設定誘導）
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    const openSettings = searchParams.get('openSettings')
+    
+    if (tab === 'basic' && openSettings === 'true') {
+      setActiveTab('basic')
+      setQuizSettingsModalOpen(true)
+      
+      // モーダル状態をセッションストレージに保存
+      sessionStorage.setItem('quiz-settings-modal-open', 'true')
+      
+      // URLをクリーンアップ（クエリパラメータを削除）
+      router.replace('/profile', { scroll: false })
+    }
+  }, [searchParams, router])
+
+  // ページロード時にセッションストレージからモーダル状態を復元
+  useEffect(() => {
+    const savedModalState = sessionStorage.getItem('quiz-settings-modal-open')
+    if (savedModalState === 'true') {
+      setQuizSettingsModalOpen(true)
+    }
   }, [])
 
   // カテゴリーを動的に読み込み
@@ -149,6 +179,9 @@ export default function ProfilePage() {
     }
     setExpandedCategories(newExpanded)
   }
+  
+  // クイズ設定モーダル状態
+  const [quizSettingsModalOpen, setQuizSettingsModalOpen] = useState(false)
   
   // プロフィール編集状態
   const [profileData, setProfileData] = useState({
@@ -601,6 +634,30 @@ export default function ProfilePage() {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* セルフパーソナライズクイズ設定 */}
+            <Card className="border-blue-200 bg-blue-50/50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Settings className="h-5 w-5" />
+                  <span>セルフパーソナライズクイズ設定</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600">
+                    お好みの学習レベルとカテゴリーを設定して、あなた専用のクイズ体験をカスタマイズできます。
+                  </p>
+                  <Button 
+                    onClick={() => setQuizSettingsModalOpen(true)}
+                    className="w-full sm:w-auto"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    クイズ設定を変更
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -1155,6 +1212,16 @@ export default function ProfilePage() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* クイズ設定モーダル */}
+      <QuizSettingsModal 
+        isOpen={quizSettingsModalOpen} 
+        onClose={() => {
+          setQuizSettingsModalOpen(false)
+          // モーダル閉じた時はセッションストレージもクリア
+          sessionStorage.removeItem('quiz-settings-modal-open')
+        }} 
+      />
     </div>
   )
 }

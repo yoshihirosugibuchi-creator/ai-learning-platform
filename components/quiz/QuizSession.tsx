@@ -26,6 +26,9 @@ import {
 } from '@/lib/accuracy-calculator'
 // Removed: import { addWisdomCardToCollection } from '@/lib/supabase-cards' - moved to server
 import { UnifiedLearningAnalysisEngine } from '@/lib/unified-learning-analytics'
+import { useSearchParams } from 'next/navigation'
+import { getUserQuizSettings, isDefaultSettings } from '@/lib/user-quiz-settings'
+import { filterQuestionsForPersonalizedQuiz } from '@/lib/quiz-filtering'
 // import { supabase } from '@/lib/supabase' // 不要（API分離取りやめのため）
 // import { saveDetailedQuizData } from '@/lib/supabase-learning' // 未使用のためコメントアウト
 // import { updateProgressAfterQuiz, calculateChallengeQuizRewards, saveChallengeQuizProgressToDatabase } from '@/lib/xp-level-system'
@@ -96,6 +99,9 @@ export default function QuizSession({
   onExit
 }: QuizSessionProps) {
   const _router = useRouter()
+  const searchParams = useSearchParams()
+  const mode = searchParams.get('mode')
+  
   // New XP System Hook
   const { saveQuizSession } = useXPStats()
   
@@ -351,8 +357,55 @@ export default function QuizSession({
     completionInProgress.current = false
     setChallengeQuizUpdateData(null)
     
+    // セルフパーソナライズクイズの場合は専用フィルタリング
+    const handleSelfPersonalizedFiltering = async () => {
+      try {
+        console.log('🎯 Self-personalized quiz mode detected')
+        const settings = await getUserQuizSettings(user.id)
+        
+        if (isDefaultSettings(settings)) {
+          console.log('⚠️ User has default settings, proceeding with basic filtering')
+          // デフォルト設定の場合は通常のランダムフィルタリング
+          return questions
+        }
+        
+        console.log('✅ Applying user personalization settings:', settings)
+        const personalizedQuestions = filterQuestionsForPersonalizedQuiz(questions, settings)
+        
+        // 既存の学習履歴ベース最適化を適用（ランダムクイズと同じロジック）
+        return optimizeQuestionsForUser(personalizedQuestions, user.id, profile, false)
+        
+      } catch (error) {
+        console.error('❌ Self-personalized filtering failed:', error)
+        return questions // フォールバック
+      }
+    }
+
+    // フィルタリング処理の分岐
     let filteredQuestions = questions
     
+    if (mode === 'self-personalized') {
+      // セルフパーソナライズクイズ: 非同期フィルタリング
+      handleSelfPersonalizedFiltering().then(personalizedQuestions => {
+        console.log(`🎯 Self-personalized questions ready: ${personalizedQuestions.length}`)
+        setSessionQuestions(personalizedQuestions)
+        setResults(prev => ({
+          ...prev,
+          totalQuestions: personalizedQuestions.length
+        }))
+      }).catch(error => {
+        console.error('❌ Self-personalized setup failed, using fallback:', error)
+        const fallbackQuestions = getRandomQuestions(questions, 10)
+        setSessionQuestions(fallbackQuestions)
+        setResults(prev => ({
+          ...prev,
+          totalQuestions: fallbackQuestions.length
+        }))
+      })
+      return // 非同期処理のため早期リターン
+    }
+    
+    // 通常のフィルタリング（AI-personalized/random/カテゴリー指定）
     // カテゴリーでフィルタリング
     if (category) {
       filteredQuestions = filteredQuestions.filter(q => q.category === category)
@@ -429,7 +482,7 @@ export default function QuizSession({
       }))
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questions, category, level, difficulties, user.id, profile?.id])
+  }, [questions, category, level, difficulties, user.id, profile?.id, mode])
 
   // Helper functions for cognitive load and flow state calculation
   const calculateCognitiveLoad = useCallback((responseTime: number, isCorrect: boolean): number => {

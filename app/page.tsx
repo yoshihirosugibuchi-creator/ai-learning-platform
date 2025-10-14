@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Play, BookOpen, Trophy } from 'lucide-react'
+import { Play, BookOpen, Brain, Settings } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
@@ -86,22 +86,42 @@ export default function Home() {
                   学習を続けましょう！AIがあなたの学習進度に合わせて最適な問題を提供します。
                 </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all">
                     <CardHeader className="text-center">
                       <div className="mx-auto mb-2 p-3 bg-primary/10 rounded-full w-fit">
-                        <Play className="h-6 w-6 text-primary" />
+                        <Brain className="h-6 w-6 text-primary" />
                       </div>
-                      <CardTitle>クイズに挑戦</CardTitle>
+                      <CardTitle>ビジネスAIパーソナライズクイズ</CardTitle>
                       <CardDescription>
-                        毎日継続すると不思議とスキルがレベルアップ
+                        学習レベルや弱点を考慮したAI出題
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Link href="/quiz?mode=ai-personalized" prefetch={true}>
+                        <Button className="w-full">
+                          <Play className="h-4 w-4 mr-2" />
+                          クイズ開始
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-2 border-blue-200 hover:border-blue-400 transition-all">
+                    <CardHeader className="text-center">
+                      <div className="mx-auto mb-2 p-3 bg-blue-100 rounded-full w-fit">
+                        <Settings className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <CardTitle>セルフパーソナライズクイズ</CardTitle>
+                      <CardDescription>
+                        お好みのカテゴリーと学習レベルを自由設定
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <Link href="/quiz?mode=random" prefetch={true}>
+                      <Link href="/quiz?mode=self-personalized" prefetch={true}>
                         <Button className="w-full">
                           <Play className="h-4 w-4 mr-2" />
-                          ランダムクイズ開始
+                          クイズ開始
                         </Button>
                       </Link>
                       <Link href="/categories" prefetch={true}>
@@ -119,7 +139,7 @@ export default function Home() {
                       </div>
                       <CardTitle>コース学習</CardTitle>
                       <CardDescription>
-                        体系的に学習できるカリキュラム
+                        教材ベースのステップバイステップ学習
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -131,26 +151,6 @@ export default function Home() {
                         <Button variant="outline" className="w-full">
                           <BookOpen className="h-4 w-4 mr-2" />
                           学習を開始
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="hover:shadow-lg transition-shadow">
-                    <CardHeader className="text-center">
-                      <div className="mx-auto mb-2 p-3 bg-yellow-100 rounded-full w-fit">
-                        <Trophy className="h-6 w-6 text-yellow-600" />
-                      </div>
-                      <CardTitle>学習分析</CardTitle>
-                      <CardDescription>
-                        学習の進捗状況を確認
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Link href="/analytics" prefetch={true}>
-                        <Button variant="outline" className="w-full">
-                          <Trophy className="h-4 w-4 mr-2" />
-                          分析を見る
                         </Button>
                       </Link>
                     </CardContent>

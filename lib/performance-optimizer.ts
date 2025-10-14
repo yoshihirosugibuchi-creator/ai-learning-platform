@@ -1,3 +1,5 @@
+'use client'
+
 // Performance Optimization Utilities
 // パフォーマンス最適化ユーティリティ
 

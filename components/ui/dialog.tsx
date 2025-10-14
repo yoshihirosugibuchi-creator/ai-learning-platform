@@ -54,6 +54,23 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
+  // Radix UIの警告を抑制するため、隠しタイトルを自動挿入
+  const hasDialogTitle = React.Children.toArray(children).some((child) => {
+    if (React.isValidElement(child)) {
+      if (child.type === DialogTitle) return true
+      // DialogHeaderの中身もチェック
+      if (child.props && typeof child.props === 'object' && 'children' in child.props) {
+        return React.Children.toArray(child.props.children as React.ReactNode).some((nestedChild) => {
+          if (React.isValidElement(nestedChild)) {
+            if (nestedChild.type === DialogTitle) return true
+          }
+          return false
+        })
+      }
+    }
+    return false
+  })
+
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
@@ -65,6 +82,9 @@ function DialogContent({
         )}
         {...props}
       >
+        {!hasDialogTitle && (
+          <DialogPrimitive.Title className="sr-only">Dialog</DialogPrimitive.Title>
+        )}
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close

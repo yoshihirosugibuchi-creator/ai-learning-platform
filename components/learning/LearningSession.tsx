@@ -17,10 +17,11 @@ import {
   BookOpen,
   Award
 } from 'lucide-react'
-import { LearningSession as LearningSessionType, SessionTypeLabels, UserBadge } from '@/lib/types/learning'
+import { LearningSession as LearningSessionType, SessionTypeLabels, UserBadge, LearningCourse } from '@/lib/types/learning'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useXPStats } from '@/hooks/useXPStats'
 import { supabase } from '@/lib/supabase'
+import { addKnowledgeCardToCollection } from '@/lib/supabase-cards'
 
 interface LearningSessionProps {
   courseId: string
@@ -54,6 +55,14 @@ interface CourseSessionResponse {
   quiz_correct?: boolean
   theme_completed?: boolean
   course_completed?: boolean
+  streak_bonus?: {
+    skpGained: number
+    breakdown: {
+      base: number
+      bonus: number
+      description: string
+    }
+  } | null
   message?: string
   error?: string
 }
@@ -98,21 +107,54 @@ export default function LearningSession({
   const [showThemeCompletion, setShowThemeCompletion] = useState(false)
   const [showCourseCompletion, setShowCourseCompletion] = useState(false)
   const [earnedXP, setEarnedXP] = useState(0)
+  // Client-side completion tracking
+  const [completedSessions, setCompletedSessions] = useState<Set<string>>(new Set())
+  const [completedThemes, setCompletedThemes] = useState<Set<string>>(new Set())
+  const [courseData, setCourseData] = useState<LearningCourse | null>(null)
   
-  // Fetch course name
+  // Fetch course data and load completion status
   useEffect(() => {
-    const fetchCourseName = async () => {
+    const fetchCourseData = async () => {
       try {
         const courseDetails = await getLearningCourseDetails(courseId)
         if (courseDetails) {
           setCourseName(courseDetails.title)
+          setCourseData(courseDetails)
+          
+          // Load existing completions from database
+          if (user?.id) {
+            const { data: sessionCompletions } = await supabase
+              .from('course_session_completions')
+              .select('session_id')
+              .eq('user_id', user.id)
+              .eq('course_id', courseId)
+              .eq('is_first_completion', true)
+            
+            console.log('🔍 Loading completed sessions from database:', sessionCompletions)
+            
+            if (sessionCompletions) {
+              setCompletedSessions(new Set(sessionCompletions.map(s => s.session_id)))
+            }
+            
+            const { data: themeCompletions } = await supabase
+              .from('course_theme_completions')
+              .select('theme_id')
+              .eq('user_id', user.id)
+              .eq('course_id', courseId)
+            
+            console.log('🔍 Loading completed themes from database:', themeCompletions)
+            
+            if (themeCompletions) {
+              setCompletedThemes(new Set(themeCompletions.map(t => t.theme_id)))
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching course details:', error)
       }
     }
-    fetchCourseName()
-  }, [courseId])
+    fetchCourseData()
+  }, [courseId, user?.id])
 
   // 初回完了判定
   useEffect(() => {
@@ -222,8 +264,8 @@ export default function LearningSession({
     return accuracy >= 0.7 // 70%以上で正解扱い
   }
 
-  // 新設計: コース学習セッション完了API呼び出し
-  const saveSessionProgress = async (): Promise<CourseSessionResponse> => {
+  // 新設計: コース学習セッション完了API呼び出し（クライアント判定結果付き）
+  const saveSessionProgress = async (clientThemeCompleted = false, clientCourseCompleted = false): Promise<CourseSessionResponse> => {
     if (!user) {
       throw new Error('Authentication required')
     }
@@ -244,7 +286,10 @@ export default function LearningSession({
       session_start_time: startTime.toISOString(),
       session_end_time: endTime.toISOString(),
       duration_seconds: durationSeconds,
-      quiz_time_spent: hasQuiz ? durationSeconds : undefined
+      quiz_time_spent: hasQuiz ? durationSeconds : undefined,
+      // クライアント側完了判定結果を追加
+      client_theme_completed: clientThemeCompleted,
+      client_course_completed: clientCourseCompleted
     }
 
     console.log('💾 Saving course session progress:', requestBody)
@@ -272,6 +317,76 @@ export default function LearningSession({
     return result
   }
 
+  // Client-side completion detection functions
+  const checkThemeCompletion = (sessionId: string): boolean => {
+    if (!courseData) return false
+    
+    // Find the theme for this session
+    let currentTheme = null
+    for (const genre of courseData.genres) {
+      for (const theme of genre.themes) {
+        if (theme.sessions.some((s) => s.id === sessionId)) {
+          currentTheme = theme
+          break
+        }
+      }
+      if (currentTheme) break
+    }
+    
+    if (!currentTheme) return false
+    
+    // Add current session to completed sessions
+    const updatedCompletedSessions = new Set(completedSessions)
+    updatedCompletedSessions.add(sessionId)
+    
+    // Check if all sessions in this theme are completed
+    const themeSessionIds = currentTheme.sessions.map((s) => s.id)
+    const allThemeSessionsCompleted = themeSessionIds.every((sid: string) => 
+      updatedCompletedSessions.has(sid)
+    )
+    
+    console.log('🎯 Theme completion check:', {
+      themeId: currentTheme.id,
+      totalSessions: themeSessionIds.length,
+      completedSessions: themeSessionIds.filter((sid: string) => updatedCompletedSessions.has(sid)).length,
+      isComplete: allThemeSessionsCompleted
+    })
+    
+    return allThemeSessionsCompleted
+  }
+  
+  const checkCourseCompletion = (completingSessionId: string): boolean => {
+    if (!courseData) return false
+    
+    // Add current session to completed sessions
+    const updatedCompletedSessions = new Set(completedSessions)
+    updatedCompletedSessions.add(completingSessionId)
+    
+    // Get all session IDs in the course
+    const allSessionIds: string[] = []
+    for (const genre of courseData.genres) {
+      for (const theme of genre.themes) {
+        for (const session of theme.sessions) {
+          allSessionIds.push(session.id)
+        }
+      }
+    }
+    
+    // Check if all sessions are completed
+    const allSessionsCompleted = allSessionIds.every((sid: string) => 
+      updatedCompletedSessions.has(sid)
+    )
+    
+    console.log('🏆 Course completion check:', {
+      courseId,
+      totalSessions: allSessionIds.length,
+      completedSessions: allSessionIds.filter((sid: string) => updatedCompletedSessions.has(sid)).length,
+      isComplete: allSessionsCompleted
+    })
+    
+    return allSessionsCompleted
+  }
+
   const completeSession = async () => {
     if (!user?.id || sessionCompleted || isCompletingSession) {
       console.error('❌ Cannot complete session: missing user or session already completed or in progress')
@@ -282,38 +397,77 @@ export default function LearningSession({
     setIsCompletingSession(true)
 
     try {
-      // 🚀 パフォーマンス改善: UIを即座に更新
+      // 🚀 Client-side completion detection BEFORE API call
+      const willCompleteTheme = checkThemeCompletion(session.id)
+      let willCompleteCourse = false
+      
+      // セッション完了数ベースでコース完了判定
+      willCompleteCourse = checkCourseCompletion(session.id)
+      
+      console.log('🎯 Client-side completion predictions:', {
+        sessionId: session.id,
+        themeId,
+        willCompleteTheme,
+        willCompleteCourse
+      })
+      
+      // 🚀 Immediate UI updates based on client-side detection
       setSessionCompleted(true)
       setViewState('completed')
       onComplete(session.id)
-      console.log('⚡ UI updated immediately for better UX')
       
-      // APIを呼び出してレスポンスを取得
-      const apiResult = await saveSessionProgress()
-
-      if (apiResult.success) {
-        // 獲得XPの表示
-        if (apiResult.earned_xp) {
-          setEarnedXP(apiResult.earned_xp)
+      // Update local completion tracking
+      const updatedSessions = new Set(completedSessions)
+      updatedSessions.add(session.id)
+      setCompletedSessions(updatedSessions)
+      
+      if (willCompleteTheme) {
+        const updatedThemes = new Set(completedThemes)
+        updatedThemes.add(themeId)
+        setCompletedThemes(updatedThemes)
+        
+        // Immediately show theme completion UI
+        setShowThemeCompletion(true)
+        setCardAcquired(true)
+        setIsThemeCompleted(true)
+        
+        // Immediately add knowledge card to collection
+        try {
+          const cardId = Math.abs(`theme_${themeId}`.split('').reduce((a, b) => a + b.charCodeAt(0), 0))
+          await addKnowledgeCardToCollection(user.id, cardId)
+          console.log('🎊 Knowledge card immediately added to collection')
+        } catch (cardError) {
+          console.warn('⚠️ Failed to add knowledge card immediately:', cardError)
         }
-
-        // 完了状態の表示
-        if (apiResult.theme_completed) {
-          setShowThemeCompletion(true)
-          setCardAcquired(true)
-          setIsThemeCompleted(true)
-          console.log('🎊 Theme completed!')
-        }
-
-        if (apiResult.course_completed) {
-          setShowCourseCompletion(true)
-          console.log('🏆 Course completed!')
-        }
-
-        console.log('✅ Session completion processing finished')
-      } else {
-        console.error('❌ API returned error:', apiResult.error)
       }
+      
+      if (willCompleteCourse) {
+        setShowCourseCompletion(true)
+        console.log('🏆 Course completion UI immediately shown')
+      }
+      
+      console.log('⚡ UI updated immediately with client-side completion detection')
+      
+      // Parallel API call for database updates with client judgments
+      Promise.resolve().then(async () => {
+        try {
+          const apiResult = await saveSessionProgress(willCompleteTheme, willCompleteCourse)
+
+          if (apiResult.success) {
+            // Update XP display from API result
+            if (apiResult.earned_xp) {
+              setEarnedXP(apiResult.earned_xp)
+            }
+            
+            console.log('✅ Database updates completed in background')
+          } else {
+            console.error('❌ API returned error:', apiResult.error)
+          }
+        } catch (error) {
+          console.error('❌ Background API error:', error)
+        }
+      })
+      
     } catch (error) {
       console.error('❌ Error in session completion:', error)
     } finally {

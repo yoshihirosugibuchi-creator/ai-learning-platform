@@ -1,5 +1,31 @@
 import { LearningCourse } from '@/lib/types/learning'
-import { globalCache } from '@/lib/performance-optimizer'
+// Server-side cache implementation (separate from client-side)
+class ServerCache {
+  private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>()
+
+  set(key: string, data: unknown, ttl: number): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    })
+  }
+
+  get(key: string): unknown | null {
+    const item = this.cache.get(key)
+    if (!item) return null
+
+    // TTL check
+    if (Date.now() - item.timestamp > item.ttl) {
+      this.cache.delete(key)
+      return null
+    }
+
+    return item.data
+  }
+}
+
+const serverCache = new ServerCache()
 import { 
   getCoursesFromDB, 
   getCourseDetailsFromDB, 
@@ -33,7 +59,7 @@ export async function getLearningCourses(): Promise<{
   const cacheKey = 'learning_courses_db'
   
   // キャッシュチェック（5分間）
-  const cached = globalCache.get(cacheKey)
+  const cached = serverCache.get(cacheKey)
   if (cached) {
     console.log('🚀 Learning courses loaded from cache')
     return cached as {
@@ -58,7 +84,7 @@ export async function getLearningCourses(): Promise<{
       const courses = await getCoursesFromDB()
       
       // キャッシュに保存（5分間）
-      globalCache.set(cacheKey, courses, 5 * 60 * 1000)
+      serverCache.set(cacheKey, courses, 5 * 60 * 1000)
       
       console.log(`✅ Learning courses loaded from DB: ${courses.length} courses`)
       return courses
@@ -205,7 +231,7 @@ export async function getLearningCourseDetails(courseId: string): Promise<Learni
   const cacheKey = `course_details_db_${courseId}`
   
   // キャッシュチェック（10分間）
-  const cached = globalCache.get(cacheKey)
+  const cached = serverCache.get(cacheKey)
   if (cached) {
     console.log('🚀 Course details loaded from cache:', courseId)
     return cached as LearningCourse
@@ -218,7 +244,7 @@ export async function getLearningCourseDetails(courseId: string): Promise<Learni
       
       if (courseData) {
         // キャッシュに保存（10分間）
-        globalCache.set(cacheKey, courseData, 10 * 60 * 1000)
+        serverCache.set(cacheKey, courseData, 10 * 60 * 1000)
         console.log('✅ Course details loaded from DB:', courseId)
         return courseData
       }
