@@ -1607,6 +1607,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_knowledge_collection_v2: {
+        Row: {
+          created_at: string | null
+          id: string
+          obtained_at: string | null
+          theme_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          obtained_at?: string | null
+          theme_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          obtained_at?: string | null
+          theme_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_learning_profiles: {
         Row: {
           attention_span_minutes: number | null
@@ -2487,3 +2511,4 @@ export type SystemConfigMonitoringUpdate = Database['public']['Tables']['system_
 export type SystemHealthLog = Database['public']['Tables']['system_health_logs']['Row']
 export type SystemHealthLogInsert = Database['public']['Tables']['system_health_logs']['Insert']
 export type SystemHealthLogUpdate = Database['public']['Tables']['system_health_logs']['Update']
+

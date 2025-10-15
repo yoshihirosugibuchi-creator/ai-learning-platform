@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
       'course_completions',
       'knowledge_card_collection',
       'wisdom_card_collection',
+      'user_knowledge_collection_v2', // 新しい知識カードコレクションV2システム
       'user_settings',
       'skp_transactions',
       'daily_xp_records',
