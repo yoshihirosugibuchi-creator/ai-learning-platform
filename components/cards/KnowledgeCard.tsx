@@ -12,14 +12,14 @@ import {
   Clock,
   Star
 } from 'lucide-react'
-import { type KnowledgeCard, getDifficultyColor } from '@/lib/knowledge-cards'
+import { type UserKnowledgeCard } from '@/lib/knowledge-cards-v2'
 import { reviewKnowledgeCard } from '@/lib/supabase-cards'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/AuthProvider'
 
 interface KnowledgeCardProps {
-  card: KnowledgeCard
+  card: UserKnowledgeCard & { obtained?: boolean }
   showDetails?: boolean
   onReview?: (cardId: string) => void
 }
@@ -30,40 +30,45 @@ export default function KnowledgeCard({
   onReview 
 }: KnowledgeCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const router = useRouter()
+  const _router = useRouter()
   const { user } = useAuth()
 
   const handleReview = async () => {
     // 復習回数をカウントアップ
     if (user?.id) {
-      // Convert string ID to number for Supabase
-      const cardId = !isNaN(Number(card.id)) 
-        ? Number(card.id)
-        : Math.abs(card.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0))
-      
-      await reviewKnowledgeCard(user.id, cardId)
-      onReview?.(card.id)
+      // Use theme_id for card identification in V2 system
+      await reviewKnowledgeCard(user.id, card.theme_id)
+      onReview?.(card.theme_id)
     }
     
-    // 学習セッションにナビゲート
-    if (card.source) {
-      const { courseId } = card.source
-      // テーマの最初のセッションに移動。実際のセッションIDはコースデータから取得する必要がある
-      // 今は簡易的にコースページに移動
-      router.push(`/learning/${courseId}`)
+    // 優先度順でナビゲーション先を決定
+    if (card.course_id && card.genre_id && card.first_session_id) {
+      // Best: Direct navigation to first session of the theme
+      const sessionUrl = `/learning/${card.course_id}/${card.genre_id}/${card.theme_id}/${card.first_session_id}`
+      console.log('🎯 Navigating directly to first session:', sessionUrl)
+      _router.push(sessionUrl)
+    } else if (card.course_id) {
+      // Fallback: Navigate to course page where user can select the theme
+      const courseUrl = `/learning/${card.course_id}`
+      console.log('🔗 Navigating to course page for theme review:', courseUrl)
+      console.log('🎯 User can find theme:', card.theme_id, 'in the course')
+      _router.push(courseUrl)
     } else {
-      console.warn('Card source information not available for navigation')
+      console.warn('⚠️ Cannot navigate: missing course_id for theme:', card.theme_id)
+      
+      // Last resort: Navigate to general learning page
+      console.log('🔗 Navigating to learning page (fallback)')
+      _router.push('/learning')
     }
   }
 
-  const difficultyColor = getDifficultyColor(card.difficulty)
-  const difficultyLabels = {
-    beginner: '初級',
-    intermediate: '中級', 
-    advanced: '上級'
-  }
+  // V2では難易度色をシンプルに（カード自体に色情報を使用）
+  const difficultyColor = card.card_data?.color || '#3B82F6'
 
-  if (!card.obtained && !showDetails) {
+  // Show as locked if no acquisition record (check obtained status properly)
+  const isLocked = !showDetails || card.obtained === false
+  
+  if (isLocked) {
     // 未獲得カードの場合はロック表示（格言カード同様のブランク表示）
     return (
       <Card className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-dashed border-gray-300">
@@ -99,59 +104,47 @@ export default function KnowledgeCard({
   return (
     <Card 
       className="overflow-hidden transition-all duration-200 hover:shadow-lg"
-      style={{ borderTop: `4px solid ${card.color}` }}
+      style={{ borderTop: `4px solid ${difficultyColor}` }}
     >
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
             <div 
               className="text-2xl p-2 rounded-full bg-opacity-10 flex items-center justify-center w-12 h-12"
-              style={{ backgroundColor: `${card.color}20` }}
+              style={{ backgroundColor: `${difficultyColor}20` }}
             >
-              {card.icon}
+              {card.card_data?.icon || '📚'}
             </div>
             <div className="space-y-1">
-              <CardTitle className="text-lg leading-tight">{card.title}</CardTitle>
+              <CardTitle className="text-lg leading-tight">{card.card_data?.title || 'ナレッジカード'}</CardTitle>
               <div className="flex items-center space-x-2">
-                <Badge 
-                  variant="secondary" 
-                  className="text-xs"
-                  style={{ 
-                    backgroundColor: difficultyColor,
-                    color: 'white'
-                  }}
-                >
-                  {difficultyLabels[card.difficulty]}
-                </Badge>
                 <Badge variant="outline" className="text-xs">
-                  {card.category}
+                  {card.theme_id}
                 </Badge>
               </div>
             </div>
           </div>
           
-          {card.obtained && (
-            <div className="flex flex-col items-end space-y-1">
-              <Bookmark className="h-4 w-4 text-primary" />
-              {card.obtainedAt && (
-                <div className="text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3 inline mr-1" />
-                  {new Date(card.obtainedAt).toLocaleDateString()}
-                </div>
-              )}
-            </div>
-          )}
+          <div className="flex flex-col items-end space-y-1">
+            <Bookmark className="h-4 w-4 text-primary" />
+            {card.obtained_at && (
+              <div className="text-xs text-muted-foreground">
+                <Clock className="h-3 w-3 inline mr-1" />
+                {new Date(card.obtained_at).toLocaleDateString()}
+              </div>
+            )}
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
         {/* Summary */}
         <p className="text-sm text-muted-foreground leading-relaxed">
-          {card.summary}
+          {card.card_data?.summary || 'ナレッジカードの説明'}
         </p>
 
         {/* Key Points Toggle */}
-        {card.keyPoints.length > 0 && (
+        {card.card_data?.keyPoints && Array.isArray(card.card_data.keyPoints) && card.card_data.keyPoints.length > 0 && (
           <div className="space-y-2">
             <Button
               variant="ghost"
@@ -164,12 +157,12 @@ export default function KnowledgeCard({
               ) : (
                 <ChevronRight className="h-4 w-4" />
               )}
-              <span>重要ポイント ({card.keyPoints.length})</span>
+              <span>重要ポイント ({card.card_data.keyPoints.length})</span>
             </Button>
             
             {isExpanded && (
               <div className="space-y-2 pl-6 border-l-2 border-primary/20">
-                {card.keyPoints.map((point, index) => (
+                {card.card_data.keyPoints.map((point, index) => (
                   <div key={index} className="flex items-start space-x-2">
                     <Star className="h-3 w-3 text-primary mt-1 flex-shrink-0" />
                     <span className="text-sm text-gray-700">{point}</span>
@@ -186,13 +179,13 @@ export default function KnowledgeCard({
         </div>
 
         {/* Action Button */}
-        {card.obtained && showDetails && (
+        {showDetails && (
           <Button
             onClick={handleReview}
             variant="outline"
             size="sm"
             className="w-full"
-            style={{ borderColor: card.color, color: card.color }}
+            style={{ borderColor: difficultyColor, color: difficultyColor }}
           >
             <Eye className="h-4 w-4 mr-2" />
             復習する

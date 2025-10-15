@@ -24,11 +24,32 @@ if (!userId || !courseId) {
   process.exit(1)
 }
 
+// ポート検出（3001優先、フォールバック3000）
+async function detectPort() {
+  const ports = [3001, 3000]
+  for (const port of ports) {
+    try {
+      const response = await fetch(`http://localhost:${port}/api/admin/reset-course-progress`, {
+        method: 'HEAD'
+      })
+      console.log(`✅ 開発サーバー検出: ポート ${port}`)
+      return port
+    } catch (error) {
+      // ポートが利用できない場合は次を試す
+    }
+  }
+  throw new Error('開発サーバーが見つかりません。npm run dev を実行してください。')
+}
+
 async function resetCourseProgress() {
   try {
     console.log(`🔄 コース進捗をリセット中: User=${userId}, Course=${courseId}`)
     
-    const response = await fetch('http://localhost:3000/api/admin/reset-course-progress', {
+    // ポート検出
+    const port = await detectPort()
+    const baseUrl = `http://localhost:${port}`
+    
+    const response = await fetch(`${baseUrl}/api/admin/reset-course-progress`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -29,17 +29,19 @@ import {
   getWisdomCardStats, 
   hasWisdomCard, 
   getWisdomCardCount,
-  getUserKnowledgeCards,
-  getKnowledgeCardStats,
-  getCardNumericId,
-  WisdomCardCollection,
-  KnowledgeCardCollection
+  getUserKnowledgeCollection,
+  getKnowledgeCardStats as getOldKnowledgeCardStats,
+  WisdomCardCollection
 } from '@/lib/supabase-cards'
-import { 
-  KnowledgeCard as KnowledgeCardType
-} from '@/lib/knowledge-cards'
+import {
+  UserKnowledgeCard
+} from '@/lib/knowledge-cards-v2'
+import {
+  UserKnowledgeCollectionV2
+} from '@/lib/types/knowledge-cards-v2'
 import { getUserBadges } from '@/lib/supabase-badges'
 import { UserBadge } from '@/lib/types/learning'
+import { supabase } from '@/lib/supabase'
 
 // Define constants outside component to avoid re-creation
 const RARITIES = ['コモン', 'レア', 'エピック', 'レジェンダリー']
@@ -49,7 +51,7 @@ export default function CollectionPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [selectedRarity, setSelectedRarity] = useState<string>('all')
   const [selectedWisdomCategory, setSelectedWisdomCategory] = useState<string>('all')
-  const [selectedKnowledgeCategory, setSelectedKnowledgeCategory] = useState<string>('all')
+  // selectedKnowledgeCategory removed - V2システムではカテゴリーフィルター不要
   const [selectedBadgeStatus, setSelectedBadgeStatus] = useState<string>('all')
   const [activeTab, setActiveTab] = useState('wisdom')
   const { user } = useAuth()
@@ -66,11 +68,26 @@ export default function CollectionPage() {
   })
   const [wisdomDataLoading, setWisdomDataLoading] = useState(true)
 
-  // ナレッジカードデータ（学習コンテンツから獲得） - Supabase版
+  // 古いnewKnowledgeCards関連の状態は削除（knowledgeCollectionDataに統合）
+
+  // ナレッジカードコレクション表示用の型定義
+  interface KnowledgeCardWithStatus extends UserKnowledgeCard {
+    obtained: boolean
+    course_title?: string
+    genre_title?: string
+    display_order?: {
+      course: number
+      genre: number
+      theme: number
+    }
+    created_at?: string | null
+  }
+
+  // ナレッジカードデータ（学習コンテンツから獲得） - V2システム対応
   const [knowledgeCollectionData, setKnowledgeCollectionData] = useState<{
-    collection: KnowledgeCardCollection[]
+    collection: UserKnowledgeCollectionV2[]
     stats: { totalObtained: number; totalCards: number; uniqueCards: number; totalReviews?: number }
-    cardsWithStatus: Array<{ obtained: boolean; count: number; id: number; title: string; category: string; rarity: string; description: string; applicationArea: string }>
+    cardsWithStatus: KnowledgeCardWithStatus[]
   }>({
     collection: [],
     stats: { totalObtained: 0, totalCards: 0, uniqueCards: 0, totalReviews: 0 },
@@ -158,53 +175,159 @@ export default function CollectionPage() {
         try {
           console.log(`🔄 LOADING KNOWLEDGE CARDS for user: ${user.id}`)
           
-          const [collection, stats] = await Promise.all([
-            getUserKnowledgeCards(user.id),
-            getKnowledgeCardStats(user.id)
+          // Step 1: Get user's acquired cards
+          const [userCollection, stats] = await Promise.all([
+            getUserKnowledgeCollection(user.id),
+            getOldKnowledgeCardStats(user.id)
           ])
 
-          console.log(`📚 KNOWLEDGE CARD COLLECTION LOADED for user ${user?.id}:`, collection)
+          console.log(`📚 USER COLLECTION LOADED for user ${user?.id}:`, userCollection)
           console.log('📊 Knowledge card stats:', stats)
-          console.log(`🔢 Total cards in collection: ${collection.length}`)
           
-          if (collection.length > 0) {
-            console.log('🎯 All card IDs in collection:', collection.map(c => ({ 
-              card_id: c.card_id, 
-              obtained_at: c.obtained_at,
-              count: c.count 
-            })))
-            
-            // Log which predefined cards match the obtained cards
-            const predefinedCardIds = ['ai_basic_concepts_card', 'ai_business_applications_card', 'ai_limitations_ethics_card']
-            predefinedCardIds.forEach(cardId => {
-              const numericId = getCardNumericId(cardId)
-              const hasCard = collection.some(c => c.card_id === numericId)
-              console.log(`🔍 Card ${cardId} (${numericId}) obtained: ${hasCard}`)
+          // Step 2: Get ALL themes with simpler query to avoid complex JOIN errors
+          const { data: allThemes, error: themesError } = await supabase
+            .from('learning_themes')
+            .select('id, title, reward_card_data, genre_id, display_order')
+            .order('display_order', { ascending: true })
+          
+          if (themesError) {
+            console.error('❌ Failed to fetch all themes:', themesError)
+            console.error('Error details:', themesError)
+            return
+          }
+          
+          if (!allThemes || allThemes.length === 0) {
+            console.log('⚠️ No themes found in database')
+            setKnowledgeCollectionData({
+              collection: [],
+              stats,
+              cardsWithStatus: []
             })
-            
-            // Debug localStorage knowledge cards
-            if (typeof window !== 'undefined' && window.localStorage) {
-              const localCardKeys = Object.keys(localStorage).filter(key => key.startsWith('knowledge_card_'))
-              console.log(`💾 LocalStorage knowledge cards found: ${localCardKeys.length}`)
-              localCardKeys.forEach(key => {
-                const cardData = localStorage.getItem(key)
-                if (cardData) {
-                  try {
-                    const parsed = JSON.parse(cardData)
-                    console.log(`💾 LocalStorage card: ${key} →`, parsed)
-                  } catch {
-                    console.error(`❌ Failed to parse localStorage card: ${key}`)
+            return
+          }
+          
+          console.log(`🗂️ ALL THEMES LOADED: ${allThemes?.length || 0} themes`)
+          
+          // Step 3: Get additional data for each theme and create cards with status
+          const cardsWithStatus = await Promise.all(
+            allThemes.map(async (theme) => {
+              try {
+                // Check if user has this card
+                const userCard = userCollection.find(card => card.theme_id === theme.id)
+                const isObtained = !!userCard
+                
+                const rewardCardData = (theme.reward_card_data as Record<string, unknown>) || {}
+                
+                // Get genre information separately for better error handling
+                const { data: genreInfo } = await supabase
+                  .from('learning_genres')
+                  .select('id, title, course_id, display_order')
+                  .eq('id', theme.genre_id)
+                  .single()
+                
+                // Get course information if genre exists
+                let courseInfo = null
+                if (genreInfo?.course_id) {
+                  const { data: courseData } = await supabase
+                    .from('learning_courses')
+                    .select('id, title, display_order')
+                    .eq('id', genreInfo.course_id)
+                    .single()
+                  courseInfo = courseData
+                }
+                
+                // Get first session for direct navigation
+                const { data: sessions } = await supabase
+                  .from('learning_sessions')
+                  .select('id, display_order')
+                  .eq('theme_id', theme.id)
+                  .order('display_order', { ascending: true })
+                  .limit(1)
+                
+                const firstSession = sessions?.[0] || null
+                
+                const courseId = genreInfo?.course_id || null
+                const courseTitle = courseInfo?.title || 'Unknown Course'
+                const genreTitle = genreInfo?.title || 'Unknown Genre'
+                
+                const enrichedCard: KnowledgeCardWithStatus = {
+                  id: userCard?.id || `placeholder_${theme.id}`,
+                  user_id: user.id,
+                  theme_id: theme.id,
+                  obtained_at: userCard?.obtained_at || null,
+                  created_at: userCard?.created_at || null,
+                  obtained: isObtained,
+                  card_data: {
+                    id: theme.id,
+                    title: (rewardCardData.title as string) || theme.title || 'ナレッジカード',
+                    summary: (rewardCardData.description as string) || (rewardCardData.summary as string) || 'テーマ完了により獲得',
+                    icon: (rewardCardData.icon as string) || '📚',
+                    color: (rewardCardData.color as string) || '#3B82F6',
+                    keyPoints: (rewardCardData.keyPoints as string[]) || (rewardCardData.key_points as string[]) || []
+                  },
+                  course_id: courseId || undefined,
+                  genre_id: theme.genre_id,
+                  theme_title: theme.title,
+                  first_session_id: firstSession?.id,
+                  // Display info
+                  course_title: courseTitle,
+                  genre_title: genreTitle,
+                  display_order: {
+                    course: courseInfo?.display_order || 999,
+                    genre: genreInfo?.display_order || 999,
+                    theme: theme.display_order || 999
                   }
                 }
-              })
+                
+                return enrichedCard
+              } catch (enrichError) {
+                console.error(`❌ Error enriching theme ${theme.id}:`, enrichError)
+                return null
+              }
+            })
+          )
+          
+          const validCards = cardsWithStatus.filter((card): card is KnowledgeCardWithStatus => card !== null)
+          
+          // 階層ソート: コース > ジャンル > テーマの順番でソート
+          validCards.sort((a, b) => {
+            // 第1キー: コースの表示順
+            if (a.display_order!.course !== b.display_order!.course) {
+              return a.display_order!.course - b.display_order!.course
             }
-          }
+            // 第2キー: ジャンルの表示順
+            if (a.display_order!.genre !== b.display_order!.genre) {
+              return a.display_order!.genre - b.display_order!.genre
+            }
+            // 第3キー: テーマの表示順
+            return a.display_order!.theme - b.display_order!.theme
+          })
+          
+          console.log('✨ All cards with status created and sorted:', validCards.length)
+          console.log('🎯 Sample card:', validCards[0])
+          console.log('🔢 Sort order sample:', validCards.slice(0, 3).map(card => ({ 
+            course: card.display_order?.course, 
+            genre: card.display_order?.genre, 
+            theme: card.display_order?.theme, 
+            title: card.card_data?.title 
+          })))
 
-          setKnowledgeCollectionData(prev => ({
-            ...prev,
-            collection,
-            stats
-          }))
+          // 獲得済みカードをUserKnowledgeCollectionV2形式に変換
+          const obtainedCardsAsV2: UserKnowledgeCollectionV2[] = validCards
+            .filter(card => card.obtained)
+            .map(card => ({
+              id: card.id,
+              user_id: card.user_id,
+              theme_id: card.theme_id,
+              obtained_at: card.obtained_at,
+              created_at: card.created_at || null
+            }))
+
+          setKnowledgeCollectionData({
+            collection: obtainedCardsAsV2,
+            stats,
+            cardsWithStatus: validCards
+          })
         } catch (error) {
           console.error('❌ Error loading knowledge cards:', error)
         }
@@ -212,516 +335,18 @@ export default function CollectionPage() {
 
       loadKnowledgeCards()
     }
+
+    // 新システムのデータ読み込みは上記のloadKnowledgeCardsに統合済み
   }, [user])
 
-  // Knowledge card data processing
-  const knowledgeCardsProcessed = useMemo(() => {
-    
-    // サンプルナレッジカードリスト
-    const knowledgeCards: KnowledgeCardType[] = [
-      {
-        id: 'conclusion_first_card',
-        title: '結論ファースト',
-        summary: 'まず結論、その後に根拠という情報構造でコミュニケーションの効率を上げる手法',
-        keyPoints: [
-          'PREP法（Point・Reason・Example・Point）の活用',
-          '聞き手の理解負荷を軽減',
-          '説得力のあるプレゼンテーション'
-        ],
-        icon: '🎯',
-        color: '#3B82F6',
-        category: '論理的思考・分析',
-        difficulty: 'beginner',
-        source: {
-          courseId: 'consulting_thinking_basics',
-          genreId: 'thinking_foundation', 
-          themeId: 'conclusion_first'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_conclusion_first')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_conclusion_first'))?.obtained_at
-      },
-      {
-        id: 'mece_thinking_card',
-        title: 'MECE思考',
-        summary: '複雑な問題を「漏れなく重複なく」整理して全体像を把握する思考技術',
-        keyPoints: [
-          'Mutually Exclusive（重複なく）',
-          'Collectively Exhaustive（漏れなく）',
-          '問題の全体像把握と優先順位付け'
-        ],
-        icon: '📊',
-        color: '#10B981',
-        category: '論理的思考・分析',
-        difficulty: 'beginner',
-        source: {
-          courseId: 'consulting_thinking_basics',
-          genreId: 'thinking_foundation',
-          themeId: 'mece_thinking'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_mece_thinking')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_mece_thinking'))?.obtained_at
-      },
-      {
-        id: 'so_what_card',
-        title: 'So What?/Why So?',
-        summary: '情報の本質を見抜き、deeper insightを得るための質問技術',
-        keyPoints: [
-          'So What? - それで何が言えるのか？',
-          'Why So? - なぜそうなるのか？',
-          '論理の飛躍を防ぐ検証プロセス'
-        ],
-        icon: '❓',
-        color: '#F59E0B',
-        category: '論理的思考・分析',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'consulting_thinking_basics',
-          genreId: 'thinking_foundation',
-          themeId: 'so_what_why_so'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_so_what_why_so')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_so_what_why_so'))?.obtained_at
-      },
-      {
-        id: 'logical_tree_card',
-        title: 'ロジックツリー',
-        summary: '問題を階層的に分解し、根本原因を特定する構造化思考ツール',
-        keyPoints: [
-          'イシューツリーとソリューションツリーの使い分け',
-          'Why型とHow型の論理展開',
-          '原因分析と対策立案の体系化'
-        ],
-        icon: '🌳',
-        color: '#8B5CF6',
-        category: '論理的思考・分析',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'consulting_thinking_basics',
-          genreId: 'thinking_foundation',
-          themeId: 'logical_tree'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_logical_tree')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_logical_tree'))?.obtained_at
-      },
-      {
-        id: 'hypothesis_thinking_card',
-        title: '仮説思考',
-        summary: '限られた情報から最も可能性の高い答えを設定し、効率的に検証する思考法',
-        keyPoints: [
-          '仮説設定→検証→修正のサイクル',
-          'So What?による本質的課題の抽出',
-          '情報収集の効率化と意思決定スピード向上'
-        ],
-        icon: '💡',
-        color: '#F59E0B',
-        category: '問題解決・思考法',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'consulting_thinking_basics',
-          genreId: 'problem_solving',
-          themeId: 'hypothesis_thinking'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_hypothesis_thinking')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_hypothesis_thinking'))?.obtained_at
-      },
-      {
-        id: '3c_analysis_card',
-        title: '3C分析',
-        summary: 'Customer（顧客）・Competitor（競合）・Company（自社）の3つの視点から事業環境を分析',
-        keyPoints: [
-          '顧客ニーズと市場動向の把握',
-          '競合他社の戦略と強み弱みの分析',
-          '自社の能力と資源の客観的評価'
-        ],
-        icon: '🎪',
-        color: '#3B82F6',
-        category: '事業戦略・企画',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'consulting_thinking_basics',
-          genreId: 'framework_application',
-          themeId: '3c_analysis'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_3c_analysis')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_3c_analysis'))?.obtained_at
-      },
-      {
-        id: 'market_analysis_card',
-        title: '市場分析フレームワーク',
-        summary: '3C分析、5Forces、SWOT分析を組み合わせた包括的な事業環境分析手法',
-        keyPoints: [
-          '顧客・競合・自社の3C分析',
-          'ポーターの5Forces による業界構造分析',
-          'SWOT分析による戦略オプション抽出'
-        ],
-        icon: '📈',
-        color: '#EF4444',
-        category: '事業戦略・企画',
-        difficulty: 'advanced',
-        source: {
-          courseId: 'business_strategy_basics',
-          genreId: 'strategy_analysis',
-          themeId: 'market_analysis'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_market_analysis')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_market_analysis'))?.obtained_at
-      },
-      {
-        id: 'value_chain_card',
-        title: 'バリューチェーン分析',
-        summary: '企業の価値創造プロセスを主活動と支援活動に分解し、競争優位性を特定',
-        keyPoints: [
-          '主活動（調達→製造→販売→サービス）の分析',
-          '支援活動（技術・人事・インフラ）の役割理解',
-          'コスト優位性と差別化要因の特定'
-        ],
-        icon: '⛓️',
-        color: '#06B6D4',
-        category: '事業戦略・企画',
-        difficulty: 'advanced',
-        source: {
-          courseId: 'business_strategy_basics',
-          genreId: 'strategy_analysis',
-          themeId: 'value_chain'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_value_chain')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_value_chain'))?.obtained_at
-      },
-      {
-        id: 'communication_basics_card',
-        title: 'ビジネスコミュニケーション基礎',
-        summary: '相手の立場を理解し、明確で効果的なメッセージを伝える技術',
-        keyPoints: [
-          'アクティブリスニングとエンパシー',
-          'ノンバーバル・コミュニケーションの活用',
-          '相手に応じたコミュニケーションスタイルの調整'
-        ],
-        icon: '💬',
-        color: '#84CC16',
-        category: 'コミュニケーション・対人関係',
-        difficulty: 'beginner',
-        source: {
-          courseId: 'communication_skills',
-          genreId: 'basic_communication',
-          themeId: 'communication_basics'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_communication_basics')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_communication_basics'))?.obtained_at
-      },
-      {
-        id: 'presentation_structure_card',
-        title: 'プレゼンテーション構成法',
-        summary: '聴衆を引き込み、メッセージを確実に伝える構造化プレゼンテーション技術',
-        keyPoints: [
-          'ピラミッド構造による論理展開',
-          'ストーリーテリングの活用',
-          '視覚的資料とスピーチの連携'
-        ],
-        icon: '🎤',
-        color: '#A855F7',
-        category: 'プレゼンテーション・提案',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'presentation_skills',
-          genreId: 'advanced_presentation',
-          themeId: 'presentation_structure'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_presentation_structure')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_presentation_structure'))?.obtained_at
-      },
-      {
-        id: 'data_visualization_card',
-        title: 'データ可視化の原則',
-        summary: '数字と事実を効果的なグラフィック表現で伝える技術',
-        keyPoints: [
-          'チャートタイプの適切な選択',
-          'カラーパレットと視認性の最適化',
-          'ストーリーを伝えるデザイン思考'
-        ],
-        icon: '📊',
-        color: '#F97316',
-        category: 'データ分析・可視化',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'data_analysis_skills',
-          genreId: 'visualization',
-          themeId: 'data_visualization'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_data_visualization')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_data_visualization'))?.obtained_at
-      },
-      {
-        id: 'project_management_card',
-        title: 'プロジェクトマネジメント基礎',
-        summary: '期限・予算・品質を管理し、プロジェクトを成功に導く体系的手法',
-        keyPoints: [
-          'WBS（Work Breakdown Structure）による作業分解',
-          'クリティカルパス法によるスケジュール管理',
-          'ステークホルダー・コミュニケーション'
-        ],
-        icon: '📋',
-        color: '#14B8A6',
-        category: 'プロジェクトマネジメント',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'project_management',
-          genreId: 'pm_basics',
-          themeId: 'project_fundamentals'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_project_fundamentals')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_project_fundamentals'))?.obtained_at
-      },
-      // マーケティング実践コース
-      {
-        id: 'customer_journey_card',
-        title: 'カスタマージャーニーマップ',
-        summary: '顧客の購買プロセス全体を可視化し、各段階での課題と機会を特定する手法',
-        keyPoints: [
-          '認知→検討→購入→利用→推奨の各段階分析',
-          'タッチポイントと感情の変化を可視化',
-          '改善機会の優先順位付け'
-        ],
-        icon: '🗺️',
-        color: '#3B82F6',
-        category: 'マーケティング・営業',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'marketing_practice',
-          genreId: 'customer_understanding',
-          themeId: 'customer_journey_mapping'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_customer_journey_mapping')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_customer_journey_mapping'))?.obtained_at
-      },
-      {
-        id: 'persona_card',
-        title: 'ペルソナ開発',
-        summary: '定量・定性データを統合し、マーケティング戦略の核となる具体的な顧客像を構築',
-        keyPoints: [
-          'デモグラフィック＋心理的特性の統合',
-          '実データに基づく仮説構築',
-          'チーム内での顧客認識統一'
-        ],
-        icon: '👤',
-        color: '#10B981',
-        category: 'マーケティング・営業',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'marketing_practice',
-          genreId: 'customer_understanding',
-          themeId: 'persona_development'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_persona_development')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_persona_development'))?.obtained_at
-      },
-      {
-        id: 'segmentation_card',
-        title: '市場セグメンテーション',
-        summary: '多様な顧客を意味のある塊に分類し、最適なターゲティング戦略を構築',
-        keyPoints: [
-          'セグメンテーション軸の戦略的選択',
-          'セグメント評価とターゲット選定',
-          'セグメント別アプローチの最適化'
-        ],
-        icon: '🎯',
-        color: '#F59E0B',
-        category: 'マーケティング・営業',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'marketing_practice',
-          genreId: 'customer_understanding',
-          themeId: 'market_segmentation'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_market_segmentation')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_market_segmentation'))?.obtained_at
-      },
-      {
-        id: 'content_marketing_card',
-        title: 'コンテンツマーケティング',
-        summary: '顧客の課題解決に役立つ価値あるコンテンツを通じて信頼関係を構築し、ビジネス成果につなげる手法',
-        keyPoints: [
-          '顧客価値優先のコンテンツ設計',
-          'カスタマージャーニーに応じた配信戦略',
-          '効果測定と継続改善'
-        ],
-        icon: '📝',
-        color: '#10B981',
-        category: 'マーケティング・営業',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'marketing_practice',
-          genreId: 'digital_marketing',
-          themeId: 'content_marketing'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_content_marketing')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_content_marketing'))?.obtained_at
-      },
-      {
-        id: 'social_media_card',
-        title: 'ソーシャルメディアマーケティング',
-        summary: 'SNSプラットフォームの特性を活かし、顧客との双方向コミュニケーションを通じてブランド価値を向上させる手法',
-        keyPoints: [
-          'プラットフォーム別の最適化戦略',
-          'コミュニティ構築とエンゲージメント',
-          'インフルエンサー・UGC活用'
-        ],
-        icon: '📱',
-        color: '#8B5CF6',
-        category: 'マーケティング・営業',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'marketing_practice',
-          genreId: 'digital_marketing',
-          themeId: 'social_media_marketing'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_social_media_marketing')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_social_media_marketing'))?.obtained_at
-      },
-      // AI活用リテラシー基礎コースのカード
-      {
-        id: 'ai_basic_concepts_card',
-        title: 'AI基本概念',
-        summary: 'AIの定義から機械学習、ディープラーニングまで、基本概念を理解',
-        keyPoints: [
-          'AI・機械学習・ディープラーニングの違い',
-          'AIの得意分野と限界の理解',
-          'ビジネスでのAI活用事例'
-        ],
-        icon: '🤖',
-        color: '#7C3AED',
-        category: 'AI・デジタル活用',
-        difficulty: 'beginner',
-        source: {
-          courseId: 'ai_literacy_fundamentals',
-          genreId: 'ai_fundamentals',
-          themeId: 'ai_basic_concepts'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_ai_basic_concepts')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_ai_basic_concepts'))?.obtained_at
-      },
-      {
-        id: 'ai_business_applications_card',
-        title: 'AIビジネス活用',
-        summary: '様々な業界でのAI活用事例と導入成功の鍵を理解',
-        keyPoints: [
-          '金融・小売・製造・医療での具体的活用例',
-          'AI導入の成功要因と課題',
-          'ROI設計と段階的導入アプローチ'
-        ],
-        icon: '💼',
-        color: '#10B981',
-        category: 'AI・デジタル活用',
-        difficulty: 'beginner',
-        source: {
-          courseId: 'ai_literacy_fundamentals',
-          genreId: 'ai_fundamentals',
-          themeId: 'ai_business_applications'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_ai_business_applications')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_ai_business_applications'))?.obtained_at
-      },
-      {
-        id: 'ai_limitations_ethics_card',
-        title: 'AI倫理とリスク管理',
-        summary: 'AIの限界を理解し、倫理的配慮とリスク管理の重要性を学習',
-        keyPoints: [
-          'AIの技術的限界とデータ依存性',
-          'バイアス・プライバシー・透明性の課題',
-          '責任あるAI活用のガイドライン'
-        ],
-        icon: '⚖️',
-        color: '#EF4444',
-        category: 'AI・デジタル活用',
-        difficulty: 'beginner',
-        source: {
-          courseId: 'ai_literacy_fundamentals',
-          genreId: 'ai_fundamentals',
-          themeId: 'ai_limitations_ethics'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_ai_limitations_ethics')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_ai_limitations_ethics'))?.obtained_at
-      },
-      {
-        id: 'prompt_basics_card',
-        title: 'プロンプト基礎',
-        summary: '明確で具体的なプロンプト設計により、生成AIから期待する回答を得る技術',
-        keyPoints: [
-          '明確性・具体性・文脈情報の提供',
-          'ロールプレイとサンプル出力の活用',
-          '段階的プロンプト改善手法'
-        ],
-        icon: '📝',
-        color: '#059669',
-        category: 'AI・デジタル活用',
-        difficulty: 'beginner',
-        source: {
-          courseId: 'ai_literacy_fundamentals',
-          genreId: 'prompt_engineering',
-          themeId: 'prompt_basics'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_prompt_basics')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_prompt_basics'))?.obtained_at
-      },
-      {
-        id: 'workflow_integration_card',
-        title: 'AIワークフロー設計',
-        summary: '既存の業務プロセスにAIを効果的に組み込み、生産性向上を実現する設計技術',
-        keyPoints: [
-          '業務プロセスの分析と改善点特定',
-          'AIツールの適材適所での活用',
-          '人とAIの役割分担設計'
-        ],
-        icon: '⚙️',
-        color: '#DC2626',
-        category: 'AI・デジタル活用',
-        difficulty: 'intermediate',
-        source: {
-          courseId: 'ai_literacy_fundamentals',
-          genreId: 'business_practice',
-          themeId: 'ai_workflow_integration'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_ai_workflow_integration')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_ai_workflow_integration'))?.obtained_at
-      },
-      {
-        id: 'ai_evaluation_card',
-        title: 'AI成果評価',
-        summary: 'AI導入の効果を適切に測定し、継続的な改善につなげる評価技術',
-        keyPoints: [
-          '定量・定性の両面での効果測定',
-          'ROI・生産性向上指標の設定',
-          '倫理・法的リスクの管理'
-        ],
-        icon: '📊',
-        color: '#7C2D12',
-        category: 'AI・デジタル活用',
-        difficulty: 'advanced',
-        source: {
-          courseId: 'ai_literacy_fundamentals',
-          genreId: 'evaluation_ethics',
-          themeId: 'ai_performance_evaluation'
-        },
-        obtained: knowledgeCollectionData.collection.some(c => c.card_id === getCardNumericId('theme_ai_performance_evaluation')),
-        obtainedAt: knowledgeCollectionData.collection.find(c => c.card_id === getCardNumericId('theme_ai_performance_evaluation'))?.obtained_at
-      }
-    ]
-    
-    console.log('🂯 Total knowledge cards defined:', knowledgeCards.length)
-    console.log('🔄 AI course cards available:', knowledgeCards.filter(card => 
-      card.source?.courseId === 'ai_literacy_fundamentals'
-    ).map(card => ({ id: card.id, title: card.title, obtained: card.obtained })))
-    
-    console.log('🔍 Card ID mapping check:')
-    knowledgeCards.slice(0, 3).forEach(card => {
-      const numericId = getCardNumericId(card.id)
-      const isObtained = knowledgeCollectionData.collection.some(c => c.card_id === numericId)
-      console.log(`  Card: ${card.id} -> Numeric: ${numericId} -> Obtained: ${isObtained}`)
-    })
-    
-    return {
-      collection: knowledgeCollectionData.collection,
-      stats: knowledgeCollectionData.stats,
-      cardsWithStatus: knowledgeCards
+  // ナレッジカードデータのログ出力
+  useMemo(() => {
+    console.log('🎴 Processing enriched knowledge cards...')
+    console.log(`📊 Enriched cards loaded: ${knowledgeCollectionData.collection.length}`)
+    console.log(`📈 Collection stats:`, knowledgeCollectionData.stats)
+    console.log(`✅ Processed ${knowledgeCollectionData.collection.length} enriched knowledge cards`)
+    if (knowledgeCollectionData.collection.length > 0) {
+      console.log('🎯 Sample enriched card:', knowledgeCollectionData.collection[0])
     }
   }, [knowledgeCollectionData])
 
@@ -734,13 +359,11 @@ export default function CollectionPage() {
     })
   }, [wisdomCollectionData.cardsWithStatus, selectedRarity, selectedWisdomCategory])
 
-  // ナレッジカード用フィルタリング
+  // ナレッジカード用フィルタリング（格言カードと同様の仕組み）
   const filteredKnowledgeCards = useMemo(() => {
-    return knowledgeCardsProcessed.cardsWithStatus.filter(card => {
-      const categoryMatch = selectedKnowledgeCategory === 'all' || card.category === selectedKnowledgeCategory
-      return categoryMatch
-    })
-  }, [knowledgeCardsProcessed.cardsWithStatus, selectedKnowledgeCategory])
+    // cardsWithStatusを使用（全てのカード：取得済み・未取得含む）
+    return knowledgeCollectionData.cardsWithStatus
+  }, [knowledgeCollectionData.cardsWithStatus])
 
   const obtainedWisdomCards = filteredWisdomCards.filter(card => card.obtained)
   const lockedWisdomCards = filteredWisdomCards.filter(card => !card.obtained)
@@ -776,19 +399,7 @@ export default function CollectionPage() {
     'risk_crisis_management'
   ]
   
-  // ナレッジカードのカテゴリー（全カテゴリーを定義）
-  const knowledgeCategories = [
-    '論理的思考・分析',
-    '問題解決・思考法', 
-    '事業戦略・企画',
-    'コミュニケーション・対人関係',
-    'プレゼンテーション・提案',
-    'データ分析・可視化',
-    'プロジェクトマネジメント',
-    'チームマネジメント',
-    'マーケティング・営業',
-    'ファイナンス・会計'
-  ]
+  // knowledgeCategories removed - V2システムではカテゴリーフィルター不要
 
   const rarityStats = useMemo(() => {
     return RARITIES.map(rarity => {
@@ -806,9 +417,7 @@ export default function CollectionPage() {
   }, [wisdomCollectionData.cardsWithStatus])
 
   const wisdomCollectionRate = wisdomDataLoading ? 0 : Math.round((wisdomCollectionData.stats.uniqueCards / wisdomCards.length) * 100)
-  const knowledgeCollectionRate = knowledgeCollectionData.cardsWithStatus.length > 0 
-    ? Math.round((obtainedKnowledgeCards.length / knowledgeCollectionData.cardsWithStatus.length) * 100)
-    : 0
+  const knowledgeCollectionRate = knowledgeCollectionData.collection.length > 0 ? 100 : 0 // 新システムでは取得済みのみ表示
 
   if (!user) {
     return (
@@ -1122,26 +731,7 @@ export default function CollectionPage() {
               </Card>
             </div>
 
-            {/* Knowledge Card Category Filter */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium mb-2 block">メインカテゴリ</label>
-                    <select
-                      value={selectedKnowledgeCategory}
-                      onChange={(e) => setSelectedKnowledgeCategory(e.target.value)}
-                      className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                    >
-                      <option value="all">全てのメインカテゴリ</option>
-                      {knowledgeCategories.map(category => (
-                        <option key={category} value={category}>{category}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* V2システムではカテゴリーフィルターは不要 */}
 
             {/* Knowledge Cards Collection */}
             <Tabs defaultValue="all" className="space-y-6">
@@ -1164,9 +754,9 @@ export default function CollectionPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredKnowledgeCards.map(card => (
                     <KnowledgeCard 
-                      key={card.id} 
+                      key={card.theme_id} 
                       card={card} 
-                      showDetails={card.obtained}
+                      showDetails={true}
                     />
                   ))}
                 </div>
@@ -1176,7 +766,7 @@ export default function CollectionPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {obtainedKnowledgeCards.map(card => (
                     <KnowledgeCard 
-                      key={card.id} 
+                      key={card.theme_id} 
                       card={card} 
                       showDetails={true}
                     />
@@ -1195,7 +785,7 @@ export default function CollectionPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {lockedKnowledgeCards.map(card => (
                     <KnowledgeCard 
-                      key={card.id} 
+                      key={card.theme_id} 
                       card={card} 
                       showDetails={false}
                     />

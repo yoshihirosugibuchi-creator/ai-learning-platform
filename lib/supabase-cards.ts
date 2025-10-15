@@ -185,7 +185,25 @@ function migrateLocalStorageCards(oldUserId: string, newUserId: string) {
   }
 }
 
-// Knowledge Card Functions
+import { UserKnowledgeCollectionV2 } from './types/knowledge-cards-v2'
+
+// Knowledge Card Functions - V2 System
+export async function getUserKnowledgeCollection(userId: string): Promise<UserKnowledgeCollectionV2[]> {
+  const { data, error } = await supabase
+    .from('user_knowledge_collection_v2')
+    .select('id, user_id, theme_id, obtained_at, created_at')
+    .eq('user_id', userId)
+    .order('obtained_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching knowledge collection V2:', error)
+    return []
+  }
+
+  return (data || []) as UserKnowledgeCollectionV2[]
+}
+
+// Legacy Knowledge Card Functions - V1 System (for backward compatibility)
 export async function getUserKnowledgeCards(userId: string): Promise<KnowledgeCardCollection[]> {
   // Migrate old test-user-123 cards if they exist
   if (userId === '550e8400-e29b-41d4-a716-446655440000') {
@@ -247,6 +265,7 @@ export async function getUserKnowledgeCards(userId: string): Promise<KnowledgeCa
   }))
 }
 
+// LEGACY: Use acquireKnowledgeCard from knowledge-cards-v2.ts instead
 export async function addKnowledgeCardToCollection(userId: string, cardId: string | number): Promise<{ count: number; isNew: boolean }> {
   const numericCardId = getCardNumericId(cardId)
   
@@ -395,12 +414,13 @@ export async function hasWisdomCard(userId: string, cardId: number): Promise<boo
 }
 
 export async function hasKnowledgeCard(userId: string, cardId: string | number): Promise<boolean> {
-  const numericCardId = getCardNumericId(cardId)
+  // V2システム: themeIdベースで確認
+  const themeId = typeof cardId === 'string' ? cardId : `theme_${cardId}`
   const { data } = await supabase
-    .from('knowledge_card_collection')
-    .select('id')
+    .from('user_knowledge_collection_v2')
+    .select('theme_id')
     .eq('user_id', userId)
-    .eq('card_id', numericCardId)
+    .eq('theme_id', themeId)
     .single()
 
   return !!data
@@ -432,53 +452,57 @@ export async function getWisdomCardCount(userId: string, cardId: number): Promis
 }
 
 export async function getKnowledgeCardCount(userId: string, cardId: string | number): Promise<number> {
-  const numericCardId = getCardNumericId(cardId)
+  // V2システム: themeIdベースで検索
+  const themeId = typeof cardId === 'string' ? cardId : `theme_${cardId}`
   const { data } = await supabase
-    .from('knowledge_card_collection')
-    .select('count')
+    .from('user_knowledge_collection_v2')
+    .select('*')
     .eq('user_id', userId)
-    .eq('card_id', numericCardId)
+    .eq('theme_id', themeId)
     .single()
 
-  return data?.count || 0
+  return data ? 1 : 0 // V2では獲得済み(1)か未獲得(0)
 }
 
-// Review knowledge card (increment review count and update timestamp)
+// Review knowledge card (update review timestamp in V2 system)
 export async function reviewKnowledgeCard(userId: string, cardId: string | number): Promise<boolean> {
   try {
-    const numericCardId = getCardNumericId(cardId)
+    // V2システム: themeIdベースで検索・更新
+    const themeId = typeof cardId === 'string' ? cardId : `theme_${cardId}`
+    
     const { data: existingCard } = await supabase
-      .from('knowledge_card_collection')
+      .from('user_knowledge_collection_v2')
       .select('*')
       .eq('user_id', userId)
-      .eq('card_id', numericCardId)
+      .eq('theme_id', themeId)
       .single()
 
     if (!existingCard) {
-      console.error('Knowledge card not found in collection')
+      console.error('Knowledge card not found in V2 collection:', { userId, themeId })
       return false
     }
 
+    // V2テーブルには obtained_at フィールドがあるので、それを更新
     const { error } = await supabase
-      .from('knowledge_card_collection')
+      .from('user_knowledge_collection_v2')
       .update({
-        last_obtained_at: new Date().toISOString()
+        obtained_at: new Date().toISOString() // V2では obtained_at フィールドを更新
       })
       .eq('user_id', userId)
-      .eq('card_id', numericCardId)
+      .eq('theme_id', themeId)
 
     if (error) {
-      console.error('Error updating knowledge card review:', {
+      console.error('Error updating knowledge card review in V2:', {
         error,
         userId,
         cardId,
-        numericCardId,
+        themeId,
         existingCard
       })
       return false
     }
 
-    console.log(`📚 Knowledge card ${cardId} (${numericCardId}) reviewed by user ${userId}`)
+    console.log(`📚 Knowledge card ${cardId} (${themeId}) reviewed by user ${userId}`)
     return true
   } catch (error) {
     console.error('Error reviewing knowledge card:', error)

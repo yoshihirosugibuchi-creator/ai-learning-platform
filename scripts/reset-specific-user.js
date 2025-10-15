@@ -11,7 +11,7 @@
  * 
  * 特徴:
  * - 強制リセットAPI使用（SERVICE_ROLE_KEY、RLSバイパス）
- * - 19テーブル完全対応
+ * - 20テーブル完全対応（user_knowledge_collection_v2追加）
  * - 削除確認機能
  * - ポート自動検出
  */
@@ -67,12 +67,12 @@ async function resetUserData() {
     const port = await detectPort()
     const baseUrl = `http://localhost:${port}`
     
-    console.log('⚠️  警告: 以下のデータが完全削除されます（19テーブル）:')
+    console.log('⚠️  警告: 以下のデータが完全削除されます（20テーブル）:')
     console.log('   📚 学習進捗: learning_progress, course_session_completions, course_theme_completions, course_completions')
     console.log('   🎯 クイズ履歴: quiz_sessions, quiz_answers, quiz_results, detailed_quiz_data')
     console.log('   📊 XP・統計: user_xp_stats_v2, user_category_xp_stats_v2, user_subcategory_xp_stats_v2, daily_xp_records')
     console.log('   💰 SKP・バッジ: skp_transactions, user_badges')
-    console.log('   🎁 コレクション: knowledge_card_collection, wisdom_card_collection')
+    console.log('   🎁 コレクション: knowledge_card_collection, wisdom_card_collection, user_knowledge_collection_v2')
     console.log('   ⚙️  設定: user_settings, user_progress')
     console.log('')
     console.log('✅ 保持されるデータ: アカウント情報（users テーブル）')

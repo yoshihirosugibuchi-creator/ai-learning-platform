@@ -245,7 +245,10 @@ export async function POST(request: Request) {
           subcategory_id: body.subcategory_id,
           is_first_completion: isFirstCompletion,
           session_quiz_correct: body.session_quiz_correct,
-          earned_xp: earnedXP
+          earned_xp: earnedXP,
+          session_start_time: body.session_start_time,
+          session_end_time: body.session_end_time,
+          duration_seconds: body.duration_seconds
         })
         .select()
 
@@ -991,26 +994,67 @@ async function recordCourseCompletion(
     // 2. クライアント判定に基づいてコース完了記録を作成
     console.log(`🎉 Recording course completion based on client judgment: ${body.course_id}`)
 
-    // コースのテーマ数を取得（統計用）
-    let totalCourseThemes = 0
+    // コースの統計情報を取得
+    let totalSessions = 0
+    let totalThemes = 0
+    let completedThemes = 0
+    let totalSessionXP = 0
+    
     try {
       const courseDetails = await getLearningCourseDetails(body.course_id)
       if (courseDetails) {
-        totalCourseThemes = courseDetails.genres.reduce((total, genre) => total + genre.themes.length, 0)
+        // 全セッション数とテーマ数を正確に計算
+        for (const genre of courseDetails.genres) {
+          totalThemes += genre.themes.length
+          for (const theme of genre.themes) {
+            totalSessions += theme.sessions.length
+          }
+        }
+        
+        // 実際に完了したテーマ数をDBから取得
+        const { data: completedThemeRecords } = await supabase
+          .from('course_theme_completions')
+          .select('theme_id')
+          .eq('user_id', userId)
+          .eq('course_id', body.course_id)
+        
+        completedThemes = completedThemeRecords?.length || 0
+        
+        // コースの累積セッションXPを計算
+        const { data: userCompletions } = await supabase
+          .from('course_session_completions')
+          .select('earned_xp')
+          .eq('user_id', userId)
+          .eq('course_id', body.course_id)
+          .eq('is_first_completion', true)
+        
+        totalSessionXP = userCompletions?.reduce((sum, completion) => sum + (completion.earned_xp || 0), 0) || 0
       }
     } catch (error) {
-      console.warn('⚠️ Failed to get course theme count:', error)
-      totalCourseThemes = 1
+      console.warn('⚠️ Failed to get course details:', error)
+      totalSessions = 1
+      totalThemes = 1
+      completedThemes = 1
+      totalSessionXP = 0
     }
+    
+    // コース完了ボーナスXP計算
+    const courseCompletionBonus = xpSettings.xp_bonus.course_completion || 100
+    const totalEarnedXP = totalSessionXP + courseCompletionBonus
+    const completionRate = totalThemes > 0 ? (completedThemes / totalThemes) * 100 : 100
 
-    // 3. コース完了記録を作成（XP/SKPは別テーブルで管理）
+    // 3. コース完了記録を正確なデータで作成
       const courseCompletionData = {
         user_id: userId,
         course_id: body.course_id,
-        completed_sessions: totalCourseThemes, // クライアント判定で完了なので全テーマ完了
-        completed_themes: totalCourseThemes, // クライアント判定で完了なので全テーマ完了
-        total_sessions: totalCourseThemes,
-        total_themes: totalCourseThemes,
+        completed_sessions: totalSessions, // 実際の完了セッション数（クライアント判定では全完了）
+        completed_themes: completedThemes, // 実際にDBに記録されている完了テーマ数
+        total_sessions: totalSessions, // コース全体のセッション数
+        total_themes: totalThemes, // コース全体のテーマ数
+        total_session_xp: totalSessionXP, // セッションからの累積XP
+        completion_bonus_xp: courseCompletionBonus, // 完了ボーナスXP
+        total_earned_xp: totalEarnedXP, // 総獲得XP
+        completion_rate: Math.round(completionRate * 100) / 100, // 完了率（小数点以下2桁）
         badges_awarded: 1
       }
       
@@ -1049,7 +1093,7 @@ async function recordCourseCompletion(
       }
 
       // 6. コース完了ボーナスXP・SKP付与（既存システム使用）
-      const courseCompletionBonus = xpSettings.xp_bonus.course_completion || 100
+      const bonusXP = xpSettings.xp_bonus.course_completion || 100
       const courseCompletionSKPBonus = xpSettings.skp.course_complete_bonus || 200
       
       // まず現在の統計を取得
@@ -1064,8 +1108,8 @@ async function recordCourseCompletion(
         supabase
           .from('user_xp_stats_v2')
           .update({
-            total_xp: (currentStats?.total_xp || 0) + courseCompletionBonus,
-            bonus_xp: (currentStats?.bonus_xp || 0) + courseCompletionBonus,
+            total_xp: (currentStats?.total_xp || 0) + bonusXP,
+            bonus_xp: (currentStats?.bonus_xp || 0) + bonusXP,
             total_skp: (currentStats?.total_skp || 0) + courseCompletionSKPBonus,
             bonus_skp: (currentStats?.bonus_skp || 0) + courseCompletionSKPBonus,
             badges_total: (currentStats?.badges_total || 0) + 1,
@@ -1096,7 +1140,7 @@ async function recordCourseCompletion(
         console.warn('⚠️ Course completion SKP transaction error:', skpTransaction.error)
       }
 
-      console.log(`🎊 Course completion recorded: +${courseCompletionBonus}XP, +${courseCompletionSKPBonus}SKP, +1 Badge`)
+      console.log(`🎊 Course completion recorded: +${bonusXP}XP, +${courseCompletionSKPBonus}SKP, +1 Badge`)
       return true
     
   } catch (error) {

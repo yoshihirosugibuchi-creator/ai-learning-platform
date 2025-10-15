@@ -21,7 +21,7 @@ import { LearningSession as LearningSessionType, SessionTypeLabels, UserBadge, L
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useXPStats } from '@/hooks/useXPStats'
 import { supabase } from '@/lib/supabase'
-import { addKnowledgeCardToCollection } from '@/lib/supabase-cards'
+import { acquireKnowledgeCard } from '@/lib/knowledge-cards-v2'
 
 interface LearningSessionProps {
   courseId: string
@@ -98,6 +98,8 @@ export default function LearningSession({
   const [isCompletingSession, setIsCompletingSession] = useState(false)
   const [_courseName, setCourseName] = useState<string>('Learning Course')
   const [isFirstCompletion, setIsFirstCompletion] = useState<boolean | null>(null)
+  const [isFirstCourseCompletion, setIsFirstCourseCompletion] = useState<boolean | null>(null)
+  const [isFirstThemeCompletion, setIsFirstThemeCompletion] = useState<boolean | null>(null)
   const [_isThemeCompleted, setIsThemeCompleted] = useState<boolean>(false)
 
   const hasQuiz = session.quiz && session.quiz.length > 0
@@ -164,7 +166,8 @@ export default function LearningSession({
       try {
         console.log('🔍 Checking if this is first completion...', {
           userId: user.id.substring(0, 8) + '...',
-          sessionId: session.id
+          sessionId: session.id,
+          courseId
         })
         
         const { data: existingCompletion, error } = await supabase
@@ -182,14 +185,57 @@ export default function LearningSession({
         
         const isFirst = !existingCompletion
         setIsFirstCompletion(isFirst)
-        console.log(`✅ First completion determination: ${isFirst}`)
+        
+        // Check first course completion (use course_completions table)
+        const { data: existingCourseCompletion, error: courseError } = await supabase
+          .from('course_completions')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('course_id', courseId)
+          .single()
+        
+        if (courseError && courseError.code !== 'PGRST116') {
+          console.error('❌ Error checking first course completion:', courseError)
+          return
+        }
+        
+        const isFirstCourse = !existingCourseCompletion
+        setIsFirstCourseCompletion(isFirstCourse)
+        
+        // Check first theme completion
+        const { data: existingThemeCompletion, error: themeError } = await supabase
+          .from('course_theme_completions')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('theme_id', themeId)
+          .eq('course_id', courseId)
+          .single()
+        
+        if (themeError && themeError.code !== 'PGRST116') {
+          console.error('❌ Error checking first theme completion:', themeError)
+          return
+        }
+        
+        const isFirstTheme = !existingThemeCompletion
+        setIsFirstThemeCompletion(isFirstTheme)
+        
+        console.log(`✅ First completion determination:`, {
+          session: isFirst,
+          course: isFirstCourse,
+          theme: isFirstTheme,
+          details: {
+            sessionId: session.id,
+            courseId,
+            themeId
+          }
+        })
       } catch (error) {
         console.error('❌ Error in checkFirstCompletion:', error)
       }
     }
     
     checkFirstCompletion()
-  }, [user?.id, session.id])
+  }, [user?.id, session.id, courseId, themeId])
 
   const renderProgressBar = () => {
     const progress = ((currentSessionIndex + 1) / totalSessions) * 100
@@ -207,7 +253,7 @@ export default function LearningSession({
 
   const handleStartQuiz = async () => {
     // 初回完了判定が完了するまで待機
-    if (isFirstCompletion === null) {
+    if (isFirstCompletion === null || isFirstThemeCompletion === null || isFirstCourseCompletion === null) {
       console.log('⏳ Waiting for first completion determination...')
       return
     }
@@ -319,7 +365,10 @@ export default function LearningSession({
 
   // Client-side completion detection functions
   const checkThemeCompletion = (sessionId: string): boolean => {
-    if (!courseData) return false
+    if (!courseData) {
+      console.log('❌ Theme completion check: No course data')
+      return false
+    }
     
     // Find the theme for this session
     let currentTheme = null
@@ -333,7 +382,10 @@ export default function LearningSession({
       if (currentTheme) break
     }
     
-    if (!currentTheme) return false
+    if (!currentTheme) {
+      console.log(`❌ Theme completion check: No theme found for session ${sessionId}`)
+      return false
+    }
     
     // Add current session to completed sessions
     const updatedCompletedSessions = new Set(completedSessions)
@@ -345,10 +397,15 @@ export default function LearningSession({
       updatedCompletedSessions.has(sid)
     )
     
-    console.log('🎯 Theme completion check:', {
+    console.log('🎯 Theme completion check (DETAILED):', {
       themeId: currentTheme.id,
+      sessionId,
       totalSessions: themeSessionIds.length,
-      completedSessions: themeSessionIds.filter((sid: string) => updatedCompletedSessions.has(sid)).length,
+      themeSessionIds,
+      currentCompletedSessions: Array.from(completedSessions),
+      updatedCompletedSessions: Array.from(updatedCompletedSessions),
+      completedInTheme: themeSessionIds.filter((sid: string) => updatedCompletedSessions.has(sid)),
+      missingInTheme: themeSessionIds.filter((sid: string) => !updatedCompletedSessions.has(sid)),
       isComplete: allThemeSessionsCompleted
     })
     
@@ -397,6 +454,23 @@ export default function LearningSession({
     setIsCompletingSession(true)
 
     try {
+      // 🚀 DETAILED DEBUG: Check current state before completion detection
+      console.log('🔍 COMPLETION DEBUG - Current state:', {
+        sessionId: session.id,
+        themeId,
+        courseId,
+        completedSessions: Array.from(completedSessions),
+        completedThemes: Array.from(completedThemes),
+        isFirstCompletion,
+        isFirstThemeCompletion,
+        isFirstCourseCompletion,
+        courseData: courseData ? {
+          totalGenres: courseData.genres.length,
+          totalThemes: courseData.genres.reduce((t, g) => t + g.themes.length, 0),
+          currentTheme: courseData.genres.flatMap(g => g.themes).find(t => t.id === themeId)?.title
+        } : null
+      })
+      
       // 🚀 Client-side completion detection BEFORE API call
       const willCompleteTheme = checkThemeCompletion(session.id)
       let willCompleteCourse = false
@@ -408,7 +482,12 @@ export default function LearningSession({
         sessionId: session.id,
         themeId,
         willCompleteTheme,
-        willCompleteCourse
+        willCompleteCourse,
+        firstCompletionStates: {
+          session: isFirstCompletion,
+          theme: isFirstThemeCompletion,
+          course: isFirstCourseCompletion
+        }
       })
       
       // 🚀 Immediate UI updates based on client-side detection
@@ -426,24 +505,38 @@ export default function LearningSession({
         updatedThemes.add(themeId)
         setCompletedThemes(updatedThemes)
         
-        // Immediately show theme completion UI
-        setShowThemeCompletion(true)
-        setCardAcquired(true)
+        // Show theme completion UI only for first THEME completion (not session completion)
+        if (isFirstThemeCompletion === true) {
+          setShowThemeCompletion(true)
+          setCardAcquired(true)
+          console.log('🎯 Theme completion UI shown for first THEME completion')
+        } else {
+          console.log('🎯 Theme completed but not first time - no completion UI shown (theme already completed before)')
+        }
         setIsThemeCompleted(true)
         
-        // Immediately add knowledge card to collection
-        try {
-          const cardId = Math.abs(`theme_${themeId}`.split('').reduce((a, b) => a + b.charCodeAt(0), 0))
-          await addKnowledgeCardToCollection(user.id, cardId)
-          console.log('🎊 Knowledge card immediately added to collection')
-        } catch (cardError) {
-          console.warn('⚠️ Failed to add knowledge card immediately:', cardError)
+        // Knowledge card acquisition (V2: use first THEME completion status)
+        if (isFirstThemeCompletion) {
+          try {
+            const result = await acquireKnowledgeCard(user.id, themeId, true)
+            if (result.success && result.isNew) {
+              console.log(`🎉 New knowledge card acquired: ${result.card?.title}`)
+            } else {
+              console.log(`📚 ${result.message}`)
+            }
+          } catch (cardError) {
+            console.warn('⚠️ Failed to acquire knowledge card:', cardError)
+          }
+        } else {
+          console.log('📚 Knowledge card not acquired - not first THEME completion')
         }
       }
       
-      if (willCompleteCourse) {
+      if (willCompleteCourse && isFirstCourseCompletion) {
         setShowCourseCompletion(true)
-        console.log('🏆 Course completion UI immediately shown')
+        console.log('🏆 Course completion UI shown for first completion')
+      } else if (willCompleteCourse && !isFirstCourseCompletion) {
+        console.log('🏆 Course completed but not first time - no completion UI shown')
       }
       
       console.log('⚡ UI updated immediately with client-side completion detection')

@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
     // 12. detailed_quiz_data - レガシーテーブル（削除済み）
     // Note: detailed_quiz_dataテーブルは削除済みのため処理をスキップ
 
-    // 13. knowledge_card_collection - ナレッジカード収集を削除
+    // 13. knowledge_card_collection - ナレッジカード収集を削除（レガシーテーブル）
     try {
       const { error: knowledgeCardError } = await supabaseAdmin
         .from('knowledge_card_collection')
@@ -209,6 +209,24 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       errors.push('knowledge_card_collection: ' + (err as Error).message)
+    }
+
+    // 13-V2. user_knowledge_collection_v2 - ナレッジカード収集V2を削除
+    try {
+      const { error: knowledgeCardV2Error } = await supabaseAdmin
+        .from('user_knowledge_collection_v2')
+        .delete()
+        .eq('user_id', userId)
+
+      if (knowledgeCardV2Error) {
+        console.warn('⚠️ Error deleting user_knowledge_collection_v2:', knowledgeCardV2Error)
+        errors.push('user_knowledge_collection_v2: ' + knowledgeCardV2Error.message)
+      } else {
+        console.log('✅ user_knowledge_collection_v2 deleted')
+        deletedTables.push('user_knowledge_collection_v2')
+      }
+    } catch (err) {
+      errors.push('user_knowledge_collection_v2: ' + (err as Error).message)
     }
 
     // 14. wisdom_card_collection - 格言カード収集を削除

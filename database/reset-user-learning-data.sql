@@ -9,7 +9,7 @@
 --    /api/admin/reset-user-data を使用
 
 -- 注意: このSQLは以下のデータを削除します
--- ✓ 学習進捗・履歴データ（19テーブル）
+-- ✓ 学習進捗・履歴データ（20テーブル） - user_knowledge_collection_v2追加
 -- ✗ アカウント情報・プロファイル（usersテーブル）は保持
 
 -- ===========================================
@@ -79,8 +79,11 @@ DELETE FROM skp_transactions WHERE user_id = 'USER_ID_PLACEHOLDER';
 -- 獲得バッジ
 DELETE FROM user_badges WHERE user_id = 'USER_ID_PLACEHOLDER';
 
--- ナレッジカード収集
+-- ナレッジカード収集（レガシー）
 DELETE FROM knowledge_card_collection WHERE user_id = 'USER_ID_PLACEHOLDER';
+
+-- ナレッジカード収集（V2）
+DELETE FROM user_knowledge_collection_v2 WHERE user_id = 'USER_ID_PLACEHOLDER';
 
 -- 格言カード収集
 DELETE FROM wisdom_card_collection WHERE user_id = 'USER_ID_PLACEHOLDER';
@@ -136,6 +139,8 @@ UNION ALL
 SELECT 'user_badges', count(*) FROM user_badges WHERE user_id = 'USER_ID_PLACEHOLDER'
 UNION ALL
 SELECT 'knowledge_card_collection', count(*) FROM knowledge_card_collection WHERE user_id = 'USER_ID_PLACEHOLDER'
+UNION ALL
+SELECT 'user_knowledge_collection_v2', count(*) FROM user_knowledge_collection_v2 WHERE user_id = 'USER_ID_PLACEHOLDER'
 UNION ALL
 SELECT 'wisdom_card_collection', count(*) FROM wisdom_card_collection WHERE user_id = 'USER_ID_PLACEHOLDER'
 UNION ALL
