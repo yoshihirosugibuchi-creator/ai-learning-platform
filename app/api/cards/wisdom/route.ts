@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { getRandomWisdomCard } from '@/lib/cards'
+import { getRandomWisdomCard, getRandomWisdomCardFromDB } from '@/lib/cards'
 // import { WisdomCard } from '@/lib/cards' // 型情報用（レスポンスでWisdomCard型を返す）
 import { addWisdomCardToCollection } from '@/lib/supabase-cards'
+
+// Feature flag for DB version (段階的移行用)
+const USE_DB_CARDS = process.env.NEXT_PUBLIC_USE_DB_WISDOM_CARDS === 'true' || true // デフォルトでDB版使用
 
 // リクエストヘッダーから認証情報を取得してSupabaseクライアントを作成
 function getSupabaseWithAuth(request: Request) {
@@ -76,9 +79,14 @@ export async function POST(request: Request): Promise<NextResponse> {
     // カード選択・付与処理
     try {
       const cardSelectStartTime = performance.now()
-      const randomCard = getRandomWisdomCard(accuracy_rate)
+      
+      // DB版またはレガシー版の選択
+      const randomCard = USE_DB_CARDS 
+        ? await getRandomWisdomCardFromDB(accuracy_rate)
+        : getRandomWisdomCard(accuracy_rate)
+      
       const cardSelectTime = performance.now() - cardSelectStartTime
-      console.log('⏱️ Card selection time:', `${cardSelectTime.toFixed(2)}ms`)
+      console.log(`⏱️ Card selection time (${USE_DB_CARDS ? 'DB' : 'Legacy'}):`, `${cardSelectTime.toFixed(2)}ms`)
       
       const dbStartTime = performance.now()
       const cardResult = await addWisdomCardToCollection(user_id, randomCard.id)
@@ -91,6 +99,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       console.log('🎴 Wisdom card processed successfully:', {
         cardId: randomCard.id,
         author: randomCard.author,
+        rarity: randomCard.rarity,
+        source: USE_DB_CARDS ? 'Database' : 'Static',
         isNew: cardResult.isNew,
         count: cardResult.count,
         timing: {

@@ -5,8 +5,11 @@ import {
   mapDifficultyToEnglish
 } from '@/lib/xp-level-system'
 // カード処理をXP APIに統合（同期処理のため）
-import { getRandomWisdomCard } from '@/lib/cards'
+import { getRandomWisdomCard, getRandomWisdomCardFromDB } from '@/lib/cards'
 import { addWisdomCardToCollection } from '@/lib/supabase-cards'
+
+// Feature flag for DB version (段階的移行用)
+const USE_DB_CARDS = process.env.NEXT_PUBLIC_USE_DB_WISDOM_CARDS === 'true' || true // デフォルトでDB版使用
 
 // リクエストヘッダーから認証情報を取得してSupabaseクライアントを作成
 function getSupabaseWithAuth(request: Request) {
@@ -800,8 +803,13 @@ export async function POST(request: Request) {
     
     if (accuracyRate >= 70) {
       try {
-        console.log('🎴 Processing wisdom card (accuracy >= 70%)...')
-        const randomCard = getRandomWisdomCard(accuracyRate)
+        console.log(`🎴 Processing wisdom card (accuracy >= 70%, using ${USE_DB_CARDS ? 'DB' : 'Static'})...`)
+        
+        // DB版またはレガシー版の選択
+        const randomCard = USE_DB_CARDS 
+          ? await getRandomWisdomCardFromDB(accuracyRate)
+          : getRandomWisdomCard(accuracyRate)
+          
         const cardResult = await addWisdomCardToCollection(userId, randomCard.id)
         
         awardedCard = randomCard

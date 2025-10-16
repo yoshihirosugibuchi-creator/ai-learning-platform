@@ -1,0 +1,174 @@
+/* スティーブ・ジョブズ カード専用ビジュアルエフェクト */
+
+.jobs-card-container {
+  position: relative;
+  overflow: hidden;
+  /* サイズ統一: 他のカードと完全に同じサイズ・形状を維持 */
+  width: 100%;
+  height: 100%;
+}
+
+/* Apple風グラデーション背景 */
+.jobs-card-background {
+  background: linear-gradient(135deg, 
+    #667eea 0%, 
+    #764ba2 25%, 
+    #f093fb 50%, 
+    #f5576c 75%, 
+    #4facfe 100%);
+  background-size: 300% 300%;
+  animation: jobs-gradient-shift 8s ease-in-out infinite;
+}
+
+@keyframes jobs-gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* イノベーション パーティクルエフェクト */
+.jobs-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.innovation-particle {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  animation: float-innovation 6s ease-in-out infinite;
+}
+
+.innovation-particle:nth-child(1) {
+  width: 4px;
+  height: 4px;
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.innovation-particle:nth-child(2) {
+  width: 6px;
+  height: 6px;
+  top: 60%;
+  left: 80%;
+  animation-delay: 2s;
+}
+
+.innovation-particle:nth-child(3) {
+  width: 3px;
+  height: 3px;
+  top: 80%;
+  left: 30%;
+  animation-delay: 4s;
+}
+
+@keyframes float-innovation {
+  0%, 100% { 
+    transform: translateY(0px) scale(1);
+    opacity: 0.7;
+  }
+  50% { 
+    transform: translateY(-15px) scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* "Think Different" テキストエフェクト */
+.jobs-quote-container {
+  position: relative;
+}
+
+.jobs-quote-highlight {
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+  background-size: 200% 200%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow-text 3s ease-in-out infinite;
+  font-weight: 700;
+}
+
+@keyframes rainbow-text {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Apple ロゴ風アイコン */
+.apple-icon-glow {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+  animation: apple-pulse 2s ease-in-out infinite;
+}
+
+@keyframes apple-pulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)); }
+  50% { filter: drop-shadow(0 0 16px rgba(255, 255, 255, 1)); }
+}
+
+/* ホバー時の特別エフェクト */
+.jobs-card-container:hover .jobs-card-background {
+  animation-duration: 3s;
+}
+
+.jobs-card-container:hover .innovation-particle {
+  animation-duration: 3s;
+}
+
+.jobs-card-container:hover .jobs-quote-highlight {
+  animation-duration: 1.5s;
+}
+
+/* エピック レアリティ専用フレーム強化 */
+.jobs-epic-frame {
+  /* サイズ・形状統一: 他のカードと完全に同じに */
+  border-width: 2px !important;
+  border-style: solid;
+  /* border-imageは角が丸くならないため、通常のborderに変更 */
+  border-color: #ff6b6b;
+  /* 既存カードと同じ丸み */
+  border-radius: 0.75rem !important; /* Tailwind lg:rounded-lg と同じ */
+  box-shadow: 
+    0 0 20px rgba(255, 107, 107, 0.3),
+    0 0 40px rgba(78, 205, 196, 0.2),
+    inset 0 0 20px rgba(69, 183, 209, 0.1);
+  position: relative;
+  /* サイズ固定: 既存カードと同じbox-sizing */
+  box-sizing: border-box;
+  /* 既存カードと同じ高さ強制 */
+  height: 20rem !important; /* h-80 = 20rem */
+}
+
+.jobs-epic-frame::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+  /* 外側フレーム: より大きな丸みで自然に */
+  border-radius: 1rem;
+  z-index: -1;
+  animation: frame-glow 4s ease-in-out infinite;
+}
+
+@keyframes frame-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .innovation-particle {
+    width: 2px;
+    height: 2px;
+  }
+  
+  .jobs-epic-frame {
+    border-width: 2px;
+  }
+}

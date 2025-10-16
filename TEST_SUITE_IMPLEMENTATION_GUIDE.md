@@ -108,15 +108,31 @@ user_subcategory_xp_stats
 
 ## 🚨 **デグレ防止戦略**
 
-### **A. 自動実行フロー**
+### **A. 自動実行フロー（2025.10.16実践結果反映）**
 
-#### **1. 開発時実行**
+#### **1. 開発時実行（包括的デプロイフロー準拠）**
 ```bash
-# 修正後の必須チェック
+# Phase 1: 前回デプロイ後差分確認
+echo "🔍 前回デプロイ後差分分析"
+git status && git diff --name-only && git log --oneline -5
+
+# Phase 2: 影響範囲分析
+echo "📊 影響範囲分析実行"
+echo "修正ファイル: $(git diff --name-only | wc -l)件"
+git diff --stat
+
+# Phase 3: 包括的品質チェック（全て0エラー必須）
+echo "✅ 包括的品質チェック実行"
 npm run typecheck    # TypeScriptエラー: 0必須
 npm run lint         # ESLintエラー: 0必須  
-npm test             # テストスイート: 全PASS必須
+npm test             # テストスイート: 54 passed必須
 npm run build        # ビルド: 成功必須
+
+echo "品質基準達成確認:"
+echo "✅ TypeScriptエラー: 0個"
+echo "✅ ESLintエラー: 0個" 
+echo "✅ テストスイート: 54 passed"
+echo "✅ ビルド: 成功"
 ```
 
 #### **2. CI/CD統合準備**
@@ -265,30 +281,46 @@ describe('🗄️ データベースパフォーマンス', () => {
 
 ## 🔧 **テスト実施準備・運用手順**
 
-### **A. 開発者向け実施手順**
+### **A. 開発者向け実施手順（2025.10.16実践版）**
 
-#### **1. 修正前テスト実行**
+#### **1. 修正前テスト実行（包括的差分分析）**
 ```bash
-# 現在の状況確認
+# 前回デプロイ後の状況確認
+echo "=== 前回デプロイ後差分確認 ==="
+git status
+git diff --name-only  
+git log --oneline -5
+
 echo "=== 修正前品質状況 ==="
 npm run typecheck && npm run lint && npm test
 ```
 
-#### **2. 修正実施**
+#### **2. 修正実施（段階的・安全な修正）**
 ```bash
-# 段階的修正推奨
-echo "=== 1ファイルずつ修正・テスト実行 ==="
-# ファイル修正
+# 影響範囲分析実行
+echo "=== 影響範囲分析 ==="
+echo "修正対象ファイル: $(git diff --name-only | wc -l)件"
+git diff --stat
+
+# 段階的修正推奨（1-2ファイルずつ）
+echo "=== 段階的修正・即座にテスト実行 ==="
+# ファイル修正後、即座に関連テスト実行
 npm test [関連テストファイル]  # 即座に影響確認
+npm run typecheck            # TypeScript確認
 ```
 
-#### **3. 修正後完全チェック**
+#### **3. 修正後完全チェック（包括的テストスイート）**
 ```bash
 echo "=== 修正後完全品質チェック ==="
 npm run typecheck  # TypeScript: エラー0必須
 npm run lint       # ESLint: エラー0必須
-npm test           # 全テスト: PASS必須
+npm test           # 全テストスイート: 54 passed必須
 npm run build      # ビルド: 成功必須
+
+echo "=== コア機能保護テスト ==="
+npm test schema-regression  # DB回帰テスト
+npm test course-completion  # API統合テスト  
+npm test basic             # 基本動作テスト
 ```
 
 ### **B. デプロイ前必須確認**

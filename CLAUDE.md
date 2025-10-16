@@ -526,6 +526,66 @@ echo "全てのチェックが成功したらデプロイ可能"
 
 ## 🚀 **デプロイメント・本番運用（2025.10.16緊急更新・新規ファイル追跡漏れ防止）**
 
+### **🚨 MANDATORY: デプロイ漏れ検証チェックリスト（絶対に省略禁止）**
+
+```markdown
+⚠️ **デプロイ前必須確認事項** - 以下を全て確認してからデプロイ実行
+
+## Phase 0: デプロイ漏れ防止チェック（CLAUDE.mdフロー準拠）
+- [ ] `git status` 実行完了
+- [ ] `git diff --name-only` による修正ファイル確認完了
+- [ ] `git ls-files --others --exclude-standard` による未追跡ファイル確認完了
+- [ ] 依存関係分析による重要度判定完了
+- [ ] CRITICAL/MODIFIEDファイルの追跡状況確認完了
+- [ ] デプロイ漏れリスク評価完了
+- [ ] リスクレベルが HIGH の場合は追加対応完了
+
+## 重要ファイル種別確認:
+- [ ] API ファイル (app/api/**/*.ts) - 機能追加時は必須
+- [ ] コンポーネント (components/**/*.tsx) - UI変更時は必須  
+- [ ] ライブラリ (lib/**/*.ts) - ユーティリティ追加時は必須
+- [ ] 型定義 (lib/database-types*.ts) - DB変更時は必須
+- [ ] CSS/静的ファイル - ビジュアル変更時は必須
+- [ ] 設定ファイル - 環境変更時は必須
+
+## デプロイ判定基準:
+- [ ] HIGH RISK (5件以上): 必ず全件確認・追加後デプロイ
+- [ ] MEDIUM RISK (1-4件): 内容確認後個別判断
+- [ ] LOW RISK (0件): デプロイ続行可能
+
+⚠️ この確認を省略した場合、本番エラーの可能性が高まります
+✅ 確認完了後、以下のデプロイフローに進んでください
+```
+
+---
+
+### **🔧 クイックリファレンス: デプロイ漏れ検出コマンド集**
+
+```bash
+# 最速デプロイ漏れ検出（30秒で完了）
+echo "🚨 デプロイ漏れ緊急確認"
+
+# 1. 修正済み未コミットファイル
+git diff --name-only | wc -l
+git diff --name-only
+
+# 2. 新規未追跡ファイル
+git ls-files --others --exclude-standard | wc -l  
+git ls-files --others --exclude-standard
+
+# 3. 重要度判定（API/コンポーネント/ライブラリ）
+git ls-files --others --exclude-standard | grep -E "(app/api|components|lib)/.*\.(ts|tsx)$"
+
+# 4. デプロイリスク計算
+echo "リスク評価: $(($(git diff --name-only | wc -l) + $(git ls-files --others --exclude-standard | grep -E "\.(ts|tsx|js|jsx)$" | wc -l)))件"
+
+# ⚠️ 結果が 5以上 = HIGH RISK → 必ず確認・追加
+# ⚠️ 結果が 1-4 = MEDIUM RISK → 内容確認  
+# ✅ 結果が 0 = LOW RISK → デプロイ続行可能
+```
+
+---
+
 ### **包括的デプロイフロー（新規ファイル存在忘れ対策強化版）**
 
 #### **🚨 デプロイエラー事例学習（2025.10.16発生）**
@@ -533,53 +593,121 @@ echo "全てのチェックが成功したらデプロイ可能"
 **根本原因**: 「作成から時間が経った新規ファイルの存在忘れ + 後からの依存関係追加」  
 **教訓**: ローカル存在ファイルは品質チェックをパスするが、git未追跡では本番エラーになる
 
-#### **Phase 1: デプロイ前品質チェック（新規ファイル存在忘れ防止強化）**
+#### **Phase 1: デプロイ前品質チェック（デプロイ漏れ防止完全版・2025.10.16緊急強化）**
 
 ```bash
-# 1. 前回デプロイ後差分確認
-echo "🔍 前回デプロイ後差分分析"
+# 1. 前回デプロイ後完全差分確認
+echo "🔍 前回デプロイ後完全差分分析"
 git status
 git diff --name-only
 git log --oneline -5
 
-# 2. 🚨 新規ファイル存在忘れ検出（2025.10.16緊急追加）
-echo "📋 新規ファイル存在忘れ検出（デプロイエラー防止）"
+# 2. 🚨 デプロイ漏れファイル完全検出（格言カード事例対応）
+echo "📋 デプロイ漏れファイル完全検出（本番エラー防止）"
 
-# 未追跡ソースファイルの特定
-UNTRACKED_SOURCE_FILES=$(git status --porcelain | grep "^??" | grep -E "\.(ts|tsx|js|jsx)$")
-if [ -n "$UNTRACKED_SOURCE_FILES" ]; then
-  echo "⚠️ 未追跡ソースファイル発見:"
-  echo "$UNTRACKED_SOURCE_FILES"
-  echo ""
-  
-  # 各未追跡ファイルの作成日時確認
-  echo "📅 ファイル作成日時分析:"
-  echo "$UNTRACKED_SOURCE_FILES" | cut -c4- | while read file; do
+# 2-1. 修正済み未コミットファイル確認
+echo "🔧 修正済み未コミットファイル:"
+MODIFIED_FILES=$(git diff --name-only)
+if [ -n "$MODIFIED_FILES" ]; then
+  echo "$MODIFIED_FILES" | while read file; do
     if [ -f "$file" ]; then
-      echo "  $file: $(stat -c '%w' "$file" 2>/dev/null || stat -f '%SB' "$file" 2>/dev/null || echo '作成日時不明')"
+      echo "  ❌ MODIFIED: $file - コミット必須"
     fi
   done
   echo ""
+  echo "対処: git add [ファイル名] でステージング"
+else
+  echo "  ✅ 修正済み未コミットファイルなし"
+fi
+echo ""
+
+# 2-2. 新規未追跡ファイル完全分析
+echo "📋 新規未追跡ファイル完全分析:"
+UNTRACKED_FILES=$(git ls-files --others --exclude-standard)
+if [ -n "$UNTRACKED_FILES" ]; then
+  echo "  発見された未追跡ファイル: $(echo "$UNTRACKED_FILES" | wc -l)件"
+  echo ""
   
-  # 依存関係チェック（重要度判定）
-  echo "🔍 依存関係分析（重要度判定）:"
-  echo "$UNTRACKED_SOURCE_FILES" | cut -c4- | while read file; do
+  # ソースコードファイル重要度分析
+  echo "🔍 ソースコードファイル重要度分析:"
+  echo "$UNTRACKED_FILES" | grep -E "\.(ts|tsx|js|jsx)$" | while read file; do
     if [ -f "$file" ]; then
       filename_without_ext=$(basename "$file" | sed 's/\.[^.]*$//')
-      DEPENDENCY_COUNT=$(grep -r "from.*['\"]\..*$filename_without_ext['\"]" . --include="*.ts" --include="*.tsx" | grep -v node_modules | wc -l)
+      DEPENDENCY_COUNT=$(grep -r "from.*['\"]\..*$filename_without_ext['\"]" . --include="*.ts" --include="*.tsx" --exclude-dir=node_modules --exclude-dir=.next | wc -l)
       if [ $DEPENDENCY_COUNT -gt 0 ]; then
-        echo "  ❌ CRITICAL: $file ($DEPENDENCY_COUNT箇所から参照) - 追跡必須"
-        echo "     参照元:"
-        grep -r "from.*['\"]\..*$filename_without_ext['\"]" . --include="*.ts" --include="*.tsx" | grep -v node_modules | head -3
+        echo "  ❌ CRITICAL: $file ($DEPENDENCY_COUNT箇所から参照) - デプロイ必須"
+        grep -r "from.*['\"]\..*$filename_without_ext['\"]" . --include="*.ts" --include="*.tsx" --exclude-dir=node_modules --exclude-dir=.next | head -2 | sed 's/^/     /'
       else
-        echo "  ⚠️  INFO: $file (参照なし) - 確認推奨"
+        echo "  ⚠️  INFO: $file (直接参照なし) - 確認推奨"
       fi
     fi
   done
   echo ""
-  echo "🔧 対処方法: 'git add [重要ファイル]' で追跡に追加"
+  
+  # API・コンポーネントファイル分析
+  echo "🔍 API・コンポーネントファイル分析:"
+  echo "$UNTRACKED_FILES" | grep -E "(app/api|components)/.*\.(ts|tsx)$" | while read file; do
+    if [ -f "$file" ]; then
+      echo "  ❌ CRITICAL: $file - API/コンポーネント新規追加"
+    fi
+  done
   echo ""
+  
+  # CSS・静的ファイル分析
+  echo "🔍 CSS・静的ファイル分析:"
+  echo "$UNTRACKED_FILES" | grep -E "\.(css|scss|png|jpg|svg)$" | while read file; do
+    if [ -f "$file" ]; then
+      echo "  ⚠️  ASSET: $file - 静的ファイル"
+    fi
+  done
+  echo ""
+  
+  # ドキュメント・設定ファイル分析
+  echo "🔍 ドキュメント・設定ファイル分析:"
+  echo "$UNTRACKED_FILES" | grep -E "\.(md|sql|json|config)$" | while read file; do
+    if [ -f "$file" ]; then
+      echo "  📄 DOC: $file - ドキュメント/設定"
+    fi
+  done
+  echo ""
+  
+else
+  echo "  ✅ 新規未追跡ファイルなし"
 fi
+
+# 2-3. ファイル作成日時分析（時系列確認）
+echo "📅 最近作成されたファイル分析（デプロイ漏れ可能性）:"
+if [ -n "$UNTRACKED_FILES" ]; then
+  echo "$UNTRACKED_FILES" | head -10 | while read file; do
+    if [ -f "$file" ]; then
+      echo "  $file: $(stat -c '%w %y' "$file" 2>/dev/null || stat -f '%SB %Sm' "$file" 2>/dev/null || echo '日時不明')"
+    fi
+  done
+fi
+echo ""
+
+# 2-4. デプロイ漏れリスク評価
+echo "🚨 デプロイ漏れリスク評価:"
+CRITICAL_COUNT=$(echo "$UNTRACKED_FILES" | grep -E "(app/api|components|lib)/.*\.(ts|tsx)$" | wc -l)
+MODIFIED_COUNT=$(echo "$MODIFIED_FILES" | wc -l)
+TOTAL_RISK=$((CRITICAL_COUNT + MODIFIED_COUNT))
+
+if [ $TOTAL_RISK -gt 5 ]; then
+  echo "  ❌ HIGH RISK: $TOTAL_RISK件の重要ファイルが未デプロイ"
+  echo "  🚨 デプロイ前に必ず確認・追加が必要"
+elif [ $TOTAL_RISK -gt 0 ]; then
+  echo "  ⚠️  MEDIUM RISK: $TOTAL_RISK件のファイルが未デプロイ"
+  echo "  📋 内容確認後にデプロイ判断"
+else
+  echo "  ✅ LOW RISK: デプロイ漏れなし"
+fi
+echo ""
+
+echo "🔧 対処方法:"
+echo "  git add [重要ファイル] でファイル追加"
+echo "  git commit でまとめてコミット"
+echo "  再度このチェックを実行して漏れがないことを確認"
+echo ""
 
 # 3. 影響範囲分析（品質基準必須）
 echo "📊 影響範囲分析実行"

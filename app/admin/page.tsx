@@ -9,7 +9,8 @@ import {
   Activity,
   Users,
   Shield,
-  RefreshCw
+  RefreshCw,
+  Palette
 } from 'lucide-react'
 import Link from 'next/link'
 import { useUserRole } from '@/hooks/useUserRole'
@@ -94,6 +95,23 @@ export default function AdminPage() {
                 <p className="text-sm text-muted-foreground">
                   業界レベル別の目標XPと<br/>
                   レーダーチャート設定を管理
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/wisdom-cards">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Palette className="h-5 w-5 text-purple-600" />
+                  <span>格言カード管理</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  格言カードの作成・編集・<br/>
+                  ビジュアル設定を管理
                 </p>
               </CardContent>
             </Card>

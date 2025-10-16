@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { WisdomCard as WisdomCardType, getCategoryIcon, getRarityConfig, getCategoryDisplayName, getSubcategoryDisplayName } from '@/lib/cards'
 import { cn } from '@/lib/utils'
 import { Lock, Sparkles } from 'lucide-react'
+import { getWisdomCardVisualInfo } from '@/lib/wisdom-card-themes'
 
 interface WisdomCardProps {
   card: WisdomCardType & { obtained?: boolean; count?: number }
@@ -26,6 +27,23 @@ export default function WisdomCard({
   const subcategoryDisplayName = card.subcategoryId ? getSubcategoryDisplayName(card.subcategoryId) : ''
   const categoryIcon = getCategoryIcon(categoryDisplayName)
 
+  // 統一ビジュアルシステム
+  const visualInfo = getWisdomCardVisualInfo(card.rarity, card.author)
+
+  // 統一ビジュアルフレームワークCSSを動的読み込み
+  useEffect(() => {
+    if (card.obtained) {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = '/images/wisdom-cards/css/wisdom-card-framework.css'
+      link.id = 'wisdom-card-framework'
+      
+      if (!document.getElementById('wisdom-card-framework')) {
+        document.head.appendChild(link)
+      }
+    }
+  }, [card.obtained])
+
   const handleCardClick = () => {
     if (card.obtained && showDetails) {
       setIsFlipped(!isFlipped)
@@ -37,6 +55,7 @@ export default function WisdomCard({
     <div 
       className={cn(
         "group perspective-1000 cursor-pointer transition-all duration-300 hover:scale-105",
+        card.obtained && visualInfo.cssClasses,
         className
       )}
       onClick={handleCardClick}
@@ -48,14 +67,12 @@ export default function WisdomCard({
         {/* Front of Card */}
         <Card className={cn(
           "absolute inset-0 backface-hidden overflow-hidden",
-          "border-2 transition-all duration-300",
+          "transition-all duration-300",
+          "wisdom-card-frame", // 常に統一フレームを適用
           card.obtained ? [
-            rarityConfig.borderColor,
-            rarityConfig.bgColor,
-            "shadow-lg hover:shadow-xl",
-            rarityConfig.glowColor
+            "shadow-lg hover:shadow-xl"
           ] : [
-            "border-gray-300 bg-gray-100",
+            "border-2 border-gray-300 bg-gray-100",
             "shadow-sm"
           ]
         )}>
@@ -105,8 +122,9 @@ export default function WisdomCard({
                       &ldquo;
                     </div>
                     <blockquote className={cn(
-                      "text-center italic font-medium leading-tight mb-4 pl-3",
-                      card.rarity === 'レジェンダリー' ? 'text-lg' : 'text-base'
+                      "text-center italic leading-tight mb-4 pl-3",
+                      card.rarity === 'レジェンダリー' ? 'text-lg' : 'text-base',
+                      card.obtained && "wisdom-quote-enhanced"
                     )}>
                       {card.quote}
                     </blockquote>
@@ -154,13 +172,23 @@ export default function WisdomCard({
               </div>
             )}
 
-            {/* Rarity Glow Effect */}
-            {card.obtained && card.rarity !== 'コモン' && (
-              <div className={cn(
-                "absolute inset-0 opacity-20 rounded-lg pointer-events-none",
-                "bg-gradient-to-br",
-                rarityConfig.color
-              )} />
+            {/* Unified Particle Effects */}
+            {card.obtained && (
+              <div className="wisdom-particles">
+                {Array.from({ length: visualInfo.particleCount }, (_, index) => (
+                  <div 
+                    key={index}
+                    className="wisdom-particle"
+                    style={{
+                      width: '4px',
+                      height: '4px',
+                      top: `${20 + (index * 30)}%`,
+                      left: `${10 + (index * 25)}%`,
+                      animationDelay: `${index * 2}s`
+                    }}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </Card>

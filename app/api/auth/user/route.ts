@@ -11,6 +11,8 @@ export async function GET(request: Request) {
         { status: 401 }
       )
     }
+    
+    console.log('🔐 User auth successful:', { userId, role: userRole })
 
     // Define permissions based on role
     const permissions = {
