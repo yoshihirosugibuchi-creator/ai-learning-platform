@@ -315,54 +315,226 @@ echo "全てのチェックが成功したらデプロイ可能"
 
 ---
 
-## 🚀 **デプロイメント・本番運用**
+## 🚀 **デプロイメント・本番運用（2025.10.16緊急更新・新規ファイル追跡漏れ防止）**
 
-### **デプロイ前チェックリスト**
+### **包括的デプロイフロー（新規ファイル存在忘れ対策強化版）**
+
+#### **🚨 デプロイエラー事例学習（2025.10.16発生）**
+**事例**: `lib/skill-levels.ts`が昨夜作成されたが未追跡、今朝の修正で依存関係追加後にデプロイエラー  
+**根本原因**: 「作成から時間が経った新規ファイルの存在忘れ + 後からの依存関係追加」  
+**教訓**: ローカル存在ファイルは品質チェックをパスするが、git未追跡では本番エラーになる
+
+#### **Phase 1: デプロイ前品質チェック（新規ファイル存在忘れ防止強化）**
 
 ```bash
-# 品質管理フロー実行
-echo "🔍 デプロイ前品質チェック"
+# 1. 前回デプロイ後差分確認
+echo "🔍 前回デプロイ後差分分析"
+git status
+git diff --name-only
+git log --oneline -5
 
-# 1. 影響範囲分析完了確認
-echo "- [ ] 影響範囲分析実行済み"
-echo "- [ ] テスト計画書作成済み"
+# 2. 🚨 新規ファイル存在忘れ検出（2025.10.16緊急追加）
+echo "📋 新規ファイル存在忘れ検出（デプロイエラー防止）"
 
-# 2. 品質チェック
+# 未追跡ソースファイルの特定
+UNTRACKED_SOURCE_FILES=$(git status --porcelain | grep "^??" | grep -E "\.(ts|tsx|js|jsx)$")
+if [ -n "$UNTRACKED_SOURCE_FILES" ]; then
+  echo "⚠️ 未追跡ソースファイル発見:"
+  echo "$UNTRACKED_SOURCE_FILES"
+  echo ""
+  
+  # 各未追跡ファイルの作成日時確認
+  echo "📅 ファイル作成日時分析:"
+  echo "$UNTRACKED_SOURCE_FILES" | cut -c4- | while read file; do
+    if [ -f "$file" ]; then
+      echo "  $file: $(stat -c '%w' "$file" 2>/dev/null || stat -f '%SB' "$file" 2>/dev/null || echo '作成日時不明')"
+    fi
+  done
+  echo ""
+  
+  # 依存関係チェック（重要度判定）
+  echo "🔍 依存関係分析（重要度判定）:"
+  echo "$UNTRACKED_SOURCE_FILES" | cut -c4- | while read file; do
+    if [ -f "$file" ]; then
+      filename_without_ext=$(basename "$file" | sed 's/\.[^.]*$//')
+      DEPENDENCY_COUNT=$(grep -r "from.*['\"]\..*$filename_without_ext['\"]" . --include="*.ts" --include="*.tsx" | grep -v node_modules | wc -l)
+      if [ $DEPENDENCY_COUNT -gt 0 ]; then
+        echo "  ❌ CRITICAL: $file ($DEPENDENCY_COUNT箇所から参照) - 追跡必須"
+        echo "     参照元:"
+        grep -r "from.*['\"]\..*$filename_without_ext['\"]" . --include="*.ts" --include="*.tsx" | grep -v node_modules | head -3
+      else
+        echo "  ⚠️  INFO: $file (参照なし) - 確認推奨"
+      fi
+    fi
+  done
+  echo ""
+  echo "🔧 対処方法: 'git add [重要ファイル]' で追跡に追加"
+  echo ""
+fi
+
+# 3. 影響範囲分析（品質基準必須）
+echo "📊 影響範囲分析実行"
+echo "修正ファイル: $(git diff --name-only | wc -l)件"
+echo "主要変更内容確認:"
+git diff --stat
+
+# 4. 包括的品質チェック（TEST_SUITE_IMPLEMENTATION_GUIDE準拠）
+echo "✅ 包括的品質チェック実行"
 npm run typecheck  # TypeScriptエラー: 0個必須
-npm run lint       # ESLintエラー: 0個必須
-npm run build      # ビルド成功必須
+npm run lint       # ESLintエラー: 0個必須  
+npm test           # 全テストスイート: 54 passed必須
+npm run build      # ビルド: 成功必須
 
-# 3. コア機能テスト
-echo "- [ ] XP/SKP計算テスト実行済み"
-echo "- [ ] 認証システムテスト実行済み"
-echo "- [ ] データ整合性テスト実行済み"
-
-# 4. 最終確認
-echo "- [ ] 本番同等環境でのテスト完了"
-echo "- [ ] ロールバック計画準備済み"
+echo "品質基準達成確認:"
+echo "- [ ] TypeScriptエラー: 0個"
+echo "- [ ] ESLintエラー: 0個"
+echo "- [ ] テストスイート: 全PASS"
+echo "- [ ] ビルド: 成功"
+echo "- [ ] 依存関係のある未追跡ファイル: 0個"
 ```
 
-### **デプロイ手順**
+#### **Phase 2: コア機能保護テスト**
 
 ```bash
-# 本番デプロイ実行
-echo "🚀 本番デプロイ開始"
+# 4. データベーススキーマ回帰テスト
+echo "🗄️ データベース回帰テスト"
+npm test schema-regression  # DB構造確認
 
-# 1. 最終コミット
-git add [修正ファイル]
-git commit -m "feat/fix: [詳細な修正内容]
+# 5. API統合テスト
+echo "🔌 API統合テスト"
+npm test course-completion  # コア機能確認
 
-🤖 Generated with [Claude Code](https://claude.ai/code)
+# 6. 基本動作確認テスト
+echo "🧪 基本動作確認"
+npm test basic             # Jest環境確認
 
-Co-Authored-By: Claude <noreply@anthropic.com>"
+echo "コア機能テスト確認:"
+echo "- [ ] データベーススキーマ: 整合性OK"
+echo "- [ ] API統合テスト: リクエスト・レスポンス正常"
+echo "- [ ] XP/SKP計算ロジック: 正確"
+echo "- [ ] 認証・セキュリティ: 動作正常"
+```
 
-# 2. 本番プッシュ
+#### **Phase 3: デプロイ実行**
+
+```bash
+# 7. ステージング（変更ファイルのコミット準備）
+echo "📋 変更ファイルステージング"
+git add [修正対象ファイル]  # 個別指定推奨
+
+# 8. コミットメッセージ作成（標準フォーマット）
+echo "📝 コミットメッセージ作成"
+git commit -m "$(cat <<'EOF'
+feat/fix: [簡潔な変更内容]
+
+🎯 主要改善:
+- [主要な機能改善1]
+- [主要な機能改善2]
+- [主要な機能改善3]
+
+📊 変更内容:
+- [ファイル1]: [変更内容]
+- [ファイル2]: [変更内容]
+- [ファイル3]: [変更内容]
+
+🚀 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+
+# 9. 本番デプロイ実行
+echo "🚀 本番デプロイ実行"
 git push origin main
 
-# 3. デプロイ後確認
-echo "- [ ] 本番環境での基本機能確認"
-echo "- [ ] XP/SKP計算動作確認"
-echo "- [ ] エラーログ監視"
+echo "デプロイ実行確認:"
+echo "- [ ] コミット成功"
+echo "- [ ] プッシュ成功"
+echo "- [ ] デプロイ完了通知確認"
+```
+
+### **デプロイ後検証（必須）**
+
+```bash
+# 10. デプロイ後確認
+echo "✅ デプロイ後動作確認"
+
+# 本番環境での基本機能確認
+echo "基本機能確認項目:"
+echo "- [ ] ログイン・ログアウト正常動作"
+echo "- [ ] ランダムクイズ実行・XP付与確認"
+echo "- [ ] カテゴリークイズ実行・統計更新確認"
+echo "- [ ] コース学習実行・ナレッジカード獲得確認"
+echo "- [ ] プロフィール画面・統計表示確認"
+echo "- [ ] コレクションページ・バッジ表示確認"
+echo "- [ ] エラーハンドリング・認証エラー確認"
+
+# パフォーマンス確認
+echo "パフォーマンス確認:"
+echo "- [ ] ページ読み込み時間: 3秒以内"
+echo "- [ ] API応答時間: 5秒以内"
+echo "- [ ] データベースクエリ: 正常"
+
+# エラーログ監視
+echo "エラーログ監視:"
+echo "- [ ] 新規エラー発生なし"
+echo "- [ ] 既存エラー増加なし"
+echo "- [ ] 警告レベル問題なし"
+```
+
+### **緊急時ロールバック手順**
+
+```bash
+# 問題発生時の緊急対応
+echo "🚨 緊急時ロールバック手順"
+
+# 1. 即座にロールバック
+git log --oneline -3  # 直前のコミットを確認
+git revert HEAD --no-edit  # 直前のコミットを取り消し
+git push origin main  # 緊急ロールバック実行
+
+# 2. 影響範囲特定
+echo "影響範囲特定:"
+echo "- [ ] エラーログ詳細確認"
+echo "- [ ] ユーザー影響度評価"
+echo "- [ ] データ整合性確認"
+
+# 3. 根本原因調査（ロールバック後）
+echo "根本原因調査:"
+echo "- [ ] テスト環境での問題再現"
+echo "- [ ] コードレビュー再実行"
+echo "- [ ] テストケース追加検討"
+
+# 4. 修正・再デプロイ計画
+echo "再デプロイ準備:"
+echo "- [ ] 完全テストスイート再実行"
+echo "- [ ] 段階的デプロイ計画"
+echo "- [ ] 監視体制強化"
+```
+
+### **デプロイ品質管理指標**
+
+```markdown
+## デプロイ成功基準（2025.10.16更新）:
+
+### 必須達成項目:
+- [x] TypeScriptエラー: 0個維持
+- [x] ESLintエラー: 0個維持
+- [x] テストスイート: 54 passed維持（todo除く）
+- [x] ビルド: 成功維持
+- [x] API統合テスト: 全PASS
+- [x] データベース回帰テスト: 全PASS
+
+### パフォーマンス基準:
+- [x] 全テストスイート実行: 1秒以内
+- [x] ビルド時間: 10秒以内
+- [x] デプロイプロセス: 5分以内完了
+
+### 品質向上指標:
+- [x] カバレッジ: 現状維持以上
+- [x] 新規警告: 0件
+- [x] コードレビュー: 高品質コミットメッセージ
+- [x] ドキュメント: 必要に応じて更新
 ```
 
 ---
