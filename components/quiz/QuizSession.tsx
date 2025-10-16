@@ -699,19 +699,19 @@ export default function QuizSession({
               let cardCount = 0
               
               if (accuracyRate >= 70) {
-                // カード選択をクライアント側で実行（将来のカードDB化も考慮）
+                // DB版カード選択（フォールバック対応）
                 try {
-                  const { getRandomWisdomCard } = await import('@/lib/cards')
-                  selectedCard = getRandomWisdomCard(accuracyRate)
+                  const { getRandomWisdomCardFromDB } = await import('@/lib/cards')
+                  selectedCard = await getRandomWisdomCardFromDB(accuracyRate)
                   isNewCard = true // デフォルトで新規扱い
                   cardCount = 1
-                  console.log('⚡ CLIENT: Card selected instantly:', {
+                  console.log('⚡ CLIENT: Card selected from DB (with fallback):', {
                     cardId: selectedCard.id,
                     author: selectedCard.author,
                     accuracy: accuracyRate
                   })
                 } catch (cardError) {
-                  console.error('❌ CLIENT: Card selection error:', cardError)
+                  console.error('❌ CLIENT: DB Card selection error:', cardError)
                 }
               }
               

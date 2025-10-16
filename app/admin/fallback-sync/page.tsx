@@ -95,11 +95,21 @@ export default function FallbackSyncPage() {
     
     try {
       const response = await directAuthenticatedFetch('/api/admin/fallback-sync?action=status')
-      const data = await response.json()
       
       if (!response.ok) {
-        throw new Error(data.error || 'API呼び出しに失敗しました')
+        const text = await response.text()
+        console.error('❌ Status API failed:', response.status, text)
+        throw new Error(`API呼び出しに失敗しました (${response.status})`)
       }
+      
+      const contentType = response.headers.get('content-type')
+      if (!contentType?.includes('application/json')) {
+        const text = await response.text()
+        console.error('❌ Status API returned non-JSON:', contentType, text.substring(0, 200))
+        throw new Error('APIがJSONを返しませんでした')
+      }
+      
+      const data = await response.json()
       
       if (data.success) {
         setFallbackStatus(data.fallbackStatus)
@@ -115,7 +125,7 @@ export default function FallbackSyncPage() {
   }, [directAuthenticatedFetch])
 
   // 同期実行
-  const handleSync = async (type: 'all' | 'xp' | 'quiz' | 'courses' | 'static') => {
+  const handleSync = async (type: 'all' | 'xp' | 'quiz' | 'courses' | 'wisdom' | 'static') => {
     console.log(`==========================================`)
     console.log(`🚀 SYNC STARTED - Type: ${type}`)
     console.log(`🕐 Timestamp: ${new Date().toISOString()}`)
@@ -134,14 +144,23 @@ export default function FallbackSyncPage() {
       console.log(`📊 レスポンス状態: ${response.status}`)
       console.log(`📊 レスポンスヘッダー:`, Object.fromEntries(response.headers.entries()))
       
-      const result = await response.json()
-      console.log(`📋 API結果:`, result)
-      
       if (!response.ok) {
-        console.error(`❌ API失敗: ${response.status} - ${result.error}`)
-        setAuthError(`同期エラー: ${result.error || 'API呼び出しに失敗しました'}`)
+        const text = await response.text()
+        console.error(`❌ API失敗: ${response.status} - ${text.substring(0, 200)}`)
+        setAuthError(`同期エラー: ${response.status} - ${text.includes('<!DOCTYPE') ? 'HTMLページが返されました' : text}`)
         return
       }
+      
+      const contentType = response.headers.get('content-type')
+      if (!contentType?.includes('application/json')) {
+        const text = await response.text()
+        console.error('❌ 同期APIがJSONを返しませんでした:', contentType, text.substring(0, 200))
+        setAuthError(`同期エラー: APIがJSONを返しませんでした`)
+        return
+      }
+      
+      const result = await response.json()
+      console.log(`📋 API結果:`, result)
       
       if (result.success && result.data) {
         console.log(`✅ 同期結果をstate設定:`, result.data)
@@ -327,10 +346,25 @@ export default function FallbackSyncPage() {
                       method: 'POST'
                     })
 
+                    if (!response.ok) {
+                      const text = await response.text()
+                      console.error(`❌ 一括同期API失敗: ${response.status} - ${text.substring(0, 200)}`)
+                      setAuthError(`同期エラー: ${response.status} - ${text.includes('<!DOCTYPE') ? 'HTMLページが返されました' : text}`)
+                      return
+                    }
+                    
+                    const contentType = response.headers.get('content-type')
+                    if (!contentType?.includes('application/json')) {
+                      const text = await response.text()
+                      console.error('❌ 一括同期APIがJSONを返しませんでした:', contentType, text.substring(0, 200))
+                      setAuthError(`同期エラー: APIがJSONを返しませんでした`)
+                      return
+                    }
+
                     const result = await response.json()
                     console.log('📊 同期結果:', result)
 
-                    if (response.ok && result.success) {
+                    if (result.success) {
                       console.log('✅ 同期完了！')
                       setLastSyncResult(result.data)
                       setAuthError(null)
@@ -483,6 +517,24 @@ export default function FallbackSyncPage() {
                           className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 text-white px-3 py-1 rounded text-sm transition-colors"
                         >
                           {syncLoading === 'courses' ? '同期中...' : '同期'}
+                        </button>
+                      )}
+                      {file.name.includes('格言カード') && (
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            try {
+                              await handleSync('wisdom')
+                            } catch (error) {
+                              console.error('格言カード同期エラー:', error)
+                            }
+                          }}
+                          disabled={!!syncLoading}
+                          className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white px-3 py-1 rounded text-sm transition-colors"
+                        >
+                          {syncLoading === 'wisdom' ? '同期中...' : '同期'}
                         </button>
                       )}
                       {file.name.includes('カテゴリー') && (

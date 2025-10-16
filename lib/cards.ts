@@ -11,6 +11,28 @@ export interface WisdomCard {
   count?: number
 }
 
+// Type adapter for DB-sourced data
+import { WisdomCardMaster } from './database-types-official'
+
+/**
+ * WisdomCardMaster (DB) → WisdomCard (legacy interface) 変換
+ * 既存コンポーネント互換性のため
+ */
+export function convertWisdomCardMasterToLegacy(dbCard: WisdomCardMaster): WisdomCard {
+  return {
+    id: dbCard.id,
+    author: dbCard.author,
+    quote: dbCard.quote,
+    categoryId: dbCard.category_id,
+    subcategoryId: dbCard.subcategory_id || undefined,
+    rarity: dbCard.rarity as 'コモン' | 'レア' | 'エピック' | 'レジェンダリー',
+    context: dbCard.context,
+    applicationArea: dbCard.application_area,
+    obtained: undefined, // User-specific data, handled separately
+    count: undefined     // User-specific data, handled separately
+  }
+}
+
 export const wisdomCards: WisdomCard[] = [
   {
     id: 1,
@@ -317,4 +339,82 @@ export function getSubcategoryDisplayName(subcategoryId: string): string {
     'サステナビリティリスク': 'サステナビリティリスク'
   }
   return subcategoryDisplayNames[subcategoryId] || subcategoryId
+}
+
+// =============================================================================
+// DB版 WISDOM CARD FUNCTIONS (Unified Interface)
+// =============================================================================
+
+import { getWisdomCardsWithFallback } from './supabase-cards'
+
+/**
+ * DB版: ランダム格言カード取得（既存インターフェース互換）
+ * パフォーマンス基準でレアリティフィルタリング + ランダム選択
+ * @param percentage - クイズ正答率 (0-100)
+ * @returns Promise<WisdomCard> - 既存インターフェース形式
+ */
+export const getRandomWisdomCardFromDB = async (percentage: number): Promise<WisdomCard> => {
+  try {
+    console.log(`🎯 Getting random wisdom card from DB (performance: ${percentage}%)`)
+    
+    // DB版: 全カード取得（フォールバック対応）
+    const allDbCards = await getWisdomCardsWithFallback()
+    
+    // レアリティフィルタリング（既存ロジック維持）
+    let availableCards: WisdomCard[]
+    
+    if (percentage >= 90) {
+      availableCards = allDbCards
+        .filter(card => card.rarity === 'レジェンダリー' || card.rarity === 'エピック')
+        .map(convertWisdomCardMasterToLegacy)
+    } else if (percentage >= 70) {
+      availableCards = allDbCards
+        .filter(card => card.rarity === 'エピック' || card.rarity === 'レア')
+        .map(convertWisdomCardMasterToLegacy)
+    } else if (percentage >= 50) {
+      availableCards = allDbCards
+        .filter(card => card.rarity === 'レア' || card.rarity === 'コモン')
+        .map(convertWisdomCardMasterToLegacy)
+    } else {
+      availableCards = allDbCards
+        .filter(card => card.rarity === 'コモン')
+        .map(convertWisdomCardMasterToLegacy)
+    }
+    
+    // ランダム選択
+    if (availableCards.length === 0) {
+      console.warn('⚠️ No cards available for the given criteria, falling back to static cards')
+      // 最終フォールバック: 既存静的データから選択
+      return getRandomWisdomCard(percentage)
+    }
+    
+    const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)]
+    console.log(`✅ Selected card: ${randomCard.author} (${randomCard.rarity})`)
+    
+    return randomCard
+  } catch (error) {
+    console.error('❌ Error getting random card from DB, falling back to static data:', error)
+    // 完全フォールバック: 既存関数
+    return getRandomWisdomCard(percentage)
+  }
+}
+
+/**
+ * DB版: 全格言カード取得（既存インターフェース互換）
+ * @returns Promise<WisdomCard[]> - 既存インターフェース形式の配列
+ */
+export const getAllWisdomCardsFromDB = async (): Promise<WisdomCard[]> => {
+  try {
+    console.log('📚 Getting all wisdom cards from DB with legacy interface compatibility')
+    
+    const allDbCards = await getWisdomCardsWithFallback()
+    const legacyCards = allDbCards.map(convertWisdomCardMasterToLegacy)
+    
+    console.log(`✅ Converted ${legacyCards.length} DB cards to legacy interface`)
+    return legacyCards
+  } catch (error) {
+    console.error('❌ Error getting all cards from DB, falling back to static data:', error)
+    // 完全フォールバック: 既存静的データ
+    return wisdomCards
+  }
 }

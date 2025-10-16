@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { syncAllFallbackData, syncXPSettings, syncQuizQuestions, syncLearningCourses, syncStaticData } from '@/scripts/sync-all-fallback-data'
+import { syncAllFallbackData, syncXPSettings, syncQuizQuestions, syncLearningCourses, syncWisdomCards, syncStaticData } from '@/scripts/sync-all-fallback-data'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { isSystemAdmin } from '@/lib/auth-helpers'
 
@@ -71,6 +71,9 @@ export async function POST(request: NextRequest) {
         break
       case 'courses':
         result = await syncLearningCourses()
+        break
+      case 'wisdom':
+        result = await syncWisdomCards()
         break
       case 'static':
         result = await syncStaticData()
@@ -166,6 +169,11 @@ export async function GET(request: NextRequest) {
         { 
           name: 'コース学習', 
           path: 'public/data/learning-courses-fallback.json',
+          type: 'json' 
+        },
+        { 
+          name: '格言カード', 
+          path: 'public/data/wisdom-cards-fallback.json',
           type: 'json' 
         },
         { 

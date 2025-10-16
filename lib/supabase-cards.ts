@@ -1,4 +1,18 @@
 import { supabase } from './supabase'
+import { WisdomCardMaster } from './database-types-official'
+
+// Type definitions for fallback JSON structure
+interface WisdomCardFallbackData {
+  wisdom_cards: WisdomCardMaster[]
+  metadata: {
+    version: string
+    total_cards: number
+    last_updated: string
+    source: string
+    rarity_distribution: Record<string, number>
+    categories: string[]
+  }
+}
 
 // Convert string card ID to consistent numeric ID for database storage
 export function getCardNumericId(cardId: string | number): number {
@@ -31,7 +45,212 @@ export interface KnowledgeCardCollection {
   created_at?: string
 }
 
-// Wisdom Card Functions
+// =============================================================================
+// WISDOM CARD FALLBACK FUNCTIONS (JSON)
+// =============================================================================
+
+/**
+ * フォールバック: JSONファイルから格言カードデータを取得
+ * @returns Promise<WisdomCardMaster[]>
+ */
+async function getWisdomCardsFromJSON(): Promise<WisdomCardMaster[]> {
+  try {
+    console.log('📁 Loading wisdom cards from JSON fallback...')
+    const response = await fetch('/data/wisdom-cards-fallback.json')
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    
+    const data: WisdomCardFallbackData = await response.json()
+    console.log(`✅ Successfully loaded ${data.wisdom_cards.length} cards from JSON fallback`)
+    
+    return data.wisdom_cards
+  } catch (error) {
+    console.error('❌ Error loading wisdom cards from JSON:', error)
+    throw error
+  }
+}
+
+
+// =============================================================================
+// WISDOM CARD MASTER DATA FUNCTIONS (Unified with Fallback)
+// =============================================================================
+
+/**
+ * 統合版: 格言カード取得（DB → JSON の2段階フォールバック）
+ * @returns Promise<WisdomCardMaster[]>
+ */
+export async function getWisdomCardsWithFallback(): Promise<WisdomCardMaster[]> {
+  try {
+    // Primary: Database
+    console.log('🎯 Attempting database access for wisdom cards...')
+    return await getAllWisdomCardsFromDB()
+  } catch (dbError) {
+    console.warn('⚠️ Database access failed, using JSON fallback:', dbError)
+    
+    // Fallback: JSON (ネットワーク障害でも動作)
+    return await getWisdomCardsFromJSON()
+  }
+}
+
+/**
+ * 統合版: IDで特定の格言カード取得（フォールバック対応）
+ * @param cardId - カードID
+ * @returns Promise<WisdomCardMaster | null>
+ */
+export async function getWisdomCardByIdWithFallback(cardId: number): Promise<WisdomCardMaster | null> {
+  try {
+    // Primary: Database
+    return await getWisdomCardByIdFromDB(cardId)
+  } catch (dbError) {
+    console.warn('⚠️ Database access failed for card ID, using JSON fallback:', dbError)
+    
+    // Fallback: JSON
+    const allCards = await getWisdomCardsFromJSON()
+    return allCards.find(card => card.id === cardId) || null
+  }
+}
+
+/**
+ * 統合版: レアリティ別格言カード取得（フォールバック対応）
+ * @param rarity - レアリティ
+ * @returns Promise<WisdomCardMaster[]>
+ */
+export async function getWisdomCardsByRarityWithFallback(rarity: string): Promise<WisdomCardMaster[]> {
+  try {
+    // Primary: Database
+    return await getWisdomCardsByRarityFromDB(rarity)
+  } catch (dbError) {
+    console.warn('⚠️ Database access failed for rarity filter, using JSON fallback:', dbError)
+    
+    // Fallback: JSON
+    const allCards = await getWisdomCardsFromJSON()
+    return allCards.filter(card => card.rarity === rarity)
+  }
+}
+
+// =============================================================================
+// WISDOM CARD MASTER DATA FUNCTIONS (DB Version - Raw)
+// =============================================================================
+
+/**
+ * DB版: 全ての格言カードマスターデータを取得
+ * @returns Promise<WisdomCardMaster[]> - アクティブなカードのみ、表示順序でソート
+ */
+export async function getAllWisdomCardsFromDB(): Promise<WisdomCardMaster[]> {
+  try {
+    console.log('🔍 Fetching wisdom cards from database...')
+    const { data, error } = await supabase
+      .from('wisdom_cards')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+
+    if (error) {
+      console.error('❌ Error fetching wisdom cards from DB:', error)
+      throw error
+    }
+
+    console.log(`✅ Successfully fetched ${data?.length || 0} wisdom cards from DB`)
+    return data || []
+  } catch (error) {
+    console.error('⚠️ Exception in getAllWisdomCardsFromDB:', error)
+    throw error
+  }
+}
+
+/**
+ * DB版: IDで特定の格言カードマスターデータを取得
+ * @param cardId - カードID
+ * @returns Promise<WisdomCardMaster | null>
+ */
+export async function getWisdomCardByIdFromDB(cardId: number): Promise<WisdomCardMaster | null> {
+  try {
+    console.log(`🔍 Fetching wisdom card ID ${cardId} from database...`)
+    const { data, error } = await supabase
+      .from('wisdom_cards')
+      .select('*')
+      .eq('id', cardId)
+      .eq('is_active', true)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows returned
+        console.log(`ℹ️ Wisdom card ID ${cardId} not found`)
+        return null
+      }
+      console.error('❌ Error fetching wisdom card by ID:', error)
+      throw error
+    }
+
+    console.log(`✅ Successfully fetched wisdom card ID ${cardId}`)
+    return data
+  } catch (error) {
+    console.error('⚠️ Exception in getWisdomCardByIdFromDB:', error)
+    throw error
+  }
+}
+
+/**
+ * DB版: レアリティ別格言カード取得
+ * @param rarity - レアリティ ('コモン' | 'レア' | 'エピック' | 'レジェンダリー')
+ * @returns Promise<WisdomCardMaster[]>
+ */
+export async function getWisdomCardsByRarityFromDB(rarity: string): Promise<WisdomCardMaster[]> {
+  try {
+    console.log(`🔍 Fetching wisdom cards with rarity: ${rarity}`)
+    const { data, error } = await supabase
+      .from('wisdom_cards')
+      .select('*')
+      .eq('rarity', rarity)
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+
+    if (error) {
+      console.error('❌ Error fetching wisdom cards by rarity:', error)
+      throw error
+    }
+
+    console.log(`✅ Successfully fetched ${data?.length || 0} ${rarity} wisdom cards`)
+    return data || []
+  } catch (error) {
+    console.error('⚠️ Exception in getWisdomCardsByRarityFromDB:', error)
+    throw error
+  }
+}
+
+/**
+ * DB版: カテゴリー別格言カード取得
+ * @param categoryId - カテゴリーID
+ * @returns Promise<WisdomCardMaster[]>
+ */
+export async function getWisdomCardsByCategoryFromDB(categoryId: string): Promise<WisdomCardMaster[]> {
+  try {
+    console.log(`🔍 Fetching wisdom cards for category: ${categoryId}`)
+    const { data, error } = await supabase
+      .from('wisdom_cards')
+      .select('*')
+      .eq('category_id', categoryId)
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+
+    if (error) {
+      console.error('❌ Error fetching wisdom cards by category:', error)
+      throw error
+    }
+
+    console.log(`✅ Successfully fetched ${data?.length || 0} wisdom cards for category ${categoryId}`)
+    return data || []
+  } catch (error) {
+    console.error('⚠️ Exception in getWisdomCardsByCategoryFromDB:', error)
+    throw error
+  }
+}
+
+// =============================================================================
+// WISDOM CARD COLLECTION FUNCTIONS (User Data)
+// =============================================================================
 export async function getUserWisdomCards(userId: string): Promise<WisdomCardCollection[]> {
   try {
     console.log('🔍 Attempting to fetch wisdom cards for user:', userId)

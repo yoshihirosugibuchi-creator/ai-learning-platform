@@ -23,7 +23,7 @@ import MobileNav from '@/components/layout/MobileNav'
 import WisdomCard from '@/components/cards/WisdomCard'
 import KnowledgeCard from '@/components/cards/KnowledgeCard'
 import { useAuth } from '@/components/auth/AuthProvider'
-import { wisdomCards, getCategoryDisplayName, WisdomCard as WisdomCardType } from '@/lib/cards'
+import { getCategoryDisplayName, WisdomCard as WisdomCardType, getAllWisdomCardsFromDB } from '@/lib/cards'
 import { 
   getUserWisdomCards, 
   getWisdomCardStats, 
@@ -64,7 +64,7 @@ export default function CollectionPage() {
   }>({
     collection: [],
     stats: { totalObtained: 0, totalCards: 0, uniqueCards: 0 },
-    cardsWithStatus: wisdomCards.map(card => ({ ...card, obtained: false, count: 0 }))
+    cardsWithStatus: [] // DB版データで初期化予定
   })
   const [wisdomDataLoading, setWisdomDataLoading] = useState(true)
 
@@ -118,9 +118,12 @@ export default function CollectionPage() {
             stats
           }))
 
-          // 次に各カードの取得状況を並列取得
+          // DB版: 全カードを取得してから取得状況を並列取得
+          console.log('🎴 Loading wisdom cards from DB with fallback...')
+          const allWisdomCards = await getAllWisdomCardsFromDB()
+          
           const cardsWithStatus = await Promise.all(
-            wisdomCards.map(async (card) => {
+            allWisdomCards.map(async (card) => {
               try {
                 const [obtained, count] = await Promise.all([
                   hasWisdomCard(user.id, card.id),
@@ -403,7 +406,7 @@ export default function CollectionPage() {
 
   const rarityStats = useMemo(() => {
     return RARITIES.map(rarity => {
-      const totalInRarity = wisdomCards.filter(card => card.rarity === rarity).length
+      const totalInRarity = wisdomCollectionData.cardsWithStatus.filter(card => card.rarity === rarity).length
       const obtainedInRarity = wisdomCollectionData.cardsWithStatus
         .filter(card => card.rarity === rarity && card.obtained).length
       
@@ -416,7 +419,7 @@ export default function CollectionPage() {
     })
   }, [wisdomCollectionData.cardsWithStatus])
 
-  const wisdomCollectionRate = wisdomDataLoading ? 0 : Math.round((wisdomCollectionData.stats.uniqueCards / wisdomCards.length) * 100)
+  const wisdomCollectionRate = wisdomDataLoading ? 0 : Math.round((wisdomCollectionData.stats.uniqueCards / wisdomCollectionData.cardsWithStatus.length) * 100)
 
   if (!user) {
     return (

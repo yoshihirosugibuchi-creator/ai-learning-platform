@@ -326,7 +326,82 @@ async function syncLearningCourses(): Promise<SyncResult> {
 }
 
 /**
- * 4. 既存の静的データ同期（カテゴリー等）
+ * 4. 格言カードデータ同期
+ */
+async function syncWisdomCards(): Promise<SyncResult> {
+  const dataType = '格言カードデータ'
+  const timestamp = new Date().toISOString()
+  
+  try {
+    console.log('🔄 格言カードデータ同期中...')
+    
+    const { data: cards, error } = await supabaseAdmin
+      .from('wisdom_cards')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+      .order('id', { ascending: true })
+
+    if (error) {
+      console.error('❌ 格言カード取得エラー:', error)
+      throw error
+    }
+
+    if (!cards || cards.length === 0) {
+      throw new Error('格言カードが見つかりません')
+    }
+
+    console.log(`📊 取得格言カード: ${cards.length}件`)
+
+    // フォールバック用のJSONファイル作成
+    const fallbackFilePath = join(process.cwd(), 'public', 'data', 'wisdom-cards-fallback.json')
+    const fallbackData = {
+      cards,
+      metadata: {
+        generatedAt: timestamp,
+        sourceRecordCount: cards.length,
+        breakdown: {
+          total: cards.length,
+          byRarity: cards.reduce((acc, card) => {
+            acc[card.rarity] = (acc[card.rarity] || 0) + 1
+            return acc
+          }, {} as Record<string, number>)
+        },
+        databaseSource: 'wisdom_cards',
+        generatorScript: 'scripts/sync-all-fallback-data.ts'
+      }
+    }
+
+    writeFileSync(fallbackFilePath, JSON.stringify(fallbackData, null, 2), 'utf8')
+    console.log(`✅ 格言カードフォールバックファイル作成完了: ${fallbackFilePath}`)
+
+    return {
+      success: true,
+      dataType,
+      recordCount: cards.length,
+      filePath: fallbackFilePath,
+      timestamp,
+      breakdown: {
+        total: cards.length,
+        ...fallbackData.metadata.breakdown.byRarity
+      }
+    }
+
+  } catch (error) {
+    console.error(`❌ ${dataType}同期エラー:`, error)
+    return {
+      success: false,
+      dataType,
+      recordCount: 0,
+      filePath: '',
+      error: error instanceof Error ? error.message : String(error),
+      timestamp
+    }
+  }
+}
+
+/**
+ * 5. 既存の静的データ同期（カテゴリー等）
  */
 async function syncStaticData(): Promise<SyncResult> {
   const dataType = 'カテゴリー・静的データ'
@@ -418,6 +493,7 @@ async function syncAllFallbackData(): Promise<SyncSummary> {
     syncXPSettings(),
     syncQuizQuestions(), 
     syncLearningCourses(),
+    syncWisdomCards(),
     syncStaticData()
   ]
 
@@ -427,7 +503,7 @@ async function syncAllFallbackData(): Promise<SyncSummary> {
     if (result.status === 'fulfilled') {
       results.push(result.value)
     } else {
-      const dataTypes = ['XP/SKP設定', 'クイズ問題', 'コース学習データ', 'カテゴリー・静的データ']
+      const dataTypes = ['XP/SKP設定', 'クイズ問題', 'コース学習データ', '格言カードデータ', 'カテゴリー・静的データ']
       results.push({
         success: false,
         dataType: dataTypes[index],
@@ -484,4 +560,4 @@ if (require.main === module) {
     })
 }
 
-export { syncAllFallbackData, syncXPSettings, syncQuizQuestions, syncLearningCourses, syncStaticData }
+export { syncAllFallbackData, syncXPSettings, syncQuizQuestions, syncLearningCourses, syncWisdomCards, syncStaticData }

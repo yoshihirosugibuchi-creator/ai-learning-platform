@@ -1993,6 +1993,75 @@ export type Database = {
         }
         Relationships: []
       }
+      wisdom_cards: {
+        Row: {
+          animation_url: string | null
+          application_area: string
+          author: string
+          author_portrait_url: string | null
+          background_image_url: string | null
+          card_image_url: string | null
+          category_icon_url: string | null
+          category_id: string
+          context: string
+          created_at: string | null
+          display_order: number | null
+          id: number
+          is_active: boolean | null
+          particle_effect_config: Json | null
+          quote: string
+          rarity: string
+          rarity_frame_url: string | null
+          special_badge_url: string | null
+          subcategory_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          animation_url?: string | null
+          application_area: string
+          author: string
+          author_portrait_url?: string | null
+          background_image_url?: string | null
+          card_image_url?: string | null
+          category_icon_url?: string | null
+          category_id: string
+          context: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: number
+          is_active?: boolean | null
+          particle_effect_config?: Json | null
+          quote: string
+          rarity: string
+          rarity_frame_url?: string | null
+          special_badge_url?: string | null
+          subcategory_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          animation_url?: string | null
+          application_area?: string
+          author?: string
+          author_portrait_url?: string | null
+          background_image_url?: string | null
+          card_image_url?: string | null
+          category_icon_url?: string | null
+          category_id?: string
+          context?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: number
+          is_active?: boolean | null
+          particle_effect_config?: Json | null
+          quote?: string
+          rarity?: string
+          rarity_frame_url?: string | null
+          special_badge_url?: string | null
+          subcategory_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       xp_level_skp_settings: {
         Row: {
           created_at: string | null
@@ -2484,6 +2553,13 @@ export type SKPTransactionInsert = Database['public']['Tables']['skp_transaction
 export type QuizQuestionInsert = Database['public']['Tables']['quiz_questions']['Insert']
 export type QuizSessionInsert = Database['public']['Tables']['quiz_sessions']['Insert']
 export type WisdomCardCollectionInsert = Database['public']['Tables']['wisdom_card_collection']['Insert']
+
+// ============= Wisdom Cards Type Aliases (new) =============
+export type WisdomCardMaster = Database['public']['Tables']['wisdom_cards']['Row']
+export type WisdomCardMasterInsert = Database['public']['Tables']['wisdom_cards']['Insert']
+export type WisdomCardMasterUpdate = Database['public']['Tables']['wisdom_cards']['Update']
+
+// ============= Learning Analytics Type Aliases =============
 export type UnifiedLearningSessionAnalytics = Database['public']['Tables']['unified_learning_session_analytics']['Row']
 export type UnifiedLearningSessionAnalyticsInsert = Database['public']['Tables']['unified_learning_session_analytics']['Insert']
 export type UnifiedLearningSessionAnalyticsUpdate = Database['public']['Tables']['unified_learning_session_analytics']['Update']
@@ -2502,6 +2578,8 @@ export type LearningAnalyticsSummaryUpdate = Database['public']['Tables']['learn
 export type LearningEffectivenessTracking = Database['public']['Tables']['learning_effectiveness_tracking']['Row']
 export type LearningEffectivenessTrackingInsert = Database['public']['Tables']['learning_effectiveness_tracking']['Insert']
 export type LearningEffectivenessTrackingUpdate = Database['public']['Tables']['learning_effectiveness_tracking']['Update']
+
+// ============= System Monitoring Type Aliases =============
 export type SystemAlert = Database['public']['Tables']['system_alerts']['Row']
 export type SystemAlertInsert = Database['public']['Tables']['system_alerts']['Insert']
 export type SystemAlertUpdate = Database['public']['Tables']['system_alerts']['Update']
