@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -14,7 +15,6 @@ import {
   Crown,
   Gem,
   Target,
-  TrendingUp,
   BookOpen,
   Brain
 } from 'lucide-react'
@@ -417,7 +417,6 @@ export default function CollectionPage() {
   }, [wisdomCollectionData.cardsWithStatus])
 
   const wisdomCollectionRate = wisdomDataLoading ? 0 : Math.round((wisdomCollectionData.stats.uniqueCards / wisdomCards.length) * 100)
-  const knowledgeCollectionRate = knowledgeCollectionData.collection.length > 0 ? 100 : 0 // 新システムでは取得済みのみ表示
 
   if (!user) {
     return (
@@ -483,7 +482,7 @@ export default function CollectionPage() {
           {/* 格言カードタブ */}
           <TabsContent value="wisdom" className="space-y-6">
             {/* Collection Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-2 mb-2">
@@ -512,7 +511,7 @@ export default function CollectionPage() {
                         wisdomCollectionData.stats.uniqueCards
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">獲得カード数</p>
+                    <p className="text-xs text-muted-foreground">獲得種類数</p>
                   </div>
                 </CardContent>
               </Card>
@@ -528,22 +527,11 @@ export default function CollectionPage() {
                         wisdomCollectionData.stats.totalCards
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">総コレクション</p>
+                    <p className="text-xs text-muted-foreground">獲得総枚数</p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="pt-6 text-center">
-                  <div className="flex flex-col items-center space-y-1">
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                    <div className="text-2xl font-bold">
-                      {rarityStats.filter(r => r.obtained > 0).length}
-                    </div>
-                    <p className="text-xs text-muted-foreground">レア度制覇</p>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
             {/* Rarity Progress */}
@@ -680,7 +668,7 @@ export default function CollectionPage() {
           {/* ナレッジカードタブ */}
           <TabsContent value="knowledge" className="space-y-6">
             {/* Knowledge Cards Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-2 mb-2">
@@ -689,12 +677,12 @@ export default function CollectionPage() {
                       {knowledgeCollectionData.collection.length === 0 && knowledgeCollectionData.stats.totalObtained === 0 ? (
                         <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
                       ) : (
-                        `${knowledgeCollectionRate}%`
+                        `${knowledgeCollectionData.cardsWithStatus.length > 0 ? Math.round((obtainedKnowledgeCards.length / knowledgeCollectionData.cardsWithStatus.length) * 100) : 0}%`
                       )}
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">習得率</p>
-                  <Progress value={knowledgeCollectionRate} className="mt-2 h-2" />
+                  <Progress value={knowledgeCollectionData.cardsWithStatus.length > 0 ? Math.round((obtainedKnowledgeCards.length / knowledgeCollectionData.cardsWithStatus.length) * 100) : 0} className="mt-2 h-2" />
                 </CardContent>
               </Card>
 
@@ -709,26 +697,11 @@ export default function CollectionPage() {
                         obtainedKnowledgeCards.length
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">獲得スキル数</p>
+                    <p className="text-xs text-muted-foreground">獲得カード数</p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="pt-6 text-center">
-                  <div className="flex flex-col items-center space-y-1">
-                    <Star className="h-4 w-4 text-purple-500" />
-                    <div className="text-2xl font-bold">
-                      {knowledgeCollectionData.collection.length === 0 && knowledgeCollectionData.stats.totalObtained === 0 ? (
-                        <div className="animate-pulse bg-gray-200 h-8 w-12 rounded mx-auto"></div>
-                      ) : (
-                        knowledgeCollectionData.stats.totalReviews || 0
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">復習回数</p>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
             {/* V2システムではカテゴリーフィルターは不要 */}
@@ -805,7 +778,7 @@ export default function CollectionPage() {
           {/* バッジ（修了証）タブ */}
           <TabsContent value="badges" className="space-y-6">
             {/* Badge Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-2 mb-2">
@@ -853,22 +826,6 @@ export default function CollectionPage() {
                   </div>
                 </CardContent>
               </Card>
-              
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Star className="h-5 w-5 text-purple-500" />
-                    <span className="font-semibold">完了率</span>
-                  </div>
-                  <div className="text-2xl font-bold text-purple-600">
-                    {badgeLoading ? (
-                      <div className="animate-pulse bg-gray-200 h-12 w-12 rounded"></div>
-                    ) : (
-                      `${userBadges.length > 0 ? Math.round((activeBadges.length / userBadges.length) * 100) : 0}%`
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
             {/* Badge Filters */}
@@ -901,11 +858,36 @@ export default function CollectionPage() {
                       {filteredBadges.map(badge => (
                         <Card key={badge.id} className={`relative overflow-hidden ${badge.isExpired ? 'opacity-70' : ''}`}>
                           <CardHeader className="text-center pb-3">
-                            <div className="text-4xl mb-2">🏆</div>
-                            <CardTitle className="text-lg">{badge.badge.title}</CardTitle>
+                            <div className="text-4xl mb-2">
+                              {badge.badge.badgeImageUrl ? (
+                                <div className="relative w-16 h-16 mx-auto">
+                                  <Image 
+                                    src={badge.badge.badgeImageUrl} 
+                                    alt={badge.badge.title}
+                                    width={64}
+                                    height={64}
+                                    className="object-contain"
+                                    onError={() => {
+                                      // 画像読み込み失敗時のフォールバック
+                                      console.warn(`Failed to load badge image: ${badge.badge.badgeImageUrl}`);
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="text-4xl">
+                                  🏆
+                                </div>
+                              )}
+                            </div>
+                            <CardTitle className="text-lg" style={{ color: badge.badge.color || '#FFD700' }}>
+                              {badge.badge.title}
+                            </CardTitle>
                             <div className="flex items-center justify-center space-x-2">
-                              <Badge variant={badge.badge.difficulty === 'basic' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
-                                {badge.badge.difficulty === 'basic' ? '初級' : badge.badge.difficulty === 'intermediate' ? '中級' : '上級'}
+                              <Badge 
+                                variant={badge.badge.difficulty === 'basic' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}
+                                style={{ backgroundColor: badge.badge.difficultyColor, color: 'white' }}
+                              >
+                                {badge.badge.difficultyName || badge.badge.difficulty}
                               </Badge>
                               {badge.isExpired && (
                                 <Badge variant="outline" className="text-red-600 border-red-600">
@@ -951,10 +933,34 @@ export default function CollectionPage() {
                       {activeBadges.map(badge => (
                         <Card key={badge.id} className="relative overflow-hidden">
                           <CardHeader className="text-center pb-3">
-                            <div className="text-4xl mb-2">🏆</div>
-                            <CardTitle className="text-lg">{badge.badge.title}</CardTitle>
-                            <Badge variant={badge.badge.difficulty === 'basic' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
-                              {badge.badge.difficulty === 'basic' ? '初級' : badge.badge.difficulty === 'intermediate' ? '中級' : '上級'}
+                            <div className="text-4xl mb-2">
+                              {badge.badge.badgeImageUrl ? (
+                                <div className="relative w-16 h-16 mx-auto">
+                                  <Image 
+                                    src={badge.badge.badgeImageUrl} 
+                                    alt={badge.badge.title}
+                                    width={64}
+                                    height={64}
+                                    className="object-contain"
+                                    onError={() => {
+                                      console.warn(`Failed to load badge image: ${badge.badge.badgeImageUrl}`);
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="text-4xl">
+                                  🏆
+                                </div>
+                              )}
+                            </div>
+                            <CardTitle className="text-lg" style={{ color: badge.badge.color || '#FFD700' }}>
+                              {badge.badge.title}
+                            </CardTitle>
+                            <Badge 
+                              variant={badge.badge.difficulty === 'basic' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}
+                              style={{ backgroundColor: badge.badge.difficultyColor, color: 'white' }}
+                            >
+                              {badge.badge.difficultyName || badge.badge.difficulty}
                             </Badge>
                           </CardHeader>
                           <CardContent className="text-center space-y-2">
@@ -985,11 +991,35 @@ export default function CollectionPage() {
                       {expiredBadges.map(badge => (
                         <Card key={badge.id} className="relative overflow-hidden opacity-70">
                           <CardHeader className="text-center pb-3">
-                            <div className="text-4xl mb-2">🏆</div>
-                            <CardTitle className="text-lg">{badge.badge.title}</CardTitle>
+                            <div className="text-4xl mb-2">
+                              {badge.badge.badgeImageUrl ? (
+                                <div className="relative w-16 h-16 mx-auto">
+                                  <Image 
+                                    src={badge.badge.badgeImageUrl} 
+                                    alt={badge.badge.title}
+                                    width={64}
+                                    height={64}
+                                    className="object-contain grayscale"
+                                    onError={() => {
+                                      console.warn(`Failed to load badge image: ${badge.badge.badgeImageUrl}`);
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="text-4xl">
+                                  🏆
+                                </div>
+                              )}
+                            </div>
+                            <CardTitle className="text-lg" style={{ color: badge.badge.color || '#999999' }}>
+                              {badge.badge.title}
+                            </CardTitle>
                             <div className="flex items-center justify-center space-x-2">
-                              <Badge variant={badge.badge.difficulty === 'basic' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
-                                {badge.badge.difficulty === 'basic' ? '初級' : badge.badge.difficulty === 'intermediate' ? '中級' : '上級'}
+                              <Badge 
+                                variant={badge.badge.difficulty === 'basic' ? 'default' : badge.badge.difficulty === 'intermediate' ? 'secondary' : 'destructive'}
+                                style={{ backgroundColor: badge.badge.difficultyColor, color: 'white' }}
+                              >
+                                {badge.badge.difficultyName || badge.badge.difficulty}
                               </Badge>
                               <Badge variant="outline" className="text-red-600 border-red-600">
                                 期限切れ

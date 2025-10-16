@@ -1070,26 +1070,63 @@ async function recordCourseCompletion(
       
       console.log('✅ Course completion recorded successfully:', courseCompletionData)
 
-      // 5. 修了証バッジ付与
-      const badgeData = {
-        user_id: userId,
-        badge_id: `course_completion_${body.course_id}`,
-        course_id: body.course_id,
-        course_name: body.course_id,
-        badge_title: `Course Completion: ${body.course_id}`,
-        badge_description: `Successfully completed all themes in ${body.course_id}`,
-        difficulty: 'intermediate',
-        earned_at: new Date().toISOString()
-      }
-      
-      const { error: badgeError } = await supabase
-        .from('user_badges')
-        .insert(badgeData)
+      // 5. 修了証バッジ付与（learning_coursesのbadge_dataを使用）
+      try {
+        // まずコース情報とbadge_dataを取得
+        const { data: courseData, error: courseError } = await supabase
+          .from('learning_courses')
+          .select('id, title, difficulty, badge_data')
+          .eq('id', body.course_id)
+          .single()
 
-      if (badgeError) {
-        console.warn('⚠️ Course completion badge error:', badgeError)
-      } else {
-        console.log('🏆 Course completion badge awarded')
+        if (courseError || !courseData) {
+          console.error('❌ Failed to fetch course badge data:', courseError)
+          throw new Error(`Course ${body.course_id} not found`)
+        }
+
+        console.log('📋 Course badge data retrieved:', courseData.badge_data)
+
+        // badge_dataからバッジ情報を取得
+        const badgeInfo = (courseData.badge_data as Record<string, unknown>) || {}
+        
+        // 有効期限の計算（validityPeriodMonthsが指定されている場合）
+        let expiresAt: string | null = null
+        const validityMonths = badgeInfo.validityPeriodMonths as number | null
+        if (validityMonths && validityMonths > 0) {
+          const expiryDate = new Date()
+          expiryDate.setMonth(expiryDate.getMonth() + validityMonths)
+          expiresAt = expiryDate.toISOString()
+        }
+
+        const badgeData = {
+          user_id: userId,
+          badge_id: (badgeInfo.id as string) || `course_completion_${body.course_id}`,
+          course_id: body.course_id,
+          course_name: courseData.title || body.course_id, // 正しいコース名を使用
+          badge_title: (badgeInfo.title as string) || `${courseData.title} 修了証`,
+          badge_description: (badgeInfo.description as string) || `${courseData.title}を完了しました`,
+          badge_image_url: (badgeInfo.badgeImageUrl as string) || null,
+          badge_color: (badgeInfo.color as string) || '#FFD700',
+          difficulty: courseData.difficulty || 'intermediate', // コース本来の難易度を使用
+          earned_at: new Date().toISOString(),
+          expires_at: expiresAt,
+          validity_period_months: validityMonths
+        }
+        
+        console.log('🏆 Creating badge with data:', badgeData)
+        
+        const { error: badgeError } = await supabase
+          .from('user_badges')
+          .insert(badgeData)
+
+        if (badgeError) {
+          console.warn('⚠️ Course completion badge error:', badgeError)
+        } else {
+          console.log('🎉 Course completion badge awarded with proper badge_data!')
+        }
+      } catch (badgeCreationError) {
+        console.error('❌ Badge creation error:', badgeCreationError)
+        console.warn('⚠️ Badge award failed, but course completion will continue')
       }
 
       // 6. コース完了ボーナスXP・SKP付与（既存システム使用）

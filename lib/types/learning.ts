@@ -73,6 +73,9 @@ export interface LearningBadge {
   badgeImageUrl?: string // 勲章画像URL
   difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert'
   validityPeriodMonths?: number // 有効期限（月数）、未設定は永続
+  // skill_levelsテーブルから取得される追加情報
+  difficultyName?: string // 難易度の日本語名
+  difficultyColor?: string // 難易度の色
 }
 
 export interface UserBadge {

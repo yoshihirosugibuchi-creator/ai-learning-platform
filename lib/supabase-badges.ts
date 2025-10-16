@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { UserBadge, LearningBadge } from './types/learning'
+import { getSkillLevel } from './skill-levels'
 
 // バッジ関連の型定義
 export interface BadgeAwardData {
@@ -169,6 +170,7 @@ export async function awardCourseBadge(data: BadgeAwardData): Promise<UserBadge 
 // ユーザーの獲得バッジ一覧を取得
 export async function getUserBadges(userId: string): Promise<UserBadge[]> {
   try {
+    // まずuser_badgesのデータを取得
     const { data, error } = await supabase
       .from('user_badges')
       .select('*')
@@ -180,24 +182,59 @@ export async function getUserBadges(userId: string): Promise<UserBadge[]> {
       return []
     }
 
-    return data.map(item => ({
-      id: item.id,
-      badge: {
-        id: item.badge_id,
-        title: item.badge_title,
-        description: item.badge_description || '',
-        icon: '🏆', // デフォルトアイコン
-        color: item.badge_color || '#FFD700',
-        badgeImageUrl: item.badge_image_url || undefined,
-        difficulty: (item.difficulty as 'basic' | 'intermediate' | 'advanced' | 'expert') || 'intermediate',
-        validityPeriodMonths: item.validity_period_months || undefined
-      },
-      earnedAt: new Date(item.earned_at),
-      expiresAt: item.expires_at ? new Date(item.expires_at) : undefined,
-      isExpired: item.expires_at ? new Date(item.expires_at) < new Date() : false,
-      courseId: item.course_id,
-      courseName: item.course_name
-    })) as UserBadge[]
+    // 各バッジの難易度情報をskill_levelsから取得し、コース情報も取得
+    const badgesWithSkillInfo = await Promise.all(
+      data.map(async (item) => {
+        const [skillLevel, courseInfo] = await Promise.all([
+          getSkillLevel(item.difficulty || 'intermediate'),
+          // コース情報を取得してdisplay_orderを取得
+          supabase
+            .from('learning_courses')
+            .select('display_order, title')
+            .eq('id', item.course_id)
+            .single()
+        ])
+        
+        return {
+          id: item.id,
+          badge: {
+            id: item.badge_id,
+            title: item.badge_title,
+            description: item.badge_description || '',
+            icon: '🏆', // デフォルトアイコン
+            color: item.badge_color || '#FFD700',
+            badgeImageUrl: item.badge_image_url || undefined,
+            difficulty: (item.difficulty as 'basic' | 'intermediate' | 'advanced' | 'expert') || 'intermediate',
+            validityPeriodMonths: item.validity_period_months || undefined,
+            // skill_levelsからの追加情報
+            difficultyName: skillLevel?.name || item.difficulty || '中級',
+            difficultyColor: skillLevel?.color || '#3B82F6'
+          },
+          earnedAt: new Date(item.earned_at),
+          expiresAt: item.expires_at ? new Date(item.expires_at) : undefined,
+          isExpired: item.expires_at ? new Date(item.expires_at) < new Date() : false,
+          courseId: item.course_id,
+          courseName: courseInfo.data?.title || item.course_name,
+          // コース順ソート用
+          _courseDisplayOrder: courseInfo.data?.display_order || 999
+        }
+      })
+    )
+
+    // コースのdisplay_orderで並び替え
+    badgesWithSkillInfo.sort((a, b) => {
+      const orderA = (a as UserBadge & { _courseDisplayOrder?: number })._courseDisplayOrder || 999
+      const orderB = (b as UserBadge & { _courseDisplayOrder?: number })._courseDisplayOrder || 999
+      return orderA - orderB
+    })
+
+    // _courseDisplayOrderを削除してから返す
+    const sortedBadges = badgesWithSkillInfo.map(badge => {
+      const { _courseDisplayOrder, ...cleanBadge } = badge as UserBadge & { _courseDisplayOrder?: number }
+      return cleanBadge
+    })
+
+    return sortedBadges as UserBadge[]
   } catch (error) {
     console.error('Exception in getUserBadges:', error)
     return []
