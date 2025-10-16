@@ -728,18 +728,31 @@ export async function POST(request: Request) {
       console.warn('⚠️ Streak bonus async processing failed:', error)
     })
 
+    // コース完了ボーナスXP計算（初回完了 & コース完了時のみ）
+    let courseCompletionBonusXP = 0
+    if (isFirstCompletion && courseCompleted) {
+      const xpSettings = await loadXPSettings(supabase)
+      courseCompletionBonusXP = xpSettings.xp_bonus.course_completion || 0
+    }
+    
+    // 総獲得XP計算
+    const totalEarnedXP = earnedXP + courseCompletionBonusXP
+
     const responseMessage = isFirstCompletion && body.session_quiz_correct
-      ? `Course session completed! Earned ${earnedXP} XP`
+      ? `Course session completed! Session: ${earnedXP} XP${courseCompletionBonusXP > 0 ? `, Bonus: ${courseCompletionBonusXP} XP` : ''}`
       : isFirstCompletion
       ? 'Course session completed (no quiz or incorrect answer - no XP)'
       : 'Course session completed (review mode - no XP, but logged for analysis)'
 
-    console.log(`✅ Course XP Save Success: Session ${body.session_id}, XP: ${earnedXP}`)
+    console.log(`✅ Course XP Save Success: Session ${body.session_id}, Session XP: ${earnedXP}, Bonus XP: ${courseCompletionBonusXP}, Total: ${totalEarnedXP}`)
 
-    return NextResponse.json({
+    // 🚀 早期レスポンス: 内訳付きXP値を即座に返す（UIパフォーマンス向上）
+    const earlyResponse = NextResponse.json({
       success: true,
       session_id: body.session_id,
-      earned_xp: earnedXP,
+      session_xp: earnedXP,
+      completion_bonus_xp: courseCompletionBonusXP,
+      total_earned_xp: totalEarnedXP,
       is_first_completion: isFirstCompletion,
       quiz_correct: body.session_quiz_correct,
       theme_completed: themeCompleted,
@@ -747,6 +760,9 @@ export async function POST(request: Request) {
       streak_bonus: streakBonusResult,
       message: responseMessage
     })
+
+    console.log('⚡ Early response sent, heavy processing continues in background')
+    return earlyResponse
 
   } catch (error) {
     console.error('❌ Course XP Save API Error:', error)

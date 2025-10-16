@@ -50,7 +50,9 @@ type ViewState = 'content' | 'quiz' | 'completed'
 interface CourseSessionResponse {
   success: boolean
   session_id?: string
-  earned_xp?: number
+  session_xp?: number
+  completion_bonus_xp?: number
+  total_earned_xp?: number
   is_first_completion?: boolean
   quiz_correct?: boolean
   theme_completed?: boolean
@@ -108,7 +110,9 @@ export default function LearningSession({
   // 完了状態
   const [showThemeCompletion, setShowThemeCompletion] = useState(false)
   const [showCourseCompletion, setShowCourseCompletion] = useState(false)
-  const [earnedXP, setEarnedXP] = useState(0)
+  const [sessionXP, setSessionXP] = useState(0)
+  const [courseCompletionBonusXP, setCourseCompletionBonusXP] = useState(0)
+  const [totalEarnedXP, setTotalEarnedXP] = useState(0)
   // Client-side completion tracking
   const [completedSessions, setCompletedSessions] = useState<Set<string>>(new Set())
   const [completedThemes, setCompletedThemes] = useState<Set<string>>(new Set())
@@ -490,10 +494,50 @@ export default function LearningSession({
         }
       })
       
+      // ⚡ Client-side XP calculation for instant display (0ms delay)
+      let predictedSessionXP = 0
+      if (isFirstCompletion && calculateQuizCorrect()) {
+        try {
+          console.log('⚡ Calculating session XP on client-side for instant display...')
+          
+          // Import XP calculation functions dynamically
+          const { loadXPSettings, calculateCourseXP } = await import('@/lib/xp-settings')
+          const { mapDifficultyToEnglish } = await import('@/lib/xp-level-system')
+          
+          // Load XP settings from same source as API
+          const xpSettings = await loadXPSettings()
+          
+          // Get course difficulty (same logic as API)
+          const courseDifficulty = courseData?.difficulty || 'basic'
+          const unifiedDifficulty = mapDifficultyToEnglish(courseDifficulty)
+          
+          // Calculate session XP using same function as API
+          predictedSessionXP = calculateCourseXP(unifiedDifficulty, xpSettings)
+          
+          console.log('⚡ Client-side session XP prediction completed:', {
+            courseDifficulty,
+            unifiedDifficulty,
+            predictedSessionXP,
+            isFirstCompletion,
+            quizCorrect: calculateQuizCorrect(),
+            settingsSource: 'xp_level_skp_settings (via loadXPSettings)'
+          })
+        } catch (error) {
+          console.warn('⚠️ Client-side session XP calculation failed, will rely on API result:', error)
+          predictedSessionXP = 0
+        }
+      }
+
       // 🚀 Immediate UI updates based on client-side detection
       setSessionCompleted(true)
       setViewState('completed')
       onComplete(session.id)
+      
+      // ⚡ Show predicted session XP immediately (0ms delay for better UX)
+      if (predictedSessionXP > 0) {
+        setSessionXP(predictedSessionXP)
+        console.log(`⚡ Session XP displayed instantly: ${predictedSessionXP} (predicted from xp_level_skp_settings)`)
+      }
       
       // Update local completion tracking
       const updatedSessions = new Set(completedSessions)
@@ -532,7 +576,35 @@ export default function LearningSession({
         }
       }
       
+      // ⚡ Client-side course completion bonus XP calculation
+      let predictedBonusXP = 0
       if (willCompleteCourse && isFirstCourseCompletion) {
+        try {
+          console.log('⚡ Calculating course completion bonus XP on client-side...')
+          
+          // Use same XP settings already loaded above
+          const { loadXPSettings } = await import('@/lib/xp-settings')
+          const xpSettings = await loadXPSettings()
+          
+          // Course completion bonus from same settings as API
+          predictedBonusXP = xpSettings.xp_bonus.course_completion || 0
+          setCourseCompletionBonusXP(predictedBonusXP)
+          
+          console.log('⚡ Course completion bonus XP predicted:', {
+            sessionXP: predictedSessionXP,
+            bonusXP: predictedBonusXP,
+            totalPredictedXP: predictedSessionXP + predictedBonusXP,
+            settingsSource: 'xp_level_skp_settings (course_completion bonus)'
+          })
+          
+          // Set individual XP values and total
+          const totalPredicted = predictedSessionXP + predictedBonusXP
+          setTotalEarnedXP(totalPredicted)
+          console.log(`⚡ Total XP with bonus displayed instantly: ${totalPredicted} (session: ${predictedSessionXP} + bonus: ${predictedBonusXP})`)
+        } catch (error) {
+          console.warn('⚠️ Course completion bonus XP calculation failed:', error)
+        }
+        
         setShowCourseCompletion(true)
         console.log('🏆 Course completion UI shown for first completion')
       } else if (willCompleteCourse && !isFirstCourseCompletion) {
@@ -547,9 +619,52 @@ export default function LearningSession({
           const apiResult = await saveSessionProgress(willCompleteTheme, willCompleteCourse)
 
           if (apiResult.success) {
-            // Update XP display from API result
-            if (apiResult.earned_xp) {
-              setEarnedXP(apiResult.earned_xp)
+            // Verify XP prediction accuracy and update if different using new API structure
+            if (apiResult.session_xp !== undefined || apiResult.completion_bonus_xp !== undefined || apiResult.total_earned_xp !== undefined) {
+              const apiSessionXP = apiResult.session_xp || 0
+              const apiBonusXP = apiResult.completion_bonus_xp || 0
+              const apiTotalXP = apiResult.total_earned_xp || 0
+              
+              console.log('🔍 API vs Client XP comparison:', {
+                api: { session: apiSessionXP, bonus: apiBonusXP, total: apiTotalXP },
+                client: { session: predictedSessionXP, bonus: predictedBonusXP, total: predictedSessionXP + predictedBonusXP }
+              })
+              
+              // Update with API values if different from predictions
+              if (apiSessionXP !== predictedSessionXP) {
+                console.warn(`⚠️ Session XP prediction mismatch: predicted ${predictedSessionXP}, actual ${apiSessionXP}`)
+                setSessionXP(apiSessionXP)
+              }
+              
+              if (apiBonusXP !== predictedBonusXP) {
+                console.warn(`⚠️ Bonus XP prediction mismatch: predicted ${predictedBonusXP}, actual ${apiBonusXP}`)
+                setCourseCompletionBonusXP(apiBonusXP)
+              }
+              
+              if (apiTotalXP !== (predictedSessionXP + predictedBonusXP)) {
+                console.warn(`⚠️ Total XP prediction mismatch: predicted ${predictedSessionXP + predictedBonusXP}, actual ${apiTotalXP}`)
+                setTotalEarnedXP(apiTotalXP)
+              }
+              
+              // Fallback: if prediction failed completely, use API values
+              if (predictedSessionXP === 0 && apiSessionXP > 0) {
+                setSessionXP(apiSessionXP)
+                console.log(`✅ Session XP displayed from API result: ${apiSessionXP}`)
+              }
+              
+              if (predictedBonusXP === 0 && apiBonusXP > 0) {
+                setCourseCompletionBonusXP(apiBonusXP)
+                console.log(`✅ Bonus XP displayed from API result: ${apiBonusXP}`)
+              }
+              
+              if ((predictedSessionXP + predictedBonusXP) === 0 && apiTotalXP > 0) {
+                setTotalEarnedXP(apiTotalXP)
+                console.log(`✅ Total XP displayed from API result: ${apiTotalXP}`)
+              }
+              
+              if (apiSessionXP === predictedSessionXP && apiBonusXP === predictedBonusXP) {
+                console.log(`✅ XP prediction accurate: session ${apiSessionXP}, bonus ${apiBonusXP}, total ${apiTotalXP}`)
+              }
             }
             
             console.log('✅ Database updates completed in background')
@@ -818,12 +933,12 @@ export default function LearningSession({
           </p>
         </div>
 
-        {earnedXP > 0 && (
+        {(sessionXP > 0 || totalEarnedXP > 0) && (
           <Card className="max-w-md mx-auto">
             <CardContent className="pt-6">
               <div className="flex items-center justify-center space-x-2">
                 <Star className="w-5 h-5 text-yellow-500" />
-                <span className="text-lg font-semibold">{earnedXP} XP</span>
+                <span className="text-lg font-semibold">{totalEarnedXP || sessionXP} XP</span>
                 <span className="text-gray-600">獲得</span>
               </div>
             </CardContent>
@@ -888,12 +1003,45 @@ export default function LearningSession({
                 <span>修了証を獲得！</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-center space-y-2">
+            <CardContent className="text-center space-y-4">
               <div className="text-4xl">🏆</div>
               <div className="font-semibold text-purple-800">コース修了証</div>
               <div className="text-sm text-purple-700">
                 コース完了の証として獲得
               </div>
+              
+              {/* XP獲得詳細表示（修正版：新しいstate変数使用） */}
+              {(sessionXP > 0 || courseCompletionBonusXP > 0 || totalEarnedXP > 0) && (
+                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border border-yellow-200">
+                  <div className="text-lg font-bold text-orange-800 mb-2">
+                    🌟 獲得XP: {totalEarnedXP || (sessionXP + courseCompletionBonusXP)} XP
+                  </div>
+                  {/* セッションXPとボーナスXPの内訳表示 */}
+                  <div className="text-sm space-y-1 text-orange-700">
+                    {sessionXP > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span>📚 セッション完了:</span>
+                        <span className="font-semibold">{sessionXP} XP</span>
+                      </div>
+                    )}
+                    {courseCompletionBonusXP > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span>🎉 コース完了ボーナス:</span>
+                        <span className="font-semibold text-purple-700">{courseCompletionBonusXP} XP</span>
+                      </div>
+                    )}
+                    {(sessionXP > 0 || courseCompletionBonusXP > 0) && (
+                      <div className="border-t border-orange-200 pt-1 mt-2">
+                        <div className="flex justify-between items-center font-bold">
+                          <span>合計:</span>
+                          <span className="text-orange-800">{totalEarnedXP || (sessionXP + courseCompletionBonusXP)} XP</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
               <div className="mt-3 p-3 bg-purple-100 rounded text-sm text-purple-800">
                 🎉 コース完了おめでとうございます！<br/>修了証はコレクションで確認できます。
               </div>
