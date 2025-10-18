@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { getCurrentUserRole } from '@/lib/auth-helpers'
 import type { Question } from '@/lib/types'
 import type { Database } from '@/lib/database-types-official'
 import fs from 'fs'
@@ -8,8 +9,17 @@ import path from 'path'
 type QuizQuestionRow = Database['public']['Tables']['quiz_questions']['Row']
 
 // DB対応版 - 問題データ取得
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // システム管理者権限チェック
+    const { userId, role } = await getCurrentUserRole(request)
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    if (role !== 'system_admin') {
+      return NextResponse.json({ error: 'System administrator access required' }, { status: 403 })
+    }
+    
     console.log('🔍 Admin: Fetching all questions from DB')
     
     const { data, error } = await supabaseAdmin
@@ -64,6 +74,15 @@ export async function GET() {
 // DB対応版 - 問題データ一括更新/挿入
 export async function POST(request: NextRequest) {
   try {
+    // システム管理者権限チェック
+    const { userId, role } = await getCurrentUserRole(request)
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    if (role !== 'system_admin') {
+      return NextResponse.json({ error: 'System administrator access required' }, { status: 403 })
+    }
+    
     const { questions }: { questions: Question[] } = await request.json()
     
     if (!Array.isArray(questions)) {
@@ -223,12 +242,21 @@ export async function POST(request: NextRequest) {
 }
 
 // DB対応版 - 問題データをJSONファイルに同期
-export async function PUT() {
+export async function PUT(request: NextRequest) {
   try {
+    // システム管理者権限チェック
+    const { userId, role } = await getCurrentUserRole(request)
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    if (role !== 'system_admin') {
+      return NextResponse.json({ error: 'System administrator access required' }, { status: 403 })
+    }
+    
     console.log('🚀 Admin: Starting questions DB→JSON sync')
     
     // DBから全データを取得
-    const response = await GET()
+    const response = await GET(request)
     const data = await response.json()
     
     if (!response.ok) {
@@ -292,6 +320,15 @@ export async function PUT() {
 // DB対応版 - 問題削除
 export async function DELETE(request: NextRequest) {
   try {
+    // システム管理者権限チェック
+    const { userId, role } = await getCurrentUserRole(request)
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    if (role !== 'system_admin') {
+      return NextResponse.json({ error: 'System administrator access required' }, { status: 403 })
+    }
+    
     const url = new URL(request.url)
     const questionId = url.searchParams.get('id')
     

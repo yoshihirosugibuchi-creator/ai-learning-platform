@@ -49,22 +49,6 @@ export default function AdminPage() {
             </Card>
           </Link>
           
-          <Link href="/admin/quiz-management">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <FileText className="h-5 w-5 text-orange-600" />
-                  <span>クイズ問題管理</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  CSVインポート・エクスポートで<br/>
-                  問題データを管理します
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
 
           <Link href="/admin/xp-settings">
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
@@ -156,6 +140,23 @@ export default function AdminPage() {
                   <p className="text-sm text-muted-foreground">
                     ユーザー権限設定・<br/>
                     アカウント管理
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/admin/quiz-management">
+              <Card className="hover:shadow-md transition-shadow cursor-pointer border-red-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <FileText className="h-5 w-5 text-orange-600" />
+                    <span>クイズ問題管理</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    CSVインポート・エクスポートで<br/>
+                    問題データを管理します
                   </p>
                 </CardContent>
               </Card>

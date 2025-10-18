@@ -240,7 +240,9 @@ export async function POST(request: Request) {
     }
 
     // 4. 統合システムでの最終XP/SKP計算
-    const totalQuestionXP = unifiedXP  // 統合システムの結果を使用
+    // 🔧 修正: quiz_answersの実際のearned_xp合計を使用（ハードコード計算を廃止）
+    const actualTotalQuestionXP = answerInserts.reduce((sum, answer) => sum + answer.earned_xp, 0)
+    const totalQuestionXP = actualTotalQuestionXP  // 実際の回答XP合計を使用
     const totalTimeSpent = answerInserts.reduce((sum, answer) => sum + answer.time_spent, 0) // 秒単位
     let bonusXP = 0
     let wisdomCards = 0
@@ -274,8 +276,9 @@ export async function POST(request: Request) {
     bonusXP = accuracyBonus
     const totalXP = totalQuestionXP + bonusXP
     
-    console.log('🎯 Quiz XP calculation (new system):', {
-      totalQuestionXP,
+    console.log('🎯 Quiz XP calculation (fixed system):', {
+      actualTotalQuestionXP,
+      legacyUnifiedXP: unifiedXP, // デバッグ用：旧計算値
       bonusXP,
       totalXP,
       accuracy: body.accuracy_rate,
@@ -284,7 +287,13 @@ export async function POST(request: Request) {
         intermediate: xpSettings.xp_quiz.intermediate,
         advanced: xpSettings.xp_quiz.advanced,
         expert: xpSettings.xp_quiz.expert
-      }
+      },
+      answerBreakdown: answerInserts.map(a => ({
+        questionId: a.question_id,
+        difficulty: a.difficulty,
+        isCorrect: a.is_correct,
+        earnedXP: a.earned_xp
+      }))
     })
     
     // 5. セッション記録更新

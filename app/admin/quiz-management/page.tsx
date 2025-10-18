@@ -11,10 +11,12 @@ import {
   Upload, 
   FileText, 
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Shield
 } from 'lucide-react'
 import { getAllQuestions } from '@/lib/questions'
 import type { Question } from '@/lib/types'
+import { useUserRole } from '@/hooks/useUserRole'
 
 interface ImportPreview {
   questions: Question[]
@@ -31,11 +33,47 @@ interface ImportPreview {
 }
 
 export default function QuizManagementPage() {
+  const { isSystemAdmin, loading: roleLoading } = useUserRole()
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(false)
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // システム管理者権限チェック
+  if (roleLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">権限確認中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isSystemAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Card className="max-w-md mx-auto border-red-200">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <Shield className="h-6 w-6 text-red-600" />
+            </div>
+            <CardTitle className="text-red-700">アクセス権限不足</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-muted-foreground mb-4">
+              クイズ問題管理機能はシステム管理者限定です。
+            </p>
+            <p className="text-sm text-muted-foreground">
+              アクセスには最高レベルの権限が必要です。
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   // 初期データ読み込み
   const loadQuestions = async () => {
@@ -328,10 +366,11 @@ export default function QuizManagementPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center">
-            <FileText className="h-6 w-6 mr-2 text-orange-600" />
+            <Shield className="h-6 w-6 mr-2 text-red-600" />
             クイズ問題管理
+            <Badge variant="destructive" className="ml-3 text-xs">システム管理者限定</Badge>
           </h1>
-          <p className="text-muted-foreground">CSVインポート・エクスポートで問題データを管理します</p>
+          <p className="text-muted-foreground">CSVインポート・エクスポートで問題データを管理します（高権限機能）</p>
         </div>
         <Button onClick={loadQuestions} disabled={loading}>
           <FileText className="h-4 w-4 mr-2" />
