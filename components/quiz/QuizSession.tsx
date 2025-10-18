@@ -69,6 +69,7 @@ interface QuestionAnswer {
   questionText: string
   selectedAnswer: string
   correctAnswer: string
+  selectedOptionIndex: number  // ユーザーが選択した選択肢のインデックス (0-3)
   isCorrect: boolean
   responseTime: number
   category: string
@@ -544,6 +545,7 @@ export default function QuizSession({
       questionText: currentQuestion.question,
       selectedAnswer: currentQuestion.options[option],
       correctAnswer: currentQuestion.options[currentQuestion.correct],
+      selectedOptionIndex: option,  // ユーザーが選択した選択肢のインデックス (0-3)
       isCorrect,
       responseTime,
       category: currentQuestion.category,
@@ -727,13 +729,14 @@ export default function QuizSession({
                 accuracy_rate: actualTotalQuestions > 0 ? (finalResults.correctAnswers / actualTotalQuestions) * 100 : 0,
                 answers: questionAnswers.map(qa => ({
                   question_id: qa.questionId,
-                  user_answer: null, // We don't store the answer index in the new format
+                  user_answer: qa.selectedOptionIndex, // ユーザーが選択した選択肢のインデックス (0-3)
                   is_correct: qa.isCorrect,
                   time_spent: qa.responseTime,
                   is_timeout: false, // We don't track timeouts in current system
                   category_id: qa.category || quizCategory || category || 'logical_thinking_problem_solving',
                   subcategory_id: qa.subcategory_id || 'general', // Use actual subcategory_id or fallback to general
-                  difficulty: qa.difficulty
+                  difficulty: qa.difficulty,
+                  confidence_level: qa.confidenceLevel // 理解度 (1-5段階、未入力時はundefined)
                 }))
               }
               

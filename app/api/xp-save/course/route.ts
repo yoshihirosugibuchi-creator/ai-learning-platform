@@ -55,6 +55,7 @@ interface CourseSessionRequest {
   session_end_time?: string
   duration_seconds?: number
   quiz_time_spent?: number  // 理解度チェック実測時間
+  quiz_user_answer?: number | null  // ユーザーが選択した理解度チェックの回答選択肢インデックス
   // Client-side completion detection results
   client_theme_completed?: boolean
   client_course_completed?: boolean
@@ -288,7 +289,7 @@ export async function POST(request: Request) {
           user_id: userId, // ユーザーID追加
           quiz_session_id: null, // コース確認クイズはクイズセッションと無関係
           question_id: `course_confirmation_${body.session_id}`,
-          user_answer: 1, // 確認クイズは通常選択肢がシンプル
+          user_answer: body.quiz_user_answer ?? null, // ユーザーが選択した理解度チェックの選択肢インデックス
           is_correct: body.session_quiz_correct,
           time_spent: body.quiz_time_spent || 30, // 理解度チェック実測時間（フォールバック30秒）
           is_timeout: false,
@@ -310,229 +311,58 @@ export async function POST(request: Request) {
       }
     }
 
-    // 7. ユーザー全体統計を直接更新（セッション回数は常に更新、XPは初回完了時のみ）
-    // 既存の統計を取得
-    const { data: existingStats } = await supabase
-      .from('user_xp_stats_v2')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
+    // 7. ユーザー全体統計更新はテーマ・コース完了記録後に実行（タイミング修正）
+    // 初回の場合のみセッション完了記録と基本統計更新を実行
+    if (isFirstCompletion) {
+      // 既存の統計を取得してセッション数のみ更新（XPは後で更新）
+      const { data: existingStats } = await supabase
+        .from('user_xp_stats_v2')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
 
-    // 統一回答ログシステムの統計更新: セッション回数は常に+1、XPは初回完了時のみ
-    const updatedStats = {
-      user_id: userId,
-      total_xp: (existingStats?.total_xp || 0) + earnedXP, // 初回完了時のみXP追加
-      quiz_xp: existingStats?.quiz_xp || 0,
-      course_xp: (existingStats?.course_xp || 0) + earnedXP, // 初回完了時のみXP追加
-      bonus_xp: existingStats?.bonus_xp || 0,
-      // SKP関連フィールド追加（初回完了時のみ）
-      total_skp: (existingStats?.total_skp || 0) + (isFirstCompletion ? totalSKP : 0),
-      quiz_skp: existingStats?.quiz_skp || 0,
-      course_skp: (existingStats?.course_skp || 0) + (isFirstCompletion ? totalSKP : 0),
-      bonus_skp: existingStats?.bonus_skp || 0,
-      streak_skp: existingStats?.streak_skp || 0,
-      // 学習時間統計（常に累積）
-      total_learning_time_seconds: (existingStats?.total_learning_time_seconds || 0) + (body.duration_seconds || 0),
-      quiz_learning_time_seconds: existingStats?.quiz_learning_time_seconds || 0,
-      course_learning_time_seconds: (existingStats?.course_learning_time_seconds || 0) + (body.duration_seconds || 0),
-      // 既存フィールド
-      quiz_sessions_completed: existingStats?.quiz_sessions_completed || 0,
-      course_sessions_completed: (existingStats?.course_sessions_completed || 0) + 1, // 常に+1
-      quiz_questions_answered: (existingStats?.quiz_questions_answered || 0) + (isFirstCompletion ? 1 : 0), // コース確認クイズも問題数にカウント（初回のみ）
-      quiz_questions_correct: (existingStats?.quiz_questions_correct || 0) + (isFirstCompletion && body.session_quiz_correct ? 1 : 0), // 正解時のみ加算（初回のみ）
-      quiz_average_accuracy: 0, // 精度計算は後で再計算
-      wisdom_cards_total: existingStats?.wisdom_cards_total || 0,
-      knowledge_cards_total: existingStats?.knowledge_cards_total || 0,
-      badges_total: existingStats?.badges_total || 0,
-      last_activity_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-    
-    // 精度の再計算
-    if (updatedStats.quiz_questions_answered > 0) {
-      updatedStats.quiz_average_accuracy = Math.round((updatedStats.quiz_questions_correct / updatedStats.quiz_questions_answered) * 100 * 100) / 100
-    }
+      // 🔧 セッション数のみ更新（現在のレコード数ベース）
+      const { count: currentSessionsCompleted } = await supabase
+        .from('course_session_completions')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId)
 
-    const { error: userStatsError } = await supabase
-      .from('user_xp_stats_v2')
-      .upsert(updatedStats)
+      const initialStatsUpdate = {
+        user_id: userId,
+        course_sessions_completed: currentSessionsCompleted || 0, // 実際のレコード数
+        quiz_questions_answered: (existingStats?.quiz_questions_answered || 0) + 1, // コース確認クイズも問題数にカウント
+        quiz_questions_correct: (existingStats?.quiz_questions_correct || 0) + (body.session_quiz_correct ? 1 : 0), // 正解時のみ加算
+        total_learning_time_seconds: (existingStats?.total_learning_time_seconds || 0) + (body.duration_seconds || 0),
+        course_learning_time_seconds: (existingStats?.course_learning_time_seconds || 0) + (body.duration_seconds || 0),
+        last_activity_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        quiz_average_accuracy: 0 // 精度計算用の初期値
+      }
 
-    if (userStatsError) {
-      console.error('❌ Course user stats upsert error:', userStatsError)
-    } else {
-      console.log('✅ Course user stats updated (sessions always +1, XP only if first completion):', {
-        previousTotal: existingStats?.total_xp || 0,
-        previousCourseSessions: existingStats?.course_sessions_completed || 0,
-        previousQuestionsAnswered: existingStats?.quiz_questions_answered || 0,
-        previousQuestionsCorrect: existingStats?.quiz_questions_correct || 0,
-        addedXP: earnedXP,
-        addedSessions: 1,
-        addedQuestions: isFirstCompletion ? 1 : 0,
-        addedCorrect: isFirstCompletion && body.session_quiz_correct ? 1 : 0,
-        newTotal: updatedStats.total_xp,
-        newCourseSessions: updatedStats.course_sessions_completed,
-        newQuestionsAnswered: updatedStats.quiz_questions_answered,
-        newQuestionsCorrect: updatedStats.quiz_questions_correct,
-        newAccuracy: updatedStats.quiz_average_accuracy,
-        isFirstCompletion: isFirstCompletion
-      })
-    }
+      // 精度の再計算
+      if (initialStatsUpdate.quiz_questions_answered > 0) {
+        initialStatsUpdate.quiz_average_accuracy = Math.round((initialStatsUpdate.quiz_questions_correct / initialStatsUpdate.quiz_questions_answered) * 100 * 100) / 100
+      }
 
-    // 8. カテゴリー・サブカテゴリー統計更新（初回完了時のみ）
-    if (isFirstCompletion && earnedXP > 0) {
-      console.log('📊 Updating category and subcategory stats for course session...')
-      
-      // デバッグ: リクエストデータ確認
-      console.log('🔍 XP Save API request data debug:', {
-        categoryId: body.category_id,
-        subcategoryId: body.subcategory_id,
-        subcategoryIdType: typeof body.subcategory_id,
-        subcategoryIdLength: body.subcategory_id?.length || 0,
-        subcategoryIdEmpty: body.subcategory_id === '' || body.subcategory_id === null || body.subcategory_id === undefined,
-        earnedXP,
-        isFirstCompletion
-      })
-      
-      try {
-        // サブカテゴリーIDの検証とエラーハンドリング
-        if (!body.subcategory_id || body.subcategory_id.trim() === '') {
-          console.warn('⚠️ subcategory_id is empty or null, skipping subcategory stats update')
-          console.warn('⚠️ Category stats will still be updated, but subcategory stats will be skipped')
-        }
-        
-        // カテゴリー統計の更新
-        console.log('🔍 Fetching existing category stats for:', { userId: userId.substring(0, 8), categoryId: body.category_id })
-        const { data: existingCategoryStats, error: categoryFetchError } = await supabase
-          .from('user_category_xp_stats_v2')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('category_id', body.category_id)
-          .maybeSingle()
-        
-        console.log('🔍 Category stats fetch result:', { 
-          found: !!existingCategoryStats, 
-          error: categoryFetchError?.message,
-          data: existingCategoryStats 
+      const { error: initialStatsError } = await supabase
+        .from('user_xp_stats_v2')
+        .update(initialStatsUpdate)
+        .eq('user_id', userId)
+
+      if (initialStatsError) {
+        console.error('❌ Initial course stats update error:', initialStatsError)
+      } else {
+        console.log('✅ Initial course stats updated (sessions +1, questions +1):', {
+          courseSessions: initialStatsUpdate.course_sessions_completed,
+          questionsAnswered: initialStatsUpdate.quiz_questions_answered,
+          questionsCorrect: initialStatsUpdate.quiz_questions_correct,
+          accuracy: initialStatsUpdate.quiz_average_accuracy
         })
-
-        // 🔧 修正: quiz_xp と course_xp を分離して管理
-        const newCourseXP = (existingCategoryStats?.course_xp || 0) + earnedXP
-        const existingQuizXP = existingCategoryStats?.quiz_xp || 0
-        const newTotalXP = existingQuizXP + newCourseXP
-
-        const categoryStatsData = {
-          user_id: userId,
-          category_id: body.category_id,
-          quiz_questions_answered: (existingCategoryStats?.quiz_questions_answered || 0) + 1,
-          quiz_questions_correct: (existingCategoryStats?.quiz_questions_correct || 0) + (body.session_quiz_correct ? 1 : 0),
-          quiz_xp: existingQuizXP, // クイズXPは変更なし
-          course_xp: newCourseXP, // コースXPに今回のXPを加算
-          total_xp: newTotalXP, // total = quiz + course
-          course_sessions_completed: (existingCategoryStats?.course_sessions_completed || 0) + 1,
-          quiz_sessions_completed: existingCategoryStats?.quiz_sessions_completed || 0,
-          quiz_average_accuracy: 0, // 後で計算
-          updated_at: new Date().toISOString()
-        }
-
-        // quiz_average_accuracy の正答率計算
-        if (categoryStatsData.quiz_questions_answered > 0) {
-          categoryStatsData.quiz_average_accuracy = Math.round((categoryStatsData.quiz_questions_correct / categoryStatsData.quiz_questions_answered) * 100 * 100) / 100
-        }
-
-        const { error: categoryStatsError } = await supabase
-          .from('user_category_xp_stats_v2')
-          .upsert(categoryStatsData, { 
-            onConflict: 'user_id,category_id',
-            ignoreDuplicates: false 
-          })
-
-        if (categoryStatsError) {
-          console.error('❌ Course category stats update error:', categoryStatsError)
-        } else {
-          console.log('✅ Course category stats updated:', {
-            categoryId: body.category_id,
-            quizXP: categoryStatsData.quiz_xp,
-            courseXP: categoryStatsData.course_xp,
-            totalXP: categoryStatsData.total_xp,
-            earnedXP: earnedXP,
-            courseSessions: categoryStatsData.course_sessions_completed
-          })
-        }
-
-        // サブカテゴリー統計の更新（subcategory_idが有効な場合のみ）
-        if (body.subcategory_id && body.subcategory_id.trim() !== '') {
-          console.log('📊 Updating subcategory stats...')
-          console.log('🔍 Fetching existing subcategory stats for:', { 
-            userId: userId.substring(0, 8), 
-            categoryId: body.category_id, 
-            subcategoryId: body.subcategory_id 
-          })
-          const { data: existingSubcategoryStats, error: subcategoryFetchError } = await supabase
-          .from('user_subcategory_xp_stats_v2')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('category_id', body.category_id)
-          .eq('subcategory_id', body.subcategory_id)
-          .maybeSingle()
-          
-          console.log('🔍 Subcategory stats fetch result:', { 
-            found: !!existingSubcategoryStats, 
-            error: subcategoryFetchError?.message,
-            data: existingSubcategoryStats 
-          })
-
-        // 🔧 修正: サブカテゴリーもquiz_xp と course_xp を分離して管理
-        const newSubcategoryCourseXP = (existingSubcategoryStats?.course_xp || 0) + earnedXP
-        const existingSubcategoryQuizXP = existingSubcategoryStats?.quiz_xp || 0
-        const newSubcategoryTotalXP = existingSubcategoryQuizXP + newSubcategoryCourseXP
-
-        const subcategoryStatsData = {
-          user_id: userId,
-          category_id: body.category_id,
-          subcategory_id: body.subcategory_id,
-          quiz_questions_answered: (existingSubcategoryStats?.quiz_questions_answered || 0) + 1,
-          quiz_questions_correct: (existingSubcategoryStats?.quiz_questions_correct || 0) + (body.session_quiz_correct ? 1 : 0),
-          quiz_xp: existingSubcategoryQuizXP, // クイズXPは変更なし
-          course_xp: newSubcategoryCourseXP, // コースXPに今回のXPを加算
-          total_xp: newSubcategoryTotalXP, // total = quiz + course
-          course_sessions_completed: (existingSubcategoryStats?.course_sessions_completed || 0) + 1,
-          quiz_sessions_completed: existingSubcategoryStats?.quiz_sessions_completed || 0,
-          quiz_average_accuracy: 0, // 後で計算
-          updated_at: new Date().toISOString()
-        }
-
-        // quiz_average_accuracy の正答率計算
-        if (subcategoryStatsData.quiz_questions_answered > 0) {
-          subcategoryStatsData.quiz_average_accuracy = Math.round((subcategoryStatsData.quiz_questions_correct / subcategoryStatsData.quiz_questions_answered) * 100 * 100) / 100
-        }
-
-        const { error: subcategoryStatsError } = await supabase
-          .from('user_subcategory_xp_stats_v2')
-          .upsert(subcategoryStatsData, { 
-            onConflict: 'user_id,category_id,subcategory_id',
-            ignoreDuplicates: false 
-          })
-
-        if (subcategoryStatsError) {
-          console.error('❌ Course subcategory stats update error:', subcategoryStatsError)
-        } else {
-          console.log('✅ Course subcategory stats updated:', {
-            categoryId: body.category_id,
-            subcategoryId: body.subcategory_id,
-            quizXP: subcategoryStatsData.quiz_xp,
-            courseXP: subcategoryStatsData.course_xp,
-            totalXP: subcategoryStatsData.total_xp,
-            earnedXP: earnedXP,
-            courseSessions: subcategoryStatsData.course_sessions_completed
-          })
-        }
-        } else {
-          console.log('⚠️ Skipping subcategory stats update due to empty subcategory_id')
-        }
-      } catch (statsError) {
-        console.error('❌ Course category/subcategory stats update error:', statsError)
       }
     }
+
+    // 8. カテゴリー・サブカテゴリー統計更新は完了処理後に実行（タイミング修正）
+    // 統計更新処理は recordThemeCompletion/recordCourseCompletion後に実行
 
     // 9. SKP取引記録を追加（初回完了時のみ）
     if (isFirstCompletion && totalSKP > 0) {
@@ -656,6 +486,17 @@ export async function POST(request: Request) {
         }
         
         console.log('✅ Database completion recording results:', { themeCompleted, courseCompleted })
+        
+        // 🔧 修正: テーマ・コース完了記録後に統計更新（タイミング修正）
+        if (earnedXP > 0) {
+          // 1. カテゴリー・サブカテゴリー統計更新
+          console.log('📊 Updating category and subcategory stats after completion processing...')
+          await updateCategoryAndSubcategoryStats(supabase, userId, body, earnedXP)
+          
+          // 2. user_xp_stats_v2のテーマ・コース完了統計更新（完了記録後）
+          console.log('📊 Updating user_xp_stats_v2 theme/course completion stats after records created...')
+          await updateUserXPStatsCompletions(supabase, userId, earnedXP, totalSKP, isFirstCompletion)
+        }
         
       } catch (error) {
         console.warn('⚠️ Completion recording error:', error)
@@ -856,6 +697,265 @@ export async function PUT(request: Request) {
   }
 }
 
+// ユーザー全体統計更新関数（テーマ・コース完了記録後）
+async function updateUserXPStatsCompletions(
+  supabase: ReturnType<typeof createClient<Database>>,
+  userId: string,
+  earnedXP: number,
+  totalSKP: number,
+  isFirstCompletion: boolean
+): Promise<void> {
+  try {
+    // 既存の統計を取得
+    const { data: existingStats } = await supabase
+      .from('user_xp_stats_v2')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    // 🔧 実際のレコード数ベースで統計を取得（記録後の正確なカウント）
+    const [themesCompletedResult, coursesCompletedResult] = await Promise.all([
+      // テーマ完了数の取得（完了記録作成後）
+      supabase
+        .from('course_theme_completions')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId),
+      // コース完了数の取得（完了記録作成後）
+      supabase
+        .from('course_completions')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId)
+    ])
+
+    const currentThemesCompleted = themesCompletedResult.count || 0
+    const currentCoursesCompleted = coursesCompletedResult.count || 0
+
+    // 統計更新（XP・SKP、テーマ・コース完了数を正確に反映）
+    const updatedStats = {
+      total_xp: (existingStats?.total_xp || 0) + earnedXP, // 初回完了時のみXP追加
+      course_xp: (existingStats?.course_xp || 0) + earnedXP, // 初回完了時のみXP追加
+      total_skp: (existingStats?.total_skp || 0) + (isFirstCompletion ? totalSKP : 0),
+      course_skp: (existingStats?.course_skp || 0) + (isFirstCompletion ? totalSKP : 0),
+      // 🔧 重要: 完了記録作成後の正確なカウント
+      course_themes_completed: currentThemesCompleted,
+      course_completed: currentCoursesCompleted,
+      updated_at: new Date().toISOString()
+    }
+
+    const { error: userStatsError } = await supabase
+      .from('user_xp_stats_v2')
+      .update(updatedStats)
+      .eq('user_id', userId)
+
+    if (userStatsError) {
+      console.error('❌ User stats completion update error:', userStatsError)
+    } else {
+      console.log('✅ User stats updated with accurate completion counts:', {
+        addedXP: earnedXP,
+        addedSKP: isFirstCompletion ? totalSKP : 0,
+        themesCompleted: currentThemesCompleted,
+        coursesCompleted: currentCoursesCompleted,
+        totalXP: updatedStats.total_xp,
+        totalSKP: updatedStats.total_skp
+      })
+    }
+  } catch (error) {
+    console.error('❌ User stats completion update error:', error)
+  }
+}
+
+// カテゴリー・サブカテゴリー統計更新関数
+async function updateCategoryAndSubcategoryStats(
+  supabase: ReturnType<typeof createClient<Database>>,
+  userId: string,
+  body: CourseSessionRequest,
+  earnedXP: number
+): Promise<void> {
+  console.log('📊 Updating category and subcategory stats for course session...')
+  
+  // デバッグ: リクエストデータ確認
+  console.log('🔍 XP Save API request data debug:', {
+    categoryId: body.category_id,
+    subcategoryId: body.subcategory_id,
+    subcategoryIdType: typeof body.subcategory_id,
+    subcategoryIdLength: body.subcategory_id?.length || 0,
+    subcategoryIdEmpty: body.subcategory_id === '' || body.subcategory_id === null || body.subcategory_id === undefined,
+    earnedXP
+  })
+  
+  try {
+    // サブカテゴリーIDの検証とエラーハンドリング
+    if (!body.subcategory_id || body.subcategory_id.trim() === '') {
+      console.warn('⚠️ subcategory_id is empty or null, skipping subcategory stats update')
+      console.warn('⚠️ Category stats will still be updated, but subcategory stats will be skipped')
+    }
+    
+    // カテゴリー統計の更新
+    console.log('🔍 Fetching existing category stats for:', { userId: userId.substring(0, 8), categoryId: body.category_id })
+    const { data: existingCategoryStats, error: categoryFetchError } = await supabase
+      .from('user_category_xp_stats_v2')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('category_id', body.category_id)
+      .maybeSingle()
+    
+    console.log('🔍 Category stats fetch result:', { 
+      found: !!existingCategoryStats, 
+      error: categoryFetchError?.message,
+      data: existingCategoryStats 
+    })
+
+    // 🔧 修正: quiz_xp と course_xp を分離して管理
+    const newCourseXP = (existingCategoryStats?.course_xp || 0) + earnedXP
+    const existingQuizXP = existingCategoryStats?.quiz_xp || 0
+    const newTotalXP = existingQuizXP + newCourseXP
+
+    // 🔧 カテゴリー別統計を実際のレコード数で取得
+    const [categorySessionsResult, categoryThemesResult] = await Promise.all([
+      supabase
+        .from('course_session_completions')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId)
+        .eq('category_id', body.category_id),
+      supabase
+        .from('course_theme_completions')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId)
+        .eq('category_id', body.category_id)
+    ])
+
+    const categoryStatsData = {
+      user_id: userId,
+      category_id: body.category_id,
+      quiz_questions_answered: (existingCategoryStats?.quiz_questions_answered || 0) + 1,
+      quiz_questions_correct: (existingCategoryStats?.quiz_questions_correct || 0) + (body.session_quiz_correct ? 1 : 0),
+      quiz_xp: existingQuizXP, // クイズXPは変更なし
+      course_xp: newCourseXP, // コースXPに今回のXPを加算
+      total_xp: newTotalXP, // total = quiz + course
+      course_sessions_completed: categorySessionsResult?.count || 0, // 実際のレコード数
+      course_themes_completed: categoryThemesResult?.count || 0, // 実際のレコード数
+      quiz_sessions_completed: existingCategoryStats?.quiz_sessions_completed || 0,
+      quiz_average_accuracy: 0, // 後で計算
+      updated_at: new Date().toISOString()
+    }
+
+    // quiz_average_accuracy の正答率計算
+    if (categoryStatsData.quiz_questions_answered > 0) {
+      categoryStatsData.quiz_average_accuracy = Math.round((categoryStatsData.quiz_questions_correct / categoryStatsData.quiz_questions_answered) * 100 * 100) / 100
+    }
+
+    const { error: categoryStatsError } = await supabase
+      .from('user_category_xp_stats_v2')
+      .upsert(categoryStatsData, { 
+        onConflict: 'user_id,category_id',
+        ignoreDuplicates: false 
+      })
+
+    if (categoryStatsError) {
+      console.error('❌ Course category stats update error:', categoryStatsError)
+    } else {
+      console.log('✅ Course category stats updated:', {
+        categoryId: body.category_id,
+        quizXP: categoryStatsData.quiz_xp,
+        courseXP: categoryStatsData.course_xp,
+        totalXP: categoryStatsData.total_xp,
+        earnedXP: earnedXP,
+        courseSessions: categoryStatsData.course_sessions_completed,
+        courseThemes: categoryStatsData.course_themes_completed
+      })
+    }
+
+    // サブカテゴリー統計の更新（subcategory_idが有効な場合のみ）
+    if (body.subcategory_id && body.subcategory_id.trim() !== '') {
+      console.log('🔍 Fetching existing subcategory stats for:', { 
+        userId: userId.substring(0, 8), 
+        categoryId: body.category_id, 
+        subcategoryId: body.subcategory_id 
+      })
+      
+      const { data: existingSubcategoryStats, error: subcategoryFetchError } = await supabase
+        .from('user_subcategory_xp_stats_v2')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('category_id', body.category_id)
+        .eq('subcategory_id', body.subcategory_id)
+        .maybeSingle()
+        
+      console.log('🔍 Subcategory stats fetch result:', { 
+        found: !!existingSubcategoryStats, 
+        error: subcategoryFetchError?.message,
+        data: existingSubcategoryStats 
+      })
+
+      // 🔧 修正: サブカテゴリーもquiz_xp と course_xp を分離して管理
+      const newSubcategoryCourseXP = (existingSubcategoryStats?.course_xp || 0) + earnedXP
+      const existingSubcategoryQuizXP = existingSubcategoryStats?.quiz_xp || 0
+      const newSubcategoryTotalXP = existingSubcategoryQuizXP + newSubcategoryCourseXP
+
+      // 🔧 サブカテゴリー別統計を実際のレコード数で取得
+      const [subcategorySessionsResult, subcategoryThemesResult] = await Promise.all([
+        supabase
+          .from('course_session_completions')
+          .select('*', { count: 'exact' })
+          .eq('user_id', userId)
+          .eq('category_id', body.category_id)
+          .eq('subcategory_id', body.subcategory_id),
+        supabase
+          .from('course_theme_completions')
+          .select('*', { count: 'exact' })
+          .eq('user_id', userId)
+          .eq('category_id', body.category_id)
+          .eq('subcategory_id', body.subcategory_id)
+      ])
+
+      const subcategoryStatsData = {
+        user_id: userId,
+        category_id: body.category_id,
+        subcategory_id: body.subcategory_id,
+        quiz_questions_answered: (existingSubcategoryStats?.quiz_questions_answered || 0) + 1,
+        quiz_questions_correct: (existingSubcategoryStats?.quiz_questions_correct || 0) + (body.session_quiz_correct ? 1 : 0),
+        quiz_xp: existingSubcategoryQuizXP, // クイズXPは変更なし
+        course_xp: newSubcategoryCourseXP, // コースXPに今回のXPを加算
+        total_xp: newSubcategoryTotalXP, // total = quiz + course
+        course_sessions_completed: subcategorySessionsResult?.count || 0, // 実際のレコード数
+        course_themes_completed: subcategoryThemesResult?.count || 0, // 実際のレコード数
+        quiz_sessions_completed: existingSubcategoryStats?.quiz_sessions_completed || 0,
+        quiz_average_accuracy: 0, // 後で計算
+        updated_at: new Date().toISOString()
+      }
+
+      // quiz_average_accuracy の正答率計算
+      if (subcategoryStatsData.quiz_questions_answered > 0) {
+        subcategoryStatsData.quiz_average_accuracy = Math.round((subcategoryStatsData.quiz_questions_correct / subcategoryStatsData.quiz_questions_answered) * 100 * 100) / 100
+      }
+
+      const { error: subcategoryStatsError } = await supabase
+        .from('user_subcategory_xp_stats_v2')
+        .upsert(subcategoryStatsData, { 
+          onConflict: 'user_id,category_id,subcategory_id',
+          ignoreDuplicates: false 
+        })
+
+      if (subcategoryStatsError) {
+        console.error('❌ Course subcategory stats update error:', subcategoryStatsError)
+      } else {
+        console.log('✅ Course subcategory stats updated:', {
+          categoryId: body.category_id,
+          subcategoryId: body.subcategory_id,
+          quizXP: subcategoryStatsData.quiz_xp,
+          courseXP: subcategoryStatsData.course_xp,
+          totalXP: subcategoryStatsData.total_xp,
+          earnedXP: earnedXP,
+          courseSessions: subcategoryStatsData.course_sessions_completed,
+          courseThemes: subcategoryStatsData.course_themes_completed
+        })
+      }
+    }
+  } catch (error) {
+    console.error('❌ Category/subcategory stats update error:', error)
+  }
+}
+
 // テーマ完了記録関数（クライアント判定に基づく）
 async function recordThemeCompletion(
   supabase: ReturnType<typeof createClient<Database>>,
@@ -923,6 +1023,9 @@ async function recordThemeCompletion(
       }
       
       console.log('✅ Theme completion recorded successfully:', themeCompletionData)
+
+      // ✅ course_themes_completed統計は実際のレコード数ベースで自動計算されるため個別更新不要
+      console.log('📊 Theme completion statistics will be auto-calculated from actual records')
 
       // 4. ナレッジカード付与（クライアント側で既に処理済みだが、DB整合性のため実行）
       const cardId = Math.abs(`theme_${body.theme_id}`.split('').reduce((a, b) => a + b.charCodeAt(0), 0))

@@ -1,7 +1,7 @@
 {
   "questions": [
     {
-      "id": 1,
+      "id": 960,
       "legacy_id": 1,
       "category_id": "finance",
       "subcategory": "財務分析・企業価値評価",
@@ -23,10 +23,10 @@
       "source": "日本公認会計士協会 財務分析ガイドライン",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 2,
+      "id": 961,
       "legacy_id": 2,
       "category_id": "strategy_management",
       "subcategory": "競争戦略・フレームワーク",
@@ -48,10 +48,10 @@
       "source": "マッキンゼー戦略フレームワーク集",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 3,
+      "id": 962,
       "legacy_id": 3,
       "category_id": "strategy_management",
       "subcategory": "category_level",
@@ -73,10 +73,10 @@
       "source": "デジタルマーケティング実践ガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 4,
+      "id": 963,
       "legacy_id": 4,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
@@ -98,10 +98,10 @@
       "source": "PMI プロジェクト管理標準",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 5,
+      "id": 964,
       "legacy_id": 5,
       "category_id": "leadership_hr",
       "subcategory": "チームマネジメント・モチベーション",
@@ -123,10 +123,10 @@
       "source": "統計学実践ハンドブック",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 6,
+      "id": 965,
       "legacy_id": 6,
       "category_id": "finance",
       "subcategory": "投資判断・リスク管理",
@@ -148,10 +148,10 @@
       "source": "ハーバードビジネスレビュー リーダーシップ論集",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 7,
+      "id": 966,
       "legacy_id": 7,
       "category_id": "project_operations",
       "subcategory": "プロジェクト設計・WBS",
@@ -173,10 +173,10 @@
       "source": "スタンフォード大学 d.school デザイン思考ガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 8,
+      "id": 967,
       "legacy_id": 8,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
@@ -198,10 +198,10 @@
       "source": "経済産業省 DXレポート2.0",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 9,
+      "id": 968,
       "legacy_id": 9,
       "category_id": "finance",
       "subcategory": "管理会計・KPI設計",
@@ -223,10 +223,10 @@
       "source": "日本取引所グループ ESG情報開示実践ハンドブック",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 10,
+      "id": 969,
       "legacy_id": 10,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
@@ -248,11 +248,11 @@
       "source": "ハーバードビジネスレビュー アジャイル組織論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 13,
-      "legacy_id": 13,
+      "id": 970,
+      "legacy_id": 11,
       "category_id": "leadership_hr",
       "subcategory": "組織開発・変革リーダーシップ",
       "subcategory_id": "organizational_development_leadership",
@@ -273,11 +273,11 @@
       "source": "日本ロジスティクスシステム協会",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 14,
-      "legacy_id": 14,
+      "id": 971,
+      "legacy_id": 12,
       "category_id": "strategy_management",
       "subcategory": "競争戦略・フレームワーク",
       "subcategory_id": "competitive_strategy_frameworks",
@@ -298,11 +298,11 @@
       "source": "エリック・リース『リーン・スタートアップ』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 15,
-      "legacy_id": 15,
+      "id": 972,
+      "legacy_id": 13,
       "category_id": "project_operations",
       "subcategory": "スケジュール・リソース管理",
       "subcategory_id": "schedule_resource_management",
@@ -323,11 +323,11 @@
       "source": "ギャラップ社 エンゲージメント調査",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 16,
-      "legacy_id": 16,
+      "id": 973,
+      "legacy_id": 14,
       "category_id": "finance",
       "subcategory": "財務分析・企業価値評価",
       "subcategory_id": "financial_analysis_valuation",
@@ -348,11 +348,11 @@
       "source": "マッキンゼー バリュエーション教本",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 17,
-      "legacy_id": 17,
+      "id": 974,
+      "legacy_id": 15,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -373,11 +373,11 @@
       "source": "PRI（責任投資原則）ガイドライン",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 18,
-      "legacy_id": 18,
+      "id": 975,
+      "legacy_id": 16,
       "category_id": "business_process_analysis",
       "subcategory": "プロセス設計・最適化",
       "subcategory_id": "process_design_optimization",
@@ -398,11 +398,11 @@
       "source": "ロジャー・フィッシャー『ハーバード流交渉術』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 19,
-      "legacy_id": 19,
+      "id": 976,
+      "legacy_id": 17,
       "category_id": "communication_presentation",
       "subcategory": "交渉・説得技術",
       "subcategory_id": "negotiation_persuasion",
@@ -423,11 +423,11 @@
       "source": "マーカス・バッキンガム『最高のチーム』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 20,
-      "legacy_id": 20,
+      "id": 977,
+      "legacy_id": 18,
       "category_id": "ai_digital_utilization",
       "subcategory": "AI・機械学習活用",
       "subcategory_id": "ai_ml_utilization",
@@ -448,11 +448,11 @@
       "source": "ナシーム・ニコラス・タレブ『ブラック・スワン』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 21,
-      "legacy_id": 21,
+      "id": 978,
+      "legacy_id": 19,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -473,11 +473,11 @@
       "source": "バーバラ・ミント『考える技術・書く技術』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 22,
-      "legacy_id": 22,
+      "id": 979,
+      "legacy_id": 20,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -498,11 +498,11 @@
       "source": "マッキンゼー式ロジカルシンキング",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 23,
-      "legacy_id": 23,
+      "id": 980,
+      "legacy_id": 21,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -523,11 +523,11 @@
       "source": "コンサルティング思考法",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 24,
-      "legacy_id": 24,
+      "id": 981,
+      "legacy_id": 22,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -548,11 +548,11 @@
       "source": "論理学基礎テキスト",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 25,
-      "legacy_id": 25,
+      "id": 982,
+      "legacy_id": 23,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -573,11 +573,11 @@
       "source": "イシューからはじめよ",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 26,
-      "legacy_id": 26,
+      "id": 983,
+      "legacy_id": 24,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -598,11 +598,11 @@
       "source": "プレゼンテーション・ゼン",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 27,
-      "legacy_id": 27,
+      "id": 984,
+      "legacy_id": 25,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -623,11 +623,11 @@
       "source": "エドワード・タフテ『視覚的表示の理論と実践』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 28,
-      "legacy_id": 28,
+      "id": 985,
+      "legacy_id": 26,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -648,11 +648,11 @@
       "source": "情報デザインの基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 29,
-      "legacy_id": 29,
+      "id": 986,
+      "legacy_id": 27,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -673,11 +673,11 @@
       "source": "インフォグラフィックス・デザイン",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 30,
-      "legacy_id": 30,
+      "id": 987,
+      "legacy_id": 28,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -698,11 +698,11 @@
       "source": "データストーリー",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 31,
-      "legacy_id": 31,
+      "id": 988,
+      "legacy_id": 29,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -723,11 +723,11 @@
       "source": "効果的会議の進め方",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 32,
-      "legacy_id": 32,
+      "id": 989,
+      "legacy_id": 30,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -748,11 +748,11 @@
       "source": "ファシリテーション・グラフィック",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 33,
-      "legacy_id": 33,
+      "id": 990,
+      "legacy_id": 31,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -773,11 +773,11 @@
       "source": "ファシリテーションの技術",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 34,
-      "legacy_id": 34,
+      "id": 991,
+      "legacy_id": 32,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -798,11 +798,11 @@
       "source": "アイデアのつくり方",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 35,
-      "legacy_id": 35,
+      "id": 992,
+      "legacy_id": 33,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -823,11 +823,11 @@
       "source": "リモートワーク時代の会議術",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 36,
-      "legacy_id": 36,
+      "id": 993,
+      "legacy_id": 34,
       "category_id": "communication_presentation",
       "subcategory": "交渉・説得技術",
       "subcategory_id": "negotiation_persuasion",
@@ -848,11 +848,11 @@
       "source": "ロジャー・フィッシャー『ハーバード流交渉術』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 37,
-      "legacy_id": 37,
+      "id": 994,
+      "legacy_id": 35,
       "category_id": "communication_presentation",
       "subcategory": "交渉・説得技術",
       "subcategory_id": "negotiation_persuasion",
@@ -873,11 +873,11 @@
       "source": "ハーバード流交渉術",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 38,
-      "legacy_id": 38,
+      "id": 995,
+      "legacy_id": 36,
       "category_id": "communication_presentation",
       "subcategory": "交渉・説得技術",
       "subcategory_id": "negotiation_persuasion",
@@ -898,11 +898,11 @@
       "source": "アリストテレス『修辞学』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 39,
-      "legacy_id": 39,
+      "id": 996,
+      "legacy_id": 37,
       "category_id": "communication_presentation",
       "subcategory": "交渉・説得技術",
       "subcategory_id": "negotiation_persuasion",
@@ -923,11 +923,11 @@
       "source": "難しい交渉を成功させる方法",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 40,
-      "legacy_id": 40,
+      "id": 997,
+      "legacy_id": 38,
       "category_id": "communication_presentation",
       "subcategory": "交渉・説得技術",
       "subcategory_id": "negotiation_persuasion",
@@ -948,11 +948,11 @@
       "source": "ステークホルダーエンゲージメント",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 41,
-      "legacy_id": 41,
+      "id": 998,
+      "legacy_id": 39,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "構造化思考（MECE・ロジックツリー）",
       "subcategory_id": "structured_thinking_mece",
@@ -973,11 +973,11 @@
       "source": "ロジカルシンキングの技術",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 42,
-      "legacy_id": 42,
+      "id": 999,
+      "legacy_id": 40,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "構造化思考（MECE・ロジックツリー）",
       "subcategory_id": "structured_thinking_mece",
@@ -998,11 +998,11 @@
       "source": "問題解決プロフェッショナル",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 43,
-      "legacy_id": 43,
+      "id": 1000,
+      "legacy_id": 41,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "仮説検証・本質追求",
       "subcategory_id": "hypothesis_verification",
@@ -1023,11 +1023,11 @@
       "source": "仮説思考入門",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 44,
-      "legacy_id": 44,
+      "id": 1001,
+      "legacy_id": 42,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "定量分析・統計解析",
       "subcategory_id": "quantitative_analysis_statistics",
@@ -1048,11 +1048,11 @@
       "source": "ビジネス統計学",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 45,
-      "legacy_id": 45,
+      "id": 1002,
+      "legacy_id": 43,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "行動経済学・意思決定理論",
       "subcategory_id": "behavioral_economics",
@@ -1073,11 +1073,11 @@
       "source": "ファスト＆スロー",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 47,
-      "legacy_id": 47,
+      "id": 1003,
+      "legacy_id": 44,
       "category_id": "strategy_management",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -1098,11 +1098,11 @@
       "source": "W・チャン・キム『ブルーオーシャン戦略』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 48,
-      "legacy_id": 48,
+      "id": 1004,
+      "legacy_id": 45,
       "category_id": "strategy_management",
       "subcategory": "競争戦略・フレームワーク",
       "subcategory_id": "competitive_strategy_frameworks",
@@ -1123,11 +1123,11 @@
       "source": "リソースベースドビュー",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 49,
-      "legacy_id": 49,
+      "id": 1005,
+      "legacy_id": 46,
       "category_id": "strategy_management",
       "subcategory": "新事業開発・イノベーション",
       "subcategory_id": "new_business_innovation",
@@ -1148,11 +1148,11 @@
       "source": "クレイトン・クリステンセン『イノベーションのジレンマ』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 50,
-      "legacy_id": 50,
+      "id": 1006,
+      "legacy_id": 47,
       "category_id": "strategy_management",
       "subcategory": "ESG・サステナビリティ経営",
       "subcategory_id": "esg_sustainability",
@@ -1173,11 +1173,11 @@
       "source": "ESG投資ガイドライン",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.379804+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 51,
-      "legacy_id": 51,
+      "id": 1007,
+      "legacy_id": 48,
       "category_id": "finance",
       "subcategory": "財務分析・企業価値評価",
       "subcategory_id": "financial_analysis_valuation",
@@ -1198,11 +1198,11 @@
       "source": "財務分析ハンドブック",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 52,
-      "legacy_id": 52,
+      "id": 1008,
+      "legacy_id": 49,
       "category_id": "finance",
       "subcategory": "財務分析・企業価値評価",
       "subcategory_id": "financial_analysis_valuation",
@@ -1223,11 +1223,11 @@
       "source": "企業財務分析",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 53,
-      "legacy_id": 53,
+      "id": 1009,
+      "legacy_id": 50,
       "category_id": "finance",
       "subcategory": "投資判断・リスク管理",
       "subcategory_id": "investment_risk_management",
@@ -1248,11 +1248,11 @@
       "source": "コーポレートファイナンス",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:45.478831+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 54,
-      "legacy_id": 54,
+      "id": 1010,
+      "legacy_id": 51,
       "category_id": "finance",
       "subcategory": "事業計画・資金調達",
       "subcategory_id": "business_planning_funding",
@@ -1273,11 +1273,11 @@
       "source": "スタートアップファイナンス",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 55,
-      "legacy_id": 55,
+      "id": 1011,
+      "legacy_id": 52,
       "category_id": "finance",
       "subcategory": "管理会計・KPI設計",
       "subcategory_id": "management_accounting_kpi",
@@ -1298,11 +1298,11 @@
       "source": "管理会計ハンドブック",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 56,
-      "legacy_id": 56,
+      "id": 1012,
+      "legacy_id": 53,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -1323,11 +1323,11 @@
       "source": "データドリブンマーケティング",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 57,
-      "legacy_id": 57,
+      "id": 1013,
+      "legacy_id": 54,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -1348,11 +1348,11 @@
       "source": "UXデザインの教科書",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 58,
-      "legacy_id": 58,
+      "id": 1014,
+      "legacy_id": 55,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -1373,11 +1373,11 @@
       "source": "ブランディングの科学",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 59,
-      "legacy_id": 59,
+      "id": 1015,
+      "legacy_id": 56,
       "category_id": "marketing_sales",
       "subcategory": "デジタルマーケティング",
       "subcategory_id": "digital_marketing",
@@ -1398,11 +1398,11 @@
       "source": "デジタルマーケティングの教科書",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 60,
-      "legacy_id": 60,
+      "id": 1016,
+      "legacy_id": 57,
       "category_id": "marketing_sales",
       "subcategory": "営業戦略・CRM",
       "subcategory_id": "sales_strategy_crm",
@@ -1423,11 +1423,11 @@
       "source": "ザ・モデル・フォー・セールス",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 61,
-      "legacy_id": 61,
+      "id": 1017,
+      "legacy_id": 58,
       "category_id": "leadership_hr",
       "subcategory": "チームマネジメント・モチベーション",
       "subcategory_id": "team_management_motivation",
@@ -1448,11 +1448,11 @@
       "source": "フレデリック・ハーズバーグ『仕事と人間性』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 62,
-      "legacy_id": 62,
+      "id": 1018,
+      "legacy_id": 59,
       "category_id": "leadership_hr",
       "subcategory": "チームマネジメント・モチベーション",
       "subcategory_id": "team_management_motivation",
@@ -1473,11 +1473,11 @@
       "source": "グーグルプロジェクトアリストテレス",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 63,
-      "legacy_id": 63,
+      "id": 1019,
+      "legacy_id": 60,
       "category_id": "leadership_hr",
       "subcategory": "タレントマネジメント・育成",
       "subcategory_id": "talent_management_development",
@@ -1498,11 +1498,11 @@
       "source": "1on1マネジメント",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 64,
-      "legacy_id": 64,
+      "id": 1020,
+      "legacy_id": 61,
       "category_id": "leadership_hr",
       "subcategory": "組織開発・変革リーダーシップ",
       "subcategory_id": "organizational_development_leadership",
@@ -1523,11 +1523,11 @@
       "source": "ジョン・コッター『企業変革力』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 65,
-      "legacy_id": 65,
+      "id": 1021,
+      "legacy_id": 62,
       "category_id": "leadership_hr",
       "subcategory": "人事戦略・働き方改革",
       "subcategory_id": "hr_strategy_workstyle",
@@ -1548,11 +1548,11 @@
       "source": "エンゲージメント経営",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 66,
-      "legacy_id": 66,
+      "id": 1022,
+      "legacy_id": 63,
       "category_id": "ai_digital_utilization",
       "subcategory": "AI・機械学習活用",
       "subcategory_id": "ai_ml_utilization",
@@ -1573,11 +1573,11 @@
       "source": "機械学習入門",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 68,
-      "legacy_id": 68,
+      "id": 1023,
+      "legacy_id": 64,
       "category_id": "ai_digital_utilization",
       "subcategory": "データドリブン経営",
       "subcategory_id": "data_driven_management",
@@ -1598,11 +1598,11 @@
       "source": "データドリブン経営入門",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 69,
-      "legacy_id": 69,
+      "id": 1024,
+      "legacy_id": 65,
       "category_id": "ai_digital_utilization",
       "subcategory": "IoT・自動化技術",
       "subcategory_id": "iot_automation",
@@ -1623,11 +1623,11 @@
       "source": "IoT活用ガイドライン",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 70,
-      "legacy_id": 70,
+      "id": 1025,
+      "legacy_id": 66,
       "category_id": "project_operations",
       "subcategory": "プロジェクト設計・WBS",
       "subcategory_id": "project_design_wbs",
@@ -1648,11 +1648,11 @@
       "source": "PMBOKガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 71,
-      "legacy_id": 71,
+      "id": 1026,
+      "legacy_id": 67,
       "category_id": "project_operations",
       "subcategory": "スケジュール・リソース管理",
       "subcategory_id": "schedule_resource_management",
@@ -1673,11 +1673,11 @@
       "source": "プロジェクトマネジメント教本",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 72,
-      "legacy_id": 72,
+      "id": 1027,
+      "legacy_id": 68,
       "category_id": "project_operations",
       "subcategory": "ステークホルダー管理",
       "subcategory_id": "stakeholder_management",
@@ -1698,11 +1698,11 @@
       "source": "ステークホルダーエンゲージメント",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 73,
-      "legacy_id": 73,
+      "id": 1028,
+      "legacy_id": 69,
       "category_id": "project_operations",
       "subcategory": "業務効率化・時間管理",
       "subcategory_id": "business_efficiency_time",
@@ -1723,11 +1723,11 @@
       "source": "パレートの法則と時間管理",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 74,
-      "legacy_id": 74,
+      "id": 1029,
+      "legacy_id": 70,
       "category_id": "business_process_analysis",
       "subcategory": "業務分析・要件定義",
       "subcategory_id": "business_analysis_requirements",
@@ -1748,11 +1748,11 @@
       "source": "業務分析の実踵",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 76,
-      "legacy_id": 76,
+      "id": 1030,
+      "legacy_id": 71,
       "category_id": "business_process_analysis",
       "subcategory": "サプライチェーン管理",
       "subcategory_id": "supply_chain_management",
@@ -1773,11 +1773,11 @@
       "source": "サプライチェーンマネジメント",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 77,
-      "legacy_id": 77,
+      "id": 1031,
+      "legacy_id": 72,
       "category_id": "business_process_analysis",
       "subcategory": "業務システム設計",
       "subcategory_id": "business_system_design",
@@ -1798,11 +1798,11 @@
       "source": "業務システム設計の基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 78,
-      "legacy_id": 78,
+      "id": 1032,
+      "legacy_id": 73,
       "category_id": "business_process_analysis",
       "subcategory": "BPR・業務改革",
       "subcategory_id": "bpr_business_reform",
@@ -1823,11 +1823,11 @@
       "source": "業務改革の実務",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 79,
-      "legacy_id": 79,
+      "id": 1033,
+      "legacy_id": 74,
       "category_id": "risk_crisis_management",
       "subcategory": "企業リスク管理",
       "subcategory_id": "corporate_risk_management",
@@ -1848,11 +1848,11 @@
       "source": "企業リスク管理ガイドライン",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 80,
-      "legacy_id": 80,
+      "id": 1034,
+      "legacy_id": 75,
       "category_id": "risk_crisis_management",
       "subcategory": "危機管理・BCP",
       "subcategory_id": "crisis_management_bcp",
@@ -1873,11 +1873,11 @@
       "source": "BCP策定ガイドライン",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 81,
-      "legacy_id": 81,
+      "id": 1035,
+      "legacy_id": 76,
       "category_id": "risk_crisis_management",
       "subcategory": "コンプライアンス・内部統制",
       "subcategory_id": "compliance_internal_control",
@@ -1898,11 +1898,11 @@
       "source": "SOX法対応ガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 82,
-      "legacy_id": 82,
+      "id": 1036,
+      "legacy_id": 77,
       "category_id": "risk_crisis_management",
       "subcategory": "情報セキュリティ",
       "subcategory_id": "information_security",
@@ -1923,11 +1923,11 @@
       "source": "情報セキュリティ管理基準",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 83,
-      "legacy_id": 83,
+      "id": 1037,
+      "legacy_id": 78,
       "category_id": "risk_crisis_management",
       "subcategory": "サステナビリティリスク",
       "subcategory_id": "sustainability_risk",
@@ -1948,11 +1948,11 @@
       "source": "ESGリスク管理ガイドライン",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 84,
-      "legacy_id": 84,
+      "id": 1038,
+      "legacy_id": 79,
       "category_id": "ai_digital_utilization",
       "subcategory": "AI・機械学習活用",
       "subcategory_id": "ai_ml_utilization",
@@ -1973,11 +1973,11 @@
       "source": "総務省 AI利活用ガイドライン",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 85,
-      "legacy_id": 85,
+      "id": 1039,
+      "legacy_id": 80,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "定量分析・統計解析",
       "subcategory_id": "quantitative_analysis_statistics",
@@ -1998,11 +1998,11 @@
       "source": "統計的推測の基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 86,
-      "legacy_id": 86,
+      "id": 1040,
+      "legacy_id": 81,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "行動経済学・意思決定理論",
       "subcategory_id": "behavioral_economics",
@@ -2023,11 +2023,11 @@
       "source": "ダニエル・カーネマン『ファスト&スロー』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 87,
-      "legacy_id": 87,
+      "id": 1041,
+      "legacy_id": 82,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "ベンチマーキング・競合分析",
       "subcategory_id": "benchmarking_competitive_analysis",
@@ -2048,11 +2048,11 @@
       "source": "競合インテリジェンスの実践",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 88,
-      "legacy_id": 88,
+      "id": 1042,
+      "legacy_id": 83,
       "category_id": "finance",
       "subcategory": "投資判断・リスク管理",
       "subcategory_id": "investment_risk_management",
@@ -2073,11 +2073,11 @@
       "source": "ハリー・マーコウィッツ ポートフォリオ理論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 89,
-      "legacy_id": 89,
+      "id": 1043,
+      "legacy_id": 84,
       "category_id": "marketing_sales",
       "subcategory": "デジタルマーケティング",
       "subcategory_id": "digital_marketing",
@@ -2098,11 +2098,11 @@
       "source": "Googleアナリティクス活用ガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 90,
-      "legacy_id": 90,
+      "id": 1044,
+      "legacy_id": 85,
       "category_id": "leadership_hr",
       "subcategory": "人事戦略・働き方改革",
       "subcategory_id": "hr_strategy_workstyle",
@@ -2123,11 +2123,11 @@
       "source": "厚生労働省 働き方改革実行計画",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 91,
-      "legacy_id": 91,
+      "id": 1045,
+      "legacy_id": 86,
       "category_id": "project_operations",
       "subcategory": "業務効率化・時間管理",
       "subcategory_id": "business_efficiency_time",
@@ -2148,11 +2148,11 @@
       "source": "デビッド・アレン『Getting Things Done』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 92,
-      "legacy_id": 92,
+      "id": 1046,
+      "legacy_id": 87,
       "category_id": "business_process_analysis",
       "subcategory": "業務システム設計",
       "subcategory_id": "business_system_design",
@@ -2173,11 +2173,11 @@
       "source": "ヤコブ・ニールセン『ユーザビリティエンジニアリング』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 93,
-      "legacy_id": 93,
+      "id": 1047,
+      "legacy_id": 88,
       "category_id": "strategy_management",
       "subcategory": "ESG・サステナビリティ経営",
       "subcategory_id": "esg_sustainability",
@@ -2198,11 +2198,11 @@
       "source": "GRIスタンダード",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 94,
-      "legacy_id": 94,
+      "id": 1048,
+      "legacy_id": 89,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -2223,11 +2223,11 @@
       "source": "ビジネスコミュニケーション基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 95,
-      "legacy_id": 95,
+      "id": 1049,
+      "legacy_id": 90,
       "category_id": "finance",
       "subcategory": "財務分析・企業価値評価",
       "subcategory_id": "financial_analysis_valuation",
@@ -2248,11 +2248,11 @@
       "source": "ベンチャーキャピタル投資ガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 96,
-      "legacy_id": 96,
+      "id": 1050,
+      "legacy_id": 91,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -2273,11 +2273,11 @@
       "source": "プレゼンテーション設計の基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 97,
-      "legacy_id": 97,
+      "id": 1051,
+      "legacy_id": 92,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -2298,11 +2298,11 @@
       "source": "ファシリテーション実践ガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 98,
-      "legacy_id": 98,
+      "id": 1052,
+      "legacy_id": 93,
       "category_id": "strategy_management",
       "subcategory": "競争戦略・フレームワーク",
       "subcategory_id": "competitive_strategy_frameworks",
@@ -2323,11 +2323,11 @@
       "source": "マイケル・ポーター『競争の戦略』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 99,
-      "legacy_id": 99,
+      "id": 1053,
+      "legacy_id": 94,
       "category_id": "strategy_management",
       "subcategory": "新事業開発・イノベーション",
       "subcategory_id": "new_business_innovation",
@@ -2348,11 +2348,11 @@
       "source": "エリック・リース『リーン・スタートアップ』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 100,
-      "legacy_id": 100,
+      "id": 1054,
+      "legacy_id": 95,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -2373,11 +2373,11 @@
       "source": "データベースマーケティング",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.590201+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 101,
-      "legacy_id": 101,
+      "id": 1055,
+      "legacy_id": 96,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -2398,11 +2398,11 @@
       "source": "ブランド・マネジメント",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 102,
-      "legacy_id": 102,
+      "id": 1056,
+      "legacy_id": 97,
       "category_id": "marketing_sales",
       "subcategory": "営業戦略・CRM",
       "subcategory_id": "sales_strategy_crm",
@@ -2423,11 +2423,11 @@
       "source": "B2Bセールス・メソドロジー",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 103,
-      "legacy_id": 103,
+      "id": 1057,
+      "legacy_id": 98,
       "category_id": "leadership_hr",
       "subcategory": "チームマネジメント・モチベーション",
       "subcategory_id": "team_management_motivation",
@@ -2448,11 +2448,11 @@
       "source": "アブラハム・マズロー『人間性の心理学』",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 104,
-      "legacy_id": 104,
+      "id": 1058,
+      "legacy_id": 99,
       "category_id": "leadership_hr",
       "subcategory": "タレントマネジメント・育成",
       "subcategory_id": "talent_management_development",
@@ -2473,11 +2473,11 @@
       "source": "ロミンガー社 人材開発研究",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:46.661169+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 106,
-      "legacy_id": 106,
+      "id": 1059,
+      "legacy_id": 100,
       "category_id": "communication_presentation",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -2498,11 +2498,11 @@
       "source": "ビジネスコミュニケーション統合理論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 107,
-      "legacy_id": 107,
+      "id": 1060,
+      "legacy_id": 101,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -2523,11 +2523,11 @@
       "source": "コンサルティング思考統合手法",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 108,
-      "legacy_id": 108,
+      "id": 1061,
+      "legacy_id": 102,
       "category_id": "strategy_management",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -2548,11 +2548,11 @@
       "source": "戦略経営統合理論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 109,
-      "legacy_id": 109,
+      "id": 1062,
+      "legacy_id": 103,
       "category_id": "finance",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -2573,11 +2573,11 @@
       "source": "現代コーポレートファイナンス",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 110,
-      "legacy_id": 110,
+      "id": 1063,
+      "legacy_id": 104,
       "category_id": "marketing_sales",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -2598,11 +2598,11 @@
       "source": "デジタルマーケティング統合戦略",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 112,
-      "legacy_id": 112,
+      "id": 1064,
+      "legacy_id": 105,
       "category_id": "ai_digital_utilization",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -2623,11 +2623,11 @@
       "source": "DX推進戦略統合ガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 113,
-      "legacy_id": 113,
+      "id": 1065,
+      "legacy_id": 106,
       "category_id": "project_operations",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -2648,11 +2648,11 @@
       "source": "複雑プロジェクト管理統合手法",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 114,
-      "legacy_id": 114,
+      "id": 1066,
+      "legacy_id": 107,
       "category_id": "business_process_analysis",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -2673,11 +2673,11 @@
       "source": "業務改革統合アプローチ",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 115,
-      "legacy_id": 115,
+      "id": 1067,
+      "legacy_id": 108,
       "category_id": "risk_crisis_management",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -2698,11 +2698,11 @@
       "source": "統合リスク管理フレームワーク",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 116,
-      "legacy_id": 116,
+      "id": 1068,
+      "legacy_id": 109,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -2723,11 +2723,11 @@
       "source": "構造化思考の基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 117,
-      "legacy_id": 117,
+      "id": 1069,
+      "legacy_id": 110,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -2748,11 +2748,11 @@
       "source": "ピラミッドプリンシプル",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 118,
-      "legacy_id": 118,
+      "id": 1070,
+      "legacy_id": 111,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -2773,11 +2773,11 @@
       "source": "論理的思考の技術",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 119,
-      "legacy_id": 119,
+      "id": 1071,
+      "legacy_id": 112,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -2798,11 +2798,11 @@
       "source": "論理学入門",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 120,
-      "legacy_id": 120,
+      "id": 1072,
+      "legacy_id": 113,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -2823,11 +2823,11 @@
       "source": "視覚デザインの基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 121,
-      "legacy_id": 121,
+      "id": 1073,
+      "legacy_id": 114,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -2848,11 +2848,11 @@
       "source": "データ表現の技術",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 122,
-      "legacy_id": 122,
+      "id": 1074,
+      "legacy_id": 115,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -2873,11 +2873,11 @@
       "source": "情報デザイン学",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 123,
-      "legacy_id": 123,
+      "id": 1075,
+      "legacy_id": 116,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -2898,11 +2898,11 @@
       "source": "効果的な会議術",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 124,
-      "legacy_id": 124,
+      "id": 1076,
+      "legacy_id": 117,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -2923,11 +2923,11 @@
       "source": "リモート会議の技術",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 125,
-      "legacy_id": 125,
+      "id": 1077,
+      "legacy_id": 118,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -2948,11 +2948,11 @@
       "source": "ファシリテーション実践ガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 126,
-      "legacy_id": 126,
+      "id": 1078,
+      "legacy_id": 119,
       "category_id": "communication_presentation",
       "subcategory": "交渉・説得技術",
       "subcategory_id": "negotiation_persuasion",
@@ -2973,11 +2973,11 @@
       "source": "交渉術の心理学",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 127,
-      "legacy_id": 127,
+      "id": 1079,
+      "legacy_id": 120,
       "category_id": "communication_presentation",
       "subcategory": "交渉・説得技術",
       "subcategory_id": "negotiation_persuasion",
@@ -2999,11 +2999,11 @@
       "source": "アリストテレス修辞学",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 128,
-      "legacy_id": 128,
+      "id": 1080,
+      "legacy_id": 121,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "構造化思考（MECE・ロジックツリー）",
       "subcategory_id": "structured_thinking_mece",
@@ -3024,11 +3024,11 @@
       "source": "ロジカルシンキング入門",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 129,
-      "legacy_id": 129,
+      "id": 1081,
+      "legacy_id": 122,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "構造化思考（MECE・ロジックツリー）",
       "subcategory_id": "structured_thinking_mece",
@@ -3049,11 +3049,11 @@
       "source": "問題解決のセオリー",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 130,
-      "legacy_id": 130,
+      "id": 1082,
+      "legacy_id": 123,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "仮説検証・本質追求",
       "subcategory_id": "hypothesis_verification",
@@ -3074,11 +3074,11 @@
       "source": "科学哲学入門",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 131,
-      "legacy_id": 131,
+      "id": 1083,
+      "legacy_id": 124,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "仮説検証・本質追求",
       "subcategory_id": "hypothesis_verification",
@@ -3099,11 +3099,11 @@
       "source": "品質管理の技術",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 132,
-      "legacy_id": 132,
+      "id": 1084,
+      "legacy_id": 125,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "定量分析・統計解析",
       "subcategory_id": "quantitative_analysis_statistics",
@@ -3124,11 +3124,11 @@
       "source": "統計学入門",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 133,
-      "legacy_id": 133,
+      "id": 1085,
+      "legacy_id": 126,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "行動経済学・意思決定理論",
       "subcategory_id": "behavioral_economics",
@@ -3149,11 +3149,11 @@
       "source": "行動経済学の実践",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 134,
-      "legacy_id": 134,
+      "id": 1086,
+      "legacy_id": 127,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "ベンチマーキング・競合分析",
       "subcategory_id": "benchmarking_competitive_analysis",
@@ -3174,11 +3174,11 @@
       "source": "ベンチマーキング実践ガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 135,
-      "legacy_id": 135,
+      "id": 1087,
+      "legacy_id": 128,
       "category_id": "strategy_management",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -3199,11 +3199,11 @@
       "source": "戦略経営論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 136,
-      "legacy_id": 136,
+      "id": 1088,
+      "legacy_id": 129,
       "category_id": "strategy_management",
       "subcategory": "競争戦略・フレームワーク",
       "subcategory_id": "competitive_strategy_frameworks",
@@ -3224,11 +3224,11 @@
       "source": "ブルーオーシャン戦略",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 137,
-      "legacy_id": 137,
+      "id": 1089,
+      "legacy_id": 130,
       "category_id": "strategy_management",
       "subcategory": "新事業開発・イノベーション",
       "subcategory_id": "new_business_innovation",
@@ -3249,11 +3249,11 @@
       "source": "リーンスタートアップ",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 138,
-      "legacy_id": 138,
+      "id": 1090,
+      "legacy_id": 131,
       "category_id": "strategy_management",
       "subcategory": "ESG・サステナビリティ経営",
       "subcategory_id": "esg_sustainability",
@@ -3274,11 +3274,11 @@
       "source": "サステナビリティ経営",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 139,
-      "legacy_id": 139,
+      "id": 1091,
+      "legacy_id": 132,
       "category_id": "finance",
       "subcategory": "財務分析・企業価値評価",
       "subcategory_id": "financial_analysis_valuation",
@@ -3299,11 +3299,11 @@
       "source": "財務分析の基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 140,
-      "legacy_id": 140,
+      "id": 1092,
+      "legacy_id": 133,
       "category_id": "finance",
       "subcategory": "投資判断・リスク管理",
       "subcategory_id": "investment_risk_management",
@@ -3324,11 +3324,11 @@
       "source": "コーポレートファイナンス",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 141,
-      "legacy_id": 141,
+      "id": 1093,
+      "legacy_id": 134,
       "category_id": "finance",
       "subcategory": "事業計画・資金調達",
       "subcategory_id": "business_planning_funding",
@@ -3349,11 +3349,11 @@
       "source": "事業計画書作成ガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 142,
-      "legacy_id": 142,
+      "id": 1094,
+      "legacy_id": 135,
       "category_id": "finance",
       "subcategory": "管理会計・KPI設計",
       "subcategory_id": "management_accounting_kpi",
@@ -3374,11 +3374,11 @@
       "source": "戦略的業績管理",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 143,
-      "legacy_id": 143,
+      "id": 1095,
+      "legacy_id": 136,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -3399,11 +3399,11 @@
       "source": "マーケティング戦略論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 144,
-      "legacy_id": 144,
+      "id": 1096,
+      "legacy_id": 137,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -3424,11 +3424,11 @@
       "source": "ブランド論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 145,
-      "legacy_id": 145,
+      "id": 1097,
+      "legacy_id": 138,
       "category_id": "marketing_sales",
       "subcategory": "デジタルマーケティング",
       "subcategory_id": "digital_marketing",
@@ -3449,11 +3449,11 @@
       "source": "デジタルマーケティング実践",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 146,
-      "legacy_id": 146,
+      "id": 1098,
+      "legacy_id": 139,
       "category_id": "marketing_sales",
       "subcategory": "営業戦略・CRM",
       "subcategory_id": "sales_strategy_crm",
@@ -3474,11 +3474,11 @@
       "source": "営業管理の実践",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 147,
-      "legacy_id": 147,
+      "id": 1099,
+      "legacy_id": 140,
       "category_id": "marketing_sales",
       "subcategory": "チームマネジメント・モチベーション",
       "subcategory_id": "team_management_motivation",
@@ -3499,11 +3499,11 @@
       "source": "組織行動論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 148,
-      "legacy_id": 148,
+      "id": 1100,
+      "legacy_id": 141,
       "category_id": "marketing_sales",
       "subcategory": "タレントマネジメント・育成",
       "subcategory_id": "talent_management_development",
@@ -3524,11 +3524,11 @@
       "source": "人材開発戦略",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 149,
-      "legacy_id": 149,
+      "id": 1101,
+      "legacy_id": 142,
       "category_id": "marketing_sales",
       "subcategory": "組織開発・変革リーダーシップ",
       "subcategory_id": "organizational_development_leadership",
@@ -3549,11 +3549,11 @@
       "source": "組織変革論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 150,
-      "legacy_id": 150,
+      "id": 1102,
+      "legacy_id": 143,
       "category_id": "marketing_sales",
       "subcategory": "人事戦略・働き方改革",
       "subcategory_id": "hr_strategy_workstyle",
@@ -3575,11 +3575,11 @@
       "source": "組織心理学",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.670983+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 151,
-      "legacy_id": 151,
+      "id": 1103,
+      "legacy_id": 144,
       "category_id": "ai_digital_utilization",
       "subcategory": "AI・機械学習活用",
       "subcategory_id": "ai_ml_utilization",
@@ -3600,11 +3600,11 @@
       "source": "機械学習の基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 152,
-      "legacy_id": 152,
+      "id": 1104,
+      "legacy_id": 145,
       "category_id": "ai_digital_utilization",
       "subcategory": "プロンプトエンジニアリング",
       "subcategory_id": "prompt_engineering",
@@ -3625,11 +3625,11 @@
       "source": "プロンプトエンジニアリング",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 153,
-      "legacy_id": 153,
+      "id": 1105,
+      "legacy_id": 146,
       "category_id": "ai_digital_utilization",
       "subcategory": "DX戦略・デジタル変革",
       "subcategory_id": "dx_strategy_transformation",
@@ -3650,11 +3650,11 @@
       "source": "デジタルトランスフォーメーション",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 154,
-      "legacy_id": 154,
+      "id": 1106,
+      "legacy_id": 147,
       "category_id": "ai_digital_utilization",
       "subcategory": "データドリブン経営",
       "subcategory_id": "data_driven_management",
@@ -3675,11 +3675,11 @@
       "source": "データ活用戦略",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 155,
-      "legacy_id": 155,
+      "id": 1107,
+      "legacy_id": 148,
       "category_id": "ai_digital_utilization",
       "subcategory": "IoT・自動化技術",
       "subcategory_id": "iot_automation",
@@ -3700,11 +3700,11 @@
       "source": "IoTシステム設計",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 156,
-      "legacy_id": 156,
+      "id": 1108,
+      "legacy_id": 149,
       "category_id": "project_operations",
       "subcategory": "プロジェクト設計・WBS",
       "subcategory_id": "project_design_wbs",
@@ -3725,11 +3725,11 @@
       "source": "PMBOK Guide",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:47.721122+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 157,
-      "legacy_id": 157,
+      "id": 1109,
+      "legacy_id": 150,
       "category_id": "project_operations",
       "subcategory": "スケジュール・リソース管理",
       "subcategory_id": "schedule_resource_management",
@@ -3750,11 +3750,11 @@
       "source": "プロジェクトマネジメント実践",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 158,
-      "legacy_id": 158,
+      "id": 1110,
+      "legacy_id": 151,
       "category_id": "project_operations",
       "subcategory": "ステークホルダー管理",
       "subcategory_id": "stakeholder_management",
@@ -3775,11 +3775,11 @@
       "source": "ステークホルダーマネジメント",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 159,
-      "legacy_id": 159,
+      "id": 1111,
+      "legacy_id": 152,
       "category_id": "project_operations",
       "subcategory": "業務効率化・時間管理",
       "subcategory_id": "business_efficiency_time",
@@ -3800,11 +3800,11 @@
       "source": "時間管理の心理学",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 160,
-      "legacy_id": 160,
+      "id": 1112,
+      "legacy_id": 153,
       "category_id": "business_process_analysis",
       "subcategory": "業務分析・要件定義",
       "subcategory_id": "business_analysis_requirements",
@@ -3825,11 +3825,11 @@
       "source": "システム分析設計",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 161,
-      "legacy_id": 161,
+      "id": 1113,
+      "legacy_id": 154,
       "category_id": "business_process_analysis",
       "subcategory": "プロセス設計・最適化",
       "subcategory_id": "process_design_optimization",
@@ -3850,11 +3850,11 @@
       "source": "TOC（制約理論）",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 162,
-      "legacy_id": 162,
+      "id": 1114,
+      "legacy_id": 155,
       "category_id": "business_process_analysis",
       "subcategory": "サプライチェーン管理",
       "subcategory_id": "supply_chain_management",
@@ -3875,11 +3875,11 @@
       "source": "サプライチェーン管理論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 163,
-      "legacy_id": 163,
+      "id": 1115,
+      "legacy_id": 156,
       "category_id": "business_process_analysis",
       "subcategory": "業務システム設計",
       "subcategory_id": "business_system_design",
@@ -3900,11 +3900,11 @@
       "source": "ユーザーインターフェース設計",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 164,
-      "legacy_id": 164,
+      "id": 1116,
+      "legacy_id": 157,
       "category_id": "business_process_analysis",
       "subcategory": "BPR・業務改革",
       "subcategory_id": "bpr_business_reform",
@@ -3925,11 +3925,11 @@
       "source": "ビジネスプロセス・リエンジニアリング",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 165,
-      "legacy_id": 165,
+      "id": 1117,
+      "legacy_id": 158,
       "category_id": "risk_crisis_management",
       "subcategory": "企業リスク管理",
       "subcategory_id": "corporate_risk_management",
@@ -3950,11 +3950,11 @@
       "source": "リスク管理フレームワーク",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 166,
-      "legacy_id": 166,
+      "id": 1118,
+      "legacy_id": 159,
       "category_id": "risk_crisis_management",
       "subcategory": "危機管理・BCP",
       "subcategory_id": "crisis_management_bcp",
@@ -3975,11 +3975,11 @@
       "source": "事業継続管理",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 167,
-      "legacy_id": 167,
+      "id": 1119,
+      "legacy_id": 160,
       "category_id": "risk_crisis_management",
       "subcategory": "コンプライアンス・内部統制",
       "subcategory_id": "compliance_internal_control",
@@ -4000,11 +4000,11 @@
       "source": "内部統制実務ガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 168,
-      "legacy_id": 168,
+      "id": 1120,
+      "legacy_id": 161,
       "category_id": "risk_crisis_management",
       "subcategory": "情報セキュリティ",
       "subcategory_id": "information_security",
@@ -4025,11 +4025,11 @@
       "source": "情報セキュリティ管理",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 169,
-      "legacy_id": 169,
+      "id": 1121,
+      "legacy_id": 162,
       "category_id": "risk_crisis_management",
       "subcategory": "サステナビリティリスク",
       "subcategory_id": "sustainability_risk",
@@ -4050,11 +4050,11 @@
       "source": "TCFD提言",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 170,
-      "legacy_id": 170,
+      "id": 1122,
+      "legacy_id": 163,
       "category_id": "consulting_industry",
       "subcategory": "ケース面接・構造化思考",
       "subcategory_id": "case_interview_structured",
@@ -4075,11 +4075,11 @@
       "source": "ケース面接対策",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 171,
-      "legacy_id": 171,
+      "id": 1123,
+      "legacy_id": 164,
       "category_id": "consulting_industry",
       "subcategory": "仮説思考・イシューツリー",
       "subcategory_id": "hypothesis_thinking_issue",
@@ -4100,11 +4100,11 @@
       "source": "イシューからはじめよ",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 172,
-      "legacy_id": 172,
+      "id": 1124,
+      "legacy_id": 165,
       "category_id": "consulting_industry",
       "subcategory": "ストーリーライン構築",
       "subcategory_id": "storyline_construction",
@@ -4125,11 +4125,11 @@
       "source": "ストーリー構築技法",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 173,
-      "legacy_id": 173,
+      "id": 1125,
+      "legacy_id": 166,
       "category_id": "consulting_industry",
       "subcategory": "ステークホルダー分析",
       "subcategory_id": "stakeholder_analysis",
@@ -4150,11 +4150,11 @@
       "source": "ステークホルダーマネジメント実践",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 174,
-      "legacy_id": 174,
+      "id": 1126,
+      "legacy_id": 167,
       "category_id": "consulting_industry",
       "subcategory": "複数ステークホルダー調整",
       "subcategory_id": "multi_stakeholder_coordination",
@@ -4175,11 +4175,11 @@
       "source": "複雑系問題解決",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 175,
-      "legacy_id": 175,
+      "id": 1127,
+      "legacy_id": 168,
       "category_id": "consulting_industry",
       "subcategory": "プロジェクト炎上対応・リカバリー",
       "subcategory_id": "project_recovery",
@@ -4200,11 +4200,11 @@
       "source": "プロジェクトリカバリー",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 176,
-      "legacy_id": 176,
+      "id": 1128,
+      "legacy_id": 169,
       "category_id": "consulting_industry",
       "subcategory": "変革リーダーシップ",
       "subcategory_id": "transformation_leadership",
@@ -4225,11 +4225,11 @@
       "source": "変革マネジメント実践論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 177,
-      "legacy_id": 177,
+      "id": 1129,
+      "legacy_id": 170,
       "category_id": "consulting_industry",
       "subcategory": "デジタル変革支援",
       "subcategory_id": "digital_transformation_support",
@@ -4250,11 +4250,11 @@
       "source": "DX推進戦略",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 178,
-      "legacy_id": 178,
+      "id": 1130,
+      "legacy_id": 171,
       "category_id": "consulting_industry",
       "subcategory": "M&A・PMI支援",
       "subcategory_id": "ma_pmi_support",
@@ -4275,11 +4275,11 @@
       "source": "M&A戦略と実務",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 179,
-      "legacy_id": 179,
+      "id": 1131,
+      "legacy_id": 172,
       "category_id": "consulting_industry",
       "subcategory": "オペレーション改革",
       "subcategory_id": "operation_reform",
@@ -4300,11 +4300,11 @@
       "source": "業務改革実践論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 180,
-      "legacy_id": 180,
+      "id": 1132,
+      "legacy_id": 173,
       "category_id": "consulting_industry",
       "subcategory": "規制業界対応（金融・製薬等）",
       "subcategory_id": "regulated_industry",
@@ -4325,11 +4325,11 @@
       "source": "規制業界戦略",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 181,
-      "legacy_id": 181,
+      "id": 1133,
+      "legacy_id": 174,
       "category_id": "si_industry",
       "subcategory": "要件定義・業務分析",
       "subcategory_id": "requirements_business_analysis",
@@ -4350,11 +4350,11 @@
       "source": "システム要件分析",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 182,
-      "legacy_id": 182,
+      "id": 1134,
+      "legacy_id": 175,
       "category_id": "si_industry",
       "subcategory": "IT戦略立案",
       "subcategory_id": "it_strategy_planning",
@@ -4375,11 +4375,11 @@
       "source": "IT戦略立案実務",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 183,
-      "legacy_id": 183,
+      "id": 1135,
+      "legacy_id": 176,
       "category_id": "si_industry",
       "subcategory": "RFP作成・ベンダー管理",
       "subcategory_id": "rfp_vendor_management",
@@ -4400,11 +4400,11 @@
       "source": "調達管理実務",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 184,
-      "legacy_id": 184,
+      "id": 1136,
+      "legacy_id": 177,
       "category_id": "si_industry",
       "subcategory": "SIプロジェクト管理",
       "subcategory_id": "si_project_management",
@@ -4425,11 +4425,11 @@
       "source": "SIプロジェクト管理実践",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 185,
-      "legacy_id": 185,
+      "id": 1137,
+      "legacy_id": 178,
       "category_id": "si_industry",
       "subcategory": "多階層ベンダー管理",
       "subcategory_id": "multi_tier_vendor",
@@ -4450,11 +4450,11 @@
       "source": "ベンダー管理実務",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 186,
-      "legacy_id": 186,
+      "id": 1138,
+      "legacy_id": 179,
       "category_id": "si_industry",
       "subcategory": "リスク管理・品質管理",
       "subcategory_id": "risk_quality_management",
@@ -4475,11 +4475,11 @@
       "source": "ソフトウェア品質管理",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 187,
-      "legacy_id": 187,
+      "id": 1139,
+      "legacy_id": 180,
       "category_id": "si_industry",
       "subcategory": "システム導入・移行管理",
       "subcategory_id": "business_system_design",
@@ -4500,11 +4500,11 @@
       "source": "システム移行実務",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 188,
-      "legacy_id": 188,
+      "id": 1140,
+      "legacy_id": 181,
       "category_id": "si_industry",
       "subcategory": "DX推進支援",
       "subcategory_id": "dx_promotion_support",
@@ -4525,11 +4525,11 @@
       "source": "DXとレガシー刷新",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 189,
-      "legacy_id": 189,
+      "id": 1141,
+      "legacy_id": 182,
       "category_id": "trading_company_industry",
       "subcategory": "商品知識・市場分析",
       "subcategory_id": "commodity_market_analysis",
@@ -4550,11 +4550,11 @@
       "source": "商品先物取引入門",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 190,
-      "legacy_id": 190,
+      "id": 1142,
+      "legacy_id": 183,
       "category_id": "trading_company_industry",
       "subcategory": "商品先物・デリバティブ活用",
       "subcategory_id": "commodity_derivatives",
@@ -4575,11 +4575,11 @@
       "source": "商品デリバティブ実務",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 191,
-      "legacy_id": 191,
+      "id": 1143,
+      "legacy_id": 184,
       "category_id": "trading_company_industry",
       "subcategory": "価格交渉・リスクヘッジ",
       "subcategory_id": "price_negotiation_hedge",
@@ -4600,11 +4600,11 @@
       "source": "商品取引実務",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 192,
-      "legacy_id": 192,
+      "id": 1144,
+      "legacy_id": 185,
       "category_id": "trading_company_industry",
       "subcategory": "新規事業開拓",
       "subcategory_id": "new_business_development",
@@ -4625,11 +4625,11 @@
       "source": "新規事業開発戦略",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 193,
-      "legacy_id": 193,
+      "id": 1145,
+      "legacy_id": 186,
       "category_id": "trading_company_industry",
       "subcategory": "出資先企業経営参画",
       "subcategory_id": "investment_participation",
@@ -4650,11 +4650,11 @@
       "source": "商社投資戦略",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 194,
-      "legacy_id": 194,
+      "id": 1146,
+      "legacy_id": 187,
       "category_id": "trading_company_industry",
       "subcategory": "海外市場開拓",
       "subcategory_id": "overseas_market_development",
@@ -4675,11 +4675,11 @@
       "source": "海外事業リスク管理",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 195,
-      "legacy_id": 195,
+      "id": 1147,
+      "legacy_id": 188,
       "category_id": "trading_company_industry",
       "subcategory": "貿易ファイナンス",
       "subcategory_id": "trade_finance",
@@ -4700,11 +4700,11 @@
       "source": "貿易実務基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 196,
-      "legacy_id": 196,
+      "id": 1148,
+      "legacy_id": 189,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -4725,11 +4725,11 @@
       "source": "会議運営実践ガイド",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 197,
-      "legacy_id": 197,
+      "id": 1149,
+      "legacy_id": 190,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -4750,11 +4750,11 @@
       "source": "プレゼンテーション技法",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 198,
-      "legacy_id": 198,
+      "id": 1150,
+      "legacy_id": 191,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -4775,11 +4775,11 @@
       "source": "視覚デザインの基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 199,
-      "legacy_id": 199,
+      "id": 1151,
+      "legacy_id": 192,
       "category_id": "communication_presentation",
       "subcategory": "交渉・説得技術",
       "subcategory_id": "negotiation_persuasion",
@@ -4800,11 +4800,11 @@
       "source": "交渉術の実践",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 200,
-      "legacy_id": 200,
+      "id": 1152,
+      "legacy_id": 193,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "構造化思考（MECE・ロジックツリー）",
       "subcategory_id": "structured_thinking_mece",
@@ -4825,11 +4825,11 @@
       "source": "構造化思考の実践",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.73154+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 201,
-      "legacy_id": 201,
+      "id": 1153,
+      "legacy_id": 194,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "仮説検証・本質追求",
       "subcategory_id": "hypothesis_verification",
@@ -4850,11 +4850,11 @@
       "source": "統計的推論の実践",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 202,
-      "legacy_id": 202,
+      "id": 1154,
+      "legacy_id": 195,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "行動経済学・意思決定理論",
       "subcategory_id": "behavioral_economics",
@@ -4875,11 +4875,11 @@
       "source": "行動経済学とバイアス",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 203,
-      "legacy_id": 203,
+      "id": 1155,
+      "legacy_id": 196,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "定量分析・統計解析",
       "subcategory_id": "quantitative_analysis_statistics",
@@ -4900,11 +4900,11 @@
       "source": "統計分析の基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 204,
-      "legacy_id": 204,
+      "id": 1156,
+      "legacy_id": 197,
       "category_id": "strategy_management",
       "subcategory": "競争戦略・フレームワーク",
       "subcategory_id": "competitive_strategy_frameworks",
@@ -4925,11 +4925,11 @@
       "source": "競争戦略論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 205,
-      "legacy_id": 205,
+      "id": 1157,
+      "legacy_id": 198,
       "category_id": "strategy_management",
       "subcategory": "新事業開発・イノベーション",
       "subcategory_id": "new_business_innovation",
@@ -4950,11 +4950,11 @@
       "source": "デザイン思考入門",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 206,
-      "legacy_id": 206,
+      "id": 1158,
+      "legacy_id": 199,
       "category_id": "strategy_management",
       "subcategory": "ESG・サステナビリティ経営",
       "subcategory_id": "esg_sustainability",
@@ -4975,11 +4975,11 @@
       "source": "サステナブル投資",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:48.730152+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 207,
-      "legacy_id": 207,
+      "id": 1159,
+      "legacy_id": 200,
       "category_id": "finance",
       "subcategory": "財務分析・企業価値評価",
       "subcategory_id": "financial_analysis_valuation",
@@ -5000,11 +5000,11 @@
       "source": "株式評価の基礎",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 208,
-      "legacy_id": 208,
+      "id": 1160,
+      "legacy_id": 201,
       "category_id": "finance",
       "subcategory": "投資判断・リスク管理",
       "subcategory_id": "investment_risk_management",
@@ -5025,11 +5025,11 @@
       "source": "現代ポートフォリオ理論",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 209,
-      "legacy_id": 209,
+      "id": 1161,
+      "legacy_id": 202,
       "category_id": "finance",
       "subcategory": "財務分析・企業価値評価",
       "subcategory_id": "financial_analysis_valuation",
@@ -5050,11 +5050,11 @@
       "source": "ベンチャー企業評価",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 210,
-      "legacy_id": 210,
+      "id": 1162,
+      "legacy_id": 203,
       "category_id": "finance",
       "subcategory": "管理会計・KPI設計",
       "subcategory_id": "management_accounting_kpi",
@@ -5075,11 +5075,11 @@
       "source": "管理会計の応用",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 211,
-      "legacy_id": 211,
+      "id": 1163,
+      "legacy_id": 204,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -5100,11 +5100,11 @@
       "source": "顧客価値マーケティング",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 212,
-      "legacy_id": 212,
+      "id": 1164,
+      "legacy_id": 205,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -5125,11 +5125,11 @@
       "source": "ブランド・マネジメント",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 213,
-      "legacy_id": 213,
+      "id": 1165,
+      "legacy_id": 206,
       "category_id": "marketing_sales",
       "subcategory": "デジタルマーケティング",
       "subcategory_id": "digital_marketing",
@@ -5150,11 +5150,11 @@
       "source": "デジタルマーケティング分析",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 214,
-      "legacy_id": 214,
+      "id": 1166,
+      "legacy_id": 207,
       "category_id": "marketing_sales",
       "subcategory": "営業戦略・CRM",
       "subcategory_id": "sales_strategy_crm",
@@ -5175,11 +5175,11 @@
       "source": "B2Bセールス手法",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 215,
-      "legacy_id": 215,
+      "id": 1167,
+      "legacy_id": 208,
       "category_id": "leadership_hr",
       "subcategory": "チームマネジメント・モチベーション",
       "subcategory_id": "team_management_motivation",
@@ -5200,11 +5200,11 @@
       "source": "チームダイナミクス",
       "is_deleted": false,
       "created_at": "2025-09-19T07:32:13.781075+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 433,
-      "legacy_id": 216,
+      "id": 1168,
+      "legacy_id": 209,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -5225,11 +5225,11 @@
       "source": "データビジュアライゼーション実践ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 434,
-      "legacy_id": 217,
+      "id": 1169,
+      "legacy_id": 210,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -5250,11 +5250,11 @@
       "source": "スクラムガイド公式版",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 435,
-      "legacy_id": 218,
+      "id": 1170,
+      "legacy_id": 211,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "定量分析・統計解析",
       "subcategory_id": "quantitative_analysis_statistics",
@@ -5275,11 +5275,11 @@
       "source": "統計学基礎と応用",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 436,
-      "legacy_id": 219,
+      "id": 1171,
+      "legacy_id": 212,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "行動経済学・意思決定理論",
       "subcategory_id": "behavioral_economics",
@@ -5300,11 +5300,11 @@
       "source": "ダニエル・カーネマン『プロスペクト理論』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 437,
-      "legacy_id": 220,
+      "id": 1172,
+      "legacy_id": 213,
       "category_id": "strategy_management",
       "subcategory": "新事業開発・イノベーション",
       "subcategory_id": "new_business_innovation",
@@ -5325,11 +5325,11 @@
       "source": "ロバート・クーパー『ステージゲート法』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 438,
-      "legacy_id": 221,
+      "id": 1173,
+      "legacy_id": 214,
       "category_id": "strategy_management",
       "subcategory": "ESG・サステナビリティ経営",
       "subcategory_id": "esg_sustainability",
@@ -5350,11 +5350,11 @@
       "source": "IPCC気候変動報告書",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 439,
-      "legacy_id": 222,
+      "id": 1174,
+      "legacy_id": 215,
       "category_id": "finance",
       "subcategory": "投資判断・リスク管理",
       "subcategory_id": "investment_risk_management",
@@ -5375,11 +5375,11 @@
       "source": "ウィリアム・シャープ『ポートフォリオ理論』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 440,
-      "legacy_id": 223,
+      "id": 1175,
+      "legacy_id": 216,
       "category_id": "finance",
       "subcategory": "管理会計・KPI設計",
       "subcategory_id": "management_accounting_kpi",
@@ -5400,11 +5400,11 @@
       "source": "ロバート・キャプラン『バランスト・スコアカード』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 441,
-      "legacy_id": 224,
+      "id": 1176,
+      "legacy_id": 217,
       "category_id": "marketing_sales",
       "subcategory": "デジタルマーケティング",
       "subcategory_id": "digital_marketing",
@@ -5425,11 +5425,11 @@
       "source": "デジタルマーケティング分析論",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 442,
-      "legacy_id": 225,
+      "id": 1177,
+      "legacy_id": 218,
       "category_id": "marketing_sales",
       "subcategory": "営業戦略・CRM",
       "subcategory_id": "sales_strategy_crm",
@@ -5450,11 +5450,11 @@
       "source": "ニール・ラッカム『SPIN営業』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 443,
-      "legacy_id": 226,
+      "id": 1178,
+      "legacy_id": 219,
       "category_id": "leadership_hr",
       "subcategory": "タレントマネジメント・育成",
       "subcategory_id": "talent_management_development",
@@ -5475,11 +5475,11 @@
       "source": "マッキンゼー『人材競争』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 444,
-      "legacy_id": 227,
+      "id": 1179,
+      "legacy_id": 220,
       "category_id": "leadership_hr",
       "subcategory": "組織開発・変革リーダーシップ",
       "subcategory_id": "organizational_development_leadership",
@@ -5500,11 +5500,11 @@
       "source": "ピーター・センゲ『学習する組織』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 445,
-      "legacy_id": 228,
+      "id": 1180,
+      "legacy_id": 221,
       "category_id": "ai_digital_utilization",
       "subcategory": "データドリブン経営",
       "subcategory_id": "data_driven_management",
@@ -5525,11 +5525,11 @@
       "source": "データマネジメント知識体系",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 446,
-      "legacy_id": 229,
+      "id": 1181,
+      "legacy_id": 222,
       "category_id": "ai_digital_utilization",
       "subcategory": "DX戦略・デジタル変革",
       "subcategory_id": "dx_strategy_transformation",
@@ -5550,11 +5550,11 @@
       "source": "経済産業省DX推進ガイドライン",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 447,
-      "legacy_id": 230,
+      "id": 1182,
+      "legacy_id": 223,
       "category_id": "project_operations",
       "subcategory": "ステークホルダー管理",
       "subcategory_id": "stakeholder_management",
@@ -5575,11 +5575,11 @@
       "source": "PMI ステークホルダー管理実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 448,
-      "legacy_id": 231,
+      "id": 1183,
+      "legacy_id": 224,
       "category_id": "business_process_analysis",
       "subcategory": "サプライチェーン管理",
       "subcategory_id": "supply_chain_management",
@@ -5600,11 +5600,11 @@
       "source": "サプライチェーン管理実践論",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 449,
-      "legacy_id": 232,
+      "id": 1184,
+      "legacy_id": 225,
       "category_id": "risk_crisis_management",
       "subcategory": "情報セキュリティ",
       "subcategory_id": "information_security",
@@ -5625,11 +5625,11 @@
       "source": "ゼロトラスト・セキュリティガイドライン",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 450,
-      "legacy_id": 233,
+      "id": 1185,
+      "legacy_id": 226,
       "category_id": "communication_presentation",
       "subcategory": "交渉・説得技術",
       "subcategory_id": "negotiation_persuasion",
@@ -5650,11 +5650,11 @@
       "source": "ロジャー・フィッシャー『Getting to Yes』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 451,
-      "legacy_id": 234,
+      "id": 1186,
+      "legacy_id": 227,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "ベンチマーキング・競合分析",
       "subcategory_id": "benchmarking_competitive_analysis",
@@ -5675,11 +5675,11 @@
       "source": "マイケル・ポーター『競争戦略』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 452,
-      "legacy_id": 235,
+      "id": 1187,
+      "legacy_id": 228,
       "category_id": "strategy_management",
       "subcategory": "競争戦略・フレームワーク",
       "subcategory_id": "competitive_strategy_frameworks",
@@ -5700,11 +5700,11 @@
       "source": "ジェイ・バーニー『企業戦略論』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 453,
-      "legacy_id": 236,
+      "id": 1188,
+      "legacy_id": 229,
       "category_id": "finance",
       "subcategory": "事業計画・資金調達",
       "subcategory_id": "business_planning_funding",
@@ -5725,11 +5725,11 @@
       "source": "スチュワート・マイヤーズ『コーポレートファイナンス』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 454,
-      "legacy_id": 237,
+      "id": 1189,
+      "legacy_id": 230,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -5750,11 +5750,11 @@
       "source": "デビッド・アーカー『ブランド論』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 455,
-      "legacy_id": 238,
+      "id": 1190,
+      "legacy_id": 231,
       "category_id": "ai_digital_utilization",
       "subcategory": "AI・機械学習活用",
       "subcategory_id": "ai_ml_utilization",
@@ -5775,11 +5775,11 @@
       "source": "アンドリュー・ング『Machine Learning Course』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 456,
-      "legacy_id": 239,
+      "id": 1191,
+      "legacy_id": 232,
       "category_id": "project_operations",
       "subcategory": "業務効率化・時間管理",
       "subcategory_id": "business_efficiency_time",
@@ -5800,11 +5800,11 @@
       "source": "大野耐一『トヨタ生産方式』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 457,
-      "legacy_id": 240,
+      "id": 1192,
+      "legacy_id": 233,
       "category_id": "business_process_analysis",
       "subcategory": "プロセス設計・最適化",
       "subcategory_id": "process_design_optimization",
@@ -5825,11 +5825,11 @@
       "source": "マイケル・ジョージ『リーンシックスシグマ』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 458,
-      "legacy_id": 241,
+      "id": 1193,
+      "legacy_id": 234,
       "category_id": "risk_crisis_management",
       "subcategory": "企業リスク管理",
       "subcategory_id": "corporate_risk_management",
@@ -5850,11 +5850,11 @@
       "source": "COSO ERMフレームワーク",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 459,
-      "legacy_id": 242,
+      "id": 1194,
+      "legacy_id": 235,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -5875,11 +5875,11 @@
       "source": "マッキンゼー式問題解決",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 460,
-      "legacy_id": 243,
+      "id": 1195,
+      "legacy_id": 236,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "仮説検証・本質追求",
       "subcategory_id": "hypothesis_verification",
@@ -5900,11 +5900,11 @@
       "source": "川喜田二郎『KJ法』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 461,
-      "legacy_id": 244,
+      "id": 1196,
+      "legacy_id": 237,
       "category_id": "strategy_management",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -5925,11 +5925,11 @@
       "source": "クレイトン・クリステンセン『イノベーションのジレンマ』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 462,
-      "legacy_id": 245,
+      "id": 1197,
+      "legacy_id": 238,
       "category_id": "finance",
       "subcategory": "財務分析・企業価値評価",
       "subcategory_id": "financial_analysis_valuation",
@@ -5950,11 +5950,11 @@
       "source": "企業価値評価実務ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 463,
-      "legacy_id": 246,
+      "id": 1198,
+      "legacy_id": 239,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -5975,11 +5975,11 @@
       "source": "アラン・クーパー『About Face』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 464,
-      "legacy_id": 247,
+      "id": 1199,
+      "legacy_id": 240,
       "category_id": "leadership_hr",
       "subcategory": "チームマネジメント・モチベーション",
       "subcategory_id": "team_management_motivation",
@@ -6000,11 +6000,11 @@
       "source": "ロバート・グリーンリーフ『サーバント・リーダーシップ』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 465,
-      "legacy_id": 248,
+      "id": 1200,
+      "legacy_id": 241,
       "category_id": "ai_digital_utilization",
       "subcategory": "AI・機械学習活用",
       "subcategory_id": "ai_ml_utilization",
@@ -6025,11 +6025,11 @@
       "source": "RPA導入実践ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 466,
-      "legacy_id": 249,
+      "id": 1201,
+      "legacy_id": 242,
       "category_id": "project_operations",
       "subcategory": "プロジェクト設計・WBS",
       "subcategory_id": "project_design_wbs",
@@ -6050,11 +6050,11 @@
       "source": "PMI プロジェクト管理高度技法",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 467,
-      "legacy_id": 250,
+      "id": 1202,
+      "legacy_id": 243,
       "category_id": "business_process_analysis",
       "subcategory": "業務分析・要件定義",
       "subcategory_id": "business_analysis_requirements",
@@ -6075,11 +6075,11 @@
       "source": "OMG BPMN 2.0仕様書",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.820138+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 468,
-      "legacy_id": 251,
+      "id": 1203,
+      "legacy_id": 244,
       "category_id": "risk_crisis_management",
       "subcategory": "危機管理・BCP",
       "subcategory_id": "crisis_management_bcp",
@@ -6100,11 +6100,11 @@
       "source": "ISO 22301事業継続管理システム",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 469,
-      "legacy_id": 252,
+      "id": 1204,
+      "legacy_id": 245,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -6125,11 +6125,11 @@
       "source": "エドワード・タフテ『情報の可視化』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 470,
-      "legacy_id": 253,
+      "id": 1205,
+      "legacy_id": 246,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "構造化思考（MECE・ロジックツリー）",
       "subcategory_id": "structured_thinking_mece",
@@ -6150,11 +6150,11 @@
       "source": "ウェブ解析実務ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 471,
-      "legacy_id": 254,
+      "id": 1206,
+      "legacy_id": 247,
       "category_id": "strategy_management",
       "subcategory": "新事業開発・イノベーション",
       "subcategory_id": "new_business_innovation",
@@ -6175,11 +6175,11 @@
       "source": "IDEO デザイン思考ガイドブック",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 472,
-      "legacy_id": 255,
+      "id": 1207,
+      "legacy_id": 248,
       "category_id": "finance",
       "subcategory": "管理会計・KPI設計",
       "subcategory_id": "management_accounting_kpi",
@@ -6200,11 +6200,11 @@
       "source": "ロバート・キャプラン『ABC/ABMの導入』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 473,
-      "legacy_id": 256,
+      "id": 1208,
+      "legacy_id": 249,
       "category_id": "marketing_sales",
       "subcategory": "デジタルマーケティング",
       "subcategory_id": "digital_marketing",
@@ -6225,11 +6225,11 @@
       "source": "マーケティング・オートメーション実践ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:49.730572+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 474,
-      "legacy_id": 257,
+      "id": 1209,
+      "legacy_id": 250,
       "category_id": "leadership_hr",
       "subcategory": "人事戦略・働き方改革",
       "subcategory_id": "hr_strategy_workstyle",
@@ -6250,11 +6250,11 @@
       "source": "ウィルマー・シャウフェリ『ワーク・エンゲージメント』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 475,
-      "legacy_id": 258,
+      "id": 1210,
+      "legacy_id": 251,
       "category_id": "ai_digital_utilization",
       "subcategory": "IoT・自動化技術",
       "subcategory_id": "iot_automation",
@@ -6275,11 +6275,11 @@
       "source": "Industrial IoT実装ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 476,
-      "legacy_id": 259,
+      "id": 1211,
+      "legacy_id": 252,
       "category_id": "project_operations",
       "subcategory": "スケジュール・リソース管理",
       "subcategory_id": "schedule_resource_management",
@@ -6300,11 +6300,11 @@
       "source": "PMI プロジェクト管理知識体系",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 477,
-      "legacy_id": 260,
+      "id": 1212,
+      "legacy_id": 253,
       "category_id": "business_process_analysis",
       "subcategory": "業務システム設計",
       "subcategory_id": "business_system_design",
@@ -6325,11 +6325,11 @@
       "source": "Roy Fielding『Architectural Styles and the Design of Network-based Software Architectures』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 478,
-      "legacy_id": 261,
+      "id": 1213,
+      "legacy_id": 254,
       "category_id": "risk_crisis_management",
       "subcategory": "コンプライアンス・内部統制",
       "subcategory_id": "compliance_internal_control",
@@ -6350,11 +6350,11 @@
       "source": "公益通報者保護法解説",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 479,
-      "legacy_id": 262,
+      "id": 1214,
+      "legacy_id": 255,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -6375,11 +6375,11 @@
       "source": "ロジャー・シュワルツ『熟練ファシリテーター』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 480,
-      "legacy_id": 263,
+      "id": 1215,
+      "legacy_id": 256,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "定量分析・統計解析",
       "subcategory_id": "quantitative_analysis_statistics",
@@ -6400,11 +6400,11 @@
       "source": "統計的思考の技術",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 481,
-      "legacy_id": 264,
+      "id": 1216,
+      "legacy_id": 257,
       "category_id": "strategy_management",
       "subcategory": "ESG・サステナビリティ経営",
       "subcategory_id": "esg_sustainability",
@@ -6425,11 +6425,11 @@
       "source": "SBTi（Science Based Targets initiative）",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 482,
-      "legacy_id": 265,
+      "id": 1217,
+      "legacy_id": 258,
       "category_id": "finance",
       "subcategory": "投資判断・リスク管理",
       "subcategory_id": "investment_risk_management",
@@ -6450,11 +6450,11 @@
       "source": "フィリップ・ジョリオン『VaRによるリスク管理』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 483,
-      "legacy_id": 266,
+      "id": 1218,
+      "legacy_id": 259,
       "category_id": "marketing_sales",
       "subcategory": "営業戦略・CRM",
       "subcategory_id": "sales_strategy_crm",
@@ -6475,11 +6475,11 @@
       "source": "現代営業組織論",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 484,
-      "legacy_id": 267,
+      "id": 1219,
+      "legacy_id": 260,
       "category_id": "leadership_hr",
       "subcategory": "組織開発・変革リーダーシップ",
       "subcategory_id": "organizational_development_leadership",
@@ -6500,11 +6500,11 @@
       "source": "クリス・アージリス『組織学習論』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 485,
-      "legacy_id": 268,
+      "id": 1220,
+      "legacy_id": 261,
       "category_id": "ai_digital_utilization",
       "subcategory": "データドリブン経営",
       "subcategory_id": "data_driven_management",
@@ -6525,11 +6525,11 @@
       "source": "DAMA データマネジメント知識体系",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 486,
-      "legacy_id": 269,
+      "id": 1221,
+      "legacy_id": 262,
       "category_id": "project_operations",
       "subcategory": "業務効率化・時間管理",
       "subcategory_id": "business_efficiency_time",
@@ -6550,11 +6550,11 @@
       "source": "フランチェスコ・シリロ『ポモドーロ・テクニック』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 487,
-      "legacy_id": 270,
+      "id": 1222,
+      "legacy_id": 263,
       "category_id": "business_process_analysis",
       "subcategory": "BPR・業務改革",
       "subcategory_id": "bpr_business_reform",
@@ -6575,11 +6575,11 @@
       "source": "ジョン・コッター『変革のプロセス』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 488,
-      "legacy_id": 271,
+      "id": 1223,
+      "legacy_id": 264,
       "category_id": "risk_crisis_management",
       "subcategory": "サステナビリティリスク",
       "subcategory_id": "sustainability_risk",
@@ -6600,11 +6600,11 @@
       "source": "TCFD提言書",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 489,
-      "legacy_id": 272,
+      "id": 1224,
+      "legacy_id": 265,
       "category_id": "communication_presentation",
       "subcategory": "交渉・説得技術",
       "subcategory_id": "negotiation_persuasion",
@@ -6625,11 +6625,11 @@
       "source": "ロジャー・フィッシャー『ハーバード流交渉術』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 490,
-      "legacy_id": 273,
+      "id": 1225,
+      "legacy_id": 266,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "行動経済学・意思決定理論",
       "subcategory_id": "behavioral_economics",
@@ -6650,11 +6650,11 @@
       "source": "ダニエル・カーネマン『ファスト&スロー』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 491,
-      "legacy_id": 274,
+      "id": 1226,
+      "legacy_id": 267,
       "category_id": "strategy_management",
       "subcategory": "競争戦略・フレームワーク",
       "subcategory_id": "competitive_strategy_frameworks",
@@ -6675,11 +6675,11 @@
       "source": "W・チャン・キム『ブルーオーシャン戦略』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 492,
-      "legacy_id": 275,
+      "id": 1227,
+      "legacy_id": 268,
       "category_id": "finance",
       "subcategory": "事業計画・資金調達",
       "subcategory_id": "business_planning_funding",
@@ -6700,11 +6700,11 @@
       "source": "投資銀行実務ハンドブック",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 493,
-      "legacy_id": 276,
+      "id": 1228,
+      "legacy_id": 269,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -6725,11 +6725,11 @@
       "source": "デビッド・アーカー『ブランド・ポートフォリオ戦略』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 494,
-      "legacy_id": 277,
+      "id": 1229,
+      "legacy_id": 270,
       "category_id": "leadership_hr",
       "subcategory": "タレントマネジメント・育成",
       "subcategory_id": "talent_management_development",
@@ -6750,11 +6750,11 @@
       "source": "マーシャル・ゴールドスミス『360度フィードバック』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 495,
-      "legacy_id": 278,
+      "id": 1230,
+      "legacy_id": 271,
       "category_id": "ai_digital_utilization",
       "subcategory": "AI・機械学習活用",
       "subcategory_id": "ai_ml_utilization",
@@ -6775,11 +6775,11 @@
       "source": "DARPA XAIプログラム",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 496,
-      "legacy_id": 279,
+      "id": 1231,
+      "legacy_id": 272,
       "category_id": "project_operations",
       "subcategory": "ステークホルダー管理",
       "subcategory_id": "stakeholder_management",
@@ -6800,11 +6800,11 @@
       "source": "IAP2参画スペクトラム",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 497,
-      "legacy_id": 280,
+      "id": 1232,
+      "legacy_id": 273,
       "category_id": "business_process_analysis",
       "subcategory": "サプライチェーン管理",
       "subcategory_id": "supply_chain_management",
@@ -6825,11 +6825,11 @@
       "source": "SCOR Model 12.0",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 498,
-      "legacy_id": 281,
+      "id": 1233,
+      "legacy_id": 274,
       "category_id": "risk_crisis_management",
       "subcategory": "情報セキュリティ",
       "subcategory_id": "information_security",
@@ -6850,11 +6850,11 @@
       "source": "JPCERT/CC CSIRT構築ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 499,
-      "legacy_id": 282,
+      "id": 1234,
+      "legacy_id": 275,
       "category_id": "communication_presentation",
       "subcategory": "結論ファースト・構造化思考",
       "subcategory_id": "conclusion_first_structured_thinking",
@@ -6875,11 +6875,11 @@
       "source": "ナンシー・デュアルテ『プレゼンテーション・ゼン』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 500,
-      "legacy_id": 283,
+      "id": 1235,
+      "legacy_id": 276,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "ベンチマーキング・競合分析",
       "subcategory_id": "benchmarking_competitive_analysis",
@@ -6900,11 +6900,11 @@
       "source": "ゲイリー・ハメル『コア・コンピタンス経営』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 501,
-      "legacy_id": 284,
+      "id": 1236,
+      "legacy_id": 277,
       "category_id": "strategy_management",
       "subcategory": "category_level",
       "subcategory_id": "category_level",
@@ -6925,11 +6925,11 @@
       "source": "マイケル・クスマノ『プラットフォーム・リーダーシップ』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 502,
-      "legacy_id": 285,
+      "id": 1237,
+      "legacy_id": 278,
       "category_id": "finance",
       "subcategory": "財務分析・企業価値評価",
       "subcategory_id": "financial_analysis_valuation",
@@ -6950,11 +6950,11 @@
       "source": "アスワス・ダモダラン『企業価値評価』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 503,
-      "legacy_id": 286,
+      "id": 1238,
+      "legacy_id": 279,
       "category_id": "marketing_sales",
       "subcategory": "顧客分析・セグメンテーション",
       "subcategory_id": "customer_analysis_segmentation",
@@ -6975,11 +6975,11 @@
       "source": "マーク・ステックラー『カスタマージャーニーマップ』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 504,
-      "legacy_id": 287,
+      "id": 1239,
+      "legacy_id": 280,
       "category_id": "leadership_hr",
       "subcategory": "チームマネジメント・モチベーション",
       "subcategory_id": "team_management_motivation",
@@ -7000,11 +7000,11 @@
       "source": "エイミー・エドモンドソン『恐れのない組織』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 505,
-      "legacy_id": 288,
+      "id": 1240,
+      "legacy_id": 281,
       "category_id": "ai_digital_utilization",
       "subcategory": "AI・機械学習活用",
       "subcategory_id": "ai_ml_utilization",
@@ -7025,11 +7025,11 @@
       "source": "ガートナー ローコード/ノーコード市場分析",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 506,
-      "legacy_id": 289,
+      "id": 1241,
+      "legacy_id": 282,
       "category_id": "project_operations",
       "subcategory": "プロジェクト設計・WBS",
       "subcategory_id": "project_design_wbs",
@@ -7050,11 +7050,11 @@
       "source": "PMI PMBOK ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 507,
-      "legacy_id": 290,
+      "id": 1242,
+      "legacy_id": 283,
       "category_id": "business_process_analysis",
       "subcategory": "プロセス設計・最適化",
       "subcategory_id": "process_design_optimization",
@@ -7075,11 +7075,11 @@
       "source": "マイク・ローザー『バリューストリームマッピング』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 508,
-      "legacy_id": 291,
+      "id": 1243,
+      "legacy_id": 284,
       "category_id": "risk_crisis_management",
       "subcategory": "企業リスク管理",
       "subcategory_id": "corporate_risk_management",
@@ -7100,11 +7100,11 @@
       "source": "企業レピュテーション・マネジメント実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 509,
-      "legacy_id": 292,
+      "id": 1244,
+      "legacy_id": 285,
       "category_id": "communication_presentation",
       "subcategory": "資料作成・可視化技術",
       "subcategory_id": "document_visualization_tech",
@@ -7125,11 +7125,11 @@
       "source": "コール・ナスバウマー『データストーリー』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 510,
-      "legacy_id": 293,
+      "id": 1245,
+      "legacy_id": 286,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "仮説検証・本質追求",
       "subcategory_id": "hypothesis_verification",
@@ -7150,11 +7150,11 @@
       "source": "IDEO Design Thinking ツールキット",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 511,
-      "legacy_id": 294,
+      "id": 1246,
+      "legacy_id": 287,
       "category_id": "strategy_management",
       "subcategory": "新事業開発・イノベーション",
       "subcategory_id": "new_business_innovation",
@@ -7175,11 +7175,11 @@
       "source": "ヘンリー・チェスブロウ『オープンイノベーション』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 512,
-      "legacy_id": 295,
+      "id": 1247,
+      "legacy_id": 288,
       "category_id": "finance",
       "subcategory": "管理会計・KPI設計",
       "subcategory_id": "management_accounting_kpi",
@@ -7200,11 +7200,11 @@
       "source": "ロバート・キャプラン『戦略マップ』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 513,
-      "legacy_id": 296,
+      "id": 1248,
+      "legacy_id": 289,
       "category_id": "marketing_sales",
       "subcategory": "デジタルマーケティング",
       "subcategory_id": "digital_marketing",
@@ -7225,11 +7225,11 @@
       "source": "プログラマティック広告実践ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 514,
-      "legacy_id": 297,
+      "id": 1249,
+      "legacy_id": 290,
       "category_id": "leadership_hr",
       "subcategory": "人事戦略・働き方改革",
       "subcategory_id": "hr_strategy_workstyle",
@@ -7250,11 +7250,11 @@
       "source": "現代人事管理論",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 515,
-      "legacy_id": 298,
+      "id": 1250,
+      "legacy_id": 291,
       "category_id": "ai_digital_utilization",
       "subcategory": "DX戦略・デジタル変革",
       "subcategory_id": "dx_strategy_transformation",
@@ -7275,11 +7275,11 @@
       "source": "デジタル・ツイン実装ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 516,
-      "legacy_id": 299,
+      "id": 1251,
+      "legacy_id": 292,
       "category_id": "project_operations",
       "subcategory": "スケジュール・リソース管理",
       "subcategory_id": "schedule_resource_management",
@@ -7300,11 +7300,11 @@
       "source": "スクラムガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 517,
-      "legacy_id": 300,
+      "id": 1252,
+      "legacy_id": 293,
       "category_id": "business_process_analysis",
       "subcategory": "業務分析・要件定義",
       "subcategory_id": "business_analysis_requirements",
@@ -7325,11 +7325,11 @@
       "source": "マイク・コーン『ユーザーストーリー』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:05.936698+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 518,
-      "legacy_id": 301,
+      "id": 1253,
+      "legacy_id": 294,
       "category_id": "risk_crisis_management",
       "subcategory": "危機管理・BCP",
       "subcategory_id": "crisis_management_bcp",
@@ -7350,11 +7350,11 @@
       "source": "FEMA インシデント・コマンド・システム",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 519,
-      "legacy_id": 302,
+      "id": 1254,
+      "legacy_id": 295,
       "category_id": "communication_presentation",
       "subcategory": "会議運営・ファシリテーション",
       "subcategory_id": "meeting_facilitation",
@@ -7375,11 +7375,11 @@
       "source": "ファニータ・ブラウン『ワールドカフェ』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 520,
-      "legacy_id": 303,
+      "id": 1255,
+      "legacy_id": 296,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "定量分析・統計解析",
       "subcategory_id": "quantitative_analysis_statistics",
@@ -7400,11 +7400,11 @@
       "source": "多変量解析法入門",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 521,
-      "legacy_id": 304,
+      "id": 1256,
+      "legacy_id": 297,
       "category_id": "strategy_management",
       "subcategory": "ESG・サステナビリティ経営",
       "subcategory_id": "esg_sustainability",
@@ -7425,11 +7425,11 @@
       "source": "エレン・マッカーサー財団『サーキュラーエコノミー』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 522,
-      "legacy_id": 305,
+      "id": 1257,
+      "legacy_id": 298,
       "category_id": "finance",
       "subcategory": "投資判断・リスク管理",
       "subcategory_id": "investment_risk_management",
@@ -7450,11 +7450,11 @@
       "source": "フィッシャー・ブラック『オプション価格理論』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 523,
-      "legacy_id": 306,
+      "id": 1258,
+      "legacy_id": 299,
       "category_id": "marketing_sales",
       "subcategory": "営業戦略・CRM",
       "subcategory_id": "sales_strategy_crm",
@@ -7475,11 +7475,11 @@
       "source": "戦略的アカウント営業",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:50.704609+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 524,
-      "legacy_id": 307,
+      "id": 1259,
+      "legacy_id": 300,
       "category_id": "leadership_hr",
       "subcategory": "組織開発・変革リーダーシップ",
       "subcategory_id": "organizational_development_leadership",
@@ -7500,11 +7500,11 @@
       "source": "デビッド・クーパーライダー『アプリシエイティブ・インクワイアリー』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 525,
-      "legacy_id": 308,
+      "id": 1260,
+      "legacy_id": 301,
       "category_id": "ai_digital_utilization",
       "subcategory": "データドリブン経営",
       "subcategory_id": "data_driven_management",
@@ -7525,11 +7525,11 @@
       "source": "機械学習実践ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 526,
-      "legacy_id": 309,
+      "id": 1261,
+      "legacy_id": 302,
       "category_id": "project_operations",
       "subcategory": "業務効率化・時間管理",
       "subcategory_id": "business_efficiency_time",
@@ -7550,11 +7550,11 @@
       "source": "ジェイク・ナップ『デザイン・スプリント』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 527,
-      "legacy_id": 310,
+      "id": 1262,
+      "legacy_id": 303,
       "category_id": "business_process_analysis",
       "subcategory": "業務システム設計",
       "subcategory_id": "business_system_design",
@@ -7575,11 +7575,11 @@
       "source": "マーティン・ファウラー『マイクロサービス』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 528,
-      "legacy_id": 311,
+      "id": 1263,
+      "legacy_id": 304,
       "category_id": "risk_crisis_management",
       "subcategory": "コンプライアンス・内部統制",
       "subcategory_id": "compliance_internal_control",
@@ -7600,11 +7600,11 @@
       "source": "GDPR条文解説",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 529,
-      "legacy_id": 312,
+      "id": 1264,
+      "legacy_id": 305,
       "category_id": "communication_presentation",
       "subcategory": "交渉・説得技術",
       "subcategory_id": "negotiation_persuasion",
@@ -7625,11 +7625,11 @@
       "source": "行動経済学と交渉戦略",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 530,
-      "legacy_id": 313,
+      "id": 1265,
+      "legacy_id": 306,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "行動経済学・意思決定理論",
       "subcategory_id": "behavioral_economics",
@@ -7650,11 +7650,11 @@
       "source": "エイモス・トヴェルスキー『フレーミング効果』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 531,
-      "legacy_id": 314,
+      "id": 1266,
+      "legacy_id": 307,
       "category_id": "strategy_management",
       "subcategory": "競争戦略・フレームワーク",
       "subcategory_id": "competitive_strategy_frameworks",
@@ -7675,11 +7675,11 @@
       "source": "トム・ラス『ストレングス・ファインダー2.0』",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 532,
-      "legacy_id": 315,
+      "id": 1267,
+      "legacy_id": 308,
       "category_id": "finance",
       "subcategory": "財務分析・企業価値評価",
       "subcategory_id": "financial_analysis_valuation",
@@ -7700,11 +7700,11 @@
       "source": "ベンチャー・キャピタル実務ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 533,
-      "legacy_id": 316,
+      "id": 1268,
+      "legacy_id": 309,
       "category_id": "consulting_industry",
       "subcategory": "ケース面接・構造化思考",
       "subcategory_id": "case_interview_structured",
@@ -7725,11 +7725,11 @@
       "source": "ケース面接実践対策",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 534,
-      "legacy_id": 317,
+      "id": 1269,
+      "legacy_id": 310,
       "category_id": "consulting_industry",
       "subcategory": "仮説思考・イシューツリー",
       "subcategory_id": "hypothesis_thinking_issue",
@@ -7750,11 +7750,11 @@
       "source": "コンサルティング実務論",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 535,
-      "legacy_id": 318,
+      "id": 1270,
+      "legacy_id": 311,
       "category_id": "consulting_industry",
       "subcategory": "ストーリーライン構築",
       "subcategory_id": "storyline_construction",
@@ -7775,11 +7775,11 @@
       "source": "戦略コンサルティング手法",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 536,
-      "legacy_id": 319,
+      "id": 1271,
+      "legacy_id": 312,
       "category_id": "consulting_industry",
       "subcategory": "継続案件獲得・拡販戦略",
       "subcategory_id": "continuous_sales_strategy",
@@ -7800,11 +7800,11 @@
       "source": "プロフェッショナル・サービス論",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 537,
-      "legacy_id": 320,
+      "id": 1272,
+      "legacy_id": 313,
       "category_id": "consulting_industry",
       "subcategory": "プロジェクト炎上対応・リカバリー",
       "subcategory_id": "project_recovery",
@@ -7825,11 +7825,11 @@
       "source": "プロジェクト・マネジメント実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 538,
-      "legacy_id": 321,
+      "id": 1273,
+      "legacy_id": 314,
       "category_id": "consulting_industry",
       "subcategory": "変革リーダーシップ",
       "subcategory_id": "transformation_leadership",
@@ -7850,11 +7850,11 @@
       "source": "変革リーダーシップ論",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 539,
-      "legacy_id": 322,
+      "id": 1274,
+      "legacy_id": 315,
       "category_id": "consulting_industry",
       "subcategory": "デジタル変革支援",
       "subcategory_id": "digital_transformation_support",
@@ -7875,11 +7875,11 @@
       "source": "デジタル変革コンサルティング実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 540,
-      "legacy_id": 323,
+      "id": 1275,
+      "legacy_id": 316,
       "category_id": "consulting_industry",
       "subcategory": "M&A・PMI支援",
       "subcategory_id": "ma_pmi_support",
@@ -7900,11 +7900,11 @@
       "source": "M&A実践ガイドブック",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 541,
-      "legacy_id": 324,
+      "id": 1276,
+      "legacy_id": 317,
       "category_id": "consulting_industry",
       "subcategory": "オペレーション改革",
       "subcategory_id": "operation_reform",
@@ -7925,11 +7925,11 @@
       "source": "オペレーション・エクセレンス実践論",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 542,
-      "legacy_id": 325,
+      "id": 1277,
+      "legacy_id": 318,
       "category_id": "consulting_industry",
       "subcategory": "規制業界対応（金融・製薬等）",
       "subcategory_id": "regulated_industry",
@@ -7950,11 +7950,11 @@
       "source": "規制業界コンサルティング実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 543,
-      "legacy_id": 326,
+      "id": 1278,
+      "legacy_id": 319,
       "category_id": "si_industry",
       "subcategory": "要件定義・業務分析",
       "subcategory_id": "requirements_business_analysis",
@@ -7975,11 +7975,11 @@
       "source": "システム要件定義実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 544,
-      "legacy_id": 327,
+      "id": 1279,
+      "legacy_id": 320,
       "category_id": "si_industry",
       "subcategory": "IT戦略立案",
       "subcategory_id": "it_strategy_planning",
@@ -8000,11 +8000,11 @@
       "source": "IT戦略マネジメント実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 545,
-      "legacy_id": 328,
+      "id": 1280,
+      "legacy_id": 321,
       "category_id": "si_industry",
       "subcategory": "RFP作成・ベンダー管理",
       "subcategory_id": "rfp_vendor_management",
@@ -8025,11 +8025,11 @@
       "source": "ITサービス・マネジメント実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 546,
-      "legacy_id": 329,
+      "id": 1281,
+      "legacy_id": 322,
       "category_id": "si_industry",
       "subcategory": "SIプロジェクト管理",
       "subcategory_id": "si_project_management",
@@ -8050,11 +8050,11 @@
       "source": "大規模SIプロジェクト管理実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 547,
-      "legacy_id": 330,
+      "id": 1282,
+      "legacy_id": 323,
       "category_id": "si_industry",
       "subcategory": "多階層ベンダー管理",
       "subcategory_id": "multi_tier_vendor",
@@ -8075,11 +8075,11 @@
       "source": "ベンダー・マネジメント実践論",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 548,
-      "legacy_id": 331,
+      "id": 1283,
+      "legacy_id": 324,
       "category_id": "si_industry",
       "subcategory": "リスク管理・品質管理",
       "subcategory_id": "risk_quality_management",
@@ -8100,11 +8100,11 @@
       "source": "ソフトウェア品質工学",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 549,
-      "legacy_id": 332,
+      "id": 1284,
+      "legacy_id": 325,
       "category_id": "si_industry",
       "subcategory": "システム導入・移行管理",
       "subcategory_id": "business_system_design",
@@ -8125,11 +8125,11 @@
       "source": "システム移行実務ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 550,
-      "legacy_id": 333,
+      "id": 1285,
+      "legacy_id": 326,
       "category_id": "si_industry",
       "subcategory": "DX推進支援",
       "subcategory_id": "dx_promotion_support",
@@ -8150,11 +8150,11 @@
       "source": "DX推進実践ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 551,
-      "legacy_id": 334,
+      "id": 1286,
+      "legacy_id": 327,
       "category_id": "si_industry",
       "subcategory": "技術的実現性評価",
       "subcategory_id": "technical_feasibility",
@@ -8175,11 +8175,11 @@
       "source": "ソフトウェア・アーキテクチャ論",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 552,
-      "legacy_id": 335,
+      "id": 1287,
+      "legacy_id": 328,
       "category_id": "si_industry",
       "subcategory": "レガシーシステム連携",
       "subcategory_id": "legacy_integration",
@@ -8200,11 +8200,11 @@
       "source": "エンタープライズ・アーキテクチャ実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 553,
-      "legacy_id": 336,
+      "id": 1288,
+      "legacy_id": 329,
       "category_id": "si_industry",
       "subcategory": "技術営業・提案活動",
       "subcategory_id": "technical_sales",
@@ -8225,11 +8225,11 @@
       "source": "B2B技術営業実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 554,
-      "legacy_id": 337,
+      "id": 1289,
+      "legacy_id": 330,
       "category_id": "si_industry",
       "subcategory": "顧客要求分析",
       "subcategory_id": "customer_requirement",
@@ -8250,11 +8250,11 @@
       "source": "ユーザー中心設計実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 555,
-      "legacy_id": 338,
+      "id": 1290,
+      "legacy_id": 331,
       "category_id": "si_industry",
       "subcategory": "長期パートナーシップ構築",
       "subcategory_id": "long_term_partnership",
@@ -8275,11 +8275,11 @@
       "source": "パートナーシップ・マネジメント論",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 556,
-      "legacy_id": 339,
+      "id": 1291,
+      "legacy_id": 332,
       "category_id": "si_industry",
       "subcategory": "契約形態・価格設定戦略",
       "subcategory_id": "contract_pricing",
@@ -8300,11 +8300,11 @@
       "source": "アジャイル開発契約実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 557,
-      "legacy_id": 340,
+      "id": 1292,
+      "legacy_id": 333,
       "category_id": "trading_company_industry",
       "subcategory": "商品知識・市場分析",
       "subcategory_id": "commodity_market_analysis",
@@ -8325,11 +8325,11 @@
       "source": "商品先物取引実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 558,
-      "legacy_id": 341,
+      "id": 1293,
+      "legacy_id": 334,
       "category_id": "trading_company_industry",
       "subcategory": "商品先物・デリバティブ活用",
       "subcategory_id": "commodity_derivatives",
@@ -8350,11 +8350,11 @@
       "source": "デリバティブ・リスク管理実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 559,
-      "legacy_id": 342,
+      "id": 1294,
+      "legacy_id": 335,
       "category_id": "trading_company_industry",
       "subcategory": "価格交渉・リスクヘッジ",
       "subcategory_id": "price_negotiation_hedge",
@@ -8375,11 +8375,11 @@
       "source": "商社取引実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 560,
-      "legacy_id": 343,
+      "id": 1295,
+      "legacy_id": 336,
       "category_id": "trading_company_industry",
       "subcategory": "品質管理・検査・保険",
       "subcategory_id": "quality_inspection_insurance",
@@ -8400,11 +8400,11 @@
       "source": "国際商品取引実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 561,
-      "legacy_id": 344,
+      "id": 1296,
+      "legacy_id": 337,
       "category_id": "trading_company_industry",
       "subcategory": "新規事業開拓",
       "subcategory_id": "new_business_development",
@@ -8425,11 +8425,11 @@
       "source": "新規事業開発実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 562,
-      "legacy_id": 345,
+      "id": 1297,
+      "legacy_id": 338,
       "category_id": "trading_company_industry",
       "subcategory": "出資先企業経営参画",
       "subcategory_id": "investment_participation",
@@ -8450,11 +8450,11 @@
       "source": "投資・事業開発実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 563,
-      "legacy_id": 346,
+      "id": 1298,
+      "legacy_id": 339,
       "category_id": "trading_company_industry",
       "subcategory": "事業ポートフォリオ管理",
       "subcategory_id": "portfolio_management",
@@ -8475,11 +8475,11 @@
       "source": "戦略的事業管理",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 564,
-      "legacy_id": 347,
+      "id": 1299,
+      "legacy_id": 340,
       "category_id": "trading_company_industry",
       "subcategory": "海外市場開拓",
       "subcategory_id": "overseas_market_development",
@@ -8500,11 +8500,11 @@
       "source": "国際ビジネス実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 565,
-      "legacy_id": 348,
+      "id": 1300,
+      "legacy_id": 341,
       "category_id": "trading_company_industry",
       "subcategory": "多国間三国間取引",
       "subcategory_id": "multilateral_trade",
@@ -8525,11 +8525,11 @@
       "source": "国際貿易実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 566,
-      "legacy_id": 349,
+      "id": 1301,
+      "legacy_id": 342,
       "category_id": "trading_company_industry",
       "subcategory": "異文化コミュニケーション",
       "subcategory_id": "cross_cultural_communication",
@@ -8550,11 +8550,11 @@
       "source": "異文化マネジメント論",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 567,
-      "legacy_id": 350,
+      "id": 1302,
+      "legacy_id": 343,
       "category_id": "trading_company_industry",
       "subcategory": "現地法人運営",
       "subcategory_id": "local_subsidiary_management",
@@ -8575,11 +8575,11 @@
       "source": "海外現地法人管理実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.022375+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 568,
-      "legacy_id": 351,
+      "id": 1303,
+      "legacy_id": 344,
       "category_id": "trading_company_industry",
       "subcategory": "貿易ファイナンス",
       "subcategory_id": "trade_finance",
@@ -8600,11 +8600,11 @@
       "source": "国際貿易決済実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 569,
-      "legacy_id": 352,
+      "id": 1304,
+      "legacy_id": 345,
       "category_id": "trading_company_industry",
       "subcategory": "貿易ファイナンス",
       "subcategory_id": "trade_finance",
@@ -8625,11 +8625,11 @@
       "source": "国際貿易金融実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 570,
-      "legacy_id": 353,
+      "id": 1305,
+      "legacy_id": 346,
       "category_id": "trading_company_industry",
       "subcategory": "貿易ファイナンス",
       "subcategory_id": "trade_finance",
@@ -8650,11 +8650,11 @@
       "source": "貿易保険実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 571,
-      "legacy_id": 354,
+      "id": 1306,
+      "legacy_id": 347,
       "category_id": "trading_company_industry",
       "subcategory": "貿易ファイナンス",
       "subcategory_id": "trade_finance",
@@ -8675,11 +8675,11 @@
       "source": "輸出入金融実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 572,
-      "legacy_id": 355,
+      "id": 1307,
+      "legacy_id": 348,
       "category_id": "trading_company_industry",
       "subcategory": "貿易ファイナンス",
       "subcategory_id": "trade_finance",
@@ -8700,11 +8700,11 @@
       "source": "貿易決済実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 573,
-      "legacy_id": 356,
+      "id": 1308,
+      "legacy_id": 349,
       "category_id": "trading_company_industry",
       "subcategory": "貿易ファイナンス",
       "subcategory_id": "trade_finance",
@@ -8725,11 +8725,11 @@
       "source": "国際金融システム",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:51.68499+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 574,
-      "legacy_id": 357,
+      "id": 1309,
+      "legacy_id": 350,
       "category_id": "trading_company_industry",
       "subcategory": "トレードファイナンス組成",
       "subcategory_id": "trade_finance_structuring",
@@ -8750,11 +8750,11 @@
       "source": "プロジェクトファイナンス実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 575,
-      "legacy_id": 358,
+      "id": 1310,
+      "legacy_id": 351,
       "category_id": "trading_company_industry",
       "subcategory": "トレードファイナンス組成",
       "subcategory_id": "trade_finance_structuring",
@@ -8775,11 +8775,11 @@
       "source": "ストラクチャード・ファイナンス実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 576,
-      "legacy_id": 359,
+      "id": 1311,
+      "legacy_id": 352,
       "category_id": "trading_company_industry",
       "subcategory": "トレードファイナンス組成",
       "subcategory_id": "trade_finance_structuring",
@@ -8800,11 +8800,11 @@
       "source": "資源金融実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 577,
-      "legacy_id": 360,
+      "id": 1312,
+      "legacy_id": 353,
       "category_id": "trading_company_industry",
       "subcategory": "トレードファイナンス組成",
       "subcategory_id": "trade_finance_structuring",
@@ -8825,11 +8825,11 @@
       "source": "コモディティ・ファイナンス実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 578,
-      "legacy_id": 361,
+      "id": 1313,
+      "legacy_id": 354,
       "category_id": "trading_company_industry",
       "subcategory": "為替・金利リスク管理",
       "subcategory_id": "fx_interest_rate_risk",
@@ -8850,11 +8850,11 @@
       "source": "為替リスク管理実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 579,
-      "legacy_id": 362,
+      "id": 1314,
+      "legacy_id": 355,
       "category_id": "trading_company_industry",
       "subcategory": "為替・金利リスク管理",
       "subcategory_id": "fx_interest_rate_risk",
@@ -8875,11 +8875,11 @@
       "source": "デリバティブ活用実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 580,
-      "legacy_id": 363,
+      "id": 1315,
+      "legacy_id": 356,
       "category_id": "trading_company_industry",
       "subcategory": "為替・金利リスク管理",
       "subcategory_id": "fx_interest_rate_risk",
@@ -8900,11 +8900,11 @@
       "source": "金利リスク管理実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 581,
-      "legacy_id": 364,
+      "id": 1316,
+      "legacy_id": 357,
       "category_id": "trading_company_industry",
       "subcategory": "為替・金利リスク管理",
       "subcategory_id": "fx_interest_rate_risk",
@@ -8925,11 +8925,11 @@
       "source": "為替リスク管理基礎",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 582,
-      "legacy_id": 365,
+      "id": 1317,
+      "legacy_id": 358,
       "category_id": "trading_company_industry",
       "subcategory": "為替・金利リスク管理",
       "subcategory_id": "fx_interest_rate_risk",
@@ -8950,11 +8950,11 @@
       "source": "グループ資金管理実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 583,
-      "legacy_id": 366,
+      "id": 1318,
+      "legacy_id": 359,
       "category_id": "trading_company_industry",
       "subcategory": "カントリーリスク分析",
       "subcategory_id": "country_risk_analysis",
@@ -8975,11 +8975,11 @@
       "source": "カントリーリスク分析実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 584,
-      "legacy_id": 367,
+      "id": 1319,
+      "legacy_id": 360,
       "category_id": "trading_company_industry",
       "subcategory": "カントリーリスク分析",
       "subcategory_id": "country_risk_analysis",
@@ -9000,11 +9000,11 @@
       "source": "政治リスク管理実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 585,
-      "legacy_id": 368,
+      "id": 1320,
+      "legacy_id": 361,
       "category_id": "trading_company_industry",
       "subcategory": "カントリーリスク分析",
       "subcategory_id": "country_risk_analysis",
@@ -9025,11 +9025,11 @@
       "source": "国際投資リスク分析",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 586,
-      "legacy_id": 369,
+      "id": 1321,
+      "legacy_id": 362,
       "category_id": "trading_company_industry",
       "subcategory": "カントリーリスク分析",
       "subcategory_id": "country_risk_analysis",
@@ -9050,11 +9050,11 @@
       "source": "国際資金移動実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 587,
-      "legacy_id": 370,
+      "id": 1322,
+      "legacy_id": 363,
       "category_id": "trading_company_industry",
       "subcategory": "カントリーリスク分析",
       "subcategory_id": "country_risk_analysis",
@@ -9075,11 +9075,11 @@
       "source": "新興国投資戦略",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 588,
-      "legacy_id": 371,
+      "id": 1323,
+      "legacy_id": 364,
       "category_id": "trading_company_industry",
       "subcategory": "カントリーリスク分析",
       "subcategory_id": "country_risk_analysis",
@@ -9100,11 +9100,11 @@
       "source": "ESG投資実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 589,
-      "legacy_id": 372,
+      "id": 1324,
+      "legacy_id": 365,
       "category_id": "ai_digital_utilization",
       "subcategory": "AI・機械学習活用",
       "subcategory_id": "ai_ml_utilization",
@@ -9125,11 +9125,11 @@
       "source": "MLOps実践ガイド",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 590,
-      "legacy_id": 373,
+      "id": 1325,
+      "legacy_id": 366,
       "category_id": "trading_company_industry",
       "subcategory": "多国間三国間取引",
       "subcategory_id": "multilateral_trade",
@@ -9150,11 +9150,11 @@
       "source": "デジタル貿易実務",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     },
     {
-      "id": 591,
-      "legacy_id": 374,
+      "id": 1326,
+      "legacy_id": 367,
       "category_id": "logical_thinking_problem_solving",
       "subcategory": "構造化思考（MECE・ロジックツリー）",
       "subcategory_id": "structured_thinking_mece",
@@ -9175,11 +9175,11 @@
       "source": "構造化思考の実践",
       "is_deleted": false,
       "created_at": "2025-09-20T04:36:06.128968+00:00",
-      "updated_at": "2025-09-24T07:10:52.446308+00:00"
+      "updated_at": "2025-10-16T13:42:45.658+00:00"
     }
   ],
   "metadata": {
-    "generatedAt": "2025-10-16T06:30:49.557Z",
+    "generatedAt": "2025-10-16T14:36:11.465Z",
     "sourceRecordCount": 367,
     "databaseSource": "quiz_questions",
     "generatorScript": "scripts/sync-all-fallback-data.ts"

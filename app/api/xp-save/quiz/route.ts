@@ -47,6 +47,7 @@ interface QuizAnswer {
   category_id: string
   subcategory_id: string
   difficulty: string
+  confidence_level?: number | null  // 理解度（1-5段階）
 }
 
 interface QuizSessionRequest {
@@ -200,6 +201,7 @@ export async function POST(request: Request) {
       subcategory_id: string;
       difficulty: string;
       session_type: string;
+      confidence_level?: number | null;
     }> = []
     
     for (const answer of body.answers) {
@@ -223,7 +225,8 @@ export async function POST(request: Request) {
         subcategory_id: answer.subcategory_id,
         difficulty: answer.difficulty,
         earned_xp: earnedXP,
-        session_type: 'quiz'
+        session_type: 'quiz',
+        confidence_level: answer.confidence_level
       })
     }
 
@@ -312,6 +315,11 @@ export async function POST(request: Request) {
     // テーブルベース設定からレベル計算（ハードコード値削除）
     const newCurrentLevel = Math.floor(newTotalXP / xpSettings.level.overall_threshold) + 1
 
+    // クイズセッション統計計算
+    const accuracyRate = (body.correct_answers / body.total_questions) * 100
+    const isPerfectSession = accuracyRate === 100
+    const is80PlusSession = accuracyRate >= 80
+
     const updatedStats = {
       user_id: userId,
       total_xp: newTotalXP,
@@ -337,6 +345,9 @@ export async function POST(request: Request) {
         ((existingStats?.quiz_questions_correct || 0) + body.correct_answers) / 
         ((existingStats?.quiz_questions_answered || 0) + body.total_questions) * 100 * 100
       ) / 100, // 小数点第2位まで
+      // 🆕 クイズセッション統計追加
+      quiz_perfect_sessions: (existingStats?.quiz_perfect_sessions || 0) + (isPerfectSession ? 1 : 0),
+      quiz_80plus_sessions: (existingStats?.quiz_80plus_sessions || 0) + (is80PlusSession ? 1 : 0),
       wisdom_cards_total: (existingStats?.wisdom_cards_total || 0) + wisdomCards,
       knowledge_cards_total: existingStats?.knowledge_cards_total || 0,
       badges_total: existingStats?.badges_total || 0,
@@ -799,16 +810,16 @@ export async function POST(request: Request) {
     let isNewCard = false
     let cardCount = 0
     
-    const accuracyRate = (body.correct_answers / body.total_questions) * 100
+    const cardAccuracyRate = (body.correct_answers / body.total_questions) * 100
     
-    if (accuracyRate >= 70) {
+    if (cardAccuracyRate >= 70) {
       try {
         console.log(`🎴 Processing wisdom card (accuracy >= 70%, using ${USE_DB_CARDS ? 'DB' : 'Static'})...`)
         
         // DB版またはレガシー版の選択
         const randomCard = USE_DB_CARDS 
-          ? await getRandomWisdomCardFromDB(accuracyRate)
-          : getRandomWisdomCard(accuracyRate)
+          ? await getRandomWisdomCardFromDB(cardAccuracyRate)
+          : getRandomWisdomCard(cardAccuracyRate)
           
         const cardResult = await addWisdomCardToCollection(userId, randomCard.id)
         

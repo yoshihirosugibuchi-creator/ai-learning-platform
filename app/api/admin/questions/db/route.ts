@@ -28,7 +28,8 @@ export async function GET() {
     
     // DB行をQuestion型に変換
     const questions: Question[] = data?.map((row: QuizQuestionRow) => ({
-      id: row.legacy_id,
+      id: row.id,
+      legacy_id: row.legacy_id,
       category: row.category_id,
       subcategory: row.subcategory || '',
       subcategory_id: row.subcategory_id || '',

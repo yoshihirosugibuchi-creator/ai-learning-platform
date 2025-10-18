@@ -1553,7 +1553,6 @@ export type Database = {
       user_category_xp_stats_v2: {
         Row: {
           category_id: string
-          course_completions: number
           course_sessions_completed: number
           course_themes_completed: number
           course_xp: number
@@ -1571,7 +1570,6 @@ export type Database = {
         }
         Insert: {
           category_id: string
-          course_completions?: number
           course_sessions_completed?: number
           course_themes_completed?: number
           course_xp?: number
@@ -1589,7 +1587,6 @@ export type Database = {
         }
         Update: {
           category_id?: string
-          course_completions?: number
           course_sessions_completed?: number
           course_themes_completed?: number
           course_xp?: number
@@ -1738,9 +1735,7 @@ export type Database = {
           created_at: string | null
           current_level: number
           id: string
-          quiz_80plus_sessions: number
           quiz_average_accuracy: number
-          quiz_perfect_sessions: number
           quiz_questions_answered: number
           quiz_questions_correct: number
           quiz_sessions_completed: number
@@ -1758,9 +1753,7 @@ export type Database = {
           created_at?: string | null
           current_level?: number
           id?: string
-          quiz_80plus_sessions?: number
           quiz_average_accuracy?: number
-          quiz_perfect_sessions?: number
           quiz_questions_answered?: number
           quiz_questions_correct?: number
           quiz_sessions_completed?: number
@@ -1778,9 +1771,7 @@ export type Database = {
           created_at?: string | null
           current_level?: number
           id?: string
-          quiz_80plus_sessions?: number
           quiz_average_accuracy?: number
-          quiz_perfect_sessions?: number
           quiz_questions_answered?: number
           quiz_questions_correct?: number
           quiz_sessions_completed?: number
@@ -1797,16 +1788,20 @@ export type Database = {
           badges_total: number
           bonus_skp: number
           bonus_xp: number
+          course_completed: number | null
           course_learning_time_seconds: number | null
           course_sessions_completed: number
           course_skp: number
+          course_themes_completed: number | null
           course_xp: number
           created_at: string | null
           current_level: number
           knowledge_cards_total: number
           last_activity_at: string | null
+          quiz_80plus_sessions: number
           quiz_average_accuracy: number | null
           quiz_learning_time_seconds: number | null
+          quiz_perfect_sessions: number
           quiz_questions_answered: number
           quiz_questions_correct: number
           quiz_sessions_completed: number
@@ -1824,16 +1819,20 @@ export type Database = {
           badges_total?: number
           bonus_skp?: number
           bonus_xp?: number
+          course_completed?: number | null
           course_learning_time_seconds?: number | null
           course_sessions_completed?: number
           course_skp?: number
+          course_themes_completed?: number | null
           course_xp?: number
           created_at?: string | null
           current_level?: number
           knowledge_cards_total?: number
           last_activity_at?: string | null
+          quiz_80plus_sessions?: number
           quiz_average_accuracy?: number | null
           quiz_learning_time_seconds?: number | null
+          quiz_perfect_sessions?: number
           quiz_questions_answered?: number
           quiz_questions_correct?: number
           quiz_sessions_completed?: number
@@ -1851,16 +1850,20 @@ export type Database = {
           badges_total?: number
           bonus_skp?: number
           bonus_xp?: number
+          course_completed?: number | null
           course_learning_time_seconds?: number | null
           course_sessions_completed?: number
           course_skp?: number
+          course_themes_completed?: number | null
           course_xp?: number
           created_at?: string | null
           current_level?: number
           knowledge_cards_total?: number
           last_activity_at?: string | null
+          quiz_80plus_sessions?: number
           quiz_average_accuracy?: number | null
           quiz_learning_time_seconds?: number | null
+          quiz_perfect_sessions?: number
           quiz_questions_answered?: number
           quiz_questions_correct?: number
           quiz_sessions_completed?: number
@@ -2553,13 +2556,9 @@ export type SKPTransactionInsert = Database['public']['Tables']['skp_transaction
 export type QuizQuestionInsert = Database['public']['Tables']['quiz_questions']['Insert']
 export type QuizSessionInsert = Database['public']['Tables']['quiz_sessions']['Insert']
 export type WisdomCardCollectionInsert = Database['public']['Tables']['wisdom_card_collection']['Insert']
-
-// ============= Wisdom Cards Type Aliases (new) =============
 export type WisdomCardMaster = Database['public']['Tables']['wisdom_cards']['Row']
 export type WisdomCardMasterInsert = Database['public']['Tables']['wisdom_cards']['Insert']
 export type WisdomCardMasterUpdate = Database['public']['Tables']['wisdom_cards']['Update']
-
-// ============= Learning Analytics Type Aliases =============
 export type UnifiedLearningSessionAnalytics = Database['public']['Tables']['unified_learning_session_analytics']['Row']
 export type UnifiedLearningSessionAnalyticsInsert = Database['public']['Tables']['unified_learning_session_analytics']['Insert']
 export type UnifiedLearningSessionAnalyticsUpdate = Database['public']['Tables']['unified_learning_session_analytics']['Update']
@@ -2578,8 +2577,6 @@ export type LearningAnalyticsSummaryUpdate = Database['public']['Tables']['learn
 export type LearningEffectivenessTracking = Database['public']['Tables']['learning_effectiveness_tracking']['Row']
 export type LearningEffectivenessTrackingInsert = Database['public']['Tables']['learning_effectiveness_tracking']['Insert']
 export type LearningEffectivenessTrackingUpdate = Database['public']['Tables']['learning_effectiveness_tracking']['Update']
-
-// ============= System Monitoring Type Aliases =============
 export type SystemAlert = Database['public']['Tables']['system_alerts']['Row']
 export type SystemAlertInsert = Database['public']['Tables']['system_alerts']['Insert']
 export type SystemAlertUpdate = Database['public']['Tables']['system_alerts']['Update']

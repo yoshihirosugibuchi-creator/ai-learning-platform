@@ -354,6 +354,34 @@ export async function addWisdomCardToCollection(userId: string, cardId: number):
     }
 
     console.log('✅ New card added successfully:', { totalTime: `${(selectTime + insertTime).toFixed(2)}ms` })
+    
+    // user_xp_stats_v2の統計を更新（新規カード獲得時のみ）
+    try {
+      // 現在の統計を取得
+      const { data: currentStats } = await supabase
+        .from('user_xp_stats_v2')
+        .select('wisdom_cards_total')
+        .eq('user_id', userId)
+        .single()
+      
+      // 統計を更新（+1増加）
+      const { error: statsError } = await supabase
+        .from('user_xp_stats_v2')
+        .update({
+          wisdom_cards_total: (currentStats?.wisdom_cards_total || 0) + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+      
+      if (statsError) {
+        console.warn('⚠️ Failed to update wisdom_cards_total stats:', statsError)
+      } else {
+        console.log(`📊 Updated wisdom_cards_total: ${(currentStats?.wisdom_cards_total || 0) + 1} for user ${userId}`)
+      }
+    } catch (statsError) {
+      console.warn('⚠️ Exception updating wisdom_cards_total stats:', statsError)
+    }
+    
     return { count: 1, isNew: true }
   }
 }

@@ -5,6 +5,7 @@ import { filterQuizzesByActiveCategories } from '@/lib/category-control'
 // Question型定義（レスポンス用）
 interface APIQuestion {
   id: number
+  legacy_id?: number
   category: string
   subcategory?: string
   subcategory_id?: string
@@ -23,7 +24,8 @@ interface APIQuestion {
 function dbRowToQuestion(row: unknown): APIQuestion {
   const dbRow = row as Record<string, unknown>
   return {
-    id: dbRow.legacy_id as number,
+    id: dbRow.id as number,
+    legacy_id: dbRow.legacy_id as number | undefined,
     category: dbRow.category_id as string,
     subcategory: dbRow.subcategory as string | undefined,
     subcategory_id: dbRow.subcategory_id as string | undefined,

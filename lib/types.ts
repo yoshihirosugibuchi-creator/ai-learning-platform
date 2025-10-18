@@ -93,6 +93,7 @@ export type QuizMainCategory =
 
 export interface Question {
   id: number
+  legacy_id?: number // CSV管理・表示用ID
   category: QuizMainCategory | string // string for flexibility with legacy data
   subcategory: QuizSubcategory | string // string for flexibility with legacy data
   subcategory_id?: string // サブカテゴリーの英数字ID（XP計算用）

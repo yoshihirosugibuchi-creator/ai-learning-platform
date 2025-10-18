@@ -59,7 +59,7 @@ export default function QuizManagementPage() {
 
     try {
       const csvHeaders = [
-        'id', 'category', 'subcategory', 'question', 
+        'id', 'legacy_id', 'category', 'subcategory', 'subcategory_id', 'question', 
         'option1', 'option2', 'option3', 'option4', 
         'correct', 'explanation', 'difficulty', 'timeLimit', 
         'relatedTopics', 'source', 'deleted', 'createdAt', 'updatedAt'
@@ -67,8 +67,10 @@ export default function QuizManagementPage() {
 
       const csvRows = questions.map(q => [
         q.id,
+        q.legacy_id,
         q.category || '',
         q.subcategory || '',
+        q.subcategory_id || '',
         `"${q.question.replace(/"/g, '""')}"`,
         `"${q.options[0]?.replace(/"/g, '""') || ''}"`,
         `"${q.options[1]?.replace(/"/g, '""') || ''}"`,
@@ -291,8 +293,8 @@ export default function QuizManagementPage() {
     try {
       setLoading(true)
       
-      // 実際のインポート処理（questions.jsonの更新）
-      const response = await fetch('/api/admin/questions', {
+      // 実際のインポート処理（DBの更新）
+      const response = await fetch('/api/admin/questions/db', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

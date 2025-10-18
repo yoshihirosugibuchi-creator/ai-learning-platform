@@ -107,6 +107,34 @@ export async function acquireKnowledgeCard(userId: string, themeId: string, isFi
       }
     }
     
+    // 4. user_xp_stats_v2のknowledge_cards_total統計を更新
+    try {
+      // 現在の統計を取得
+      const { data: currentStats } = await supabase
+        .from('user_xp_stats_v2')
+        .select('knowledge_cards_total')
+        .eq('user_id', userId)
+        .single()
+      
+      // 統計を更新（+1増加）
+      const { error: statsError } = await supabase
+        .from('user_xp_stats_v2')
+        .update({
+          knowledge_cards_total: (currentStats?.knowledge_cards_total || 0) + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+      
+      if (statsError) {
+        console.warn('⚠️ Failed to update knowledge_cards_total stats:', statsError)
+        // 統計更新エラーでもカード獲得は成功とする
+      } else {
+        console.log(`📊 Updated knowledge_cards_total: ${(currentStats?.knowledge_cards_total || 0) + 1} for user ${userId}`)
+      }
+    } catch (statsError) {
+      console.warn('⚠️ Exception updating knowledge_cards_total stats:', statsError)
+    }
+    
     console.log(`🎉 Knowledge card acquired: ${cardData.title}`)
     return {
       success: true,
