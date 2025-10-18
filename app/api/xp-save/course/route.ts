@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { loadXPSettings, type XPSettings, calculateCourseXP, calculateSKP } from '@/lib/xp-settings'
+import { loadXPSettings, type XPSettings, calculateCourseXP } from '@/lib/xp-settings'
 import { 
   mapDifficultyToEnglish
 } from '@/lib/xp-level-system'
@@ -179,23 +179,23 @@ export async function POST(request: Request) {
     let skpResult = { skpGained: 0, breakdown: { base: 0, bonus: 0, description: 'No SKP (review or not first completion)' } }
     
     if (isFirstCompletion) {
-      const _isReview = false  // 初回完了の場合は復習ではない
-      const isCompleted = body.session_quiz_correct  // 確認クイズ正解時のみ完了とみなす
-      
-      // コースSKP計算（テーブルベース）
-      const correctAnswers = body.session_quiz_correct ? 1 : 0
-      const incorrectAnswers = body.session_quiz_correct ? 0 : 1
-      const skpTotal = calculateSKP(correctAnswers, incorrectAnswers, false, xpSettings)
-      
-      // コース完了ボーナス
-      const completionBonus = isCompleted ? xpSettings.skp.course_complete_bonus : 0
+      // コースSKP計算（コースセッション専用）
+      // コースの確認クイズは1問のみ - パーフェクトボーナスは適用しない
+      let baseSKP = 0
+      if (body.session_quiz_correct) {
+        baseSKP = xpSettings.skp.quiz_correct  // 正解: 10 SKP
+      } else {
+        baseSKP = xpSettings.skp.quiz_incorrect  // 不正解: 2 SKP
+      }
       
       skpResult = {
-        skpGained: skpTotal + completionBonus,
+        skpGained: baseSKP,
         breakdown: {
-          base: skpTotal,
-          bonus: completionBonus,
-          description: `正解${correctAnswers}問・不正解${incorrectAnswers}問${completionBonus > 0 ? ` + コース完了ボーナス(${completionBonus}SKP)` : ''}`
+          base: baseSKP,
+          bonus: 0,
+          description: body.session_quiz_correct 
+            ? `確認クイズ正解(${baseSKP}SKP)`
+            : `確認クイズ不正解(${baseSKP}SKP)`
         }
       }
       
@@ -1249,8 +1249,8 @@ async function recordCourseCompletion(
       }
 
       // 6. コース完了ボーナスXP・SKP付与（既存システム使用）
-      const bonusXP = xpSettings.xp_bonus.course_completion || 100
-      const courseCompletionSKPBonus = xpSettings.skp.course_complete_bonus || 200
+      const bonusXP = xpSettings.xp_bonus.course_completion || 50
+      const courseCompletionSKPBonus = xpSettings.skp.course_complete_bonus || 50
       
       // まず現在の統計を取得
       const { data: currentStats } = await supabase
@@ -1296,6 +1296,34 @@ async function recordCourseCompletion(
         console.warn('⚠️ Course completion SKP transaction error:', skpTransaction.error)
       }
 
+      // 7. daily_xp_recordsにボーナスXPを追加
+      const today = new Date()
+      const dateString = today.getFullYear() + '-' + 
+        String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(today.getDate()).padStart(2, '0')
+      
+      const { data: existingDailyRecord } = await supabase
+        .from('daily_xp_records')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('date', dateString)
+        .single()
+      
+      if (existingDailyRecord) {
+        const { error: dailyUpdateError } = await supabase
+          .from('daily_xp_records')
+          .update({
+            bonus_xp_earned: (existingDailyRecord.bonus_xp_earned || 0) + bonusXP,
+            total_xp_earned: (existingDailyRecord.total_xp_earned || 0) + bonusXP
+          })
+          .eq('user_id', userId)
+          .eq('date', dateString)
+        
+        if (dailyUpdateError) {
+          console.warn('⚠️ Daily XP record bonus update error:', dailyUpdateError)
+        }
+      }
+      
       console.log(`🎊 Course completion recorded: +${bonusXP}XP, +${courseCompletionSKPBonus}SKP, +1 Badge`)
       return true
     

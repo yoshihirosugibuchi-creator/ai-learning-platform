@@ -245,7 +245,7 @@ export async function POST(request: Request) {
     const totalQuestionXP = actualTotalQuestionXP  // 実際の回答XP合計を使用
     const totalTimeSpent = answerInserts.reduce((sum, answer) => sum + answer.time_spent, 0) // 秒単位
     let bonusXP = 0
-    let wisdomCards = 0
+    // wisdomCardsは削除（実際のカード獲得時に更新されるため不要）
     
     // 統合SKP計算結果を使用
     const totalSKP = unifiedSKPResult.skpGained
@@ -267,11 +267,9 @@ export async function POST(request: Request) {
       accuracyBonus = calculateBonusXP('quiz_accuracy_80', xpSettings)
     }
 
-    // 格言カード統計カウンター（実際の処理は /api/cards/wisdom で実行）
-    if (body.accuracy_rate >= 70.0) {
-      wisdomCards = 1 // 統計カウンター更新のみ
-      console.log('📊 Wisdom card counter updated for accuracy:', body.accuracy_rate)
-    }
+    // 格言カード統計カウンター（削除：実際のカード獲得時に更新されるため）
+    // wisdomCardsは実際のカード獲得とは無関係なので、ここでは更新しない
+    // 実際のカード獲得は addWisdomCardToCollection で処理される
 
     bonusXP = accuracyBonus
     const totalXP = totalQuestionXP + bonusXP
@@ -302,7 +300,7 @@ export async function POST(request: Request) {
       .update({
         total_xp: totalXP,
         bonus_xp: bonusXP,
-        wisdom_cards_awarded: wisdomCards,
+        wisdom_cards_awarded: 0, // 実際のカード獲得は別APIで処理
         status: 'completed'
       })
       .eq('id', sessionId)
@@ -357,7 +355,7 @@ export async function POST(request: Request) {
       // 🆕 クイズセッション統計追加
       quiz_perfect_sessions: (existingStats?.quiz_perfect_sessions || 0) + (isPerfectSession ? 1 : 0),
       quiz_80plus_sessions: (existingStats?.quiz_80plus_sessions || 0) + (is80PlusSession ? 1 : 0),
-      wisdom_cards_total: (existingStats?.wisdom_cards_total || 0) + wisdomCards,
+      wisdom_cards_total: existingStats?.wisdom_cards_total || 0, // カード獲得時に更新されるため、ここでは更新しない
       knowledge_cards_total: existingStats?.knowledge_cards_total || 0,
       badges_total: existingStats?.badges_total || 0,
       current_level: newCurrentLevel,
@@ -439,14 +437,15 @@ export async function POST(request: Request) {
       date: dateString,
       quiz_sessions: (existingDailyRecord?.quiz_sessions || 0) + 1,
       course_sessions: existingDailyRecord?.course_sessions || 0,
-      quiz_xp_earned: (existingDailyRecord?.quiz_xp_earned || 0) + totalXP,
+      // XP計算（重複を排除）
+      quiz_xp_earned: (existingDailyRecord?.quiz_xp_earned || 0) + totalQuestionXP, // bonusを除いた問題XPのみ
       course_xp_earned: existingDailyRecord?.course_xp_earned || 0,
-      total_xp_earned: (existingDailyRecord?.total_xp_earned || 0) + totalXP,
       bonus_xp_earned: (existingDailyRecord?.bonus_xp_earned || 0) + bonusXP,
-      // 学習時間統計
-      quiz_time_seconds: (existingDailyRecord?.quiz_time_seconds || 0) + totalTimeSpent,
+      total_xp_earned: (existingDailyRecord?.total_xp_earned || 0) + totalXP, // = quiz_xp + course_xp + bonus_xp
+      // 学習時間統計（quiz_sessionsから正しく取得）
+      quiz_time_seconds: (existingDailyRecord?.quiz_time_seconds || 0) + durationSeconds, // セッション全体の時間を使用
       course_time_seconds: existingDailyRecord?.course_time_seconds || 0,
-      total_time_seconds: (existingDailyRecord?.total_time_seconds || 0) + totalTimeSpent
+      total_time_seconds: (existingDailyRecord?.total_time_seconds || 0) + durationSeconds
     }
 
     let dailyRecordError
