@@ -283,6 +283,14 @@ export async function POST(request: Request) {
 
     // 7. 統一回答ログシステム: コース確認クイズ回答をquiz_answersテーブルに記録
     if (isFirstCompletion) {
+      console.log('📝 Recording quiz answer:', {
+        quiz_user_answer: body.quiz_user_answer,
+        quiz_time_spent: body.quiz_time_spent,
+        session_quiz_correct: body.session_quiz_correct,
+        hasQuizUserAnswer: body.quiz_user_answer !== undefined && body.quiz_user_answer !== null,
+        hasQuizTimeSpent: body.quiz_time_spent !== undefined && body.quiz_time_spent !== null
+      })
+      
       const { error: answerInsertError } = await supabase
         .from('quiz_answers')
         .insert({
@@ -488,7 +496,7 @@ export async function POST(request: Request) {
         console.log('✅ Database completion recording results:', { themeCompleted, courseCompleted })
         
         // 🔧 修正: テーマ・コース完了記録後に統計更新（タイミング修正）
-        if (earnedXP > 0) {
+        if (earnedXP > 0 || totalSKP > 0) {
           // 1. カテゴリー・サブカテゴリー統計更新
           console.log('📊 Updating category and subcategory stats after completion processing...')
           await updateCategoryAndSubcategoryStats(supabase, userId, body, earnedXP)
@@ -1027,59 +1035,8 @@ async function recordThemeCompletion(
       // ✅ course_themes_completed統計は実際のレコード数ベースで自動計算されるため個別更新不要
       console.log('📊 Theme completion statistics will be auto-calculated from actual records')
 
-      // 4. ナレッジカード付与（クライアント側で既に処理済みだが、DB整合性のため実行）
-      const cardId = Math.abs(`theme_${body.theme_id}`.split('').reduce((a, b) => a + b.charCodeAt(0), 0))
-      
-      // 既存のナレッジカードをチェック
-      const { data: existingCard } = await supabase
-        .from('knowledge_card_collection')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('card_id', cardId)
-        .single()
-      
-      let knowledgeCardError = null
-
-      if (existingCard) {
-        // 既存の場合はカウントを増やす（通常はクライアント側で追加済み）
-        const { error } = await supabase
-          .from('knowledge_card_collection')
-          .update({
-            count: (existingCard.count || 0) + 1,
-            last_obtained_at: new Date().toISOString()
-          })
-          .eq('id', existingCard.id)
-        
-        knowledgeCardError = error
-        
-        if (knowledgeCardError) {
-          console.warn('⚠️ Knowledge card update error:', knowledgeCardError)
-        } else {
-          console.log('🃏 Knowledge card count updated (DB sync)')
-        }
-      } else {
-        // クライアント側で追加されていない場合の新規作成
-        const knowledgeCardData = {
-          user_id: userId,
-          card_id: cardId,
-          count: 1,
-          obtained_at: new Date().toISOString(),
-          last_obtained_at: new Date().toISOString(),
-          created_at: new Date().toISOString()
-        }
-        
-        const { error } = await supabase
-          .from('knowledge_card_collection')
-          .insert(knowledgeCardData)
-        
-        knowledgeCardError = error
-        
-        if (knowledgeCardError) {
-          console.warn('⚠️ Knowledge card insert error (backup):', knowledgeCardError)
-        } else {
-          console.log('🃏 Knowledge card awarded (DB backup)')
-        }
-      }
+      // 4. ナレッジカード処理は統合V2システムで管理
+      // user_knowledge_collection_v2への記録はクライアント側で完了済み
 
       console.log('✅ Theme completion recorded')
       return true
@@ -1255,7 +1212,7 @@ async function recordCourseCompletion(
       // まず現在の統計を取得
       const { data: currentStats } = await supabase
         .from('user_xp_stats_v2')
-        .select('total_xp, bonus_xp, total_skp, bonus_skp, badges_total')
+        .select('total_xp, bonus_xp, total_skp, bonus_skp, course_skp, badges_total')
         .eq('user_id', userId)
         .single()
 
@@ -1267,7 +1224,7 @@ async function recordCourseCompletion(
             total_xp: (currentStats?.total_xp || 0) + bonusXP,
             bonus_xp: (currentStats?.bonus_xp || 0) + bonusXP,
             total_skp: (currentStats?.total_skp || 0) + courseCompletionSKPBonus,
-            bonus_skp: (currentStats?.bonus_skp || 0) + courseCompletionSKPBonus,
+            course_skp: (currentStats?.course_skp || 0) + courseCompletionSKPBonus,
             badges_total: (currentStats?.badges_total || 0) + 1,
             updated_at: new Date().toISOString()
           } as UserXPStatsV2Update)
