@@ -381,7 +381,7 @@ export async function POST(request: Request) {
           type: 'earned',
           amount: totalSKP,
           source: `course_session_${body.session_id}`,
-          description: `Course session: ${body.course_id} (${body.session_quiz_correct ? 'Correct' : 'Incorrect'} confirmation quiz)${body.session_quiz_correct ? ' + Perfect bonus' : ''}`,
+          description: `コース学習完了: ${body.course_id} (確認クイズ${body.session_quiz_correct ? '正解' : '不正解'})`,
           created_at: new Date().toISOString()
         })
 
@@ -1238,7 +1238,7 @@ async function recordCourseCompletion(
             type: 'earned',
             amount: courseCompletionSKPBonus,
             source: `course_completion_${body.course_id}`,
-            description: `Course completion bonus: ${body.course_id}`,
+            description: `コース完了ボーナス: ${body.course_id}`,
             created_at: new Date().toISOString()
           } as SKPTransactionInsert) : Promise.resolve({ error: null })
       ])
