@@ -18,6 +18,7 @@ export interface UserKnowledgeCard {
   user_id: string
   theme_id: string
   obtained_at: string | null
+  created_at?: string | null
   // カード詳細は learning_themes.reward_card_data から取得
   card_data?: RewardCardData
   // ナビゲーション用の追加情報
@@ -190,6 +191,7 @@ export async function getUserKnowledgeCollection(userId: string): Promise<UserKn
         user_id: item.user_id,
         theme_id: item.theme_id,
         obtained_at: item.obtained_at,
+        created_at: item.created_at || null,
         card_data: themeData?.reward_card_data as unknown as RewardCardData
       })
     }

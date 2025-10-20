@@ -29,12 +29,12 @@ import {
   getWisdomCardStats, 
   hasWisdomCard, 
   getWisdomCardCount,
-  getUserKnowledgeCollection,
-  getKnowledgeCardStats as getOldKnowledgeCardStats,
   WisdomCardCollection
 } from '@/lib/supabase-cards'
 import {
-  UserKnowledgeCard
+  UserKnowledgeCard,
+  getKnowledgeCardStats,
+  getUserKnowledgeCollection
 } from '@/lib/knowledge-cards-v2'
 import {
   UserKnowledgeCollectionV2
@@ -179,10 +179,17 @@ export default function CollectionPage() {
           console.log(`🔄 LOADING KNOWLEDGE CARDS for user: ${user.id}`)
           
           // Step 1: Get user's acquired cards
-          const [userCollection, stats] = await Promise.all([
+          const [userCollection, v2Stats] = await Promise.all([
             getUserKnowledgeCollection(user.id),
-            getOldKnowledgeCardStats(user.id)
+            getKnowledgeCardStats(user.id)
           ])
+
+          // Adapt V2 stats to V1 format for compatibility
+          const stats = {
+            totalObtained: v2Stats.totalCards,
+            totalCards: v2Stats.totalCards,
+            uniqueCards: v2Stats.totalCards
+          }
 
           console.log(`📚 USER COLLECTION LOADED for user ${user?.id}:`, userCollection)
           console.log('📊 Knowledge card stats:', stats)

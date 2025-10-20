@@ -52,6 +52,9 @@ export default function AdminLayout({
                   {pathname.includes('categories') && 'カテゴリー管理'}
                   {pathname.includes('subcategories') && 'サブカテゴリー管理'}
                   {pathname.includes('quiz-management') && 'クイズ問題管理'}
+                  {pathname.includes('review-management') && 'クイズレビュー管理'}
+                  {pathname.includes('production-import') && 'クイズ本番取込'}
+                  {pathname.includes('quiz-generator') && 'クイズ生成'}
                   {pathname.includes('industry-targets') && '業界目標管理'}
                   {pathname.includes('wisdom-cards') && '格言カード管理'}
                 </span>

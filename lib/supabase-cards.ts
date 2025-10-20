@@ -396,41 +396,7 @@ export async function getWisdomCardStats(userId: string) {
   }
 }
 
-// Migrate old localStorage keys to new user ID
-function migrateLocalStorageCards(oldUserId: string, newUserId: string) {
-  if (typeof window === 'undefined' || !window.localStorage) return
-  
-  try {
-    const oldKeys = Object.keys(localStorage).filter(key => 
-      key.startsWith(`knowledge_card_${oldUserId}_`)
-    )
-    
-    console.log(`🔄 Migrating ${oldKeys.length} localStorage cards from ${oldUserId} to ${newUserId}`)
-    
-    oldKeys.forEach(oldKey => {
-      const cardData = localStorage.getItem(oldKey)
-      if (cardData) {
-        try {
-          const parsed = JSON.parse(cardData)
-          parsed.user_id = newUserId // Update user_id
-          
-          // Create new key with new user ID
-          const cardId = oldKey.split('_').pop()
-          const newKey = `knowledge_card_${newUserId}_${cardId}`
-          
-          localStorage.setItem(newKey, JSON.stringify(parsed))
-          localStorage.removeItem(oldKey) // Remove old key
-          
-          console.log(`✅ Migrated card: ${oldKey} → ${newKey}`)
-        } catch (error) {
-          console.error(`❌ Failed to migrate card ${oldKey}:`, error)
-        }
-      }
-    })
-  } catch (error) {
-    console.error('❌ Error during localStorage migration:', error)
-  }
-}
+// Deprecated localStorage migration function removed - not needed for V2 system
 
 import { UserKnowledgeCollectionV2 } from './types/knowledge-cards-v2'
 
@@ -450,173 +416,31 @@ export async function getUserKnowledgeCollection(userId: string): Promise<UserKn
   return (data || []) as UserKnowledgeCollectionV2[]
 }
 
-// Legacy Knowledge Card Functions - V1 System (for backward compatibility)
-export async function getUserKnowledgeCards(userId: string): Promise<KnowledgeCardCollection[]> {
-  // Migrate old test-user-123 cards if they exist
-  if (userId === '550e8400-e29b-41d4-a716-446655440000') {
-    migrateLocalStorageCards('test-user-123', userId)
-  }
-  const { data, error } = await supabase
-    .from('knowledge_card_collection')
-    .select('*')
-    .eq('user_id', userId)
-    .order('obtained_at', { ascending: false })
+// =============================================================================
+// DEPRECATED LEGACY FUNCTIONS - DO NOT USE
+// =============================================================================
+// These functions are deprecated and will be removed.
+// Use knowledge-cards-v2.ts functions instead.
 
-  if (error) {
-    console.error('Error fetching knowledge cards:', error)
-    
-    // Fallback to localStorage
-    if (typeof window !== 'undefined' && window.localStorage) {
-      try {
-        const localCards: KnowledgeCardCollection[] = []
-        // Also check for old test-user-123 keys for backward compatibility
-        const localStorageKeys = Object.keys(localStorage).filter(key => 
-          key.startsWith(`knowledge_card_${userId}_`) || 
-          key.startsWith('knowledge_card_test-user-123_')
-        )
-        
-        localStorageKeys.forEach(key => {
-          try {
-            const cardData = localStorage.getItem(key)
-            if (cardData) {
-              const parsedCard = JSON.parse(cardData)
-              // Update user_id to current user for compatibility
-              parsedCard.user_id = userId
-              localCards.push(parsedCard)
-            }
-          } catch (parseError) {
-            console.error('Error parsing localStorage card data:', parseError)
-          }
-        })
-        
-        console.log(`📱 Loaded ${localCards.length} knowledge cards from localStorage for user ${userId}`)
-        return localCards
-      } catch (localError) {
-        console.error('Error loading from localStorage:', localError)
-        return []
-      }
-    }
-    
-    return []
-  }
-
-  // DBデータをKnowledgeCardCollection形式に変換
-  return (data || []).map(card => ({
-    id: card.id,
-    user_id: card.user_id || '',
-    card_id: card.card_id,
-    count: card.count || 0,
-    obtained_at: card.obtained_at || new Date().toISOString(),
-    last_obtained_at: card.last_obtained_at || new Date().toISOString(),
-    created_at: card.created_at || undefined
-  }))
+/**
+ * @deprecated Use getUserKnowledgeCollection from knowledge-cards-v2.ts
+ */
+export function getUserKnowledgeCards(): Promise<never> {
+  throw new Error('DEPRECATED: Use getUserKnowledgeCollection from knowledge-cards-v2.ts')
 }
 
-// LEGACY: Use acquireKnowledgeCard from knowledge-cards-v2.ts instead
-export async function addKnowledgeCardToCollection(userId: string, cardId: string | number): Promise<{ count: number; isNew: boolean }> {
-  const numericCardId = getCardNumericId(cardId)
-  
-  console.log('🔍 CARD ACQUISITION ATTEMPT:', {
-    originalCardId: cardId,
-    numericCardId,
-    userId
-  })
-  
-  // Check if card already exists
-  const { data: existing } = await supabase
-    .from('knowledge_card_collection')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('card_id', numericCardId)
-    .single()
-    
-  console.log('🔍 EXISTING CARD CHECK:', { existing, numericCardId, userId })
-
-  const now = new Date().toISOString()
-
-  if (existing) {
-    // Update existing card count
-    const { data, error } = await supabase
-      .from('knowledge_card_collection')
-      .update({
-        count: (existing.count || 0) + 1,
-        last_obtained_at: now
-      })
-      .eq('id', existing.id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('❌ Error updating knowledge card:', error)
-      return { count: existing.count || 0, isNew: false }
-    }
-
-    console.log('✅ CARD COUNT UPDATED:', { cardId, numericCardId, newCount: data.count })
-    return { count: data.count || 0, isNew: false }
-  } else {
-    // Add new card
-    const { data, error } = await supabase
-      .from('knowledge_card_collection')
-      .insert([{
-        user_id: userId,
-        card_id: numericCardId,
-        count: 1,
-        obtained_at: now,
-        last_obtained_at: now
-      }])
-      .select()
-      .single()
-
-    if (error) {
-      console.error('❌ Error adding knowledge card:', error)
-      console.error('❌ Insert error details:', { error, cardId, numericCardId, userId })
-      
-      // Fallback to localStorage if database fails
-      console.warn('⚠️ Database failed, using localStorage fallback for card acquisition')
-      if (typeof window !== 'undefined' && window.localStorage) {
-        try {
-          // Check if card already exists in localStorage (including old test-user-123 keys)
-          const existingKeys = Object.keys(localStorage).filter(key => 
-            key.includes(`_${numericCardId}`) && 
-            (key.startsWith(`knowledge_card_${userId}_`) || key.startsWith('knowledge_card_test-user-123_'))
-          )
-          
-          if (existingKeys.length > 0) {
-            console.log('📱 Card already exists in localStorage:', existingKeys[0])
-            return { count: 1, isNew: false }
-          }
-          
-          const localKey = `knowledge_card_${userId}_${numericCardId}`
-          const cardData = {
-            user_id: userId,
-            card_id: numericCardId,
-            count: 1,
-            obtained_at: new Date().toISOString(),
-            last_obtained_at: new Date().toISOString()
-          }
-          localStorage.setItem(localKey, JSON.stringify(cardData))
-          console.log('💾 Knowledge card saved to localStorage:', { cardId, numericCardId, userId })
-          return { count: 1, isNew: true }
-        } catch (localError) {
-          console.error('Failed to save card to localStorage:', localError)
-        }
-      }
-      return { count: 0, isNew: false }
-    }
-
-    console.log('🎉 NEW CARD ADDED TO COLLECTION:', { cardId, numericCardId, userId, data })
-    return { count: 1, isNew: true }
-  }
+/**
+ * @deprecated Use acquireKnowledgeCard from knowledge-cards-v2.ts
+ */
+export function addKnowledgeCardToCollection(): Promise<never> {
+  throw new Error('DEPRECATED: Use acquireKnowledgeCard from knowledge-cards-v2.ts')
 }
 
-export async function getKnowledgeCardStats(userId: string) {
-  const cards = await getUserKnowledgeCards(userId)
-  
-  return {
-    totalObtained: cards.length,
-    totalCards: cards.reduce((sum, card) => sum + card.count, 0),
-    uniqueCards: cards.length
-  }
+/**
+ * @deprecated Use getKnowledgeCardStats from knowledge-cards-v2.ts
+ */
+export function getKnowledgeCardStats(): Promise<never> {
+  throw new Error('DEPRECATED: Use getKnowledgeCardStats from knowledge-cards-v2.ts')
 }
 
 // Check if user has specific card
@@ -660,17 +484,32 @@ export async function hasWisdomCard(userId: string, cardId: number): Promise<boo
   }
 }
 
+/**
+ * V2システム対応: ナレッジカード保有確認
+ * @param userId ユーザーID
+ * @param cardId カードID (theme_id)
+ */
 export async function hasKnowledgeCard(userId: string, cardId: string | number): Promise<boolean> {
-  // V2システム: themeIdベースで確認
-  const themeId = typeof cardId === 'string' ? cardId : `theme_${cardId}`
-  const { data } = await supabase
-    .from('user_knowledge_collection_v2')
-    .select('theme_id')
-    .eq('user_id', userId)
-    .eq('theme_id', themeId)
-    .single()
+  try {
+    // V2システム: themeIdベースで確認
+    const themeId = typeof cardId === 'string' ? cardId : `theme_${cardId}`
+    const { data, error } = await supabase
+      .from('user_knowledge_collection_v2')
+      .select('theme_id')
+      .eq('user_id', userId)
+      .eq('theme_id', themeId)
+      .single()
 
-  return !!data
+    if (error && error.code !== 'PGRST116') {
+      console.warn('Error checking knowledge card V2:', error)
+      return false
+    }
+
+    return !!data
+  } catch (error) {
+    console.warn('Exception in hasKnowledgeCard V2:', error)
+    return false
+  }
 }
 
 // Get card count
@@ -698,17 +537,33 @@ export async function getWisdomCardCount(userId: string, cardId: number): Promis
   }
 }
 
+/**
+ * V2システム対応: ナレッジカード獲得数確認
+ * @param userId ユーザーID
+ * @param cardId カードID (theme_id)
+ * @returns 獲得済み(1)か未獲得(0)
+ */
 export async function getKnowledgeCardCount(userId: string, cardId: string | number): Promise<number> {
-  // V2システム: themeIdベースで検索
-  const themeId = typeof cardId === 'string' ? cardId : `theme_${cardId}`
-  const { data } = await supabase
-    .from('user_knowledge_collection_v2')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('theme_id', themeId)
-    .single()
+  try {
+    // V2システム: themeIdベースで検索
+    const themeId = typeof cardId === 'string' ? cardId : `theme_${cardId}`
+    const { data, error } = await supabase
+      .from('user_knowledge_collection_v2')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('theme_id', themeId)
+      .single()
 
-  return data ? 1 : 0 // V2では獲得済み(1)か未獲得(0)
+    if (error && error.code !== 'PGRST116') {
+      console.warn('Error getting knowledge card count V2:', error)
+      return 0
+    }
+
+    return data ? 1 : 0 // V2では獲得済み(1)か未獲得(0)
+  } catch (error) {
+    console.warn('Exception in getKnowledgeCardCount V2:', error)
+    return 0
+  }
 }
 
 // Review knowledge card (update review timestamp in V2 system)

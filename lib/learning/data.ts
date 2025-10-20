@@ -322,29 +322,37 @@ export async function getAvailableLearningCourses(): Promise<{
 }
 
 // 学習進捗の取得・保存（Supabase使用）
-import { getLearningProgressSupabase, saveLearningProgressSupabase } from '@/lib/supabase-learning'
+import { getLearningProgressSupabase as _getLearningProgressSupabase, saveLearningProgressSupabase as _saveLearningProgressSupabase } from '@/lib/supabase-learning'
 
-export async function getLearningProgress(userId: string): Promise<Record<string, unknown>> {
-  try {
-    const progress = await getLearningProgressSupabase(userId)
-    return progress
-  } catch (error) {
-    console.error('Error loading learning progress from Supabase:', error)
-    return {}
-  }
+/**
+ * @deprecated この関数は廃止されました。
+ * 現在はcourse_session_completions / course_theme_completionsテーブルで
+ * コース完了を管理しています。
+ */
+export async function getLearningProgress(_userId: string): Promise<Record<string, unknown>> {
+  console.warn('⚠️ getLearningProgress: DEPRECATED - この関数は廃止されました')
+  console.warn('📋 コース完了は course_session_completions / course_theme_completions で管理されます')
+  
+  // 空のオブジェクトを返す（既存呼び出し元でエラーにならないように）
+  return {}
 }
 
-export async function saveLearningProgress(userId: string, courseId: string, genreId: string, themeId: string, sessionId: string, completed: boolean): Promise<boolean> {
-  try {
-    const success = await saveLearningProgressSupabase(userId, courseId, genreId, themeId, sessionId, completed)
-    if (!success) {
-      console.error('Failed to save learning progress to Supabase')
-    }
-    return success
-  } catch (error) {
-    console.error('Error saving learning progress to Supabase:', error)
-    return false
-  }
+/**
+ * @deprecated この関数は廃止されました。
+ * 現在はcourse_session_completions / course_theme_completionsテーブルで
+ * コース完了を管理しています。
+ * 
+ * XP保存は /api/xp-save/course で自動的に行われます。
+ * user_settingsテーブルは使用禁止です。
+ */
+export async function saveLearningProgress(_userId: string, _courseId: string, _genreId: string, _themeId: string, _sessionId: string, _completed: boolean): Promise<boolean> {
+  console.warn('⚠️ saveLearningProgress: DEPRECATED - この関数は廃止されました')
+  console.warn('📋 コース完了は course_session_completions / course_theme_completions で管理されます')
+  console.warn('💾 XP保存は /api/xp-save/course で自動実行されます')
+  console.warn('🚫 user_settingsテーブルは使用禁止です')
+  
+  // 何もせずに成功を返す（既存呼び出し元でエラーにならないように）
+  return true
 }
 
 // 学習統計の計算（XPシステム統合版）

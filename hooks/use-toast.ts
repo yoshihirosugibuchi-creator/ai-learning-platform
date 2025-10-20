@@ -1,6 +1,13 @@
 import { useState } from 'react'
 
 interface Toast {
+  id: string
+  title: string
+  description?: string
+  variant?: 'default' | 'destructive'
+}
+
+interface ToastInput {
   title: string
   description?: string
   variant?: 'default' | 'destructive'
@@ -9,16 +16,18 @@ interface Toast {
 export function useToast() {
   const [toasts, setToasts] = useState<Toast[]>([])
 
-  const toast = (toast: Toast) => {
-    setToasts(prev => [...prev, toast])
+  const toast = (toastInput: ToastInput) => {
+    const id = Date.now().toString()
+    const newToast = { ...toastInput, id }
     
-    // 3秒後に自動で削除
-    setTimeout(() => {
-      setToasts(prev => prev.slice(1))
-    }, 3000)
+    setToasts(prev => [...prev, newToast])
     
-    console.log('Toast:', toast.title, toast.description)
+    console.log('Toast:', toastInput.title, toastInput.description)
   }
 
-  return { toast, toasts }
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id))
+  }
+
+  return { toast, toasts, removeToast }
 }

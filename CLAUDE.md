@@ -2,8 +2,67 @@
 
 **対象**: Claude Code AI Assistant  
 **目的**: 開発・修正・デバッグ作業時の必須プロセス・参照ドキュメント  
-**最終更新**: 2025年10月16日  
+**最終更新**: 2025年10月20日  
 **重要**: XP/SKP計算停止問題の再発防止システム導入
+
+---
+
+## 🎨 **UI/UXガイドライン（必須遵守）**
+
+### **🚫 ブラウザ標準ダイアログの使用禁止**
+
+```typescript
+// ❌ 絶対に禁止 - ブラウザ標準ダイアログは使用しない
+window.alert('メッセージ')
+window.confirm('確認メッセージ')
+window.prompt('入力してください')
+
+// ❌ 以下のパターンも禁止
+if (window.confirm('削除しますか？')) { ... }
+const input = window.prompt('名前を入力')
+```
+
+### **✅ 必須：プロジェクト標準UIの使用**
+
+```typescript
+// ✅ トースト通知を使用（通知・成功・エラーメッセージ）
+import { useToast } from '@/hooks/use-toast'
+
+const { toast } = useToast()
+toast({
+  title: 'タイトル',
+  description: 'メッセージ内容',
+  variant: 'default' | 'destructive'
+})
+
+// ✅ カスタムモーダルを使用（確認ダイアログ）
+const [showConfirmModal, setShowConfirmModal] = useState(false)
+
+// モーダル表示
+{showConfirmModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+      {/* モーダル内容 */}
+    </div>
+  </div>
+)}
+
+// ✅ フォーム入力は専用モーダル・インラインフォームを使用
+```
+
+### **📝 UI実装ルール**
+
+1. **通知・メッセージ**: `useToast` フックを使用
+2. **確認ダイアログ**: カスタムモーダルコンポーネントを実装
+3. **入力フォーム**: 専用モーダルまたはインラインフォームを使用
+4. **エラー表示**: トースト通知（variant: 'destructive'）を使用
+5. **成功表示**: トースト通知（variant: 'default'）を使用
+
+### **🎯 理由**
+- ブラウザ標準ダイアログは「localhost:3000 のメッセージ」等の表示でUXが悪い
+- プロジェクトのデザインシステムと統一性がない
+- モバイル対応が不十分
+- カスタマイズ性がない
 
 ---
 

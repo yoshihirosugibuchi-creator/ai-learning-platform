@@ -90,13 +90,14 @@ export default function LearningSession({
   const [viewState, setViewState] = useState<ViewState>('content')
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0)
   const [quizAnswers, setQuizAnswers] = useState<{ [key: number]: string }>({})
+  const [quizAnswerIndices, setQuizAnswerIndices] = useState<{ [key: number]: number }>({})
   const [quizResults, setQuizResults] = useState<{ [key: number]: boolean }>({})
   const [showQuizResult, setShowQuizResult] = useState(false)
   const [sessionCompleted, setSessionCompleted] = useState(false)
   const [_cardAcquired, setCardAcquired] = useState(false)
   const [_badgeAwarded, _setBadgeAwarded] = useState<UserBadge | null>(null)
   const [startTime] = useState(new Date())
-  const [_quizStartTime, setQuizStartTime] = useState<Date | null>(null)
+  const [quizStartTime, setQuizStartTime] = useState<Date | null>(null)
   const [isCompletingSession, setIsCompletingSession] = useState(false)
   const [_courseName, setCourseName] = useState<string>('Learning Course')
   const [isFirstCompletion, setIsFirstCompletion] = useState<boolean | null>(null)
@@ -268,6 +269,7 @@ export default function LearningSession({
       setViewState('quiz')
       setCurrentQuizIndex(0)
       setQuizAnswers({})
+      setQuizAnswerIndices({})
       setQuizResults({})
       setShowQuizResult(false)
     } else {
@@ -282,6 +284,11 @@ export default function LearningSession({
     setQuizAnswers(prev => ({
       ...prev,
       [currentQuizIndex]: currentQuiz.options[answerIndex]
+    }))
+    
+    setQuizAnswerIndices(prev => ({
+      ...prev,
+      [currentQuizIndex]: answerIndex
     }))
     
     setQuizResults(prev => ({
@@ -323,6 +330,18 @@ export default function LearningSession({
     const endTime = new Date()
     const durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000)
     const quizCorrect = calculateQuizCorrect()
+    
+    // クイズの解答時間を計算（クイズ開始時間から終了まで）
+    let quizTimeSpent: number | undefined
+    if (hasQuiz && quizStartTime) {
+      quizTimeSpent = Math.floor((endTime.getTime() - quizStartTime.getTime()) / 1000)
+    }
+    
+    // 選択した回答のインデックスを取得（クイズがある場合のみ）
+    let quizUserAnswer: number | null = null
+    if (hasQuiz && quizAnswerIndices[0] !== undefined) {
+      quizUserAnswer = quizAnswerIndices[0] // コース確認クイズは1問のみ
+    }
 
     const requestBody = {
       session_id: session.id,
@@ -336,13 +355,22 @@ export default function LearningSession({
       session_start_time: startTime.toISOString(),
       session_end_time: endTime.toISOString(),
       duration_seconds: durationSeconds,
-      quiz_time_spent: hasQuiz ? durationSeconds : undefined,
+      quiz_time_spent: quizTimeSpent, // 実際のクイズ解答時間
+      quiz_user_answer: quizUserAnswer, // 選択した回答のインデックス
       // クライアント側完了判定結果を追加
       client_theme_completed: clientThemeCompleted,
       client_course_completed: clientCourseCompleted
     }
 
     console.log('💾 Saving course session progress:', requestBody)
+    console.log('🎯 Quiz debug info:', {
+      hasQuiz,
+      quizStartTime,
+      quizTimeSpent,
+      quizAnswerIndices,
+      quizUserAnswer,
+      quizCorrect
+    })
 
     // Supabaseセッションからトークンを取得
     const { data: { session: authSession } } = await supabase.auth.getSession()

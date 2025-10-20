@@ -13,6 +13,8 @@ import { WisdomCardMaster } from '@/lib/database-types-official'
 import { getCategoryDisplayName, getRarityConfig } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
 import { WisdomCard as WisdomCardType } from '@/lib/cards'
+import { useToast } from '@/hooks/use-toast'
+import { ToastContainer } from '@/components/ui/toast'
 
 interface WisdomCardFormData {
   id?: number
@@ -59,6 +61,7 @@ interface Subcategory {
 
 
 export default function WisdomCardAdminPage() {
+  const { toast, toasts, removeToast } = useToast()
   const [cards, setCards] = useState<WisdomCardMaster[]>([])
   const [editingCard, setEditingCard] = useState<WisdomCardFormData | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -275,13 +278,17 @@ export default function WisdomCardAdminPage() {
     } catch (error) {
       console.error('❌ 保存エラー:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      alert(`保存に失敗しました: ${errorMessage}`)
+      toast({
+        title: '保存失敗',
+        description: `保存に失敗しました: ${errorMessage}`,
+        variant: 'destructive'
+      })
     }
   }
 
   // カード削除（絶版化対応）
   const handleDeleteCard = async (cardId: number) => {
-    if (!confirm('このカードを削除しますか？\n（ユーザーが所有中の場合は絶版化されます）')) return
+    if (!window.confirm('このカードを削除しますか？\n\n📝 ユーザーが所有中の場合は絶版化されます。\n新規発行を停止し、コレクションでは継続表示されます。')) return
 
     try {
       // Supabaseセッションからアクセストークンを取得
@@ -289,7 +296,11 @@ export default function WisdomCardAdminPage() {
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.access_token) {
-        alert('認証セッションがありません。再ログインしてください。')
+        toast({
+          title: '認証エラー',
+          description: '認証セッションがありません。再ログインしてください。',
+          variant: 'destructive'
+        })
         return
       }
       
@@ -307,21 +318,31 @@ export default function WisdomCardAdminPage() {
       const result = await response.json()
       
       if (result.discontinued) {
-        alert(`${result.message}\n\n絶版カードとして保持されます。\nユーザーのコレクションには引き続き表示されます。`)
+        toast({
+          title: 'カード削除完了',
+          description: `${result.message}\n\n絶版カードとして保持されます。\nユーザーのコレクションには引き続き表示されます。`
+        })
       } else {
-        alert('カードを完全に削除しました')
+        toast({
+          title: '削除完了',
+          description: 'カードを完全に削除しました'
+        })
       }
 
       await fetchCards()
     } catch (error) {
       console.error('削除エラー:', error)
-      alert('削除に失敗しました')
+      toast({
+        title: '削除失敗',
+        description: '削除に失敗しました',
+        variant: 'destructive'
+      })
     }
   }
 
   // カード再活性化
   const handleReactivateCard = async (cardId: number) => {
-    if (!confirm('このカードを再活性化しますか？\n（新規発行対象に復活します）')) return
+    if (!window.confirm('このカードを再活性化しますか？\n\n🔄 新規発行対象に復活し、ユーザーが再び獲得可能になります。')) return
 
     try {
       // Supabaseセッションからアクセストークンを取得
@@ -329,7 +350,11 @@ export default function WisdomCardAdminPage() {
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.access_token) {
-        alert('認証セッションがありません。再ログインしてください。')
+        toast({
+          title: '認証エラー',
+          description: '認証セッションがありません。再ログインしてください。',
+          variant: 'destructive'
+        })
         return
       }
       
@@ -349,11 +374,18 @@ export default function WisdomCardAdminPage() {
         throw new Error('再活性化に失敗しました')
       }
 
-      alert('カードを再活性化しました')
+      toast({
+        title: '再活性化完了',
+        description: 'カードを再活性化しました'
+      })
       await fetchCards()
     } catch (error) {
       console.error('再活性化エラー:', error)
-      alert('再活性化に失敗しました')
+      toast({
+        title: '再活性化失敗',
+        description: '再活性化に失敗しました',
+        variant: 'destructive'
+      })
     }
   }
 
@@ -776,6 +808,12 @@ export default function WisdomCardAdminPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* トースト表示 */}
+      <ToastContainer 
+        toasts={toasts} 
+        onRemoveToast={removeToast} 
+      />
     </div>
   )
 }

@@ -3,12 +3,15 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Settings, Save, RotateCcw } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { useToast } from '@/hooks/use-toast'
+import { ToastContainer } from '@/components/ui/toast'
 import { 
   getUserQuizSettings, 
   saveUserQuizSettings, 
@@ -26,11 +29,13 @@ const learningLevels = [
 
 export default function QuizPersonalizationSettings() {
   const { user } = useAuth()
+  const { toast, toasts, removeToast } = useToast()
   const [settings, setSettings] = useState<QuizPersonalizationSettings | null>(null)
   const [categories, setCategories] = useState<Array<{ id: string; name: string; type: 'basic' | 'industry' }>>([])
   const [_subcategories, setSubcategories] = useState<Array<{ id: string; name: string; categoryId: string }>>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showResetDialog, setShowResetDialog] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -112,22 +117,40 @@ export default function QuizPersonalizationSettings() {
     try {
       const result = await saveUserQuizSettings(user.id, settings)
       if (result.success) {
-        alert('設定を保存しました。')
+        toast({
+          title: '設定を保存しました',
+          description: 'クイズパーソナライズ設定が正常に更新されました。'
+        })
       } else {
-        alert('設定の保存に失敗しました: ' + result.error)
+        toast({
+          title: '設定の保存に失敗しました',
+          description: result.error,
+          variant: 'destructive'
+        })
       }
     } catch (error) {
       console.error('設定保存エラー:', error)
-      alert('設定の保存中にエラーが発生しました。')
+      toast({
+        title: '設定の保存中にエラーが発生しました',
+        description: 'しばらく時間をおいて再度お試しください。',
+        variant: 'destructive'
+      })
     } finally {
       setSaving(false)
     }
   }
 
   const handleReset = () => {
-    if (confirm('設定をデフォルトに戻しますか？')) {
-      setSettings(getDefaultQuizSettings())
-    }
+    setShowResetDialog(true)
+  }
+
+  const confirmReset = () => {
+    setSettings(getDefaultQuizSettings())
+    setShowResetDialog(false)
+    toast({
+      title: '設定をリセットしました',
+      description: 'デフォルト設定に戻りました。保存ボタンをクリックして設定を確定してください。'
+    })
   }
 
   if (loading) {
@@ -293,6 +316,38 @@ export default function QuizPersonalizationSettings() {
           </div>
         </div>
       </CardContent>
+
+      {/* リセット確認ダイアログ */}
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>設定をリセットしますか？</DialogTitle>
+            <DialogDescription>
+              現在の設定内容がすべてデフォルト値に戻ります。この操作は元に戻せません。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowResetDialog(false)}
+            >
+              キャンセル
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmReset}
+            >
+              リセット実行
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* トースト表示 */}
+      <ToastContainer 
+        toasts={toasts} 
+        onRemoveToast={removeToast} 
+      />
     </Card>
   )
 }

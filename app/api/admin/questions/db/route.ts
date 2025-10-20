@@ -11,13 +11,13 @@ type QuizQuestionRow = Database['public']['Tables']['quiz_questions']['Row']
 // DB対応版 - 問題データ取得
 export async function GET(request: NextRequest) {
   try {
-    // システム管理者権限チェック
+    // 管理者権限チェック（admin または system_admin）
     const { userId, role } = await getCurrentUserRole(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    if (role !== 'system_admin') {
-      return NextResponse.json({ error: 'System administrator access required' }, { status: 403 })
+    if (!['admin', 'system_admin'].includes(role || '')) {
+      return NextResponse.json({ error: 'Administrator access required' }, { status: 403 })
     }
     
     console.log('🔍 Admin: Fetching all questions from DB')
@@ -91,6 +91,14 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+    
+    // デバッグ: 受信したquestions配列の最初の数問をログ出力
+    console.log('🔍 Received questions sample:', questions.slice(0, 2).map((q, i) => ({
+      index: i + 1,
+      optionsType: Array.isArray(q.options) ? 'array' : typeof q.options,
+      optionsLength: Array.isArray(q.options) ? q.options.length : 'N/A',
+      optionsValue: q.options
+    })))
     
     console.log(`🚀 Admin: Starting bulk upsert for ${questions.length} questions`)
     

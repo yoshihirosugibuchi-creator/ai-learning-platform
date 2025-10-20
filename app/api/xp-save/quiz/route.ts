@@ -243,7 +243,6 @@ export async function POST(request: Request) {
     // 🔧 修正: quiz_answersの実際のearned_xp合計を使用（ハードコード計算を廃止）
     const actualTotalQuestionXP = answerInserts.reduce((sum, answer) => sum + answer.earned_xp, 0)
     const totalQuestionXP = actualTotalQuestionXP  // 実際の回答XP合計を使用
-    const totalTimeSpent = answerInserts.reduce((sum, answer) => sum + answer.time_spent, 0) // 秒単位
     let bonusXP = 0
     // wisdomCardsは削除（実際のカード獲得時に更新されるため不要）
     
@@ -294,13 +293,49 @@ export async function POST(request: Request) {
       }))
     })
     
-    // 5. セッション記録更新
+    // 5. カード処理（70%以上で付与）- セッション更新前に実行
+    let awardedCard = null
+    let isNewCard = false
+    let cardCount = 0
+    let wisdomCardsAwarded = 0  // 実際に付与されたカード数
+    
+    const cardAccuracyRate = (body.correct_answers / body.total_questions) * 100
+    
+    if (cardAccuracyRate >= 70) {
+      try {
+        console.log(`🎴 Processing wisdom card (accuracy >= 70%, using ${USE_DB_CARDS ? 'DB' : 'Static'})...`)
+        
+        // DB版またはレガシー版の選択
+        const randomCard = USE_DB_CARDS 
+          ? await getRandomWisdomCardFromDB(cardAccuracyRate)
+          : getRandomWisdomCard(cardAccuracyRate)
+          
+        const cardResult = await addWisdomCardToCollection(userId, randomCard.id)
+        
+        awardedCard = randomCard
+        isNewCard = cardResult.isNew
+        cardCount = cardResult.count
+        wisdomCardsAwarded = 1  // カード付与成功
+        
+        console.log('✅ Wisdom card awarded:', {
+          cardId: randomCard.id,
+          author: randomCard.author,
+          isNew: cardResult.isNew,
+          count: cardResult.count
+        })
+      } catch (cardError) {
+        console.error('❌ Card processing error (non-critical):', cardError)
+        // カードエラーでもクイズ保存は成功として扱う
+      }
+    }
+    
+    // 6. セッション記録更新
     const { error: sessionUpdateError } = await supabase
       .from('quiz_sessions')
       .update({
         total_xp: totalXP,
         bonus_xp: bonusXP,
-        wisdom_cards_awarded: 0, // 実際のカード獲得は別APIで処理
+        wisdom_cards_awarded: wisdomCardsAwarded,  // 実際の付与数を記録
         status: 'completed'
       })
       .eq('id', sessionId)
@@ -309,7 +344,7 @@ export async function POST(request: Request) {
       console.warn('Session update error:', sessionUpdateError)
     }
 
-    // 6. ユーザー全体統計を直接更新（トリガーレス v2テーブル使用）
+    // 7. ユーザー全体統計を直接更新（トリガーレス v2テーブル使用）
     // まず既存の統計を取得
     const { data: existingStats } = await supabase
       .from('user_xp_stats_v2')
@@ -340,8 +375,8 @@ export async function POST(request: Request) {
       bonus_skp: existingStats?.bonus_skp || 0,
       streak_skp: existingStats?.streak_skp || 0,
       // 学習時間統計
-      total_learning_time_seconds: (existingStats?.total_learning_time_seconds || 0) + totalTimeSpent,
-      quiz_learning_time_seconds: (existingStats?.quiz_learning_time_seconds || 0) + totalTimeSpent,
+      total_learning_time_seconds: (existingStats?.total_learning_time_seconds || 0) + durationSeconds,
+      quiz_learning_time_seconds: (existingStats?.quiz_learning_time_seconds || 0) + durationSeconds,
       course_learning_time_seconds: existingStats?.course_learning_time_seconds || 0,
       // 既存フィールド
       quiz_sessions_completed: (existingStats?.quiz_sessions_completed || 0) + 1,
@@ -418,7 +453,7 @@ export async function POST(request: Request) {
       })
     }
 
-    // 7. daily_xp_records テーブルの更新（連続日数計算用）
+    // 8. daily_xp_records テーブルの更新（連続日数計算用）
     const today = new Date()
     const dateString = today.getFullYear() + '-' + 
       String(today.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -481,7 +516,7 @@ export async function POST(request: Request) {
       })
     }
 
-    // 8. SKP取引記録を追加
+    // 9. SKP取引記録を追加
     if (totalSKP > 0) {
       const { error: skpTransactionError } = await supabase
         .from('skp_transactions')
@@ -505,7 +540,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 9. 実際の統計結果を再確認（v2テーブル）
+    // 10. 実際の統計結果を再確認（v2テーブル）
     const { data: verifyStats, error: verifyError } = await supabase
       .from('user_xp_stats_v2')
       .select('*')
@@ -524,7 +559,7 @@ export async function POST(request: Request) {
       console.error('❌ Stats verification failed:', verifyError)
     }
 
-    // 10. 更新されたセッション情報取得
+    // 11. 更新されたセッション情報取得
     const { data: updatedSession, error: fetchError } = await supabase
       .from('quiz_sessions')
       .select('*')
@@ -535,7 +570,7 @@ export async function POST(request: Request) {
       throw new Error(`Updated session fetch error: ${fetchError.message}`)
     }
 
-    // 11. カテゴリー別・サブカテゴリー別統計更新
+    // 12. カテゴリー別・サブカテゴリー別統計更新
     try {
       // 全回答のカテゴリー・サブカテゴリーを確認
       const allCategories = Array.from(new Set(body.answers.map(a => a.category_id)))
@@ -703,7 +738,7 @@ export async function POST(request: Request) {
       console.warn('⚠️ Category stats update failed:', categoryError)
     }
 
-    // 12. 継続学習ボーナスSKP計算・付与（自動実行）
+    // 13. 継続学習ボーナスSKP計算・付与（自動実行）
     let streakBonusResult = null
     try {
       console.log('🔥 Auto-triggering streak bonus calculation after quiz completion...')
@@ -813,39 +848,7 @@ export async function POST(request: Request) {
       // エラーが発生してもクイズ保存は成功として扱う
     }
 
-    // カード処理（70%以上で付与）
-    let awardedCard = null
-    let isNewCard = false
-    let cardCount = 0
-    
-    const cardAccuracyRate = (body.correct_answers / body.total_questions) * 100
-    
-    if (cardAccuracyRate >= 70) {
-      try {
-        console.log(`🎴 Processing wisdom card (accuracy >= 70%, using ${USE_DB_CARDS ? 'DB' : 'Static'})...`)
-        
-        // DB版またはレガシー版の選択
-        const randomCard = USE_DB_CARDS 
-          ? await getRandomWisdomCardFromDB(cardAccuracyRate)
-          : getRandomWisdomCard(cardAccuracyRate)
-          
-        const cardResult = await addWisdomCardToCollection(userId, randomCard.id)
-        
-        awardedCard = randomCard
-        isNewCard = cardResult.isNew
-        cardCount = cardResult.count
-        
-        console.log('✅ Wisdom card awarded:', {
-          cardId: randomCard.id,
-          author: randomCard.author,
-          isNew: cardResult.isNew,
-          count: cardResult.count
-        })
-      } catch (cardError) {
-        console.error('❌ Card processing error (non-critical):', cardError)
-        // カードエラーでもクイズ保存は成功として扱う
-      }
-    }
+    // カード情報は既に処理済み（5番で実行）
 
     console.log(`✅ Quiz XP Save Success: Session ${sessionId}, Total XP: ${updatedSession.total_xp}`)
 

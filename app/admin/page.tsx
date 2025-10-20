@@ -10,7 +10,10 @@ import {
   Users,
   Shield,
   RefreshCw,
-  Palette
+  Palette,
+  Sparkles,
+  Upload,
+  ClipboardCheck
 } from 'lucide-react'
 import Link from 'next/link'
 import { useUserRole } from '@/hooks/useUserRole'
@@ -96,6 +99,57 @@ export default function AdminPage() {
                 <p className="text-sm text-muted-foreground">
                   格言カードの作成・編集・<br/>
                   ビジュアル設定を管理
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/quiz-generator">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Sparkles className="h-5 w-5 text-yellow-500" />
+                  <span>クイズ問題生成</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  AIを活用してクイズ問題を<br/>
+                  自動生成・レビュー管理
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/review-management">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <ClipboardCheck className="h-5 w-5 text-blue-600" />
+                  <span>クイズレビュー管理</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  AI生成問題のレビュー・<br/>
+                  承認・編集を行います
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/production-import">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Upload className="h-5 w-5 text-green-600" />
+                  <span>クイズ本番取込</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  承認済み問題を本番DBに<br/>
+                  一括取込します
                 </p>
               </CardContent>
             </Card>

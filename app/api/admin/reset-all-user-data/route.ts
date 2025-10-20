@@ -115,20 +115,20 @@ export async function POST(request: NextRequest) {
       errors.push('user_subcategory_xp_stats_v2: ' + (err as Error).message)
     }
 
-    // 6. quiz_answers - クイズ回答データを全削除（user_id有無両方に対応）
+    // 6. quiz_answers - クイズ回答データを全削除（修正版）
     try {
-      // 全quiz_answersを削除（user_idがNULLのものも含む）
+      // 全quiz_answersを削除（created_atベースで確実に削除）
       const { error: quizAnswersError, count } = await supabaseAdmin
         .from('quiz_answers')
         .delete()
-        .gt('id', 0) // 全削除（idが0より大きいもの = 全て）
+        .gte('created_at', '2020-01-01') // 2020年以降全削除（実質全削除）
 
       if (quizAnswersError) {
         console.warn('⚠️ Error deleting quiz_answers:', quizAnswersError)
         errors.push('quiz_answers: ' + quizAnswersError.message)
       } else {
         console.log('✅ quiz_answers (all records) deleted')
-        deletedTables.push('quiz_answers (all records)')
+        deletedTables.push('quiz_answers')
         deletedCounts['quiz_answers'] = count || 0
       }
     } catch (err) {

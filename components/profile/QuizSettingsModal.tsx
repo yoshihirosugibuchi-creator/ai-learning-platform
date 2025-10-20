@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ArrowLeft, ArrowRight, Check, Settings, RotateCcw } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { useToast } from '@/hooks/use-toast'
+import { ToastContainer } from '@/components/ui/toast'
 import { 
   getUserQuizSettings, 
   saveUserQuizSettings, 
@@ -65,6 +67,7 @@ interface LearningLevelItem {
 
 export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModalProps) {
   const { user } = useAuth()
+  const { toast, toasts, removeToast } = useToast()
   const [currentStep, setCurrentStep] = useState(1)
   const [_settings, setSettings] = useState<QuizPersonalizationSettings | null>(null)
   const [tempSettings, setTempSettings] = useState<Partial<QuizPersonalizationSettings>>({})
@@ -73,6 +76,7 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
   const [learningLevels, setLearningLevels] = useState<LearningLevelItem[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showResetDialog, setShowResetDialog] = useState(false)
 
   const loadSettings = useCallback(async () => {
     if (!user) return
@@ -255,27 +259,45 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
         // 保存完了後にセッションストレージをクリア
         sessionStorage.removeItem('quiz-settings-modal-open')
         onClose()
-        alert('設定を保存しました。')
+        toast({
+          title: '設定を保存しました',
+          description: 'クイズパーソナライズ設定が正常に更新されました。'
+        })
       } else {
-        alert('設定の保存に失敗しました: ' + result.error)
+        toast({
+          title: '設定の保存に失敗しました',
+          description: result.error,
+          variant: 'destructive'
+        })
       }
     } catch (error) {
       console.error('設定保存エラー:', error)
-      alert('設定の保存中にエラーが発生しました。')
+      toast({
+        title: '設定の保存中にエラーが発生しました',
+        description: 'しばらく時間をおいて再度お試しください。',
+        variant: 'destructive'
+      })
     } finally {
       setSaving(false)
     }
   }
 
   const handleReset = () => {
-    if (confirm('設定をデフォルトに戻しますか？')) {
-      const defaultSettings = {
-        ...getDefaultQuizSettings(),
-        basicCategories: basicCategoriesData.map(cat => cat.id) // 全基本カテゴリーを選択
-      }
-      setTempSettings({ ...defaultSettings })
-      setCurrentStep(1)
+    setShowResetDialog(true)
+  }
+
+  const confirmReset = () => {
+    const defaultSettings = {
+      ...getDefaultQuizSettings(),
+      basicCategories: basicCategoriesData.map(cat => cat.id) // 全基本カテゴリーを選択
     }
+    setTempSettings({ ...defaultSettings })
+    setCurrentStep(1)
+    setShowResetDialog(false)
+    toast({
+      title: '設定をリセットしました',
+      description: 'デフォルト設定に戻りました。設定確認後に保存してください。'
+    })
   }
 
   const basicCategoriesData = categories.filter(cat => cat.type === 'basic')
@@ -795,6 +817,38 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
           </div>
         )}
       </DialogContent>
+
+      {/* リセット確認ダイアログ */}
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>設定をリセットしますか？</DialogTitle>
+            <DialogDescription>
+              現在の設定内容がすべてデフォルト値に戻ります。この操作は元に戻せません。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowResetDialog(false)}
+            >
+              キャンセル
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmReset}
+            >
+              リセット実行
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* トースト表示 */}
+      <ToastContainer 
+        toasts={toasts} 
+        onRemoveToast={removeToast} 
+      />
     </Dialog>
   )
 }

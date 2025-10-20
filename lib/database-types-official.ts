@@ -908,6 +908,207 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_questions_review: {
+        Row: {
+          ai_model: string | null
+          ai_prompt: string | null
+          category_id: string
+          correct_answer: number
+          created_at: string | null
+          difficulty: string
+          explanation: string | null
+          generated_at: string | null
+          generated_by: string
+          generation_batch_id: string | null
+          generation_params: Json | null
+          id: number
+          import_batch_id: string | null
+          imported_at: string | null
+          imported_by: string | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          priority: number | null
+          production_question_id: number | null
+          question: string
+          review_changes: Json | null
+          review_notes: string | null
+          review_score: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: string | null
+          status: string
+          subcategory: string | null
+          subcategory_id: string | null
+          tags: string[] | null
+          time_limit: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_model?: string | null
+          ai_prompt?: string | null
+          category_id: string
+          correct_answer: number
+          created_at?: string | null
+          difficulty: string
+          explanation?: string | null
+          generated_at?: string | null
+          generated_by: string
+          generation_batch_id?: string | null
+          generation_params?: Json | null
+          id?: number
+          import_batch_id?: string | null
+          imported_at?: string | null
+          imported_by?: string | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          priority?: number | null
+          production_question_id?: number | null
+          question: string
+          review_changes?: Json | null
+          review_notes?: string | null
+          review_score?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string | null
+          status?: string
+          subcategory?: string | null
+          subcategory_id?: string | null
+          tags?: string[] | null
+          time_limit?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_model?: string | null
+          ai_prompt?: string | null
+          category_id?: string
+          correct_answer?: number
+          created_at?: string | null
+          difficulty?: string
+          explanation?: string | null
+          generated_at?: string | null
+          generated_by?: string
+          generation_batch_id?: string | null
+          generation_params?: Json | null
+          id?: number
+          import_batch_id?: string | null
+          imported_at?: string | null
+          imported_by?: string | null
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          priority?: number | null
+          production_question_id?: number | null
+          question?: string
+          review_changes?: Json | null
+          review_notes?: string | null
+          review_score?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string | null
+          status?: string
+          subcategory?: string | null
+          subcategory_id?: string | null
+          tags?: string[] | null
+          time_limit?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      quiz_review_batches: {
+        Row: {
+          batch_type: string
+          completed_at: string | null
+          errors: Json | null
+          executed_by: string
+          failed_count: number | null
+          id: string
+          parameters: Json | null
+          started_at: string | null
+          success_count: number | null
+          total_count: number
+        }
+        Insert: {
+          batch_type: string
+          completed_at?: string | null
+          errors?: Json | null
+          executed_by: string
+          failed_count?: number | null
+          id: string
+          parameters?: Json | null
+          started_at?: string | null
+          success_count?: number | null
+          total_count?: number
+        }
+        Update: {
+          batch_type?: string
+          completed_at?: string | null
+          errors?: Json | null
+          executed_by?: string
+          failed_count?: number | null
+          id?: string
+          parameters?: Json | null
+          started_at?: string | null
+          success_count?: number | null
+          total_count?: number
+        }
+        Relationships: []
+      }
+      quiz_review_history: {
+        Row: {
+          action_type: string
+          changes: Json | null
+          comment: string | null
+          id: number
+          new_status: string | null
+          performed_at: string | null
+          performed_by: string
+          previous_status: string | null
+          review_question_id: number
+        }
+        Insert: {
+          action_type: string
+          changes?: Json | null
+          comment?: string | null
+          id?: number
+          new_status?: string | null
+          performed_at?: string | null
+          performed_by: string
+          previous_status?: string | null
+          review_question_id: number
+        }
+        Update: {
+          action_type?: string
+          changes?: Json | null
+          comment?: string | null
+          id?: number
+          new_status?: string | null
+          performed_at?: string | null
+          performed_by?: string
+          previous_status?: string | null
+          review_question_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_review_history_review_question_id_fkey"
+            columns: ["review_question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_questions_review"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_review_history_review_question_id_fkey"
+            columns: ["review_question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_review_pending"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_sessions: {
         Row: {
           accuracy_rate: number
@@ -2111,6 +2312,61 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_review_pending: {
+        Row: {
+          ai_model: string | null
+          ai_prompt: string | null
+          category_id: string | null
+          category_name: string | null
+          correct_answer: number | null
+          created_at: string | null
+          difficulty: string | null
+          explanation: string | null
+          generated_at: string | null
+          generated_by: string | null
+          generation_batch_id: string | null
+          generation_params: Json | null
+          generator_name: string | null
+          id: number | null
+          import_batch_id: string | null
+          imported_at: string | null
+          imported_by: string | null
+          option_a: string | null
+          option_b: string | null
+          option_c: string | null
+          option_d: string | null
+          priority: number | null
+          production_question_id: number | null
+          question: string | null
+          review_changes: Json | null
+          review_notes: string | null
+          review_score: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_name: string | null
+          source: string | null
+          status: string | null
+          subcategory: string | null
+          subcategory_id: string | null
+          subcategory_name: string | null
+          tags: string[] | null
+          time_limit: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
+      quiz_review_stats: {
+        Row: {
+          avg_review_score: number | null
+          category_id: string | null
+          count: number | null
+          difficulty: string | null
+          latest_generation: string | null
+          latest_review: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_to_spaced_repetition: {
@@ -2587,3 +2843,13 @@ export type SystemHealthLog = Database['public']['Tables']['system_health_logs']
 export type SystemHealthLogInsert = Database['public']['Tables']['system_health_logs']['Insert']
 export type SystemHealthLogUpdate = Database['public']['Tables']['system_health_logs']['Update']
 
+// ============= New Review System Type Aliases =============
+export type QuizQuestionReview = Database['public']['Tables']['quiz_questions_review']['Row']
+export type QuizQuestionReviewInsert = Database['public']['Tables']['quiz_questions_review']['Insert']
+export type QuizQuestionReviewUpdate = Database['public']['Tables']['quiz_questions_review']['Update']
+export type QuizReviewBatch = Database['public']['Tables']['quiz_review_batches']['Row']
+export type QuizReviewBatchInsert = Database['public']['Tables']['quiz_review_batches']['Insert']
+export type QuizReviewBatchUpdate = Database['public']['Tables']['quiz_review_batches']['Update']
+export type QuizReviewHistory = Database['public']['Tables']['quiz_review_history']['Row']
+export type QuizReviewHistoryInsert = Database['public']['Tables']['quiz_review_history']['Insert']
+export type QuizReviewHistoryUpdate = Database['public']['Tables']['quiz_review_history']['Update']
