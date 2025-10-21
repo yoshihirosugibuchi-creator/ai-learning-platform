@@ -230,6 +230,48 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_analytics_batch_log: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          force_reprocess: boolean | null
+          id: number
+          process_date: string
+          process_type: string
+          processed_users: number | null
+          started_at: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          force_reprocess?: boolean | null
+          id?: number
+          process_date: string
+          process_type: string
+          processed_users?: number | null
+          started_at: string
+          status: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          force_reprocess?: boolean | null
+          id?: number
+          process_date?: string
+          process_type?: string
+          processed_users?: number | null
+          started_at?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       daily_xp_records: {
         Row: {
           bonus_xp_earned: number
@@ -238,6 +280,7 @@ export type Database = {
           course_xp_earned: number
           created_at: string | null
           date: string
+          hourly_efficiency_data: Json | null
           id: string
           learning_quality_score: number | null
           peak_study_hour: number | null
@@ -256,6 +299,7 @@ export type Database = {
           course_xp_earned?: number
           created_at?: string | null
           date: string
+          hourly_efficiency_data?: Json | null
           id?: string
           learning_quality_score?: number | null
           peak_study_hour?: number | null
@@ -274,6 +318,7 @@ export type Database = {
           course_xp_earned?: number
           created_at?: string | null
           date?: string
+          hourly_efficiency_data?: Json | null
           id?: string
           learning_quality_score?: number | null
           peak_study_hour?: number | null
@@ -2842,8 +2887,6 @@ export type SystemConfigMonitoringUpdate = Database['public']['Tables']['system_
 export type SystemHealthLog = Database['public']['Tables']['system_health_logs']['Row']
 export type SystemHealthLogInsert = Database['public']['Tables']['system_health_logs']['Insert']
 export type SystemHealthLogUpdate = Database['public']['Tables']['system_health_logs']['Update']
-
-// ============= New Review System Type Aliases =============
 export type QuizQuestionReview = Database['public']['Tables']['quiz_questions_review']['Row']
 export type QuizQuestionReviewInsert = Database['public']['Tables']['quiz_questions_review']['Insert']
 export type QuizQuestionReviewUpdate = Database['public']['Tables']['quiz_questions_review']['Update']
@@ -2853,3 +2896,12 @@ export type QuizReviewBatchUpdate = Database['public']['Tables']['quiz_review_ba
 export type QuizReviewHistory = Database['public']['Tables']['quiz_review_history']['Row']
 export type QuizReviewHistoryInsert = Database['public']['Tables']['quiz_review_history']['Insert']
 export type QuizReviewHistoryUpdate = Database['public']['Tables']['quiz_review_history']['Update']
+
+// ============= New Analytics Types (for learning analytics enhancement) =============
+export type DailyXPRecord = Database['public']['Tables']['daily_xp_records']['Row']
+export type DailyXPRecordInsert = Database['public']['Tables']['daily_xp_records']['Insert']
+export type DailyXPRecordUpdate = Database['public']['Tables']['daily_xp_records']['Update']
+export type DailyAnalyticsBatchLog = Database['public']['Tables']['daily_analytics_batch_log']['Row']
+export type DailyAnalyticsBatchLogInsert = Database['public']['Tables']['daily_analytics_batch_log']['Insert']
+export type DailyAnalyticsBatchLogUpdate = Database['public']['Tables']['daily_analytics_batch_log']['Update']
+

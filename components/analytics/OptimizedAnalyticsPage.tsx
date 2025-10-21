@@ -11,6 +11,9 @@ import { aiAnalytics, LearningPattern, OptimalLearningTime, PersonalizedHints } 
 import IndustryAnalysisPage from '@/components/analytics/IndustryAnalysisPage'
 import XPStatsCard from '@/components/xp/XPStatsCard'
 import { CachedLearningDashboard } from '@/components/analytics/CachedLearningDashboard'
+import LearningQualityScoreCard from '@/components/analytics/LearningQualityScoreCard'
+import HourlyEfficiencyChart from '@/components/analytics/HourlyEfficiencyChart'
+import LearningPatternComparison from '@/components/analytics/LearningPatternComparison'
 
 // タブごとのデータキャッシュ
 interface TabCache {
@@ -290,66 +293,117 @@ export default function OptimizedAnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="patterns" className="space-y-6">
-          {isTabLoading ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="h-5 w-5" />
-                  AI学習パターン分析
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="animate-pulse">
-                      <div className="h-4 w-32 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-12 w-full bg-gray-100 rounded"></div>
-                    </div>
-                  ))}
+          {/* セクション説明 */}
+          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <Brain className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-900 mb-2">AI学習パターン分析</h3>
+                  <p className="text-blue-800 text-sm leading-relaxed">
+                    あなたの学習行動データを多角的にAI分析し、学習の質・効率・パターンを可視化します。
+                    継続性・正確性・効率性・多様性・深度の5つの観点から総合的に評価し、
+                    個人最適化された学習改善提案を提供します。
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          ) : (
+              </div>
+            </CardContent>
+          </Card>
+
+          {user?.id && (
             <>
-              {/* AI学習パターン分析カード */}
-              <Card>
+              {/* 学習品質総合評価 */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  学習品質総合評価
+                </h4>
+                <LearningQualityScoreCard 
+                  userId={user.id} 
+                  refreshTrigger={tabCache.patterns.lastRefresh}
+                  className="w-full"
+                />
+              </div>
+              
+              {/* 時間効率分析 */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                  時間効率分析
+                </h4>
+                <HourlyEfficiencyChart 
+                  userId={user.id}
+                  refreshTrigger={tabCache.patterns.lastRefresh}
+                  className="w-full"
+                />
+              </div>
+              
+              {/* 学習スタイル分析 */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Brain className="h-5 w-5 text-purple-600" />
+                  学習スタイル分析
+                </h4>
+                <LearningPatternComparison 
+                  userId={user.id}
+                  refreshTrigger={tabCache.patterns.lastRefresh}
+                  className="w-full"
+                />
+              </div>
+            </>
+          )}
+          
+          {/* 詳細統計データ */}
+          {!isTabLoading && (
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-gray-600" />
+                詳細統計情報
+                <span className="text-sm font-normal text-gray-500 ml-2">（上記分析の基礎データ）</span>
+              </h4>
+              
+              {/* 基礎統計カード */}
+              <Card className="border-gray-200">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Brain className="h-5 w-5" />
-                    AI学習パターン分析
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    学習活動統計
                   </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    上記の品質スコア・効率分析・パターン分析の計算に使用されている基礎データです
+                  </p>
                 </CardHeader>
                 <CardContent>
                   {tabCache.patterns.aiPatterns ? (
-                    <div className="grid gap-6 md:grid-cols-2">
-                      {/* 学習頻度パターン */}
-                      <div className="p-4 bg-blue-50 rounded-lg">
-                        <h4 className="font-medium text-blue-900 mb-3">学習頻度パターン</h4>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {/* 学習頻度データ */}
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <h5 className="font-medium text-gray-900 mb-3">学習頻度データ</h5>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span>平均日次問題数:</span>
                             <span className="font-medium">{tabCache.patterns.aiPatterns.learningFrequency.averageDailyQuestions}問</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>学習日数:</span>
+                            <span>活動日数:</span>
                             <span className="font-medium">{tabCache.patterns.aiPatterns.learningFrequency.activeDays}日</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>継続性スコア:</span>
+                            <span>継続性指標:</span>
                             <span className="font-medium">{Math.round(tabCache.patterns.aiPatterns.learningFrequency.consistency * 100)}%</span>
                           </div>
                         </div>
                       </div>
 
-                      {/* 時間帯パターン */}
-                      <div className="p-4 bg-green-50 rounded-lg">
-                        <h4 className="font-medium text-green-900 mb-3">最適学習時間</h4>
+                      {/* 時間帯データ */}
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <h5 className="font-medium text-gray-900 mb-3">時間帯別データ</h5>
                         {tabCache.patterns.aiPatterns.timeOfDayPatterns.bestPerformanceHours.length > 0 ? (
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                               <span>最高パフォーマンス時間:</span>
                               <span className="font-medium">
-                                {tabCache.patterns.aiPatterns.timeOfDayPatterns.bestPerformanceHours[0].hour}時
+                                {tabCache.patterns.aiPatterns.timeOfDayPatterns.bestPerformanceHours[0].hour}時台
                               </span>
                             </div>
                             <div className="flex justify-between">
@@ -360,30 +414,32 @@ export default function OptimizedAnalyticsPage() {
                             </div>
                           </div>
                         ) : (
-                          <p className="text-sm text-green-800">データ蓄積中...</p>
+                          <p className="text-sm text-gray-600">データ蓄積中...</p>
                         )}
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-12">
-                      <Brain className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium mb-2">AI分析データなし</h3>
-                      <p className="text-muted-foreground">
-                        学習データを蓄積してAI分析を開始しましょう
+                    <div className="text-center py-8">
+                      <BarChart3 className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-gray-600 text-sm">
+                        学習データを蓄積中です
                       </p>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
-              {/* 最適化レコメンデーション */}
+              {/* 学習最適化提案 */}
               {tabCache.patterns.optimalTime && (
-                <Card>
+                <Card className="border-orange-200 bg-orange-50">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Lightbulb className="h-5 w-5" />
-                      学習最適化レコメンデーション
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Lightbulb className="h-4 w-4 text-orange-600" />
+                      個人最適化提案
                     </CardTitle>
+                    <p className="text-sm text-orange-700">
+                      あなたの学習パターン分析に基づく、パフォーマンス向上のための具体的な提案です
+                    </p>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4 md:grid-cols-3">
@@ -409,14 +465,36 @@ export default function OptimizedAnalyticsPage() {
                   </CardContent>
                 </Card>
               )}
-            </>
+            </div>
           )}
         </TabsContent>
 
         <TabsContent value="insights" className="space-y-6">
+          {/* セクション説明 */}
+          <Card className="bg-gradient-to-r from-green-50 to-yellow-50 border-green-200">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <Lightbulb className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-lg font-semibold text-green-900 mb-2">AI学習インサイト</h3>
+                  <p className="text-green-800 text-sm leading-relaxed">
+                    あなたの学習パターン分析結果に基づいて、AIが生成したパーソナライズされた学習改善提案とヒントです。
+                    継続的な学習効果向上を目指すための具体的なアクションプランを提供します。
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
-              <CardTitle>学習インサイト</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-yellow-600" />
+                パーソナライズドヒント
+              </CardTitle>
+              <p className="text-gray-600 text-sm mt-2">
+                あなたの学習行動分析に基づく個人最適化された改善提案
+              </p>
             </CardHeader>
             <CardContent>
               {isTabLoading ? (
