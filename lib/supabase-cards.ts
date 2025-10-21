@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { WisdomCardMaster } from './database-types-official'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Type definitions for fallback JSON structure
 interface WisdomCardFallbackData {
@@ -293,12 +294,15 @@ export async function getUserWisdomCards(userId: string): Promise<WisdomCardColl
   }
 }
 
-export async function addWisdomCardToCollection(userId: string, cardId: number): Promise<{ count: number; isNew: boolean }> {
+export async function addWisdomCardToCollection(userId: string, cardId: number, authenticatedSupabase?: SupabaseClient): Promise<{ count: number; isNew: boolean }> {
   console.log('🔍 Starting addWisdomCardToCollection:', { userId: userId.substring(0, 8) + '...', cardId })
+  
+  // 認証付きクライアントを優先使用（グローバルクライアントはフォールバック）
+  const client = authenticatedSupabase || supabase
   
   // Check if card already exists
   const selectStartTime = performance.now()
-  const { data: existing } = await supabase
+  const { data: existing } = await client
     .from('wisdom_card_collection')
     .select('*')
     .eq('user_id', userId)
@@ -312,7 +316,7 @@ export async function addWisdomCardToCollection(userId: string, cardId: number):
   if (existing) {
     // Update existing card count
     const updateStartTime = performance.now()
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('wisdom_card_collection')
       .update({
         count: (existing.count || 0) + 1,
@@ -334,7 +338,7 @@ export async function addWisdomCardToCollection(userId: string, cardId: number):
   } else {
     // Add new card
     const insertStartTime = performance.now()
-    const { data: _data, error } = await supabase
+    const { data: _data, error } = await client
       .from('wisdom_card_collection')
       .insert([{
         user_id: userId,
@@ -358,14 +362,14 @@ export async function addWisdomCardToCollection(userId: string, cardId: number):
     // user_xp_stats_v2の統計を更新（新規カード獲得時のみ）
     try {
       // 現在の統計を取得
-      const { data: currentStats } = await supabase
+      const { data: currentStats } = await client
         .from('user_xp_stats_v2')
         .select('wisdom_cards_total')
         .eq('user_id', userId)
         .single()
       
       // 統計を更新（+1増加）
-      const { error: statsError } = await supabase
+      const { error: statsError } = await client
         .from('user_xp_stats_v2')
         .update({
           wisdom_cards_total: (currentStats?.wisdom_cards_total || 0) + 1,

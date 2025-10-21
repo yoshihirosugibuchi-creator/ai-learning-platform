@@ -4,6 +4,14 @@ import { loadXPSettings, calculateQuizXP, calculateBonusXP, calculateSKP } from 
 import { 
   mapDifficultyToEnglish
 } from '@/lib/xp-level-system'
+// 🆕 学習分析システム強化：hourly_efficiency_data管理
+import { 
+  updateHourlyEfficiencyData, 
+  parseHourlyEfficiencyData, 
+  getPeakStudyHour,
+  getStudyTimeMinutes 
+} from '@/lib/hourly-efficiency'
+import { getCurrentHourJST, getDateJST } from '@/lib/time-utils'
 // カード処理をXP APIに統合（同期処理のため）
 import { getRandomWisdomCard, getRandomWisdomCardFromDB } from '@/lib/cards'
 import { addWisdomCardToCollection } from '@/lib/supabase-cards'
@@ -310,7 +318,7 @@ export async function POST(request: Request) {
           ? await getRandomWisdomCardFromDB(cardAccuracyRate)
           : getRandomWisdomCard(cardAccuracyRate)
           
-        const cardResult = await addWisdomCardToCollection(userId, randomCard.id)
+        const cardResult = await addWisdomCardToCollection(userId, randomCard.id, supabase)
         
         awardedCard = randomCard
         isNewCard = cardResult.isNew
@@ -453,19 +461,53 @@ export async function POST(request: Request) {
       })
     }
 
-    // 8. daily_xp_records テーブルの更新（連続日数計算用）
-    const today = new Date()
-    const dateString = today.getFullYear() + '-' + 
-      String(today.getMonth() + 1).padStart(2, '0') + '-' + 
-      String(today.getDate()).padStart(2, '0')
+    // 8. 学習分析システム強化：hourly_efficiency_data 計算
+    console.log('🧠 Calculating hourly efficiency data...')
+    
+    // 思考時間の合計計算（各問題のtime_spent合計）
+    const totalThinkingTime = body.answers.reduce((sum, answer) => sum + answer.time_spent, 0)
+    
+    console.log('⏱️ Thinking time analysis:', {
+      totalThinkingTime: totalThinkingTime,
+      totalThinkingMinutes: Math.round(totalThinkingTime / 60),
+      sessionDurationSeconds: durationSeconds,
+      sessionDurationMinutes: Math.round(durationSeconds / 60),
+      currentHourJST: getCurrentHourJST()
+    })
 
-    // 今日の記録を取得または作成
+    // 8. daily_xp_records テーブルの更新（連続日数計算用 + 学習分析強化）
+    const dateString = getDateJST() // 日本時間対応関数を使用
+
+    // 今日の記録を取得または作成（hourly_efficiency_data含む）
     const { data: existingDailyRecord } = await supabase
       .from('daily_xp_records')
       .select('*')
       .eq('user_id', userId)
       .eq('date', dateString)
       .single()
+
+    // 🆕 既存のhourly_efficiency_dataを安全にパース
+    const existingHourlyData = existingDailyRecord?.hourly_efficiency_data 
+      ? parseHourlyEfficiencyData(existingDailyRecord.hourly_efficiency_data)
+      : null
+    
+    // 🆕 hourly_efficiency_dataを更新
+    const updatedHourlyData = updateHourlyEfficiencyData(existingHourlyData, {
+      thinkingTime: totalThinkingTime,
+      xpEarned: totalXP,
+      hourJST: getCurrentHourJST()
+    })
+    
+    // 🆕 study_time_minutes と peak_study_hour を計算
+    const studyTimeMinutes = getStudyTimeMinutes(updatedHourlyData)
+    const peakStudyHour = getPeakStudyHour(updatedHourlyData)
+    
+    console.log('🧠 Updated hourly efficiency data:', {
+      studyTimeMinutes,
+      peakStudyHour,
+      totalSessions: updatedHourlyData.daily_session_count,
+      peakHours: updatedHourlyData.peak_hours
+    })
 
     const dailyRecordData = {
       user_id: userId,
@@ -480,7 +522,11 @@ export async function POST(request: Request) {
       // 学習時間統計（quiz_sessionsから正しく取得）
       quiz_time_seconds: (existingDailyRecord?.quiz_time_seconds || 0) + durationSeconds, // セッション全体の時間を使用
       course_time_seconds: existingDailyRecord?.course_time_seconds || 0,
-      total_time_seconds: (existingDailyRecord?.total_time_seconds || 0) + durationSeconds
+      total_time_seconds: (existingDailyRecord?.total_time_seconds || 0) + durationSeconds,
+      // 🆕 学習分析システム強化フィールド
+      study_time_minutes: studyTimeMinutes,
+      peak_study_hour: peakStudyHour,
+      hourly_efficiency_data: updatedHourlyData
     }
 
     let dailyRecordError
@@ -512,7 +558,11 @@ export async function POST(request: Request) {
         date: dateString,
         quizSessions: dailyRecordData.quiz_sessions,
         quizXP: dailyRecordData.quiz_xp_earned,
-        totalXP: dailyRecordData.total_xp_earned
+        totalXP: dailyRecordData.total_xp_earned,
+        // 🆕 学習分析データログ
+        studyTimeMinutes: dailyRecordData.study_time_minutes,
+        peakStudyHour: dailyRecordData.peak_study_hour,
+        hourlyDataUpdated: !!dailyRecordData.hourly_efficiency_data
       })
     }
 
