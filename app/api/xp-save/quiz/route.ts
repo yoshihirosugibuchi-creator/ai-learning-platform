@@ -525,7 +525,7 @@ export async function POST(request: Request) {
           type: 'earned',
           amount: totalSKP,
           source: `quiz_session_${sessionId}`,
-          description: `Quiz session: ${body.correct_answers}/${body.total_questions} correct (${body.accuracy_rate}% accuracy)${isPerfect ? ' + Perfect bonus' : ''}`,
+          description: `クイズ完了: ${body.correct_answers}/${body.total_questions}問正解 (正答率${body.accuracy_rate}%)${isPerfect ? ' + 全問正解ボーナス' : ''}`,
           created_at: new Date().toISOString()
         })
 
@@ -827,7 +827,7 @@ export async function POST(request: Request) {
                 type: 'earned',
                 amount: newStreakBonus,
                 source: `streak_${currentStreak}days`,
-                description: `Learning streak bonus: ${currentStreak} consecutive days${tenDayBonusCount > 0 ? ` (includes ${tenDayBonusCount} ten-day bonuses)` : ''}`,
+                description: `学習継続ボーナス: ${currentStreak}日連続${tenDayBonusCount > 0 ? ` (10日ボーナス${tenDayBonusCount}回含む)` : ''}`,
                 created_at: new Date().toISOString()
               })
 

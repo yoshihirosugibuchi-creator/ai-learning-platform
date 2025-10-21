@@ -177,7 +177,7 @@ export async function POST(request: Request) {
             type: 'earned',
             amount: newStreakBonus,
             source: `streak_${currentStreak}days`,
-            description: `Learning streak bonus: ${currentStreak} consecutive days${newTenDayBonuses > 0 ? ` (includes ${newTenDayBonuses} ten-day bonuses)` : ''}`,
+            description: `学習継続ボーナス: ${currentStreak}日連続${newTenDayBonuses > 0 ? ` (10日ボーナス${newTenDayBonuses}回含む)` : ''}`,
             created_at: new Date().toISOString()
           })
 
