@@ -742,7 +742,9 @@ export default function WisdomCardAdminPage() {
                 <div key={card.id} className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 ${isDiscontinued ? 'bg-gray-50 opacity-75' : ''}`}>
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <Badge className={rarityConfig.textColor}>
+                      <Badge 
+                        className={`${rarityConfig.bgColor} ${rarityConfig.borderColor} border text-gray-900 font-semibold`}
+                      >
                         {rarityConfig.symbol} {card.rarity}
                       </Badge>
                       {isDiscontinued && (

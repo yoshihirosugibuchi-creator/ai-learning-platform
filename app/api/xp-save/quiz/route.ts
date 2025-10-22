@@ -65,6 +65,13 @@ interface QuizSessionRequest {
   correct_answers: number
   accuracy_rate: number
   answers: QuizAnswer[]
+  selected_card?: {
+    id: number
+    author: string
+    quote: string
+    rarity: string
+    accuracy_rate: number
+  }
 }
 
 // 旧XP設定システムは削除し、新しい統合設定システムを使用
@@ -311,26 +318,56 @@ export async function POST(request: Request) {
     
     if (cardAccuracyRate >= 70) {
       try {
-        console.log(`🎴 Processing wisdom card (accuracy >= 70%, using ${USE_DB_CARDS ? 'DB' : 'Static'})...`)
-        
-        // DB版またはレガシー版の選択
-        const randomCard = USE_DB_CARDS 
-          ? await getRandomWisdomCardFromDB(cardAccuracyRate)
-          : getRandomWisdomCard(cardAccuracyRate)
+        // 🔧 修正: クライアント選択カードを優先使用（二重選択問題の解決）
+        if (body.selected_card) {
+          console.log(`🎴 Using client-selected wisdom card (avoiding double selection)...`)
           
-        const cardResult = await addWisdomCardToCollection(userId, randomCard.id, supabase)
-        
-        awardedCard = randomCard
-        isNewCard = cardResult.isNew
-        cardCount = cardResult.count
-        wisdomCardsAwarded = 1  // カード付与成功
-        
-        console.log('✅ Wisdom card awarded:', {
-          cardId: randomCard.id,
-          author: randomCard.author,
-          isNew: cardResult.isNew,
-          count: cardResult.count
-        })
+          // クライアント選択カードをそのまま使用
+          const clientSelectedCard = {
+            id: body.selected_card.id,
+            author: body.selected_card.author,
+            quote: body.selected_card.quote,
+            rarity: body.selected_card.rarity,
+            categoryId: '', // 表示専用なので空でOK
+            context: '',
+            applicationArea: ''
+          }
+          
+          const cardResult = await addWisdomCardToCollection(userId, body.selected_card.id, supabase)
+          
+          awardedCard = clientSelectedCard
+          isNewCard = cardResult.isNew
+          cardCount = cardResult.count
+          wisdomCardsAwarded = 1  // カード付与成功
+          
+          console.log('✅ Client-selected wisdom card saved:', {
+            cardId: body.selected_card.id,
+            author: body.selected_card.author,
+            isNew: cardResult.isNew,
+            count: cardResult.count
+          })
+        } else {
+          console.log(`🎴 Processing wisdom card (accuracy >= 70%, using ${USE_DB_CARDS ? 'DB' : 'Static'})...`)
+          
+          // フォールバック: サーバー側でカード選択（従来の方法）
+          const randomCard = USE_DB_CARDS 
+            ? await getRandomWisdomCardFromDB(cardAccuracyRate)
+            : getRandomWisdomCard(cardAccuracyRate)
+            
+          const cardResult = await addWisdomCardToCollection(userId, randomCard.id, supabase)
+          
+          awardedCard = randomCard
+          isNewCard = cardResult.isNew
+          cardCount = cardResult.count
+          wisdomCardsAwarded = 1  // カード付与成功
+          
+          console.log('✅ Server-selected wisdom card awarded (fallback):', {
+            cardId: randomCard.id,
+            author: randomCard.author,
+            isNew: cardResult.isNew,
+            count: cardResult.count
+          })
+        }
       } catch (cardError) {
         console.error('❌ Card processing error (non-critical):', cardError)
         // カードエラーでもクイズ保存は成功として扱う

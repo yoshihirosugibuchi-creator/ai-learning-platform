@@ -203,7 +203,7 @@ export const getRarityConfig = (rarity: WisdomCard['rarity']) => {
         color: 'from-yellow-400 via-orange-400 to-red-500',
         borderColor: 'border-yellow-400',
         textColor: 'text-yellow-600',
-        bgColor: 'bg-gradient-to-br from-yellow-50 to-orange-50',
+        bgColor: 'bg-gradient-to-br from-yellow-100 to-orange-100',
         glowColor: 'shadow-yellow-400/30',
         stars: '⭐⭐⭐⭐⭐',
         symbol: '👑'
@@ -211,9 +211,9 @@ export const getRarityConfig = (rarity: WisdomCard['rarity']) => {
     case 'エピック':
       return {
         color: 'from-purple-400 via-pink-400 to-red-400',
-        borderColor: 'border-purple-400',
+        borderColor: 'border-purple-300',
         textColor: 'text-purple-600',
-        bgColor: 'bg-gradient-to-br from-purple-50 to-pink-50',
+        bgColor: 'bg-gradient-to-br from-purple-100 to-pink-100',
         glowColor: 'shadow-purple-400/30',
         stars: '⭐⭐⭐⭐',
         symbol: '💎'
@@ -221,9 +221,9 @@ export const getRarityConfig = (rarity: WisdomCard['rarity']) => {
     case 'レア':
       return {
         color: 'from-blue-400 via-cyan-400 to-teal-400',
-        borderColor: 'border-blue-400',
+        borderColor: 'border-blue-300',
         textColor: 'text-blue-600',
-        bgColor: 'bg-gradient-to-br from-blue-50 to-cyan-50',
+        bgColor: 'bg-blue-200/80',
         glowColor: 'shadow-blue-400/30',
         stars: '⭐⭐⭐',
         symbol: '⭐'
@@ -231,9 +231,9 @@ export const getRarityConfig = (rarity: WisdomCard['rarity']) => {
     case 'コモン':
       return {
         color: 'from-gray-300 to-gray-400',
-        borderColor: 'border-gray-300',
+        borderColor: 'border-gray-400',
         textColor: 'text-gray-600',
-        bgColor: 'bg-gradient-to-br from-gray-50 to-gray-100',
+        bgColor: 'bg-gradient-to-br from-gray-100 to-gray-200',
         glowColor: 'shadow-gray-400/20',
         stars: '⭐⭐',
         symbol: '🎯'
