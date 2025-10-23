@@ -374,7 +374,7 @@ export function updateLearningEfficiencyMetrics(
   const metrics = getLearningEfficiencyMetrics(userId)
   
   // Update learning velocity (questions per minute)
-  const velocityThisSession = questionsAnswered / (sessionDuration / 60000) // convert ms to minutes
+  const velocityThisSession = questionsAnswered / (sessionDuration / 60) // convert seconds to minutes
   metrics.learningVelocity = (metrics.learningVelocity + velocityThisSession) / 2
   
   // Update optimal session length based on accuracy decline

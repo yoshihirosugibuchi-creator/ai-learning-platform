@@ -17,253 +17,280 @@ interface PromptData {
 }
 
 /**
- * Claude向け最適化プロンプト（XMLタグ構造化）
+ * 既存問題コンテキストの最適化：重要情報のみ抽出
+ */
+function generateOptimizedExistingContext(existingContext: string, existingCount: number): string {
+  if (!existingContext || existingCount === 0) return ''
+  
+  // 既存問題一覧から最初の10問のみ表示（プロンプト長制限）
+  const maxDisplay = 10
+  const lines = existingContext.split('\n').filter(line => line.trim())
+  const existingProblemsSection = lines.find(line => line.includes('【既存問題一覧'))
+  
+  if (existingProblemsSection) {
+    const problemLines = lines.slice(lines.indexOf(existingProblemsSection) + 1)
+      .filter(line => line.match(/^\d+\./))
+      .slice(0, maxDisplay)
+    
+    return `<existing_problems>
+この分野には既に${existingCount}問が登録済みです。以下と重複しない新しい観点で出題してください：
+
+${problemLines.join('\n')}${existingCount > maxDisplay ? `\n...他${existingCount - maxDisplay}問あり` : ''}
+
+⚠️ 上記問題と完全に異なるアプローチ・視点・ユースケースで新問題を作成してください。
+</existing_problems>`
+  }
+  
+  return `<existing_problems>
+この分野には既に${existingCount}問が登録済みです。重複を避けて新しい観点で出題してください。
+</existing_problems>`
+}
+
+/**
+ * 難易度別の詳細説明文を取得（時間目安含む）
+ */
+function getDifficultyDescription(difficultyName: string): string {
+  const descriptions: Record<string, string> = {
+    'basic': '初級(basic) - 学生・新入社員レベル: 10-25秒 - 基本概念・用語・定義',
+    'intermediate': '中級(intermediate) - 入社2-3年目レベル: 25-40秒 - 実践的理解・応用問題', 
+    'advanced': '上級(advanced) - ベテラン社員レベル: 40-70秒 - 深い理解・複雑な問題解決',
+    'expert': 'エキスパート(expert) - 専門家レベル: 50-90秒 - 最新技術・高度な実装・アーキテクチャ設計',
+    // 旧形式との互換性（「基礎」→「初級」に統一）
+    '初級': '初級(basic) - 学生・新入社員レベル: 10-25秒 - 基本概念・用語・定義',
+    '中級': '中級(intermediate) - 入社2-3年目レベル: 25-40秒 - 実践的理解・応用問題',
+    '上級': '上級(advanced) - ベテラン社員レベル: 40-70秒 - 深い理解・複雑な問題解決',
+    'エキスパート': 'エキスパート(expert) - 専門家レベル: 50-90秒 - 最新技術・高度な実装・アーキテクチャ設計'
+  }
+  return descriptions[difficultyName] || `${difficultyName}レベル`
+}
+
+/**
+ * 制限時間の設定（基本時間 + 問題種別による追加時間）
+ */
+function getTimeLimit(difficultyName: string): number {
+  const timeLimits: Record<string, number> = {
+    'basic': 25,
+    'intermediate': 35, 
+    'advanced': 50,
+    'expert': 70,
+    // 旧形式との互換性（「基礎」→「初級」に統一）
+    '初級': 25,
+    '中級': 35,
+    '上級': 50,
+    'エキスパート': 70
+  }
+  return timeLimits[difficultyName] || 45
+}
+
+/**
+ * カテゴリータイプ・難易度別の問題作成ガイドライン
+ */
+function getQuestionGuidelines(categoryType: string, categoryName: string, difficultyName: string): string {
+  const businessGuidelines = `
+・ビジネス全般で活用できる汎用的なスキル・知識
+・業界を問わず重要な基本概念・手法・フレームワーク
+・実務で広く使われる標準的なアプローチ・ベストプラクティス
+・チームワーク・コミュニケーション・問題解決に関連する内容`
+
+  const industryGuidelines = `
+・${categoryName}業界特有の専門知識・技術・ツール
+・業界の最新トレンド・技術動向・規制・標準
+・実際の${categoryName}業界で直面する課題・ソリューション
+・${categoryName}業界のベストプラクティス・成功事例`
+
+  const difficultyFocus = getDifficultyFocus(difficultyName)
+  
+  return (categoryType === 'main' ? businessGuidelines : industryGuidelines) + '\n\n' + difficultyFocus
+}
+
+/**
+ * 難易度別のフォーカス内容（詳細時間設定ガイド含む）
+ */
+function getDifficultyFocus(difficultyName: string): string {
+  const focuses: Record<string, string> = {
+    'basic': '【初級レベル重点】\n・基本用語・概念の定義と理解\n・基礎的な手順・プロセスの把握\n・入門レベルでの実践例\n・制限時間: 基本10-25秒',
+    'intermediate': '【中級レベル重点】\n・実践的な応用・活用方法\n・複数選択肢の比較・判断\n・業務での具体的な使用場面\n・制限時間: 基本25-40秒',
+    'advanced': '【上級レベル重点】\n・複雑な問題解決・分析・設計\n・高度な判断・意思決定\n・専門性の高い実装・運用\n・制限時間: 基本40-70秒',
+    'expert': '【エキスパートレベル重点】\n・最新技術・アーキテクチャ設計\n・高度な最適化・パフォーマンス\n・専門家レベルの深い洞察\n・制限時間: 基本50-90秒',
+    // 旧形式との互換性（「基礎」→「初級」に統一）
+    '初級': '【初級レベル重点】\n・基本用語・概念の定義と理解\n・基礎的な手順・プロセスの把握\n・入門レベルでの実践例\n・制限時間: 基本10-25秒',
+    '中級': '【中級レベル重点】\n・実践的な応用・活用方法\n・複数選択肢の比較・判断\n・業務での具体的な使用場面\n・制限時間: 基本25-40秒',
+    '上級': '【上級レベル重点】\n・複雑な問題解決・分析・設計\n・高度な判断・意思決定\n・専門性の高い実装・運用\n・制限時間: 基本40-70秒',
+    'エキスパート': '【エキスパートレベル重点】\n・最新技術・アーキテクチャ設計\n・高度な最適化・パフォーマンス\n・専門家レベルの深い洞察\n・制限時間: 基本50-90秒'
+  }
+  return focuses[difficultyName] || ''
+}
+
+/**
+ * Claude向け最適化プロンプト（情報整理・最適化版）
  */
 export function generateClaudePrompt(data: PromptData): string {
+  // 既存問題コンテキストの最適化処理
+  const optimizedExistingContext = data.existingCount > 0 ? 
+    generateOptimizedExistingContext(data.existingContext, data.existingCount) : ''
+
   return `<task>
-日本語でクイズ問題を生成してください。出力は必ずJSON形式でお願いします。
+${data.categoryName}の${data.subcategoryName}分野で、${data.difficultyName}レベルのクイズ問題を${data.count}問生成してください。
+JSON形式で出力し、既存問題との重複を完全に避けてください。
 ${data.duplicateWarning}
-${data.existingContext}
 </task>
 
-<generation_conditions>
-- カテゴリー: ${data.categoryName}（ID: ${data.categoryId}）
-- カテゴリータイプ: ${data.categoryType === 'main' ? 'ビジネススキル' : '業界専門スキル'}（${data.categoryTypeDescription}）
-- サブカテゴリー: ${data.subcategoryName}（ID: ${data.subcategoryId}）
-- 難易度: ${data.difficultyName}（ID: ${data.difficultyId}）
-- 問題数: ${data.count}問
-- ソース: 適切な参考情報源（書籍、公式ドキュメント、標準仕様等）
-</generation_conditions>
+<target_scope>
+・カテゴリー: ${data.categoryName}（${data.categoryType === 'main' ? 'ビジネススキル' : '業界専門スキル'}）
+・サブカテゴリー: ${data.subcategoryName}
+・難易度: ${getDifficultyDescription(data.difficultyName)}
+・問題数: ${data.count}問
+</target_scope>
 
-<question_perspective>
-${data.categoryType === 'main' ? 
-`<business_skills>
-- ビジネス全般で活用できる汎用的なスキル・知識
-- 業界を問わず重要な基本概念・手法
-- 実務で広く使われる標準的なアプローチ
-- チームワーク・コミュニケーション・問題解決に関連する内容
-</business_skills>` :
-`<industry_expertise>
-- ${data.categoryName}業界特有の専門知識・技術
-- 業界の最新トレンド・技術動向
-- 実際の${data.categoryName}業界で直面する課題・ソリューション
-- ${data.categoryName}業界のベストプラクティス・事例
-</industry_expertise>`}
-</question_perspective>
+${optimizedExistingContext}
 
-<difficulty_definitions>
-- 基礎: 学生・新入社員レベル（基本概念・用語・定義の理解）
-- 中級: 入社2-3年目レベル（実践的な理解・応用問題）
-- 上級: ベテラン社員レベル（深い理解・複雑な問題解決）
-- エキスパート: 専門家レベル（最新技術・高度な実装・アーキテクチャ設計）
-</difficulty_definitions>
-
-<time_limit_guidelines>
-- 基礎レベル: 10-25秒（基本概念・定義問題）
-- 中級レベル: 25-40秒（思考・応用問題）
-- 上級レベル: 40-70秒（複雑な分析・実装問題）
-- エキスパート: 50-90秒（高度な技術判断・設計問題）
-- 計算問題: +10-15秒追加 | コード読解: +15-20秒追加 | 実装パターン: +20-30秒追加
-</time_limit_guidelines>
-
-<duplicate_avoidance>
-${data.existingCount > 0 ? `- ${data.subcategoryName}分野では既に${data.existingCount}問が存在（全難易度レベル含む）
-- 上記表示された既存問題と絶対に重複しない新しい観点・切り口から出題
-- 既存問題の内容・表現・アプローチを完全に避ける
-- より深い理解や実践的な応用問題を重視
-- 異なるユースケース・シナリオ・実装パターンでの出題
-- 初級・中級・上級の全難易度レベルでの既存問題を考慮
-- 上記既存問題一覧とは明確に異なるアプローチを必須採用` : `- 基礎から応用まで幅広い観点での出題
-- 体系的で段階的な難易度設定
-- 実務で活用できる実践的な内容
-- 新規分野として質の高い問題を体系的に構築`}
-</duplicate_avoidance>
+<question_guidelines>
+${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyName)}
+</question_guidelines>
 
 <output_format>
 {
   "questions": [
     {
-      "question": "問題文をここに記載（具体的で明確に）",
+      "question": "具体的で明確な問題文",
       "options": {"A": "選択肢1", "B": "選択肢2", "C": "選択肢3", "D": "選択肢4"},
-      "correctAnswer": "A～Dのいずれか（必ずランダムに）",
-      "explanation": "正解の理由と学習ポイントを詳しく説明",
+      "correctAnswer": "A/B/C/D（必ずランダム配置）",
+      "explanation": "正解理由と学習ポイント",
       "category": "${data.categoryId}",
       "subcategory": "${data.subcategoryId}",
       "difficulty": "${data.difficultyId}",
-      "timeLimit": 45,
-      "tags": ["具体的タグ1", "具体的タグ2", "具体的タグ3"],
-      "source": "参考資料名・公式ドキュメント・書籍名等"
+      "timeLimit": ${getTimeLimit(data.difficultyName)},
+      "tags": ["関連タグ1", "関連タグ2"],
+      "source": "参考資料名"
     }
   ]
 }
 </output_format>
 
-<quality_standards>
-- 正確性: 技術的に正しく、最新の情報に基づく
-- 明確性: 曖昧さのない問題文と選択肢
-- 教育的価値: 解説で理解を深め、実務に活かせる知識
-- 適切性: ${data.difficultyName}レベルに適合した難易度
-- 実践性: 実際の開発・業務で遭遇する場面を想定
-- 具体性: 抽象的でなく具体的なシナリオベース
-- ランダム性: 正解選択肢は必ずA/B/C/Dにランダムに配置（偏りを避ける）
-</quality_standards>
+<time_setting_guide>
+**制限時間設定ガイド（重要）**：
+- 基本時間: ${getDifficultyDescription(data.difficultyName).match(/(\d+-\d+秒)/)?.[1] || '10-25秒'}
+- 追加時間: 計算問題+10-15秒、コード読解+15-20秒、実装パターン+20-30秒
+- 最終調整: 問題複雑度に応じて±5-10秒
+</time_setting_guide>
 
-<important_notes>
-⚠️ correctAnswerは各問題でA/B/C/Dをランダムに使用してください。
-例：1問目="B"、2問目="D"、3問目="A"、4問目="C"、5問目="B" など、偏らないように。
-
-ソース記載例: "MDN Web Docs"、"ECMAScript仕様書"、"Clean Code（Robert C. Martin著）"等
-タグ記載例: 技術要素["JavaScript", "ES6"]、概念["デザインパターン"]、分野["フロントエンド"]等
-</important_notes>`
+<quality_requirements>
+✅ 正確性・明確性・教育的価値を確保
+✅ ${data.difficultyName}レベルに適した内容・制限時間
+✅ 実務で活用できる実践的な問題
+✅ 正解選択肢をA/B/C/Dにランダム配置
+✅ 既存問題と完全に異なる観点・アプローチ
+✅ 制限時間は上記ガイドに従って適切に設定
+</quality_requirements>`
 }
 
 /**
- * ChatGPT向け最適化プロンプト（構造化・箇条書き重視）
+ * ChatGPT向け最適化プロンプト（情報整理・最適化版）
  */
 export function generateChatGPTPrompt(data: PromptData): string {
-  return `以下の条件で日本語のクイズ問題を生成してください。
-出力は必ずJSON形式でお願いします。${data.duplicateWarning}${data.existingContext}
+  const optimizedExistingContext = data.existingCount > 0 ? 
+    generateOptimizedExistingContext(data.existingContext, data.existingCount) : ''
 
-# 生成条件
-- **カテゴリー**: ${data.categoryName}（ID: ${data.categoryId}）
-- **カテゴリータイプ**: ${data.categoryType === 'main' ? 'ビジネススキル' : '業界専門スキル'}（${data.categoryTypeDescription}）
-- **サブカテゴリー**: ${data.subcategoryName}（ID: ${data.subcategoryId}）
-- **難易度**: ${data.difficultyName}（ID: ${data.difficultyId}）
+  return `# ${data.categoryName}の${data.subcategoryName}分野クイズ問題生成
+${data.difficultyName}レベルで${data.count}問作成。JSON形式で出力してください。
+${data.duplicateWarning}
+
+## 生成条件
+- **カテゴリー**: ${data.categoryName}（${data.categoryType === 'main' ? 'ビジネススキル' : '業界専門スキル'}）
+- **サブカテゴリー**: ${data.subcategoryName}
+- **難易度**: ${getDifficultyDescription(data.difficultyName)}
 - **問題数**: ${data.count}問
-- **ソース**: 適切な参考情報源（書籍、公式ドキュメント、標準仕様等）
 
-# 問題作成の視点
-${data.categoryType === 'main' ? 
-`## ビジネススキル観点
-- ビジネス全般で活用できる汎用的なスキル・知識
-- 業界を問わず重要な基本概念・手法
-- 実務で広く使われる標準的なアプローチ
-- チームワーク・コミュニケーション・問題解決に関連する内容` :
-`## 業界専門スキル観点
-- ${data.categoryName}業界特有の専門知識・技術
-- 業界の最新トレンド・技術動向
-- 実際の${data.categoryName}業界で直面する課題・ソリューション
-- ${data.categoryName}業界のベストプラクティス・事例`}
+${optimizedExistingContext}
 
-# 難易度レベル定義
-- **基礎**: 学生・新入社員レベル（基本概念・用語・定義の理解）
-- **中級**: 入社2-3年目レベル（実践的な理解・応用問題）
-- **上級**: ベテラン社員レベル（深い理解・複雑な問題解決）
-- **エキスパート**: 専門家レベル（最新技術・高度な実装・アーキテクチャ設計）
+## 問題作成ガイドライン
+${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyName)}
 
-# 制限時間設定指針（マイクロラーニング対応）
-- 基礎レベル: 10-25秒（基本概念・定義問題）
-- 中級レベル: 25-40秒（思考・応用問題）
-- 上級レベル: 40-70秒（複雑な分析・実装問題）
-- エキスパート: 50-90秒（高度な技術判断・設計問題）
-- **追加時間**: 計算問題+10-15秒、コード読解+15-20秒、実装パターン+20-30秒
-
-# 重複回避要件
-${data.existingCount > 0 ? `- ${data.subcategoryName}分野では既に${data.existingCount}問が存在（全難易度レベル含む）
-- 上記表示された既存問題と絶対に重複しない新しい観点・切り口から出題
-- 既存問題の内容・表現・アプローチを完全に避ける
-- より深い理解や実践的な応用問題を重視
-- 異なるユースケース・シナリオ・実装パターンでの出題
-- 初級・中級・上級の全難易度レベルでの既存問題を考慮
-- 上記既存問題一覧とは明確に異なるアプローチを必須採用` : `- 基礎から応用まで幅広い観点での出題
-- 体系的で段階的な難易度設定
-- 実務で活用できる実践的な内容
-- 新規分野として質の高い問題を体系的に構築`}
-
-# 出力形式
-\`\`\`json
-{
-  "questions": [
-    {
-      "question": "問題文をここに記載（具体的で明確に）",
-      "options": {"A": "選択肢1", "B": "選択肢2", "C": "選択肢3", "D": "選択肢4"},
-      "correctAnswer": "A～Dのいずれか（必ずランダムに）",
-      "explanation": "正解の理由と学習ポイントを詳しく説明",
-      "category": "${data.categoryId}",
-      "subcategory": "${data.subcategoryId}",
-      "difficulty": "${data.difficultyId}",
-      "timeLimit": 45,
-      "tags": ["具体的タグ1", "具体的タグ2", "具体的タグ3"],
-      "source": "参考資料名・公式ドキュメント・書籍名等"
-    }
-  ]
-}
-\`\`\`
-
-# 品質基準（必須遵守）
-1. **正確性**: 技術的に正しく、最新の情報に基づく
-2. **明確性**: 曖昧さのない問題文と選択肢
-3. **教育的価値**: 解説で理解を深め、実務に活かせる知識
-4. **適切性**: ${data.difficultyName}レベルに適合した難易度
-5. **実践性**: 実際の開発・業務で遭遇する場面を想定
-6. **具体性**: 抽象的でなく具体的なシナリオベース
-7. **ランダム性**: 正解選択肢は必ずA/B/C/Dにランダムに配置（偏りを避ける）
-
-# 重要な注意事項
-⚠️ **correctAnswerは各問題でA/B/C/Dをランダムに使用してください。**
-例：1問目="B"、2問目="D"、3問目="A"、4問目="C"、5問目="B" など、偏らないように。
-
-**ソース記載例**: "MDN Web Docs - JavaScript"、"ECMAScript 2023仕様書"、"Clean Code（Robert C. Martin著）"等
-**タグ記載例**: 技術要素["JavaScript", "ES6"]、概念["デザインパターン"]、分野["フロントエンド"]等`
-}
-
-/**
- * Gemini向け最適化プロンプト（簡潔・効率重視）
- */
-export function generateGeminiPrompt(data: PromptData): string {
-  return `## クイズ問題生成タスク
-日本語のクイズ問題を生成してください。JSON形式で出力。
-${data.duplicateWarning}${data.existingContext}
-
-**基本条件**
-- カテゴリー: ${data.categoryName}（${data.categoryId}）
-- サブカテゴリー: ${data.subcategoryName}（${data.subcategoryId}）
-- 難易度: ${data.difficultyName}（${data.difficultyId}）
-- 問題数: ${data.count}問
-- カテゴリータイプ: ${data.categoryTypeDescription}
-
-**問題作成観点**
-${data.categoryType === 'main' ? 
-`ビジネススキル: 汎用的スキル・知識、基本概念・手法、標準的アプローチ、チームワーク・コミュニケーション・問題解決` :
-`業界専門: ${data.categoryName}業界の専門知識・技術、最新トレンド・技術動向、実際の業界課題・ソリューション、ベストプラクティス・事例`}
-
-**難易度・制限時間設定**
-- 基礎（学生・新入社員）: 10-25秒 - 基本概念・用語・定義
-- 中級（入社2-3年目）: 25-40秒 - 実践的理解・応用問題
-- 上級（ベテラン社員）: 40-70秒 - 深い理解・複雑な問題解決
-- エキスパート（専門家）: 50-90秒 - 最新技術・高度な実装・アーキテクチャ設計
-- 追加時間: 計算+10-15秒、コード読解+15-20秒、実装パターン+20-30秒
-
-**重複回避**
-${data.existingCount > 0 ? `${data.subcategoryName}分野既存${data.existingCount}問。上記既存問題と完全に異なる新観点・切り口必須。既存の内容・表現・アプローチ完全回避。深い理解・実践的応用重視。異なるユースケース・シナリオ・実装パターン。全難易度レベル既存問題考慮。` : `新規分野。基礎～応用幅広い観点。体系的段階的難易度。実務活用実践的内容。質の高い問題体系的構築。`}
-
-**JSON出力形式**
+## 出力形式
 \`\`\`json
 {
   "questions": [
     {
       "question": "具体的で明確な問題文",
       "options": {"A": "選択肢1", "B": "選択肢2", "C": "選択肢3", "D": "選択肢4"},
-      "correctAnswer": "A～D（必ずランダム配置）",
-      "explanation": "正解理由と学習ポイント詳細説明",
+      "correctAnswer": "A/B/C/D（必ずランダム配置）",
+      "explanation": "正解理由と学習ポイント",
       "category": "${data.categoryId}",
       "subcategory": "${data.subcategoryId}",
       "difficulty": "${data.difficultyId}",
-      "timeLimit": 適切な秒数,
-      "tags": ["具体的タグ1", "具体的タグ2", "具体的タグ3"],
-      "source": "参考資料名・公式ドキュメント・書籍名"
+      "timeLimit": ${getTimeLimit(data.difficultyName)},
+      "tags": ["関連タグ1", "関連タグ2"],
+      "source": "参考資料名"
     }
   ]
 }
 \`\`\`
 
-**品質基準（全項目必須）**
-正確性（技術的正確・最新情報）、明確性（曖昧さなし）、教育的価値（実務活用可能知識）、適切性（${data.difficultyName}レベル適合）、実践性（実際の開発・業務場面）、具体性（具体的シナリオベース）、ランダム性（A/B/C/Dランダム配置・偏り回避）
+## 制限時間設定ガイド（重要）
+- **基本時間**: ${getDifficultyDescription(data.difficultyName).match(/(\d+-\d+秒)/)?.[1] || '10-25秒'}
+- **追加時間**: 計算問題+10-15秒、コード読解+15-20秒、実装パターン+20-30秒
+- **最終調整**: 問題複雑度に応じて±5-10秒
 
-**重要注意**
-⚠️ correctAnswerは各問題でA,B,C,Dをランダム使用必須。例：1問目="B"、2問目="D"、3問目="A"等、偏り禁止。
-ソース例："MDN Web Docs"、"ECMAScript仕様書"、"Clean Code"等
-タグ例：技術["JavaScript","ES6"]、概念["デザインパターン"]、分野["フロントエンド"]等`
+## 品質要件
+1. **正確性**: 技術的に正しく最新の情報
+2. **明確性**: 曖昧さのない問題文と選択肢
+3. **教育的価値**: 実務に活かせる知識
+4. **適切性**: ${data.difficultyName}レベルに適合・制限時間適正
+5. **実践性**: 実際の業務で遭遇する場面
+6. **ランダム性**: 正解選択肢をA/B/C/Dにランダム配置
+
+⚠️ **正解選択肢（correctAnswer）は必ずA/B/C/Dをランダムに使用してください**
+⚠️ **制限時間（timeLimit）は上記ガイドに従って適切に設定してください**`
+}
+
+/**
+ * Gemini向け最適化プロンプト（情報整理・最適化版）
+ */
+export function generateGeminiPrompt(data: PromptData): string {
+  const optimizedExistingContext = data.existingCount > 0 ? 
+    generateOptimizedExistingContext(data.existingContext, data.existingCount) : ''
+
+  return `## ${data.categoryName}/${data.subcategoryName}クイズ生成
+${data.difficultyName}レベル・${data.count}問・JSON出力
+${data.duplicateWarning}
+
+**生成設定**
+・カテゴリー: ${data.categoryName}（${data.categoryType === 'main' ? 'ビジネス' : '業界専門'}）
+・サブカテゴリー: ${data.subcategoryName}
+・難易度: ${getDifficultyDescription(data.difficultyName)}
+
+${optimizedExistingContext}
+
+**作成指針**
+${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyName)}
+
+**JSON出力**
+\`\`\`json
+{
+  "questions": [
+    {
+      "question": "明確な問題文",
+      "options": {"A": "選択肢1", "B": "選択肢2", "C": "選択肢3", "D": "選択肢4"},
+      "correctAnswer": "A/B/C/D（ランダム）",
+      "explanation": "正解理由・学習ポイント",
+      "category": "${data.categoryId}",
+      "subcategory": "${data.subcategoryId}",
+      "difficulty": "${data.difficultyId}",
+      "timeLimit": ${getTimeLimit(data.difficultyName)},
+      "tags": ["タグ1", "タグ2"],
+      "source": "参考資料名"
+    }
+  ]
+}
+\`\`\`
+
+**制限時間ガイド**
+基本時間: ${getDifficultyDescription(data.difficultyName).match(/(\d+-\d+秒)/)?.[1] || '10-25秒'} + 追加時間（計算+10-15秒、コード読解+15-20秒、実装+20-30秒）
+
+**必須要件**
+正確性・明確性・教育的価値・${data.difficultyName}レベル適合・制限時間適正・実践性・A/B/C/Dランダム配置
+⚠️ correctAnswerは必ずA,B,C,Dランダム使用
+⚠️ timeLimitは上記ガイド従って設定`
 }
 
 /**

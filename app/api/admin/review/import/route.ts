@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    if (role !== 'admin' && role !== 'system_admin') {
+    if (!['admin', 'system_admin'].includes(role || '')) {
       return NextResponse.json({ error: 'Administrator access required' }, { status: 403 })
     }
 
@@ -249,13 +249,15 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    if (role !== 'admin' && role !== 'system_admin') {
+    if (!['admin', 'system_admin'].includes(role || '')) {
       return NextResponse.json({ error: 'Administrator access required' }, { status: 403 })
     }
 
     console.log('📋 Fetching approved questions ready for import')
+    console.log('🔍 User info:', { userId, role })
 
     // 承認済みで未取込の問題を取得
+    console.log('🔍 Querying with conditions: status=approved, imported_at=null')
     const { data, error, count } = await supabaseAdmin
       .from('quiz_questions_review')
       .select('*', { count: 'exact' })
@@ -263,6 +265,8 @@ export async function GET(request: NextRequest) {
       .is('imported_at', null)
       .order('reviewed_at', { ascending: false })
 
+    console.log('🗄️ Query result:', { dataLength: data?.length, error, count })
+    
     if (error) {
       console.error('❌ Error fetching importable questions:', error)
       return NextResponse.json(

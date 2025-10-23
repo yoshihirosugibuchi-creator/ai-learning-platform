@@ -13,7 +13,8 @@ import {
   Palette,
   Sparkles,
   Upload,
-  ClipboardCheck
+  ClipboardCheck,
+  BarChart3
 } from 'lucide-react'
 import Link from 'next/link'
 import { useUserRole } from '@/hooks/useUserRole'
@@ -228,6 +229,23 @@ export default function AdminPage() {
                   <p className="text-sm text-muted-foreground">
                     DB→ファイル同期・<br/>
                     フォールバックデータ管理
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/admin/batch-analytics">
+              <Card className="hover:shadow-md transition-shadow cursor-pointer border-red-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <BarChart3 className="h-5 w-5 text-purple-600" />
+                    <span>日次分析バッチ管理</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    学習品質スコア・ピーク時間の<br/>
+                    自動計算システム管理
                   </p>
                 </CardContent>
               </Card>

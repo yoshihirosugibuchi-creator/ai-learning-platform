@@ -2,36 +2,56 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getCurrentUserRole } from '@/lib/auth-helpers'
 
-// キーワード抽出関数：問題文から重要なキーワードを抽出
-function extractKeywords(questionText: string): string {
+// 問題文要約関数：問題文を理解しやすい要約形式に変換
+function summarizeQuestion(questionText: string): string {
   if (!questionText || questionText.length < 10) {
     return questionText // 短すぎる場合はそのまま返す
   }
 
-  // 日本語の重要語句抽出ロジック
   const text = questionText.trim()
   
-  // 1. 専門用語や固有名詞を抽出（カタカナ、英数字含む）
-  const technicalTerms = text.match(/[ア-ン][ア-ンー]+|[A-Za-z][A-Za-z0-9]*|[０-９]+/g) || []
+  // 問題文の核心部分を抽出するロジック
+  // 1. 質問形式を識別・変換
+  let summary = text
   
-  // 2. 重要な日本語キーワード（名詞・動詞など）を抽出
-  const importantWords = text.match(/[一-龯]{2,}/g) || []
+  // 一般的な質問パターンを簡潔化
+  const questionPatterns = [
+    { pattern: /^(.{1,50}?)について、?(.{1,50}?)はどれですか？?$/g, format: "$1の$2" },
+    { pattern: /^(.{1,50}?)で(.{1,50}?)する方法はどれですか？?$/g, format: "$1での$2方法" },
+    { pattern: /^(.{1,50}?)を(.{1,50}?)する際の(.{1,50}?)はどれですか？?$/g, format: "$1を$2する際の$3" },
+    { pattern: /^(.{1,50}?)において、?(.{1,50}?)として正しいものはどれですか？?$/g, format: "$1における$2" },
+    { pattern: /^(.{1,50}?)に関して、?(.{1,50}?)はどれですか？?$/g, format: "$1の$2" },
+    { pattern: /^(.{1,50}?)の(.{1,50}?)として適切なものはどれですか？?$/g, format: "$1の$2" }
+  ]
   
-  // 3. 記号や接続詞を除去、重複削除
-  const keywords = [...new Set([...technicalTerms, ...importantWords])]
-    .filter(word => 
-      word.length >= 2 && 
-      !['です', 'ます', 'した', 'する', 'ある', 'いる', 'ない', 'から', 'ので', 'ため', 'とき', 'こと', 'もの', 'など', 'また', 'さらに', 'ただし', 'なお', 'ちなみに'].includes(word)
-    )
-    .slice(0, 8) // 最大8個まで
-  
-  // 4. キーワードを結合して返す
-  if (keywords.length === 0) {
-    // キーワード抽出できない場合は先頭40文字を返す
-    return text.length > 40 ? text.substring(0, 40) + '...' : text
+  // パターンマッチングで要約を試行
+  for (const { pattern, format } of questionPatterns) {
+    const match = text.match(pattern)
+    if (match) {
+      summary = format.replace(/\$1/g, match[1]?.trim() || '').replace(/\$2/g, match[2]?.trim() || '').replace(/\$3/g, match[3]?.trim() || '')
+      break
+    }
   }
   
-  return keywords.join('・')
+  // パターンマッチしない場合は、重要部分を抽出
+  if (summary === text) {
+    // 「〜について」「〜において」「〜に関して」などの部分を抽出
+    const topicMatch = text.match(/(.{1,40}?)(?:について|において|に関して|とは|の場合|のとき)/)
+    if (topicMatch) {
+      summary = topicMatch[1] + "について"
+    } else {
+      // 最初の重要な部分（句点まで、または50文字まで）を抽出
+      const firstPart = text.split(/。|、/)[0]
+      summary = firstPart.length > 60 ? firstPart.substring(0, 60) + "..." : firstPart
+    }
+  }
+  
+  // 最終的に長すぎる場合は切り詰め
+  if (summary.length > 80) {
+    summary = summary.substring(0, 80) + "..."
+  }
+  
+  return summary
 }
 
 // クイズ問題統計API - 重複防止用
@@ -81,13 +101,19 @@ export async function GET(request: NextRequest) {
           subcategorySamples[question.subcategory_id] = []
         }
         if (question.question) {
-          // キーワード抽出方式：重要概念を抽出
-          const keywords = extractKeywords(question.question)
+          // 問題文要約方式：問題作成者が内容を理解しやすい形式に変換
+          const questionSummary = summarizeQuestion(question.question)
           
-          // 難易度とタイムリミットを含めた表示形式
-          const difficultyLabel = question.difficulty || '未設定'
+          // 難易度とタイムリミットを含めた表示形式（クイズ生成画面用日本語化）
+          const difficultyMapping: Record<string, string> = {
+            'basic': '初級(basic)',
+            'intermediate': '中級(intermediate)', 
+            'advanced': '上級(advanced)',
+            'expert': 'エキスパート(expert)'
+          }
+          const difficultyLabel = difficultyMapping[question.difficulty || ''] || question.difficulty || '未設定'
           const timeLimitLabel = question.time_limit || 45
-          const formattedQuestion = `[${difficultyLabel}・${timeLimitLabel}秒] ${keywords}`
+          const formattedQuestion = `[${difficultyLabel}・${timeLimitLabel}秒] ${questionSummary}`
           
           subcategorySamples[question.subcategory_id].push(formattedQuestion)
         }

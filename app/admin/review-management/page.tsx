@@ -16,7 +16,9 @@ import {
   CheckCircle,
   XCircle,
   RotateCcw,
-  AlertTriangle
+  AlertTriangle,
+  CheckSquare,
+  Square
 } from 'lucide-react'
 import { useUserRole } from '@/hooks/useUserRole'
 import { useAuth } from '@/components/auth/AuthProvider'
@@ -82,7 +84,7 @@ interface Filters {
 // ======================================================================
 
 export default function ReviewManagementPage() {
-  const { isAdmin, loading: roleLoading } = useUserRole()
+  const { isAdmin, isSystemAdmin, loading: roleLoading } = useUserRole()
   const { user } = useAuth()
   const { toast, toasts, removeToast } = useToast()
   
@@ -96,6 +98,7 @@ export default function ReviewManagementPage() {
   const [deletingQuestionId, setDeletingQuestionId] = useState<number | null>(null)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
   const [filters, setFilters] = useState<Filters>({
     status: '',
     category: '',
@@ -251,6 +254,45 @@ export default function ReviewManagementPage() {
     }
   }
 
+  const handleBulkDelete = async () => {
+    if (selectedQuestions.length === 0) return
+
+    try {
+      const response = await fetch('/api/admin/review/bulk-delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await (await import('@/lib/supabase')).supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          questionIds: selectedQuestions
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: '一括削除完了',
+          description: `${selectedQuestions.length}問を削除しました`
+        })
+        setSelectedQuestions([])
+        fetchQuestions()
+      } else {
+        const error = await response.text()
+        toast({
+          title: '削除失敗',
+          description: `削除に失敗しました: ${error}`,
+          variant: 'destructive'
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'エラーが発生しました',
+        description: `削除中にエラーが発生しました: ${error}`,
+        variant: 'destructive'
+      })
+    }
+  }
+
   const handleEditQuestion = (question: ReviewQuestion) => {
     setEditingQuestion({ ...question })
     setShowEditModal(true)
@@ -278,14 +320,15 @@ export default function ReviewManagementPage() {
           difficulty: editingQuestion.difficulty,
           time_limit: editingQuestion.time_limit,
           ai_model: editingQuestion.ai_model,
-          review_notes: editingQuestion.review_notes
+          review_notes: editingQuestion.review_notes,
+          status: 'editing' // 編集時は自動的に「編集中」ステータスに変更
         })
       })
 
       if (response.ok) {
         toast({
           title: '問題更新完了',
-          description: '問題を更新しました'
+          description: '問題を更新しました（ステータス: 編集中）'
         })
         setShowEditModal(false)
         setEditingQuestion(null)
@@ -354,6 +397,15 @@ export default function ReviewManagementPage() {
     const finalReason = rejectReason.trim() || '一括却下処理'
     setShowRejectModal(false)
     handleBulkStatusChange('rejected', finalReason)
+  }
+
+  // 全選択・全選択解除関数
+  const selectAllQuestions = () => {
+    setSelectedQuestions(questions.map(q => q.id))
+  }
+
+  const deselectAllQuestions = () => {
+    setSelectedQuestions([])
   }
 
   // ======================================================================
@@ -543,6 +595,17 @@ export default function ReviewManagementPage() {
                   <XCircle className="mr-2 h-4 w-4" />
                   一括却下
                 </Button>
+                {isSystemAdmin && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => setShowBulkDeleteConfirm(true)}
+                    className="bg-red-700 hover:bg-red-800"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    一括削除
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
@@ -562,6 +625,28 @@ export default function ReviewManagementPage() {
           <CardTitle className="flex items-center justify-between">
             <span>問題一覧 ({pagination.total}件)</span>
             <div className="flex items-center gap-2">
+              {questions.length > 0 && (
+                <div className="flex items-center gap-2 mr-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={selectAllQuestions}
+                    disabled={questions.length === 0 || selectedQuestions.length === questions.length}
+                  >
+                    <CheckSquare className="h-4 w-4 mr-1" />
+                    全選択
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={deselectAllQuestions}
+                    disabled={selectedQuestions.length === 0}
+                  >
+                    <Square className="h-4 w-4 mr-1" />
+                    全解除
+                  </Button>
+                </div>
+              )}
               <span className="text-sm text-muted-foreground">
                 ページ {pagination.page} / {pagination.totalPages}
               </span>
@@ -885,6 +970,47 @@ export default function ReviewManagementPage() {
                 onClick={handleRejectConfirm}
               >
                 却下する
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 一括削除確認モーダル */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">一括削除の確認</h3>
+            <div className="space-y-3">
+              <p className="text-gray-700">
+                選択された{selectedQuestions.length}問を完全に削除しますか？
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <div className="flex">
+                  <AlertTriangle className="h-5 w-5 text-red-600 mr-2 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-semibold text-red-800">警告:</p>
+                    <p className="text-red-700">この操作は元に戻せません。</p>
+                    <p className="text-red-700">システム管理者のみ実行可能です。</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setShowBulkDeleteConfirm(false)}
+              >
+                キャンセル
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setShowBulkDeleteConfirm(false)
+                  handleBulkDelete()
+                }}
+              >
+                削除する
               </Button>
             </div>
           </div>

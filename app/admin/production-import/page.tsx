@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Textarea } from '@/components/ui/textarea'
 import { 
   Upload,
   CheckCircle,
@@ -12,7 +13,8 @@ import {
   AlertCircle,
   Database,
   RefreshCw,
-  Package
+  Package,
+  RotateCcw
 } from 'lucide-react'
 import { useUserRole } from '@/hooks/useUserRole'
 import { useAuth } from '@/components/auth/AuthProvider'
@@ -86,6 +88,9 @@ export default function ProductionImportPage() {
   const [skipDuplicateCheck, setSkipDuplicateCheck] = useState(false)
   const [lastImportResult, setLastImportResult] = useState<ImportResult | null>(null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showReturnModal, setShowReturnModal] = useState(false)
+  const [returnReason, setReturnReason] = useState('')
+  const [returningQuestions, setReturningQuestions] = useState<number[]>([])
 
   // ======================================================================
   // データ取得関数
@@ -218,6 +223,74 @@ export default function ProductionImportPage() {
       })
     } finally {
       setImporting(false)
+    }
+  }
+
+  const handleReturnClick = () => {
+    if (selectedQuestions.length === 0) {
+      toast({
+        title: '選択エラー',
+        description: '差し戻し対象の問題を選択してください',
+        variant: 'destructive'
+      })
+      return
+    }
+    setReturningQuestions(selectedQuestions)
+    setReturnReason('')
+    setShowReturnModal(true)
+  }
+
+  const handleReturnConfirm = async () => {
+    if (!returnReason.trim()) {
+      toast({
+        title: '入力エラー',
+        description: '差し戻し理由を入力してください',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    setShowReturnModal(false)
+    
+    try {
+      const response = await fetch('/api/admin/review/return', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await (await import('@/lib/supabase')).supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          questionIds: returningQuestions,
+          returnReason: returnReason.trim()
+        })
+      })
+
+      if (response.ok) {
+        await response.json()
+        toast({
+          title: '差し戻し完了',
+          description: `${returningQuestions.length}問を差し戻しました`
+        })
+        
+        // 差し戻し後、承認済み一覧を更新
+        fetchApprovedQuestions()
+        setSelectedQuestions([])
+        setReturningQuestions([])
+        setReturnReason('')
+      } else {
+        const error = await response.text()
+        toast({
+          title: '差し戻し失敗',
+          description: `差し戻しに失敗しました: ${error}`,
+          variant: 'destructive'
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'エラーが発生しました',
+        description: `差し戻し中にエラーが発生しました: ${error}`,
+        variant: 'destructive'
+      })
     }
   }
 
@@ -403,6 +476,15 @@ export default function ProductionImportPage() {
               <span className="text-sm text-muted-foreground">
                 {selectedQuestions.length}問を選択中
               </span>
+              <Button
+                onClick={handleReturnClick}
+                disabled={importing || selectedQuestions.length === 0}
+                variant="outline"
+                className="border-orange-300 text-orange-700 hover:bg-orange-50"
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                差し戻し
+              </Button>
               <Button
                 onClick={handleImportClick}
                 disabled={importing || selectedQuestions.length === 0}
@@ -623,6 +705,63 @@ export default function ProductionImportPage() {
                     取り込みを実行
                   </>
                 )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 差し戻し理由入力モーダル */}
+      {showReturnModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">問題の差し戻し</h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-gray-700 mb-3">
+                  選択された<span className="font-medium">{returningQuestions.length}問</span>を差し戻します。
+                </p>
+                <label className="text-sm font-medium block mb-2">差し戻し理由を入力してください *</label>
+                <Textarea
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  placeholder="例: 重複問題のため、問題文の修正が必要、カテゴリー分類が不適切など"
+                  rows={4}
+                  className="w-full"
+                />
+              </div>
+              <div className="bg-orange-50 border border-orange-200 rounded-md p-3">
+                <div className="flex">
+                  <AlertTriangle className="h-5 w-5 text-orange-600 mr-2 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-semibold text-orange-800">差し戻しについて:</p>
+                    <ul className="list-disc list-inside mt-1 text-orange-700 space-y-1">
+                      <li>問題のステータスが「差し戻し」に変更されます</li>
+                      <li>レビュー画面で再度確認・修正が可能になります</li>
+                      <li>理由は履歴として記録されます</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowReturnModal(false)
+                  setReturnReason('')
+                  setReturningQuestions([])
+                }}
+              >
+                キャンセル
+              </Button>
+              <Button
+                onClick={handleReturnConfirm}
+                disabled={!returnReason.trim()}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                差し戻し実行
               </Button>
             </div>
           </div>
