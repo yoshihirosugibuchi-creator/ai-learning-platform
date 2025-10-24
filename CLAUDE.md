@@ -329,6 +329,20 @@ echo "6. セッション有効期限確認"
 
 **→ 新機能実装時は必ず既存パターンを調査し、確立された認証フローを使用すること**
 
+#### **復習機能認証エラー問題（2025.10.24追記）**:
+1. **🔍 既存パターン無視**: `/api/review/stats`認証必須なのに、フロントエンドで認証ヘッダーなし実装
+2. **📋 ガイドライン軽視**: CLAUDE.mdの必須チェックリストを省略
+3. **🔄 大量401エラー**: 認証なしAPIアクセスでサーバーログが汚染
+4. **⚡ 解決方法**: 既存の管理画面パターン（`directAuthenticatedFetch`）に合わせて認証ヘッダー追加
+
+#### **日次バッチ管理無限ループ問題（2025.10.24追記）**:
+1. **🔄 useEffect設計ミス**: `useEffect([loadData])`で依存関係循環、システム負荷増大
+2. **🏃‍♂️ React Hook理解不足**: useCallbackとuseEffectの相互依存パターン
+3. **⚠️ システム落下**: 朝方アクセス時にサーバー不安定化
+4. **✅ 解決方法**: 依存関係を適切に分離（初期化・フィルター変更・定期更新を独立）、ESLint抑制で対応
+
+**→ 既存パターン調査とReact Hook設計の両方を徹底すること**
+
 ---
 
 ## 🚨 **作業開始前必須確認（絶対に省略禁止）**
@@ -1292,6 +1306,40 @@ npm run typecheck | grep -E "(supabase|database)"
 - state更新がuseEffectを再トリガーしないか確認
 - プロファイル更新系は初期化時のみ実行するよう制御
 - ESLint警告を適切に抑制（// eslint-disable-line react-hooks/exhaustive-deps）
+
+🚨 **日次バッチ管理無限ループ事例（2025.10.24追記）**:
+```typescript
+// ❌ 無限ループを引き起こす危険なパターン
+const loadData = useCallback(async () => {
+  // データ取得処理
+}, [filterProcessType, filterStatus, filterDays, toast])  // ← 複数の依存関係
+
+useEffect(() => {
+  loadData()
+}, [loadData])  // ← loadDataが変更されるたびに再実行
+
+// ✅ 正しい修正パターン
+useEffect(() => {
+  loadData()
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [])  // 初回のみ実行
+
+useEffect(() => {
+  loadData()
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [filterProcessType, filterStatus, filterDays])  // フィルター変更時のみ
+
+useEffect(() => {
+  const interval = setInterval(() => loadData(), 5 * 60 * 1000)
+  return () => clearInterval(interval)
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [])  // 初回のみインターバル設定
+```
+
+⚠️ **管理画面での頻発パターン**:
+- データ取得関数（loadData）をuseCallbackで定義
+- 同じ関数をuseEffectの依存配列に含める
+- フィルター変更時の自動再読み込みと定期更新が競合
 ```
 
 ### **品質基準（常に維持）**

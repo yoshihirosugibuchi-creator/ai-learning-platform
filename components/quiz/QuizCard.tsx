@@ -270,7 +270,7 @@ export default function QuizCard({
           </Badge>
           
           {/* 復習理由バッジ */}
-          {question.reviewReason && (
+          {'reviewReason' in question && question.reviewReason && (
             <Badge 
               variant="secondary" 
               className={`text-xs ${

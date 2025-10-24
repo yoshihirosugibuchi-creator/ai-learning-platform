@@ -106,6 +106,12 @@ export interface Question {
   relatedTopics: string[]
   source: string | null // データベーススキーマに合わせる
   deleted?: boolean // 削除フラグ
+  // 復習関連フィールド（復習モード時のみ）
+  reviewReason?: 'forgetting_curve' | 'weak_category' | 'repeat_mistakes'
+  reviewPriority?: 1 | 2 | 3
+  lastAttemptDate?: string
+  incorrectStreak?: number
+  categoryAccuracy?: number
 }
 
 export interface UserProgress {
