@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useToast } from '@/hooks/use-toast'
+import { supabase } from '@/lib/supabase'
 import { 
   requestBatchExecution,
   BATCH_PROCESS_TYPES,
@@ -69,11 +70,8 @@ export default function BatchAnalyticsPage() {
   const getAuthToken = useCallback(async () => {
     if (!user?.id) return null
 
-    // 既存のSupabaseクライアントを使用（新しいクライアント作成を避ける）
-    const { supabase } = await import('@/lib/supabase')
-    
-    const { data: sessionData } = await supabase.auth.getSession()
-    return sessionData.session?.access_token || null
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token || null
   }, [user?.id])
 
   // データ読み込み
