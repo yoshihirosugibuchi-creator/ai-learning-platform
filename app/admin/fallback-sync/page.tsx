@@ -125,7 +125,7 @@ export default function FallbackSyncPage() {
   }, [directAuthenticatedFetch])
 
   // 同期実行
-  const handleSync = async (type: 'all' | 'xp' | 'quiz' | 'courses' | 'wisdom' | 'static') => {
+  const handleSync = async (type: 'all' | 'xp' | 'quiz' | 'hints' | 'courses' | 'wisdom' | 'static') => {
     console.log(`==========================================`)
     console.log(`🚀 SYNC STARTED - Type: ${type}`)
     console.log(`🕐 Timestamp: ${new Date().toISOString()}`)
