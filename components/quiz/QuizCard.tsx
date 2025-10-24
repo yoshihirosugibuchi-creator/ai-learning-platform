@@ -22,13 +22,7 @@ function getDifficultyBadgeVariant(difficulty: string): "default" | "secondary" 
 }
 
 interface QuizCardProps {
-  question: Question & { 
-    reviewReason?: 'forgetting_curve' | 'weak_category' | 'repeat_mistakes'
-    reviewPriority?: number
-    lastAttemptDate?: string
-    incorrectStreak?: number
-    categoryAccuracy?: number
-  }
+  question: Question
   questionNumber: number
   totalQuestions: number
   onAnswer: (selectedOption: number, isCorrect: boolean) => void
