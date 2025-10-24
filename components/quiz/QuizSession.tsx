@@ -45,6 +45,7 @@ interface QuizSessionProps {
   onComplete: (results: QuizResults) => void
   onExit: () => void
   isReviewMode?: boolean
+  hintsEnabled?: boolean
 }
 
 interface CategoryProgress {
@@ -99,7 +100,8 @@ export default function QuizSession({
   profile,
   onComplete,
   onExit,
-  isReviewMode: _isReviewMode = false
+  isReviewMode: _isReviewMode = false,
+  hintsEnabled = true
 }: QuizSessionProps) {
   const _router = useRouter()
   const searchParams = useSearchParams()
@@ -1184,7 +1186,7 @@ export default function QuizSession({
         confidenceLevel={currentConfidence}
         onConfidenceChange={setCurrentConfidence}
         showConfidenceInput={showConfidenceInput && showResult}
-        hintsEnabled={true}
+        hintsEnabled={hintsEnabled}
         onHintUsed={(level, hint) => {
           console.log(`Hint used: Level ${level} - ${hint}`)
           // ヒント使用の記録（XP計算で使用）

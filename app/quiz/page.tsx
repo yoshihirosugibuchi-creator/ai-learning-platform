@@ -220,6 +220,7 @@ export default function QuizPage() {
               onComplete={handleQuizComplete}
               onExit={handleQuizExit}
               isReviewMode={mode === 'review'}
+              hintsEnabled={true}
             />
           </div>
         )}
