@@ -137,12 +137,27 @@ export default function QuizCard({
   // ヒントデータ取得関数
   const loadHintData = useCallback(async () => {
     try {
+      console.log('📡 Fetching hints from API for question:', question.id)
       const response = await fetch(`/api/questions/${question.id}/hints`)
+      
+      console.log('📡 API Response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
-        setHintData(data.hints || { available: false })
+        console.log('📡 Received hint data:', data)
+        
+        // data.hints構造を確認し、正しい構造でhintDataを設定
+        const hintsWithAvailable = {
+          ...data.hints,
+          available: data.available || !!(data.hints?.level1 || data.hints?.level2 || data.hints?.level3)
+        }
+        
+        console.log('📡 Setting hint data:', hintsWithAvailable)
+        setHintData(hintsWithAvailable)
       } else {
-        console.warn('Failed to load hint data')
+        console.warn('Failed to load hint data, status:', response.status)
+        const errorData = await response.json().catch(() => ({}))
+        console.warn('Error response:', errorData)
         setHintData({ available: false })
       }
     } catch (error) {
@@ -153,7 +168,15 @@ export default function QuizCard({
   
   // ヒントデータを取得
   useEffect(() => {
+    console.log('🔍 Quiz Hint Debug:', {
+      hintsEnabled,
+      questionId: question.id,
+      hasHintData: !!hintData,
+      hintDataAvailable: hintData?.available
+    })
+    
     if (hintsEnabled && !hintData) {
+      console.log('📡 Loading hint data for question:', question.id)
       loadHintData()
     }
   }, [hintsEnabled, question.id, hintData, loadHintData])
@@ -308,6 +331,16 @@ export default function QuizCard({
         </div>
         
         {/* ヒント表示（回答前のみ） */}
+        {(() => {
+          console.log('🎯 Hint Display Condition Check:', {
+            hintsEnabled,
+            hintDataAvailable: hintData?.available,
+            showResult,
+            isTimeUp,
+            shouldShow: hintsEnabled && hintData?.available && !showResult && !isTimeUp
+          })
+          return null
+        })()}
         {hintsEnabled && hintData?.available && !showResult && !isTimeUp && (
           <HintDisplay
             hints={shownHints}
