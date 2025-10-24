@@ -3,8 +3,8 @@
  * 
  * ⚠️ 注意: このファイルは自動生成されます。手動で編集しないでください。
  * 
- * 生成時刻: 2025-10-16T11:25:01.968Z
- * データベース設定件数: 23件
+ * 生成時刻: 2025-10-23T16:09:39.099Z
+ * データベース設定件数: 26件
  * 
  * 生成元: scripts/sync-all-fallback-data.ts
  * データソース: xp_level_skp_settings テーブル
@@ -45,12 +45,17 @@ export const DATABASE_FALLBACK_SETTINGS: XPSettings = {
     course_complete_bonus: 50,
     daily_streak_bonus: 10,
     ten_day_streak_bonus: 100
+  },
+  hint: {
+    level1_penalty_percent: 5.0,
+    level2_penalty_percent: 15.0,
+    level3_penalty_percent: 30.0
   }
 }
 
 export const FALLBACK_METADATA = {
-  generatedAt: '2025-10-16T11:25:01.968Z',
-  sourceRecordCount: 23,
+  generatedAt: '2025-10-23T16:09:39.099Z',
+  sourceRecordCount: 26,
   databaseSource: 'xp_level_skp_settings',
   generatorScript: 'scripts/sync-all-fallback-data.ts'
 }
