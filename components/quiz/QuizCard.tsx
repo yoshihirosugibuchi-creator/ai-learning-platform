@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -32,6 +32,73 @@ interface QuizCardProps {
   confidenceLevel?: number | null
   onConfidenceChange?: (level: number) => void
   showConfidenceInput?: boolean
+  // ヒント機能追加
+  hintsEnabled?: boolean
+  onHintUsed?: (level: number, hint: string) => void
+}
+
+// ヒントデータの型定義
+interface HintData {
+  level1?: string
+  level2?: string
+  level3?: string
+  available: boolean
+}
+
+// ヒント表示用のコンポーネント
+interface HintDisplayProps {
+  hints: string[]
+  currentLevel: number
+  onRequestHint: () => void
+  disabled: boolean
+  maxLevel: number
+}
+
+function HintDisplay({ hints, currentLevel, onRequestHint, disabled, maxLevel }: HintDisplayProps) {
+  const getHintButtonText = () => {
+    if (currentLevel === 0) return 'ヒント1を見る（XP -5%）'
+    if (currentLevel === 1) return 'ヒント2を見る（XP -15%）'
+    if (currentLevel === 2) return 'ヒント3を見る（XP -30%）'
+    return 'すべてのヒントを表示済み'
+  }
+
+  const canShowMoreHints = currentLevel < maxLevel && currentLevel < 3
+
+  return (
+    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
+      <div className="flex items-center space-x-2">
+        <Lightbulb className="h-5 w-5 text-yellow-600" />
+        <span className="font-medium text-yellow-900">ヒント</span>
+      </div>
+      
+      {/* 表示済みヒント */}
+      {hints.map((hint, index) => (
+        <div key={index} className="bg-white border border-yellow-200 rounded p-3">
+          <div className="text-xs text-yellow-600 mb-1">ヒント {index + 1}</div>
+          <div className="text-sm text-gray-800">{hint}</div>
+        </div>
+      ))}
+      
+      {/* 次のヒントボタン */}
+      {canShowMoreHints && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRequestHint}
+          disabled={disabled}
+          className="w-full border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+        >
+          {getHintButtonText()}
+        </Button>
+      )}
+      
+      {!canShowMoreHints && hints.length > 0 && (
+        <div className="text-xs text-yellow-600 text-center">
+          利用可能なヒントをすべて表示しました
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function QuizCard({
@@ -44,16 +111,86 @@ export default function QuizCard({
   selectedOption,
   confidenceLevel,
   onConfidenceChange,
-  showConfidenceInput = false
+  showConfidenceInput = false,
+  hintsEnabled = false,
+  onHintUsed
 }: QuizCardProps) {
   const [timeLeft, setTimeLeft] = useState(question.timeLimit)
   const [isTimeUp, setIsTimeUp] = useState(false)
+  
+  // ヒント関連のstate
+  const [hintData, setHintData] = useState<HintData | null>(null)
+  const [shownHints, setShownHints] = useState<string[]>([])
+  const [currentHintLevel, setCurrentHintLevel] = useState(0)
+  const [isLoadingHint, setIsLoadingHint] = useState(false)
 
-  // Reset timer when question changes
+  // Reset timer and hints when question changes
   useEffect(() => {
     setTimeLeft(question.timeLimit)
     setIsTimeUp(false)
+    setHintData(null)
+    setShownHints([])
+    setCurrentHintLevel(0)
+    setIsLoadingHint(false)
   }, [question.id, question.timeLimit])
+  
+  // ヒントデータ取得関数
+  const loadHintData = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/questions/${question.id}/hints`)
+      if (response.ok) {
+        const data = await response.json()
+        setHintData(data.hints || { available: false })
+      } else {
+        console.warn('Failed to load hint data')
+        setHintData({ available: false })
+      }
+    } catch (error) {
+      console.error('Error loading hint data:', error)
+      setHintData({ available: false })
+    }
+  }, [question.id])
+  
+  // ヒントデータを取得
+  useEffect(() => {
+    if (hintsEnabled && !hintData) {
+      loadHintData()
+    }
+  }, [hintsEnabled, question.id, hintData, loadHintData])
+  
+  // ヒント表示処理
+  const handleRequestHint = async () => {
+    if (!hintData || isLoadingHint || showResult || isTimeUp) return
+    
+    setIsLoadingHint(true)
+    
+    try {
+      const nextLevel = currentHintLevel + 1
+      let hintText = ''
+      
+      if (nextLevel === 1 && hintData.level1) {
+        hintText = hintData.level1
+      } else if (nextLevel === 2 && hintData.level2) {
+        hintText = hintData.level2
+      } else if (nextLevel === 3 && hintData.level3) {
+        hintText = hintData.level3
+      }
+      
+      if (hintText) {
+        setShownHints(prev => [...prev, hintText])
+        setCurrentHintLevel(nextLevel)
+        
+        // コールバックでヒント使用を通知
+        if (onHintUsed) {
+          onHintUsed(nextLevel, hintText)
+        }
+      }
+    } catch (error) {
+      console.error('Error showing hint:', error)
+    } finally {
+      setIsLoadingHint(false)
+    }
+  }
 
   useEffect(() => {
     if (showResult || isTimeUp) return
@@ -127,10 +264,28 @@ export default function QuizCard({
           {question.question}
         </CardTitle>
         
-        <div className="flex justify-center">
+        <div className="flex justify-center space-x-2">
           <Badge variant="outline" className="text-xs">
             {getSubcategoryDisplayName(question.subcategory)}
           </Badge>
+          
+          {/* 復習理由バッジ */}
+          {question.reviewReason && (
+            <Badge 
+              variant="secondary" 
+              className={`text-xs ${
+                question.reviewReason === 'forgetting_curve' 
+                  ? 'bg-purple-100 text-purple-800 border-purple-200' 
+                  : question.reviewReason === 'weak_category'
+                    ? 'bg-red-100 text-red-800 border-red-200'
+                    : 'bg-orange-100 text-orange-800 border-orange-200'
+              }`}
+            >
+              {question.reviewReason === 'forgetting_curve' && '🧠 忘却曲線'}
+              {question.reviewReason === 'weak_category' && '📊 苦手分野'}
+              {question.reviewReason === 'repeat_mistakes' && '🔄 繰り返しミス'}
+            </Badge>
+          )}
         </div>
       </CardHeader>
 
@@ -151,6 +306,17 @@ export default function QuizCard({
             </Button>
           ))}
         </div>
+        
+        {/* ヒント表示（回答前のみ） */}
+        {hintsEnabled && hintData?.available && !showResult && !isTimeUp && (
+          <HintDisplay
+            hints={shownHints}
+            currentLevel={currentHintLevel}
+            onRequestHint={handleRequestHint}
+            disabled={isLoadingHint}
+            maxLevel={3}
+          />
+        )}
 
         {(showResult || isTimeUp) && (
           <div className="space-y-4 pt-4 border-t">

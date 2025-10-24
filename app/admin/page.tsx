@@ -155,6 +155,23 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           </Link>
+
+          <Link href="/admin/question-maintenance">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-indigo-600" />
+                  <span>クイズ問題メンテナンス</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  既存問題の編集と<br/>
+                  AIヒント生成・管理
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </div>
 

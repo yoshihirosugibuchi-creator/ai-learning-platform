@@ -44,6 +44,7 @@ interface QuizSessionProps {
   profile: UserProfileWithProgress | null
   onComplete: (results: QuizResults) => void
   onExit: () => void
+  isReviewMode?: boolean
 }
 
 interface CategoryProgress {
@@ -97,7 +98,8 @@ export default function QuizSession({
   user,
   profile,
   onComplete,
-  onExit
+  onExit,
+  isReviewMode = false
 }: QuizSessionProps) {
   const _router = useRouter()
   const searchParams = useSearchParams()
@@ -727,6 +729,7 @@ export default function QuizSession({
                 total_questions: actualTotalQuestions,
                 correct_answers: finalResults.correctAnswers,
                 accuracy_rate: actualTotalQuestions > 0 ? (finalResults.correctAnswers / actualTotalQuestions) * 100 : 0,
+                session_type: isReviewMode ? 'review' : (mode || 'standard'),
                 answers: questionAnswers.map(qa => ({
                   question_id: qa.questionId,
                   user_answer: qa.selectedOptionIndex, // ユーザーが選択した選択肢のインデックス (0-3)
@@ -1182,6 +1185,12 @@ export default function QuizSession({
         confidenceLevel={currentConfidence}
         onConfidenceChange={setCurrentConfidence}
         showConfidenceInput={showConfidenceInput && showResult}
+        hintsEnabled={true}
+        onHintUsed={(level, hint) => {
+          console.log(`Hint used: Level ${level} - ${hint}`)
+          // ヒント使用の記録（XP計算で使用）
+          // TODO: 現在の回答記録にヒント使用レベルを追加
+        }}
       />
     </div>
   )

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { syncAllFallbackData, syncXPSettings, syncQuizQuestions, syncLearningCourses, syncWisdomCards, syncStaticData } from '@/scripts/sync-all-fallback-data'
+import { syncAllFallbackData, syncXPSettings, syncQuizQuestions, syncQuizHints, syncLearningCourses, syncWisdomCards, syncStaticData } from '@/scripts/sync-all-fallback-data'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { isSystemAdmin } from '@/lib/auth-helpers'
 
@@ -68,6 +68,9 @@ export async function POST(request: NextRequest) {
         break
       case 'quiz':
         result = await syncQuizQuestions()
+        break
+      case 'hints':
+        result = await syncQuizHints()
         break
       case 'courses':
         result = await syncLearningCourses()
@@ -164,6 +167,11 @@ export async function GET(request: NextRequest) {
         { 
           name: 'クイズ問題', 
           path: 'public/questions.json',
+          type: 'json' 
+        },
+        { 
+          name: 'クイズヒント', 
+          path: 'public/data/quiz-hints-fallback.json',
           type: 'json' 
         },
         { 

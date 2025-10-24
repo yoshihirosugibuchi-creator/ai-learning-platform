@@ -887,6 +887,64 @@ export type Database = {
           },
         ]
       }
+      quiz_hints: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          level1_hint: string | null
+          level2_hint: string | null
+          level3_hint: string | null
+          question_id: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          level1_hint?: string | null
+          level2_hint?: string | null
+          level3_hint?: string | null
+          question_id: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          level1_hint?: string | null
+          level2_hint?: string | null
+          level3_hint?: string | null
+          question_id?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_hints_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_hints_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_hints_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_questions: {
         Row: {
           category_id: string
@@ -2500,10 +2558,7 @@ export type Database = {
         }
         Returns: string
       }
-      calculate_question_xp: {
-        Args: { difficulty: string }
-        Returns: number
-      }
+      calculate_question_xp: { Args: { difficulty: string }; Returns: number }
       calculate_user_course_time: {
         Args: { target_user_id: string }
         Returns: number
@@ -2585,18 +2640,12 @@ export type Database = {
           question_id: string
         }[]
       }
-      get_xp_setting: {
-        Args: { setting_key: string }
-        Returns: number
-      }
+      get_xp_setting: { Args: { setting_key: string }; Returns: number }
       initialize_user_learning_profile: {
         Args: { p_user_id: string }
         Returns: undefined
       }
-      insert_initial_industry_targets: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      insert_initial_industry_targets: { Args: never; Returns: undefined }
       optimize_session_parameters: {
         Args: { p_user_id: string }
         Returns: {
@@ -2857,9 +2906,6 @@ export type SKPTransactionInsert = Database['public']['Tables']['skp_transaction
 export type QuizQuestionInsert = Database['public']['Tables']['quiz_questions']['Insert']
 export type QuizSessionInsert = Database['public']['Tables']['quiz_sessions']['Insert']
 export type WisdomCardCollectionInsert = Database['public']['Tables']['wisdom_card_collection']['Insert']
-export type WisdomCardMaster = Database['public']['Tables']['wisdom_cards']['Row']
-export type WisdomCardMasterInsert = Database['public']['Tables']['wisdom_cards']['Insert']
-export type WisdomCardMasterUpdate = Database['public']['Tables']['wisdom_cards']['Update']
 export type UnifiedLearningSessionAnalytics = Database['public']['Tables']['unified_learning_session_analytics']['Row']
 export type UnifiedLearningSessionAnalyticsInsert = Database['public']['Tables']['unified_learning_session_analytics']['Insert']
 export type UnifiedLearningSessionAnalyticsUpdate = Database['public']['Tables']['unified_learning_session_analytics']['Update']
@@ -2887,21 +2933,18 @@ export type SystemConfigMonitoringUpdate = Database['public']['Tables']['system_
 export type SystemHealthLog = Database['public']['Tables']['system_health_logs']['Row']
 export type SystemHealthLogInsert = Database['public']['Tables']['system_health_logs']['Insert']
 export type SystemHealthLogUpdate = Database['public']['Tables']['system_health_logs']['Update']
-export type QuizQuestionReview = Database['public']['Tables']['quiz_questions_review']['Row']
-export type QuizQuestionReviewInsert = Database['public']['Tables']['quiz_questions_review']['Insert']
-export type QuizQuestionReviewUpdate = Database['public']['Tables']['quiz_questions_review']['Update']
-export type QuizReviewBatch = Database['public']['Tables']['quiz_review_batches']['Row']
-export type QuizReviewBatchInsert = Database['public']['Tables']['quiz_review_batches']['Insert']
-export type QuizReviewBatchUpdate = Database['public']['Tables']['quiz_review_batches']['Update']
-export type QuizReviewHistory = Database['public']['Tables']['quiz_review_history']['Row']
-export type QuizReviewHistoryInsert = Database['public']['Tables']['quiz_review_history']['Insert']
-export type QuizReviewHistoryUpdate = Database['public']['Tables']['quiz_review_history']['Update']
 
-// ============= New Analytics Types (for learning analytics enhancement) =============
+// ============= Additional Type Aliases (missing types) =============
+export type WisdomCardMaster = Database['public']['Tables']['wisdom_cards']['Row']
+export type WisdomCardMasterInsert = Database['public']['Tables']['wisdom_cards']['Insert']
+export type WisdomCardMasterUpdate = Database['public']['Tables']['wisdom_cards']['Update']
 export type DailyXPRecord = Database['public']['Tables']['daily_xp_records']['Row']
 export type DailyXPRecordInsert = Database['public']['Tables']['daily_xp_records']['Insert']
 export type DailyXPRecordUpdate = Database['public']['Tables']['daily_xp_records']['Update']
 export type DailyAnalyticsBatchLog = Database['public']['Tables']['daily_analytics_batch_log']['Row']
 export type DailyAnalyticsBatchLogInsert = Database['public']['Tables']['daily_analytics_batch_log']['Insert']
 export type DailyAnalyticsBatchLogUpdate = Database['public']['Tables']['daily_analytics_batch_log']['Update']
+export type QuizHint = Database['public']['Tables']['quiz_hints']['Row']
+export type QuizHintInsert = Database['public']['Tables']['quiz_hints']['Insert']
+export type QuizHintUpdate = Database['public']['Tables']['quiz_hints']['Update']
 

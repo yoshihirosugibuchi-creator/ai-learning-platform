@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { loadXPSettings, calculateQuizXP, calculateBonusXP, calculateSKP } from '@/lib/xp-settings'
+import { loadXPSettings, calculateQuizXP, calculateBonusXP, calculateSKP, type XPSettings } from '@/lib/xp-settings'
 import { 
   mapDifficultyToEnglish
 } from '@/lib/xp-level-system'
@@ -15,9 +15,29 @@ import { getCurrentHourJST, getDateJST } from '@/lib/time-utils'
 // カード処理をXP APIに統合（同期処理のため）
 import { getRandomWisdomCard, getRandomWisdomCardFromDB } from '@/lib/cards'
 import { addWisdomCardToCollection } from '@/lib/supabase-cards'
+// ヒント・復習システム
+import { determineReviewNeed } from '@/lib/review-logic'
 
 // Feature flag for DB version (段階的移行用)
 const USE_DB_CARDS = process.env.NEXT_PUBLIC_USE_DB_WISDOM_CARDS === 'true' || true // デフォルトでDB版使用
+
+/**
+ * ヒント使用時のXPペナルティを計算
+ */
+function calculateHintPenalty(baseXP: number, maxHintLevel: number, xpSettings: XPSettings): number {
+  if (maxHintLevel === 0 || !baseXP) return baseXP
+  
+  // 設定テーブルからペナルティ率取得
+  const penaltyPercent = 
+    maxHintLevel === 1 ? (xpSettings.hint?.level1_penalty_percent || 5.0) :
+    maxHintLevel === 2 ? (xpSettings.hint?.level2_penalty_percent || 15.0) :
+    maxHintLevel === 3 ? (xpSettings.hint?.level3_penalty_percent || 30.0) :
+    0
+  
+  // 四捨五入で整数化
+  const penaltyAmount = Math.round(baseXP * (penaltyPercent / 100))
+  return Math.max(1, baseXP - penaltyAmount) // 最低1XPは保証
+}
 
 // リクエストヘッダーから認証情報を取得してSupabaseクライアントを作成
 function getSupabaseWithAuth(request: Request) {
@@ -56,6 +76,8 @@ interface QuizAnswer {
   subcategory_id: string
   difficulty: string
   confidence_level?: number | null  // 理解度（1-5段階）
+  hint_used?: boolean              // ヒント使用フラグ
+  max_hint_level?: number          // 使用した最大ヒントレベル（1-3）
 }
 
 interface QuizSessionRequest {
@@ -217,6 +239,8 @@ export async function POST(request: Request) {
       difficulty: string;
       session_type: string;
       confidence_level?: number | null;
+      hint_used: boolean;
+      review_needed: boolean;
     }> = []
     
     for (const answer of body.answers) {
@@ -225,7 +249,37 @@ export async function POST(request: Request) {
       if (answer.is_correct) {
         // テーブル参照XP計算（1問あたりのXP）
         const questionDifficulty = mapDifficultyToEnglish(answer.difficulty)
-        earnedXP = calculateQuizXP(questionDifficulty, xpSettings)
+        const baseXP = calculateQuizXP(questionDifficulty, xpSettings)
+        
+        // ヒント使用時のXPペナルティ適用（個別問題のみ、ボーナスXPには適用しない）
+        const maxHintLevel = answer.max_hint_level || 0
+        earnedXP = calculateHintPenalty(baseXP, maxHintLevel, xpSettings)
+      }
+
+      // 復習必要判定（問題取得して制限時間確認）
+      let reviewNeeded = false
+      try {
+        // 問題の制限時間を取得
+        const { data: questionData } = await supabase
+          .from('quiz_questions')
+          .select('timeLimit')
+          .eq('id', answer.question_id)
+          .single()
+        
+        const timeLimit = questionData?.timeLimit || 45 // デフォルト45秒
+        
+        reviewNeeded = await determineReviewNeed(
+          userId,
+          answer.question_id,
+          answer.is_correct,
+          answer.time_spent,
+          answer.difficulty,
+          timeLimit
+        )
+      } catch (error) {
+        console.error('❌ Error determining review need:', error)
+        // エラー時は保守的に復習推奨
+        reviewNeeded = !answer.is_correct
       }
 
       answerInserts.push({
@@ -241,7 +295,9 @@ export async function POST(request: Request) {
         difficulty: answer.difficulty,
         earned_xp: earnedXP,
         session_type: 'quiz',
-        confidence_level: answer.confidence_level
+        confidence_level: answer.confidence_level,
+        hint_used: answer.hint_used || false,
+        review_needed: reviewNeeded
       })
     }
 

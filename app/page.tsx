@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Play, BookOpen, Brain, Settings } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Play, BookOpen, Brain, Settings, RefreshCw, Target } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
@@ -17,6 +18,16 @@ export default function Home() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user, loading } = useAuth()
   const [stats, setStats] = useState({ totalQuestions: 115, totalCategories: 12, totalSubcategories: 50, questionsFromData: 0 })
+  const [reviewStats, setReviewStats] = useState<{
+    totalReviewNeeded: number
+    todayCompleted: number
+    shouldShowNotification: boolean
+    reviewEffectiveness: {
+      improvement: number
+      sampleSize: number
+    }
+  } | null>(null)
+  // const [loadingReviewStats, setLoadingReviewStats] = useState(false)
 
   useEffect(() => {
     // ローディング中は何もしない
@@ -42,6 +53,44 @@ export default function Home() {
     }
     loadStats()
   }, [])
+  
+  // 復習統計データを取得
+  useEffect(() => {
+    if (!user || loading) return
+    
+    async function loadReviewStats() {
+      // setLoadingReviewStats(true)
+      try {
+        // 既存のSupabaseクライアントを使用（新しいクライアント作成を避ける）
+        const { supabase } = await import('@/lib/supabase')
+        
+        const { data: sessionData } = await supabase.auth.getSession()
+        const token = sessionData.session?.access_token
+        
+        if (!token) {
+          console.warn('No auth token available for review stats')
+          return
+        }
+
+        const response = await fetch('/api/review/stats', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setReviewStats(data)
+        }
+      } catch (error) {
+        console.error('Error loading review stats:', error)
+      } finally {
+        // setLoadingReviewStats(false)
+      }
+    }
+    
+    loadReviewStats()
+  }, [user, loading])
 
   return (
     <>
@@ -86,7 +135,48 @@ export default function Home() {
                   学習を続けましょう！AIがあなたの学習進度に合わせて最適な問題を提供します。
                 </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* 復習AI推奨パネル */}
+                {reviewStats && reviewStats.totalReviewNeeded > 0 && (
+                  <Card className="border-2 border-orange-200 bg-orange-50 hover:border-orange-400 transition-all mb-6">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="p-2 bg-orange-100 rounded-full">
+                            <RefreshCw className="h-5 w-5 text-orange-600" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg text-orange-900">復習AI推奨クイズ</CardTitle>
+                            <CardDescription className="text-orange-700">
+                              忘却曲線や苦手カテゴリーを分析した復習問題
+                            </CardDescription>
+                          </div>
+                        </div>
+                        <Badge variant="destructive" className="bg-orange-500">
+                          {reviewStats.totalReviewNeeded}問
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-orange-700">今日の復習完了: {reviewStats.todayCompleted}問</span>
+                        {reviewStats.reviewEffectiveness.improvement > 0 && (
+                          <span className="text-green-600 flex items-center">
+                            <Target className="h-3 w-3 mr-1" />
+                            効果: +{reviewStats.reviewEffectiveness.improvement}%
+                          </span>
+                        )}
+                      </div>
+                      <Link href="/quiz?mode=review" prefetch={true}>
+                        <Button className="w-full bg-orange-600 hover:bg-orange-700">
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          復習クイズ開始
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all">
                     <CardHeader className="text-center">
                       <div className="mx-auto mb-2 p-3 bg-primary/10 rounded-full w-fit">
@@ -127,6 +217,26 @@ export default function Home() {
                       <Link href="/categories" prefetch={true}>
                         <Button variant="outline" className="w-full">
                           特定カテゴリーで挑戦
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-2 border-purple-200 hover:border-purple-400 transition-all">
+                    <CardHeader className="text-center">
+                      <div className="mx-auto mb-2 p-3 bg-purple-100 rounded-full w-fit">
+                        <RefreshCw className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <CardTitle>復習推奨AIクイズ</CardTitle>
+                      <CardDescription>
+                        忘却曲線と苦手分野を分析したAI復習問題
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Link href="/quiz?mode=review" prefetch={true}>
+                        <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          復習開始
                         </Button>
                       </Link>
                     </CardContent>

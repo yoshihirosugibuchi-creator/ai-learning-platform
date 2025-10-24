@@ -30,7 +30,8 @@ import {
   Filter,
   ChevronDown,
   ChevronUp,
-  Settings
+  Settings,
+  Bell
 } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
@@ -658,6 +659,76 @@ export default function ProfilePage() {
                     <Settings className="h-4 w-4 mr-2" />
                     クイズ設定を変更
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 復習通知設定 */}
+            <Card className="border-orange-200 bg-orange-50/50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Bell className="h-5 w-5" />
+                  <span>復習通知設定</span>
+                  <Badge variant="secondary" className="text-xs">準備中</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600">
+                    忘却曲線に基づいた最適なタイミングで復習通知を受け取ることができます。
+                  </p>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between py-2 px-3 bg-white rounded border">
+                      <div>
+                        <p className="text-sm font-medium">復習推奨通知</p>
+                        <p className="text-xs text-gray-500">苦手問題や忘却曲線に基づく復習タイミング</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="review-notifications"
+                          className="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                          disabled
+                        />
+                        <label htmlFor="review-notifications" className="text-sm text-gray-500">有効</label>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between py-2 px-3 bg-white rounded border">
+                      <div>
+                        <p className="text-sm font-medium">学習継続リマインダー</p>
+                        <p className="text-xs text-gray-500">連続学習記録を維持するための通知</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="streak-notifications"
+                          className="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                          disabled
+                        />
+                        <label htmlFor="streak-notifications" className="text-sm text-gray-500">有効</label>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between py-2 px-3 bg-white rounded border">
+                      <div>
+                        <p className="text-sm font-medium">週次学習サマリー</p>
+                        <p className="text-xs text-gray-500">学習進捗と成果の週次レポート</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="weekly-summary"
+                          className="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                          disabled
+                        />
+                        <label htmlFor="weekly-summary" className="text-sm text-gray-500">有効</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-3 bg-orange-100 rounded-lg">
+                    <p className="text-xs text-orange-700">
+                      <strong>実装予定：</strong> プッシュ通知、メール通知、アプリ内通知の設定が可能になります。現在は復習推奨機能のみ利用可能です。
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

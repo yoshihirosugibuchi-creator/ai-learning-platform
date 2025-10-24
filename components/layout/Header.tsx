@@ -3,8 +3,9 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Brain, Menu, ArrowLeft, User, Bookmark, Bell, Flame, Zap, Home, BookOpen, GraduationCap, LogOut, Settings, Shield, Trophy, Sparkles } from 'lucide-react'
+import { Brain, Menu, ArrowLeft, User, Bookmark, Bell, Flame, Zap, Home, BookOpen, GraduationCap, LogOut, Settings, Shield, Trophy, Sparkles, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +35,11 @@ export default function Header({
   const loadingRef = useRef(false)
   const { stats: xpStats } = useXPStats()
   const { isAdmin } = useUserRole()
+  const [reviewStats, setReviewStats] = useState<{
+    totalReviewNeeded: number
+    shouldShowNotification: boolean
+  } | null>(null)
+  const [loadingReviewStats, setLoadingReviewStats] = useState(false)
 
   // ユーザーデータ取得（SKPのみ）
   const loadUserData = useCallback(async () => {
@@ -49,10 +55,59 @@ export default function Header({
       }
     }
   }, [user?.id])
+  
+  // 復習統計データを取得
+  const loadReviewStats = useCallback(async () => {
+    if (!user?.id || loadingReviewStats) return
+    
+    setLoadingReviewStats(true)
+    try {
+      // 既存のSupabaseクライアントを使用（新しいクライアント作成を避ける）
+      const { supabase } = await import('@/lib/supabase')
+      
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+      
+      if (!token) {
+        console.warn('No auth token available for review stats')
+        return
+      }
+
+      const response = await fetch('/api/review/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setReviewStats({
+          totalReviewNeeded: data.totalReviewNeeded,
+          shouldShowNotification: data.shouldShowNotification
+        })
+      }
+    } catch (error) {
+      console.error('Error loading review stats:', error)
+    } finally {
+      setLoadingReviewStats(false)
+    }
+  }, [user?.id, loadingReviewStats])
 
   useEffect(() => {
     loadUserData()
-  }, [loadUserData])
+    loadReviewStats()
+  }, [loadUserData, loadReviewStats])
+  
+  // 定期的に復習統計を更新（5分おき）
+  useEffect(() => {
+    if (!user?.id) return
+    
+    const interval = setInterval(() => {
+      loadReviewStats()
+    }, 5 * 60 * 1000) // 5分
+    
+    return () => clearInterval(interval)
+  }, [user?.id, loadReviewStats])
 
   const handleLogout = async () => {
     await signOut()
@@ -169,9 +224,58 @@ export default function Header({
                   </Link>
                 </Button>
                 
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="h-4 w-4" />
-                </Button>
+                {/* 復習通知ボタン */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="relative">
+                      <Bell className="h-4 w-4" />
+                      {reviewStats && reviewStats.totalReviewNeeded > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center"
+                        >
+                          {reviewStats.totalReviewNeeded > 99 ? '99+' : reviewStats.totalReviewNeeded}
+                        </Badge>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64">
+                    {reviewStats && reviewStats.totalReviewNeeded > 0 ? (
+                      <>
+                        <div className="p-3 border-b">
+                          <div className="flex items-center space-x-2">
+                            <RefreshCw className="h-4 w-4 text-orange-500" />
+                            <span className="font-medium text-sm">復習推奨</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {reviewStats.totalReviewNeeded}問の復習が推奨されています
+                          </p>
+                        </div>
+                        <DropdownMenuItem asChild>
+                          <Link href="/quiz?mode=review" className="flex items-center p-3">
+                            <RefreshCw className="mr-2 h-4 w-4 text-orange-500" />
+                            <div className="flex-1">
+                              <div className="text-sm font-medium">復習クイズを開始</div>
+                              <div className="text-xs text-muted-foreground">
+                                忘却曲線と苦手分野を分析して選定
+                              </div>
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    ) : (
+                      <div className="p-3">
+                        <div className="flex items-center space-x-2">
+                          <Bell className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">新しい通知はありません</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          復習が必要な問題があれば、ここに表示されます
+                        </p>
+                      </div>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               {/* User Info */}
