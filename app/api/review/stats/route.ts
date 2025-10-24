@@ -82,7 +82,6 @@ async function getTodayReviewCompletedCount(userId: string): Promise<number> {
       .from('quiz_sessions')
       .select('id')
       .eq('user_id', userId)
-      .eq('session_type', 'review')
       .gte('created_at', today.toISOString())
       .lt('created_at', tomorrow.toISOString())
 
@@ -108,7 +107,6 @@ async function getLastReviewDate(userId: string): Promise<Date | null> {
       .from('quiz_sessions')
       .select('created_at')
       .eq('user_id', userId)
-      .eq('session_type', 'review')
       .order('created_at', { ascending: false })
       .limit(1)
       .single()
@@ -140,7 +138,6 @@ async function calculateReviewEffectiveness(userId: string): Promise<{
       .from('quiz_sessions')
       .select('id, total_questions, correct_answers')
       .eq('user_id', userId)
-      .eq('session_type', 'review')
       .order('created_at', { ascending: false })
       .limit(10) // 直近10セッション
 

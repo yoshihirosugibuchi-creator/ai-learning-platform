@@ -75,8 +75,7 @@ async function getForgettingQuestions(userId: string, limit: number = 50): Promi
       .select(`
         question_id,
         created_at,
-        difficulty,
-        quiz_questions!inner(id, question, option1, option2, option3, option4, correct_answer, category_id, subcategory_id, difficulty, time_limit, explanation, source)
+        difficulty
       `)
       .eq('user_id', userId)
       .eq('is_correct', true)
@@ -111,19 +110,30 @@ async function getForgettingQuestions(userId: string, limit: number = 50): Promi
       })
 
       if (shouldReview) {
-        const question = answer.quiz_questions
+        // 問題詳細を別途取得
+        const { data: questionData, error: questionError } = await supabaseAdmin
+          .from('quiz_questions')
+          .select('id, question, option1, option2, option3, option4, correct_answer, category_id, subcategory_id, difficulty, time_limit, explanation, source')
+          .eq('id', parseInt(answer.question_id))
+          .single()
+
+        if (questionError || !questionData) {
+          console.warn(`⚠️ Failed to fetch question ${answer.question_id}:`, questionError)
+          continue
+        }
+
         forgettingQuestions.push({
-          id: question.id,
-          question: question.question || '',
-          options: [question.option1, question.option2, question.option3, question.option4].filter(Boolean),
-          correct: question.correct_answer || 0,
-          category: question.category_id || '',
-          subcategory: question.subcategory_id || '',
-          subcategory_id: question.subcategory_id || undefined,
-          difficulty: question.difficulty || 'intermediate',
-          timeLimit: question.time_limit || 60,
-          explanation: question.explanation || '',
-          source: question.source || '',
+          id: questionData.id,
+          question: questionData.question || '',
+          options: [questionData.option1, questionData.option2, questionData.option3, questionData.option4].filter(Boolean),
+          correct: questionData.correct_answer || 0,
+          category: questionData.category_id || '',
+          subcategory: questionData.subcategory_id || '',
+          subcategory_id: questionData.subcategory_id || undefined,
+          difficulty: questionData.difficulty || 'intermediate',
+          timeLimit: questionData.time_limit || 60,
+          explanation: questionData.explanation || '',
+          source: questionData.source || '',
           relatedTopics: [],
           priority: 1,
           reason: 'forgetting_curve',
@@ -253,8 +263,7 @@ async function getRepeatMistakeQuestions(userId: string, limit: number = 20): Pr
         question_id,
         subcategory_id,
         difficulty,
-        created_at,
-        quiz_questions!inner(id, question, options, correct, explanation, category, subcategory, subcategory_id, difficulty, timeLimit, relatedTopics, source)
+        created_at
       `)
       .eq('user_id', userId)
       .eq('is_correct', false)
@@ -310,19 +319,31 @@ async function getRepeatMistakeQuestions(userId: string, limit: number = 20): Pr
         
         for (const mistake of mistakes.slice(0, 3)) { // 最大3問まで
           if (!mistake.created_at) continue
-          const question = mistake.quiz_questions
+          
+          // 問題詳細を別途取得
+          const { data: questionData, error: questionError } = await supabaseAdmin
+            .from('quiz_questions')
+            .select('id, question, option1, option2, option3, option4, correct_answer, category_id, subcategory_id, difficulty, time_limit, explanation, source')
+            .eq('id', parseInt(mistake.question_id))
+            .single()
+
+          if (questionError || !questionData) {
+            console.warn(`⚠️ Failed to fetch question ${mistake.question_id}:`, questionError)
+            continue
+          }
+
           repeatMistakeQuestions.push({
-            id: question.id,
-            question: question.question || '',
-            options: [question.option1, question.option2, question.option3, question.option4].filter(Boolean),
-            correct: question.correct_answer || 0,
-            category: question.category_id || '',
-            subcategory: question.subcategory_id || '',
-            subcategory_id: question.subcategory_id || undefined,
-            difficulty: question.difficulty || 'intermediate',
-            timeLimit: question.time_limit || 60,
-            explanation: question.explanation || '',
-            source: question.source || '',
+            id: questionData.id,
+            question: questionData.question || '',
+            options: [questionData.option1, questionData.option2, questionData.option3, questionData.option4].filter(Boolean),
+            correct: questionData.correct_answer || 0,
+            category: questionData.category_id || '',
+            subcategory: questionData.subcategory_id || '',
+            subcategory_id: questionData.subcategory_id || undefined,
+            difficulty: questionData.difficulty || 'intermediate',
+            timeLimit: questionData.time_limit || 60,
+            explanation: questionData.explanation || '',
+            source: questionData.source || '',
             relatedTopics: [],
             priority: 3,
             reason: 'repeat_mistakes',
