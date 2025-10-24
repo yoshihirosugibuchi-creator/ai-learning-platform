@@ -348,7 +348,7 @@ async function getRepeatMistakeQuestions(userId: string, limit: number = 20): Pr
 export async function selectReviewQuestions(
   userId: string, 
   requestedCount: number = 10
-): Promise<Question[]> {
+): Promise<(Question & { reviewReason?: string; reviewPriority?: number; lastAttemptDate?: string; incorrectStreak?: number; categoryAccuracy?: number })[]> {
   try {
     console.log(`🎯 Selecting review questions for user ${userId}, count: ${requestedCount}`)
 
