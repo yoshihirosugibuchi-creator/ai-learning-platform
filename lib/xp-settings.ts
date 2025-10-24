@@ -36,6 +36,11 @@ export interface XPSettings {
     daily_streak_bonus: number
     ten_day_streak_bonus: number
   }
+  hint?: {
+    level1_penalty_percent?: number
+    level2_penalty_percent?: number
+    level3_penalty_percent?: number
+  }
 }
 
 // ⚠️ ハードコード削除: 動的フォールバック設定を使用
@@ -90,7 +95,8 @@ async function loadDynamicFallbackSettings(): Promise<XPSettings> {
       xp_course: { basic: 15, intermediate: 25, advanced: 35, expert: 55 },
       xp_bonus: { quiz_accuracy_80: 20, quiz_accuracy_100: 30, course_completion: 50 },
       level: { overall_threshold: 1000, main_category_threshold: 500, industry_category_threshold: 1000, industry_subcategory_threshold: 500 },
-      skp: { quiz_correct: 10, quiz_incorrect: 2, quiz_perfect_bonus: 50, course_correct: 10, course_incorrect: 2, course_complete_bonus: 50, daily_streak_bonus: 10, ten_day_streak_bonus: 100 }
+      skp: { quiz_correct: 10, quiz_incorrect: 2, quiz_perfect_bonus: 50, course_correct: 10, course_incorrect: 2, course_complete_bonus: 50, daily_streak_bonus: 10, ten_day_streak_bonus: 100 },
+      hint: { level1_penalty_percent: 5, level2_penalty_percent: 15, level3_penalty_percent: 30 }
     }
   }
 }
@@ -194,7 +200,8 @@ export async function loadXPSettings(supabaseClient?: SupabaseClient<Database>):
       xp_course: {},
       xp_bonus: {},
       level: {},
-      skp: {}
+      skp: {},
+      hint: {}
     }
 
     settings.forEach((setting: { setting_category: string; setting_key: string; setting_value: number }) => {
@@ -219,7 +226,8 @@ export async function loadXPSettings(supabaseClient?: SupabaseClient<Database>):
         xp_course: { ...fallbackSettings.xp_course, ...loadedSettings.xp_course },
         xp_bonus: { ...fallbackSettings.xp_bonus, ...loadedSettings.xp_bonus },
         level: { ...fallbackSettings.level, ...loadedSettings.level },
-        skp: { ...fallbackSettings.skp, ...loadedSettings.skp }
+        skp: { ...fallbackSettings.skp, ...loadedSettings.skp },
+        hint: { ...fallbackSettings.hint, ...loadedSettings.hint }
       }
       
       // キャッシュ更新
@@ -230,12 +238,18 @@ export async function loadXPSettings(supabaseClient?: SupabaseClient<Database>):
     }
 
     // 完全な設定が取得できた場合
+    // hintが存在しない場合はフォールバック設定で補完
+    const fallbackForHint = await loadDynamicFallbackSettings()
+    
     const finalSettings: XPSettings = {
       xp_quiz: loadedSettings.xp_quiz as XPSettings['xp_quiz'],
       xp_course: loadedSettings.xp_course as XPSettings['xp_course'],
       xp_bonus: loadedSettings.xp_bonus as XPSettings['xp_bonus'],
       level: loadedSettings.level as XPSettings['level'],
-      skp: loadedSettings.skp as XPSettings['skp']
+      skp: loadedSettings.skp as XPSettings['skp'],
+      hint: Object.keys(loadedSettings.hint || {}).length > 0 
+        ? loadedSettings.hint as XPSettings['hint']
+        : fallbackForHint.hint
     }
 
     // キャッシュ更新
