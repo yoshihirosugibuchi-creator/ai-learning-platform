@@ -99,7 +99,7 @@ export default function QuizSession({
   profile,
   onComplete,
   onExit,
-  isReviewMode = false
+  isReviewMode: _isReviewMode = false
 }: QuizSessionProps) {
   const _router = useRouter()
   const searchParams = useSearchParams()
@@ -729,7 +729,6 @@ export default function QuizSession({
                 total_questions: actualTotalQuestions,
                 correct_answers: finalResults.correctAnswers,
                 accuracy_rate: actualTotalQuestions > 0 ? (finalResults.correctAnswers / actualTotalQuestions) * 100 : 0,
-                session_type: isReviewMode ? 'review' : (mode || 'standard'),
                 answers: questionAnswers.map(qa => ({
                   question_id: qa.questionId,
                   user_answer: qa.selectedOptionIndex, // ユーザーが選択した選択肢のインデックス (0-3)
