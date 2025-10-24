@@ -401,7 +401,98 @@ async function syncWisdomCards(): Promise<SyncResult> {
 }
 
 /**
- * 5. 既存の静的データ同期（カテゴリー等）
+ * 5. クイズヒントデータ同期
+ */
+async function syncQuizHints(): Promise<SyncResult> {
+  const dataType = 'クイズヒントデータ'
+  const timestamp = new Date().toISOString()
+  
+  try {
+    console.log('🔄 クイズヒントデータ同期中...')
+    
+    const { data: hints, error } = await supabaseAdmin
+      .from('quiz_hints')
+      .select(`
+        id,
+        question_id,
+        level1_hint,
+        level2_hint,
+        level3_hint,
+        created_at,
+        updated_at,
+        quiz_questions!quiz_hints_question_id_fkey (
+          id,
+          question,
+          category_id,
+          subcategory_id,
+          difficulty
+        )
+      `)
+      .order('question_id')
+
+    if (error) {
+      console.error('❌ クイズヒント取得エラー:', error)
+      throw error
+    }
+
+    if (!hints || hints.length === 0) {
+      console.log('⚠️ クイズヒントが見つかりません（空のフォールバックファイルを作成）')
+    }
+
+    console.log(`📊 取得クイズヒント: ${hints?.length || 0}件`)
+
+    // フォールバック用のJSONファイル作成
+    const fallbackFilePath = join(process.cwd(), 'public', 'data', 'quiz-hints-fallback.json')
+    const fallbackData = {
+      hints: hints || [],
+      metadata: {
+        generatedAt: timestamp,
+        sourceRecordCount: hints?.length || 0,
+        breakdown: {
+          total: hints?.length || 0,
+          byLevel: {
+            level1: hints?.filter(h => h.level1_hint)?.length || 0,
+            level2: hints?.filter(h => h.level2_hint)?.length || 0,
+            level3: hints?.filter(h => h.level3_hint)?.length || 0
+          }
+        },
+        databaseSource: 'quiz_hints',
+        generatorScript: 'scripts/sync-all-fallback-data.ts'
+      }
+    }
+
+    writeFileSync(fallbackFilePath, JSON.stringify(fallbackData, null, 2), 'utf8')
+    console.log(`✅ クイズヒントフォールバックファイル作成完了: ${fallbackFilePath}`)
+
+    return {
+      success: true,
+      dataType,
+      recordCount: hints?.length || 0,
+      filePath: fallbackFilePath,
+      timestamp,
+      breakdown: {
+        '総ヒント数': hints?.length || 0,
+        'Level1': fallbackData.metadata.breakdown.byLevel.level1,
+        'Level2': fallbackData.metadata.breakdown.byLevel.level2,
+        'Level3': fallbackData.metadata.breakdown.byLevel.level3
+      }
+    }
+
+  } catch (error) {
+    console.error(`❌ ${dataType}同期エラー:`, error)
+    return {
+      success: false,
+      dataType,
+      recordCount: 0,
+      filePath: '',
+      error: error instanceof Error ? error.message : String(error),
+      timestamp
+    }
+  }
+}
+
+/**
+ * 6. 既存の静的データ同期（カテゴリー等）
  */
 async function syncStaticData(): Promise<SyncResult> {
   const dataType = 'カテゴリー・静的データ'
@@ -494,6 +585,7 @@ async function syncAllFallbackData(): Promise<SyncSummary> {
     syncQuizQuestions(), 
     syncLearningCourses(),
     syncWisdomCards(),
+    syncQuizHints(),
     syncStaticData()
   ]
 
@@ -503,7 +595,7 @@ async function syncAllFallbackData(): Promise<SyncSummary> {
     if (result.status === 'fulfilled') {
       results.push(result.value)
     } else {
-      const dataTypes = ['XP/SKP設定', 'クイズ問題', 'コース学習データ', '格言カードデータ', 'カテゴリー・静的データ']
+      const dataTypes = ['XP/SKP設定', 'クイズ問題', 'コース学習データ', '格言カードデータ', 'クイズヒントデータ', 'カテゴリー・静的データ']
       results.push({
         success: false,
         dataType: dataTypes[index],
@@ -560,4 +652,11 @@ if (require.main === module) {
     })
 }
 
-export { syncAllFallbackData, syncXPSettings, syncQuizQuestions, syncLearningCourses, syncWisdomCards, syncStaticData }
+// 個別エクスポート（Turbopack静的解析対応）
+export { syncAllFallbackData }
+export { syncXPSettings }
+export { syncQuizQuestions }
+export { syncQuizHints }
+export { syncLearningCourses }
+export { syncWisdomCards }
+export { syncStaticData }
