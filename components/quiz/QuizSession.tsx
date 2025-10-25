@@ -761,7 +761,10 @@ export default function QuizSession({
                   author: selectedCard.author,
                   quote: selectedCard.quote,
                   rarity: selectedCard.rarity,
-                  accuracy_rate: accuracyRate
+                  accuracy_rate: accuracyRate,
+                  categoryId: selectedCard.categoryId,
+                  context: selectedCard.context,
+                  applicationArea: selectedCard.applicationArea
                 } : undefined
               }
               

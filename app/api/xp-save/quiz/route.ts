@@ -93,6 +93,9 @@ interface QuizSessionRequest {
     quote: string
     rarity: string
     accuracy_rate: number
+    categoryId: string
+    context: string
+    applicationArea: string
   }
 }
 
@@ -377,17 +380,26 @@ export async function POST(request: Request) {
         // 🔧 修正: クライアント選択カードを優先使用（二重選択問題の解決）
         if (body.selected_card) {
           console.log(`🎴 Using client-selected wisdom card (avoiding double selection)...`)
+          console.log(`🎴 Client-selected card data:`, {
+            id: body.selected_card.id,
+            author: body.selected_card.author,
+            quote: body.selected_card.quote,
+            rarity: body.selected_card.rarity,
+            categoryId: body.selected_card.categoryId
+          })
           
-          // クライアント選択カードをそのまま使用
+          // クライアント選択カードをそのまま使用（categoryIdを保持）
           const clientSelectedCard = {
             id: body.selected_card.id,
             author: body.selected_card.author,
             quote: body.selected_card.quote,
             rarity: body.selected_card.rarity,
-            categoryId: '', // 表示専用なので空でOK
-            context: '',
-            applicationArea: ''
+            categoryId: body.selected_card.categoryId || '', // クライアントから受信したcategoryIdを保持
+            context: body.selected_card.context || '',
+            applicationArea: body.selected_card.applicationArea || ''
           }
+          
+          console.log(`🎴 Processing card for collection:`, clientSelectedCard)
           
           const cardResult = await addWisdomCardToCollection(userId, body.selected_card.id, supabase)
           
@@ -400,7 +412,8 @@ export async function POST(request: Request) {
             cardId: body.selected_card.id,
             author: body.selected_card.author,
             isNew: cardResult.isNew,
-            count: cardResult.count
+            count: cardResult.count,
+            awardedCard: { id: awardedCard.id, author: awardedCard.author, categoryId: awardedCard.categoryId }
           })
         } else {
           console.log(`🎴 Processing wisdom card (accuracy >= 70%, using ${USE_DB_CARDS ? 'DB' : 'Static'})...`)

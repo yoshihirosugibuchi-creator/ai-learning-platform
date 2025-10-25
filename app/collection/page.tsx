@@ -122,6 +122,7 @@ export default function CollectionPage() {
           console.log('🎴 Loading wisdom cards from DB with fallback...')
           const allWisdomCards = await getAllWisdomCardsFromDB()
           
+          console.log(`🔍 [Collection] Loading wisdom cards for user ${user.id}...`)
           const cardsWithStatus = await Promise.all(
             allWisdomCards.map(async (card) => {
               try {
@@ -129,13 +130,23 @@ export default function CollectionPage() {
                   hasWisdomCard(user.id, card.id),
                   getWisdomCardCount(user.id, card.id)
                 ])
-                return { ...card, obtained, count }
+                
+                const cardWithStatus = { ...card, obtained, count }
+                console.log(`🔍 [Collection] Card ${card.id} (${card.author}):`, {
+                  categoryId: cardWithStatus.categoryId,
+                  rarity: cardWithStatus.rarity,
+                  obtained: cardWithStatus.obtained,
+                  count: cardWithStatus.count
+                })
+                
+                return cardWithStatus
               } catch (error) {
                 console.error(`Error loading card ${card.id}:`, error)
                 return { ...card, obtained: false, count: 0 }
               }
             })
           )
+          console.log(`🔍 [Collection] Total cards loaded: ${cardsWithStatus.length}`)
 
           // 最終データをセット
           setWisdomCollectionData({
