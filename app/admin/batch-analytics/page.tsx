@@ -8,7 +8,6 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import { 
-  requestBatchExecution,
   BATCH_PROCESS_TYPES,
   BATCH_STATUS,
   type BatchProcessType,
@@ -100,22 +99,28 @@ export default function BatchAnalyticsPage() {
       // バッチ履歴処理
       if (historyResponse.ok) {
         const historyResult = await historyResponse.json()
-        if (historyResult.success) {
-          setBatchLogs(historyResult.logs)
-        } else {
+        if (historyResult.error) {
           toast({
             title: 'データ取得エラー',
-            description: historyResult.error_message,
+            description: historyResult.error,
             variant: 'destructive'
           })
+        } else {
+          setBatchLogs(historyResult.logs || [])
         }
       }
 
       // バッチ統計処理
       if (statsResponse.ok) {
         const statsResult = await statsResponse.json()
-        if (statsResult.success && statsResult.statistics) {
-          setStatistics(statsResult.statistics)
+        if (statsResult.error) {
+          toast({
+            title: 'データ取得エラー',
+            description: statsResult.error,
+            variant: 'destructive'
+          })
+        } else if (statsResult.stats) {
+          setStatistics(statsResult.stats)
         }
       }
 
@@ -141,7 +146,10 @@ export default function BatchAnalyticsPage() {
 
   // 手動バッチ実行
   const handleManualExecution = async () => {
+    console.log('🔧 [バッチ実行] 開始 - ユーザー:', user?.id)
+    
     if (!user?.id) {
+      console.error('❌ [バッチ実行] ユーザー認証なし')
       toast({
         title: 'エラー',
         description: 'ユーザー認証が必要です',
@@ -151,19 +159,55 @@ export default function BatchAnalyticsPage() {
     }
 
     try {
+      console.log('🔧 [バッチ実行] setIsExecuting(true)')
       setIsExecuting(true)
       
+      console.log('🔧 [バッチ実行] 認証トークン取得開始')
       const authToken = await getAuthToken()
       if (!authToken) {
+        console.error('❌ [バッチ実行] 認証トークン取得失敗')
         throw new Error('認証トークンの取得に失敗しました')
       }
+      console.log('✅ [バッチ実行] 認証トークン取得成功')
 
-      const result = await requestBatchExecution({
+      console.log('🔧 [バッチ実行] バッチリクエスト開始:', {
         process_type: selectedProcessType,
         target_date: selectedDate,
         analysis_period: 30,
         auto_retry: false
-      }, authToken)
+      })
+
+      // 既存パターンに合わせて直接fetch呼び出し
+      const response = await fetch('/api/admin/batch-execution', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          process_type: selectedProcessType,
+          target_date: selectedDate
+        })
+      })
+
+      if (!response.ok) {
+        const errorResult = await response.json()
+        if (response.status === 409) {
+          // Conflictエラー（重複実行など）は特別処理
+          toast({
+            title: 'バッチ実行不可',
+            description: errorResult.error_message || 'バッチが既に実行中または完了済みです',
+            variant: 'destructive'
+          })
+          setIsExecuting(false)
+          return
+        }
+        throw new Error(`Batch execution failed: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+
+      console.log('📊 [バッチ実行] 結果:', result)
 
       if (result.success) {
         toast({

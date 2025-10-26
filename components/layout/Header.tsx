@@ -91,12 +91,15 @@ export default function Header({
     } finally {
       setLoadingReviewStats(false)
     }
-  }, [user?.id, loadingReviewStats])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]) // 依存関係からloadingReviewStatsを削除して循環参照を防ぐ
 
+  // 初回読み込み
   useEffect(() => {
     loadUserData()
     loadReviewStats()
-  }, [loadUserData, loadReviewStats])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]) // loadReviewStatsの依存関係を削除して循環参照を防ぐ
   
   // 定期的に復習統計を更新（5分おき）
   useEffect(() => {
@@ -107,7 +110,8 @@ export default function Header({
     }, 5 * 60 * 1000) // 5分
     
     return () => clearInterval(interval)
-  }, [user?.id, loadReviewStats])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]) // loadReviewStatsの依存関係を削除して循環参照を防ぐ
 
   const handleLogout = async () => {
     await signOut()

@@ -22,6 +22,7 @@
     "migrate:questions": "tsx scripts/migrate-questions-to-db.ts",
     "check:course-consistency": "tsx scripts/check-course-master-consistency.ts",
     "check:course-consistency-static": "tsx scripts/check-course-master-consistency-static.ts",
+    "check:db-consistency": "tsx scripts/check-database-consistency.ts",
     "sync:quiz-json": "tsx scripts/sync-quiz-data-to-json.ts",
     "analyze:data-reflection": "tsx scripts/analyze-data-reflection-status.ts",
     "analyze:learning-consistency": "NODE_ENV=development tsx --env-file=.env.local scripts/analyze-learning-data-consistency.ts",

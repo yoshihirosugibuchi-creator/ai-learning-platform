@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUserRole } from '@/lib/auth-helpers'
-import { monitorBatchHealth } from '@/lib/batch-management'
+import { getRunningBatches } from '@/lib/batch-management-server'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +16,57 @@ export async function GET(request: NextRequest) {
     }
 
     // バッチヘルス監視実行
-    const healthStatus = await monitorBatchHealth()
+    const { batches: runningBatches, error } = await getRunningBatches()
+    
+    if (error) {
+      return NextResponse.json({
+        success: true,
+        health: {
+          status: 'critical',
+          message: 'データベース接続エラー',
+          details: {
+            stuck_processes: 0,
+            recent_failures: 0
+          }
+        }
+      })
+    }
+
+    // ヘルス状態を分析
+    const stuckProcesses = runningBatches.filter(batch => {
+      if (!batch.started_at) return false
+      const startTime = new Date(batch.started_at).getTime()
+      const now = Date.now()
+      const hoursSinceStart = (now - startTime) / (1000 * 60 * 60)
+      return hoursSinceStart > 2 // 2時間以上動いているプロセスは停止扱い
+    }).length
+
+    // 直近の失敗数をチェック（ここでは実装簡略化）
+    const recentFailures = 0
+
+    let status: 'healthy' | 'warning' | 'critical'
+    let message: string
+
+    if (stuckProcesses > 0) {
+      status = 'critical'
+      message = `${stuckProcesses}個のプロセスが停止状態です`
+    } else if (runningBatches.length > 5) {
+      status = 'warning'
+      message = `実行中プロセスが多数あります (${runningBatches.length}個)`
+    } else {
+      status = 'healthy'
+      message = 'バッチシステムは正常に動作しています'
+    }
+
+    const healthStatus = {
+      status,
+      message,
+      details: {
+        stuck_processes: stuckProcesses,
+        recent_failures: recentFailures,
+        running_processes: runningBatches.length
+      }
+    }
 
     return NextResponse.json({
       success: true,

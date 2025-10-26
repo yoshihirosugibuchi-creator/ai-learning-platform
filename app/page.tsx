@@ -135,46 +135,6 @@ export default function Home() {
                   学習を続けましょう！AIがあなたの学習進度に合わせて最適な問題を提供します。
                 </p>
                 
-                {/* 復習AI推奨パネル */}
-                {reviewStats && reviewStats.totalReviewNeeded > 0 && (
-                  <Card className="border-2 border-orange-200 bg-orange-50 hover:border-orange-400 transition-all mb-6">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <div className="p-2 bg-orange-100 rounded-full">
-                            <RefreshCw className="h-5 w-5 text-orange-600" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg text-orange-900">復習AI推奨クイズ</CardTitle>
-                            <CardDescription className="text-orange-700">
-                              忘却曲線や苦手カテゴリーを分析した復習問題
-                            </CardDescription>
-                          </div>
-                        </div>
-                        <Badge variant="destructive" className="bg-orange-500">
-                          {reviewStats.totalReviewNeeded}問
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-orange-700">今日の復習完了: {reviewStats.todayCompleted}問</span>
-                        {reviewStats.reviewEffectiveness.improvement > 0 && (
-                          <span className="text-green-600 flex items-center">
-                            <Target className="h-3 w-3 mr-1" />
-                            効果: +{reviewStats.reviewEffectiveness.improvement}%
-                          </span>
-                        )}
-                      </div>
-                      <Link href="/quiz?mode=review" prefetch={true}>
-                        <Button className="w-full bg-orange-600 hover:bg-orange-700">
-                          <RefreshCw className="h-4 w-4 mr-2" />
-                          復習クイズ開始
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                )}
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all">
@@ -222,19 +182,65 @@ export default function Home() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-2 border-purple-200 hover:border-purple-400 transition-all">
+                  {/* 統合復習AIクイズ */}
+                  <Card className={`border-2 transition-all ${
+                    (reviewStats?.totalReviewNeeded ?? 0) > 0 
+                      ? 'border-orange-200 bg-orange-50 hover:border-orange-400' 
+                      : 'border-purple-200 hover:border-purple-400'
+                  }`}>
                     <CardHeader className="text-center">
-                      <div className="mx-auto mb-2 p-3 bg-purple-100 rounded-full w-fit">
-                        <RefreshCw className="h-6 w-6 text-purple-600" />
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className={`p-3 rounded-full w-fit ${
+                            (reviewStats?.totalReviewNeeded ?? 0) > 0 ? 'bg-orange-100' : 'bg-purple-100'
+                          }`}>
+                            <RefreshCw className={`h-6 w-6 ${
+                              (reviewStats?.totalReviewNeeded ?? 0) > 0 ? 'text-orange-600' : 'text-purple-600'
+                            }`} />
+                          </div>
+                          <div className="text-left">
+                            <CardTitle className={`text-sm ${
+                              (reviewStats?.totalReviewNeeded ?? 0) > 0 ? 'text-orange-900' : ''
+                            }`}>
+                              復習推奨AIクイズ
+                            </CardTitle>
+                            <CardDescription className="text-xs">
+                              忘却曲線と苦手分野を分析したAI復習問題
+                            </CardDescription>
+                          </div>
+                        </div>
+                        
+                        {/* 復習必要な場合のみバッジ表示 */}
+                        {(reviewStats?.totalReviewNeeded ?? 0) > 0 && (
+                          <Badge variant="destructive" className="bg-orange-500 text-xs">
+                            {reviewStats?.totalReviewNeeded}問
+                          </Badge>
+                        )}
                       </div>
-                      <CardTitle>復習推奨AIクイズ</CardTitle>
-                      <CardDescription>
-                        忘却曲線と苦手分野を分析したAI復習問題
-                      </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    
+                    <CardContent className="space-y-3">
+                      {/* 復習必要な場合のみ詳細統計表示 */}
+                      {(reviewStats?.totalReviewNeeded ?? 0) > 0 && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-orange-700">
+                            今日の復習完了: {reviewStats?.todayCompleted ?? 0}問
+                          </span>
+                          {(reviewStats?.reviewEffectiveness?.improvement ?? 0) > 0 && (
+                            <span className="text-green-600 flex items-center">
+                              <Target className="h-3 w-3 mr-1" />
+                              効果: +{reviewStats?.reviewEffectiveness?.improvement}%
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      
                       <Link href="/quiz?mode=review" prefetch={true}>
-                        <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                        <Button className={`w-full ${
+                          (reviewStats?.totalReviewNeeded ?? 0) > 0 
+                            ? 'bg-orange-600 hover:bg-orange-700' 
+                            : 'bg-purple-600 hover:bg-purple-700'
+                        }`}>
                           <RefreshCw className="h-4 w-4 mr-2" />
                           復習開始
                         </Button>

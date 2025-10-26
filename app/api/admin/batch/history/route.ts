@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUserRole } from '@/lib/auth-helpers'
-import { getBatchHistory } from '@/lib/batch-management'
+import { getBatchHistory } from '@/lib/batch-management-server'
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,9 +26,8 @@ export async function GET(request: NextRequest) {
     const historyResult = await getBatchHistory({
       process_type: processType as any,
       status: status as any,
-      days,
-      limit
-    })
+      days
+    }, limit)
 
     return NextResponse.json(historyResult)
 

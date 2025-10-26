@@ -78,6 +78,7 @@ interface QuizAnswer {
   confidence_level?: number | null  // 理解度（1-5段階）
   hint_used?: boolean              // ヒント使用フラグ
   max_hint_level?: number          // 使用した最大ヒントレベル（1-3）
+  hint_usage_details?: object      // ヒント使用詳細（将来拡張用）
 }
 
 interface QuizSessionRequest {
@@ -134,6 +135,25 @@ export async function POST(request: Request) {
       answersLength: body.answers?.length || 0,
       totalQuestions: body.total_questions,
       bodyKeys: Object.keys(body)
+    })
+    
+    // ヒント使用データの受信確認
+    console.log('🔍 Received hint usage data:', {
+      hintUsageStats: {
+        totalAnswers: body.answers.length,
+        answersWithHints: body.answers.filter(a => a.hint_used).length,
+        hintLevelBreakdown: body.answers.reduce((acc, a) => {
+          if (a.max_hint_level && a.max_hint_level > 0) {
+            acc[`level${a.max_hint_level}`] = (acc[`level${a.max_hint_level}`] || 0) + 1
+          }
+          return acc
+        }, {} as Record<string, number>)
+      },
+      sampleHintData: body.answers.slice(0, 3).map(a => ({
+        question_id: a.question_id,
+        hint_used: a.hint_used,
+        max_hint_level: a.max_hint_level
+      }))
     })
     
     if (!body.answers || body.answers.length === 0) {
@@ -243,6 +263,8 @@ export async function POST(request: Request) {
       session_type: string;
       confidence_level?: number | null;
       hint_used: boolean;
+      max_hint_level?: number | null;
+      hint_usage_details?: object;
       review_needed: boolean;
     }> = []
     
@@ -300,6 +322,8 @@ export async function POST(request: Request) {
         session_type: 'quiz',
         confidence_level: answer.confidence_level,
         hint_used: answer.hint_used || false,
+        max_hint_level: answer.max_hint_level || 0,  // ヒント使用レベルを追加
+        hint_usage_details: answer.hint_usage_details || {},  // ヒント使用詳細を追加（将来拡張用）
         review_needed: reviewNeeded
       })
     }

@@ -161,7 +161,7 @@ async function calculateReviewEffectiveness(userId: string): Promise<{
       const { data: answers } = await supabaseAdmin
         .from('quiz_answers')
         .select('question_id, is_correct')
-        .eq('session_id', session.id)
+        .eq('quiz_session_id', session.id)
 
       if (!answers) continue
 

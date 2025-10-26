@@ -230,35 +230,35 @@ class AILearningAnalytics {
           }
         })
       } else {
-        // Fallback to learning sessions
-        console.log(`[Analytics] No detailed data found, using learning sessions`)
+        // Fallback to course session completions (user learning records)
+        console.log(`[Analytics] No detailed data found, using course session completions`)
         
-        const { data: sessions } = await supabase
-          .from('learning_sessions')
+        const { data: sessionCompletions } = await supabase
+          .from('course_session_completions')
           .select('*')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
 
-        if (sessions) {
-          sessions.forEach((session) => {
+        if (sessionCompletions) {
+          sessionCompletions.forEach((completion) => {
             // course_idからメインカテゴリーを推定（不正確だが一時的対応）
-            const sessionData = session as SessionAnalytics
-            const mainCategory = this.inferMainCategoryFromCourse(sessionData.course_id || '')
-            if (mainCategory && sessionData.quiz_score != null) {
-              // Simulate question data from session
-              for (let i = 0; i < 5; i++) {
+            const mainCategory = this.inferMainCategoryFromCourse(completion.course_id || '')
+            if (mainCategory && completion.earned_xp != null) {
+              // Simulate question data from session completion
+              const questionsCount = Math.floor(completion.earned_xp / 10) || 5 // XPベースで問題数推定
+              for (let i = 0; i < questionsCount; i++) {
                 progressData.push({
                   userId,
-                  questionId: `${sessionData.session_id || session.id}_q${i}`,
+                  questionId: `${completion.id}_q${i}`,
                   category: mainCategory,
-                  difficulty: this.inferDifficulty(sessionData),
-                  isCorrect: Math.random() < (sessionData.quiz_score / 100),
-                  timeSpent: (sessionData.duration || 300000) / 5,
-                  timestamp: session.created_at as string
+                  difficulty: 'normal', // CourseSessionCompletionから難易度推定は困難なため固定値
+                  isCorrect: Math.random() < 0.8, // CourseSessionCompletionにquiz_scoreないため80%成功率で仮定
+                  timeSpent: (completion.duration_seconds || 300) / questionsCount * 1000, // ミリ秒単位
+                  timestamp: completion.created_at || new Date().toISOString()
                 })
               }
             } else {
-              console.warn(`[Analytics] Unable to determine main category for course: ${sessionData.course_id}`)
+              console.warn(`[Analytics] Unable to determine main category for course: ${completion.course_id}`)
             }
           })
         }

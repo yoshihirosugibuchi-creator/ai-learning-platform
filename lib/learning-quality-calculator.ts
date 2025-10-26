@@ -3,7 +3,7 @@
 
 import './database-types-official'
 import './hourly-efficiency'
-import { supabaseAdmin } from './supabase-admin'
+import { supabase } from './supabase'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // 学習品質スコア構成要素の重み（合計100%）
@@ -299,7 +299,7 @@ async function getLearningStats(
 ): Promise<LearningStats> {
   
   // daily_xp_records から基本統計を取得
-  const { data: dailyRecords, error: dailyError } = await supabaseAdmin
+  const { data: dailyRecords, error: dailyError } = await supabase
     .from('daily_xp_records')
     .select('*')
     .eq('user_id', userId)
@@ -312,7 +312,7 @@ async function getLearningStats(
   }
   
   // quiz_sessions から詳細データを取得
-  const { data: quizSessions, error: quizError } = await supabaseAdmin
+  const { data: quizSessions, error: quizError } = await supabase
     .from('quiz_sessions')
     .select(`
       *,

@@ -79,6 +79,15 @@ interface QuestionAnswer {
   subcategory_id?: string
   difficulty: string
   confidenceLevel?: number
+  // ヒント機能追加
+  maxHintLevel?: number        // 使用した最大ヒントレベル (0-3)
+  hintUsed?: boolean          // ヒント使用の有無
+  hintUsageDetails?: {        // ヒント使用詳細（オプション）
+    level1Used?: boolean
+    level2Used?: boolean
+    level3Used?: boolean
+    timestamps?: number[]
+  }
 }
 
 interface QuizSession {
@@ -208,6 +217,9 @@ export default function QuizSession({
   const [cognitiveLoadSamples, setCognitiveLoadSamples] = useState<number[]>([])
   const [flowStateSamples, setFlowStateSamples] = useState<number[]>([])
   const [_lastResponseTime, setLastResponseTime] = useState<number>(0)
+  
+  // ヒント使用状態管理
+  const [hintUsageMap, setHintUsageMap] = useState<Record<string, number>>({})
 
   // 🔧 チャレンジクイズDB更新機能を一時的に無効化（フリーズ問題解決のため）
   // useEffect(() => {
@@ -544,8 +556,11 @@ export default function QuizSession({
     setShowResult(true)
     
     // Store detailed question answer data
+    const currentQuestionId = currentQuestion.id.toString()
+    const maxHintLevel = hintUsageMap[currentQuestionId] || 0
+    
     const questionAnswer: QuestionAnswer = {
-      questionId: currentQuestion.id.toString(),
+      questionId: currentQuestionId,
       questionText: currentQuestion.question,
       selectedAnswer: currentQuestion.options[option],
       correctAnswer: currentQuestion.options[currentQuestion.correct],
@@ -555,7 +570,10 @@ export default function QuizSession({
       category: currentQuestion.category,
       subcategory: currentQuestion.subcategory,
       subcategory_id: currentQuestion.subcategory_id,
-      difficulty: currentQuestion.difficulty || '未設定'
+      difficulty: currentQuestion.difficulty || '未設定',
+      // ヒント使用情報を含める
+      maxHintLevel: maxHintLevel,
+      hintUsed: maxHintLevel > 0
     }
     
     setQuestionAnswers(prev => [...prev, questionAnswer])
@@ -740,7 +758,10 @@ export default function QuizSession({
                   category_id: qa.category || quizCategory || category || 'logical_thinking_problem_solving',
                   subcategory_id: qa.subcategory_id || 'general', // Use actual subcategory_id or fallback to general
                   difficulty: qa.difficulty,
-                  confidence_level: qa.confidenceLevel // 理解度 (1-5段階、未入力時はundefined)
+                  confidence_level: qa.confidenceLevel, // 理解度 (1-5段階、未入力時はundefined)
+                  // ヒント使用情報を追加
+                  max_hint_level: qa.maxHintLevel || 0,  // 使用した最大ヒントレベル (0-3)
+                  hint_used: qa.hintUsed || false       // ヒント使用フラグ
                 }))
               }
               
@@ -751,6 +772,20 @@ export default function QuizSession({
                 answers_count: quizSessionData.answers.length,
                 sessionQuestions_length: sessionQuestions.length,
                 questionAnswers_length: questionAnswers.length
+              })
+              
+              // ヒント使用データの詳細ログ
+              console.log('🔍 Hint usage data in quiz session:', {
+                questionAnswers: questionAnswers.map(qa => ({
+                  questionId: qa.questionId,
+                  maxHintLevel: qa.maxHintLevel,
+                  hintUsed: qa.hintUsed
+                })),
+                apiData: quizSessionData.answers.map(answer => ({
+                  question_id: answer.question_id,
+                  max_hint_level: answer.max_hint_level,
+                  hint_used: answer.hint_used
+                }))
               })
               
               // 選択されたカード情報をAPIデータに含める
@@ -1191,9 +1226,21 @@ export default function QuizSession({
         showConfidenceInput={showConfidenceInput && showResult}
         hintsEnabled={hintsEnabled}
         onHintUsed={(level, hint) => {
-          console.log(`Hint used: Level ${level} - ${hint}`)
-          // ヒント使用の記録（XP計算で使用）
-          // TODO: 現在の回答記録にヒント使用レベルを追加
+          console.log(`🔍 Hint used: Level ${level} - ${hint}`)
+          
+          // 現在の問題IDに対するヒント使用レベルを記録
+          const questionId = currentQuestion.id.toString()
+          setHintUsageMap(prev => ({
+            ...prev,
+            [questionId]: Math.max(prev[questionId] || 0, level)
+          }))
+          
+          console.log('🎯 Hint System Debug:', {
+            questionId: questionId,
+            hintLevel: level,
+            hintText: hint,
+            willApplyPenalty: true
+          })
         }}
       />
     </div>

@@ -52,25 +52,41 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
     
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: '認証に失敗しました' },
-        { status: 401 }
-      )
+    // 2. 認証方式の判定（ユーザートークン vs サービスロールキー）
+    let userId = null
+    let isServiceRole = false
+    
+    // サービスロールキーかどうかチェック
+    if (token === process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.log('[バッチAPI] サービスロールキー認証')
+      isServiceRole = true
+    } else {
+      // ユーザートークンとして認証を試行
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+      
+      if (authError || !user) {
+        return NextResponse.json(
+          { error: '認証に失敗しました: 有効なユーザートークンまたはサービスロールキーが必要です' },
+          { status: 401 }
+        )
+      }
+      
+      userId = user.id
     }
 
-    // 2. システム管理者権限チェック
-    const hasAdminPermission = await isSystemAdmin(user.id)
-    if (!hasAdminPermission) {
-      return NextResponse.json(
-        { error: 'システム管理者権限が必要です' },
-        { status: 403 }
-      )
+    // 3. システム管理者権限チェック（ユーザートークンの場合のみ）
+    if (!isServiceRole) {
+      const hasAdminPermission = await isSystemAdmin(userId!)
+      if (!hasAdminPermission) {
+        return NextResponse.json(
+          { error: 'システム管理者権限が必要です' },
+          { status: 403 }
+        )
+      }
     }
 
-    // 3. リクエストパラメータ解析
+    // 4. リクエストパラメータ解析
     const body = await request.json()
     const {
       process_date = new Date().toISOString().split('T')[0], // YYYY-MM-DD
@@ -82,7 +98,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`[日次分析バッチ] 開始: ${process_date}, タイプ: ${process_type}`)
 
-    // 4. 重複実行チェック
+    // 5. 重複実行チェック
     if (!force_reprocess) {
       const duplicateCheck = await checkDuplicateExecution(process_date, process_type)
       if (duplicateCheck.isDuplicate) {
@@ -94,14 +110,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 5. バッチログエントリ作成
+    // 6. バッチログエントリ作成（force_reprocessの場合は既存ログ削除）
+    if (force_reprocess) {
+      await deleteExistingBatchLogs(process_date, process_type)
+    }
+    
     const batchLogId = await createBatchLogEntry({
       process_date,
       process_type,
       force_reprocess
     })
 
-    // 6. バッチ処理実行
+    // 7. バッチ処理実行
     const result = await executeBatchProcess({
       batchLogId,
       process_date,
@@ -507,4 +527,22 @@ async function failBatchLog(batchLogId: number, processedUsers: number, errorMes
       updated_at: new Date().toISOString()
     })
     .eq('id', batchLogId)
+}
+
+/**
+ * 既存バッチログ削除（force_reprocess用）
+ */
+async function deleteExistingBatchLogs(processDate: string, processType: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('daily_analytics_batch_log')
+    .delete()
+    .eq('process_date', processDate)
+    .eq('process_type', processType)
+
+  if (error) {
+    console.error(`既存バッチログ削除エラー: ${error.message}`)
+    // エラーがあっても処理は続行（ログが存在しない場合など）
+  } else {
+    console.log(`既存バッチログ削除完了: ${processDate}, ${processType}`)
+  }
 }

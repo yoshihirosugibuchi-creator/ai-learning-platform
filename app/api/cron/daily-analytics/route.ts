@@ -2,7 +2,9 @@
 // 毎日午前2時(JST)に前日データを自動処理
 
 import { NextRequest, NextResponse } from 'next/server'
-import { scheduleAutoBatch, BATCH_PROCESS_TYPES } from '@/lib/batch-management'
+// バッチ処理関数は将来の実装で使用予定
+// import { startBatchLog, completeBatchLog } from '@/lib/batch-management-server'
+import { BATCH_PROCESS_TYPES } from '@/lib/batch-management-types'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { notifyBatchFailure } from '@/lib/notification-system'
 
@@ -55,14 +57,57 @@ export async function GET(request: NextRequest) {
     const targetDate = getPreviousDateJST()
     console.log('[Cron] 処理対象日:', targetDate)
 
-    // 4. 自動バッチ実行（全ての処理タイプ）
-    const results = await scheduleAutoBatch(
-      systemAuthToken,
-      [BATCH_PROCESS_TYPES.ALL] // 学習品質スコア + ピーク時間 + 思考時間を一括処理
-    )
+    // 4. 既存の日次分析バッチAPIを呼び出し
+    console.log('[Cron] 既存バッチAPI呼び出し開始')
+    
+    const batchResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/admin/daily-analytics-batch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${systemAuthToken}`
+      },
+      body: JSON.stringify({
+        process_date: targetDate,
+        process_type: BATCH_PROCESS_TYPES.ALL,
+        force_reprocess: false
+      })
+    })
 
-    const totalProcessedUsers = results.reduce((sum, result) => sum + result.processed_users, 0)
-    const totalErrors = results.filter(result => !result.success).length
+    if (!batchResponse.ok) {
+      const errorText = await batchResponse.text()
+      console.error('[Cron] バッチAPI呼び出し詳細エラー:', {
+        status: batchResponse.status,
+        statusText: batchResponse.statusText,
+        errorBody: errorText,
+        requestUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/api/admin/daily-analytics-batch`,
+        hasAuthToken: !!systemAuthToken,
+        authTokenLength: systemAuthToken?.length || 0
+      })
+      throw new Error(`バッチAPI呼び出し失敗: ${batchResponse.status} ${batchResponse.statusText} - ${errorText}`)
+    }
+
+    const batchResult = await batchResponse.json()
+    console.log('[Cron] バッチAPI実行結果:', batchResult)
+
+    // 結果を統一形式に変換
+    interface BatchResult {
+      success: boolean
+      processed_users: number
+      total_time_seconds: number
+      error_message: string | null
+      warnings: string[]
+    }
+
+    const results: BatchResult[] = [{
+      success: batchResult.success,
+      processed_users: batchResult.processed_users || 0,
+      total_time_seconds: batchResult.total_time_seconds || 0,
+      error_message: batchResult.error || null,
+      warnings: batchResult.warnings || []
+    }]
+
+    const totalProcessedUsers = results[0].processed_users
+    const totalErrors = results[0].success ? 0 : 1
     const executionTimeSeconds = Math.round((Date.now() - startTime) / 1000)
 
     // 5. 実行結果の詳細ログ
@@ -91,8 +136,8 @@ export async function GET(request: NextRequest) {
     // 7. 失敗時の通知送信
     if (totalErrors > 0 && cronLogId) {
       try {
-        const failedResults = results.filter(r => !r.success)
-        const errorMessages = failedResults.map(r => r.error_message || 'Unknown error').join('; ')
+        const failedResults = results.filter((r: BatchResult) => !r.success)
+        const errorMessages = failedResults.map((r: BatchResult) => r.error_message || 'Unknown error').join('; ')
         
         await notifyBatchFailure({
           batchLogId: cronLogId,
@@ -107,7 +152,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 8. レスポンス作成
-    const response = {
+    const cronResponse = {
       success: totalErrors === 0,
       message: totalErrors === 0 
         ? `日次バッチ完了: ${totalProcessedUsers}人処理, ${executionTimeSeconds}秒`
@@ -116,15 +161,15 @@ export async function GET(request: NextRequest) {
         target_date: targetDate,
         processed_users: totalProcessedUsers,
         execution_time_seconds: executionTimeSeconds,
-        success_count: results.filter(r => r.success).length,
+        success_count: results.filter((r: BatchResult) => r.success).length,
         error_count: totalErrors
       },
       batch_results: results
     }
 
-    console.log('[Cron] 日次分析バッチ完了:', response.message)
+    console.log('[Cron] 日次分析バッチ完了:', cronResponse.message)
     
-    return NextResponse.json(response)
+    return NextResponse.json(cronResponse)
 
   } catch (error) {
     const executionTimeSeconds = Math.round((Date.now() - startTime) / 1000)

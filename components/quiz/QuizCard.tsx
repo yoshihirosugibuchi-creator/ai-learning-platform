@@ -84,7 +84,15 @@ function HintDisplay({ hints, currentLevel, onRequestHint, disabled, maxLevel }:
         <Button
           variant="outline"
           size="sm"
-          onClick={onRequestHint}
+          onClick={() => {
+            console.log('🔍 Hint button clicked:', {
+              currentLevel,
+              maxLevel,
+              disabled,
+              canShowMoreHints
+            })
+            onRequestHint()
+          }}
           disabled={disabled}
           className="w-full border-yellow-300 text-yellow-700 hover:bg-yellow-100"
         >
@@ -138,7 +146,25 @@ export default function QuizCard({
   const loadHintData = useCallback(async () => {
     try {
       console.log('📡 Fetching hints from API for question:', question.id)
-      const response = await fetch(`/api/questions/${question.id}/hints`)
+      
+      // 一般ユーザー向け認証（Supabaseクライアント使用）
+      const { supabase } = await import('@/lib/supabase')
+      
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+      
+      if (!token) {
+        console.warn('No auth token available for hint request')
+        setHintData({ available: false })
+        return
+      }
+      
+      const response = await fetch(`/api/questions/${question.id}/hints`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
       
       console.log('📡 API Response status:', response.status)
       
@@ -183,6 +209,14 @@ export default function QuizCard({
   
   // ヒント表示処理
   const handleRequestHint = async () => {
+    console.log('🔍 handleRequestHint called:', {
+      hintData,
+      isLoadingHint,
+      showResult,
+      isTimeUp,
+      shouldProceed: !(!hintData || isLoadingHint || showResult || isTimeUp)
+    })
+    
     if (!hintData || isLoadingHint || showResult || isTimeUp) return
     
     setIsLoadingHint(true)
@@ -191,6 +225,14 @@ export default function QuizCard({
       const nextLevel = currentHintLevel + 1
       let hintText = ''
       
+      console.log('🔍 Hint selection:', {
+        nextLevel,
+        hintData,
+        level1Available: !!hintData.level1,
+        level2Available: !!hintData.level2,
+        level3Available: !!hintData.level3
+      })
+      
       if (nextLevel === 1 && hintData.level1) {
         hintText = hintData.level1
       } else if (nextLevel === 2 && hintData.level2) {
@@ -198,6 +240,8 @@ export default function QuizCard({
       } else if (nextLevel === 3 && hintData.level3) {
         hintText = hintData.level3
       }
+      
+      console.log('🔍 Selected hint text:', hintText)
       
       if (hintText) {
         setShownHints(prev => [...prev, hintText])
@@ -334,19 +378,21 @@ export default function QuizCard({
         {(() => {
           console.log('🎯 Hint Display Condition Check:', {
             hintsEnabled,
+            hintData: hintData,
             hintDataAvailable: hintData?.available,
             showResult,
             isTimeUp,
-            shouldShow: hintsEnabled && hintData?.available && !showResult && !isTimeUp
+            shouldShow: hintsEnabled && !showResult && !isTimeUp,
+            questionId: question.id
           })
           return null
         })()}
-        {hintsEnabled && hintData?.available && !showResult && !isTimeUp && (
+        {hintsEnabled && !showResult && !isTimeUp && (
           <HintDisplay
             hints={shownHints}
             currentLevel={currentHintLevel}
             onRequestHint={handleRequestHint}
-            disabled={isLoadingHint}
+            disabled={isLoadingHint || !hintData?.available}
             maxLevel={3}
           />
         )}

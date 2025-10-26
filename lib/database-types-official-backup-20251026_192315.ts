@@ -817,12 +817,10 @@ export type Database = {
           difficulty: string
           earned_xp: number
           genre_id: string | null
-          hint_usage_details: Json | null
           hint_used: boolean
           id: string
           is_correct: boolean
           is_timeout: boolean
-          max_hint_level: number | null
           question_id: string
           quiz_session_id: string | null
           review_needed: boolean
@@ -842,12 +840,10 @@ export type Database = {
           difficulty: string
           earned_xp?: number
           genre_id?: string | null
-          hint_usage_details?: Json | null
           hint_used?: boolean
           id?: string
           is_correct?: boolean
           is_timeout?: boolean
-          max_hint_level?: number | null
           question_id: string
           quiz_session_id?: string | null
           review_needed?: boolean
@@ -867,12 +863,10 @@ export type Database = {
           difficulty?: string
           earned_xp?: number
           genre_id?: string | null
-          hint_usage_details?: Json | null
           hint_used?: boolean
           id?: string
           is_correct?: boolean
           is_timeout?: boolean
-          max_hint_level?: number | null
           question_id?: string
           quiz_session_id?: string | null
           review_needed?: boolean
@@ -2954,7 +2948,3 @@ export type QuizHint = Database['public']['Tables']['quiz_hints']['Row']
 export type QuizHintInsert = Database['public']['Tables']['quiz_hints']['Insert']
 export type QuizHintUpdate = Database['public']['Tables']['quiz_hints']['Update']
 
-// ============= Quiz Answers Types with Hint Support =============
-export type QuizAnswer = Database['public']['Tables']['quiz_answers']['Row']
-export type QuizAnswerInsert = Database['public']['Tables']['quiz_answers']['Insert']
-export type QuizAnswerUpdate = Database['public']['Tables']['quiz_answers']['Update']

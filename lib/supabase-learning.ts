@@ -1,4 +1,4 @@
-import { supabase } from './supabase-admin'
+import { supabase } from './supabase'
 import { loadXPSettings } from './xp-settings'
 import { DATABASE_FALLBACK_SETTINGS } from './xp-settings-fallback.generated'
 

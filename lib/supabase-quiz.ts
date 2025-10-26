@@ -197,40 +197,9 @@ export async function getCategoryQuizResults(userId: string, categoryId: string)
   }))
 }
 
-// ユーザー進捗を更新または作成（レガシー関数 - 使用禁止）
+// ユーザー進捗を更新または作成（レガシー関数 - 削除済み）
 // Note: user_progressテーブルは削除済み。代わりにuser_category_xp_stats_v2を使用してください
-export async function updateUserProgress(
-  _userId: string, 
-  _categoryId: string, 
-  _subcategoryId: string | null, 
-  _correctAnswers: number, 
-  _totalQuestions: number
-): Promise<UserProgress | null> {
-  console.warn('⚠️ updateUserProgress is deprecated - user_progress table deleted. Use user_category_xp_stats_v2 instead.')
-  return null
-  
-  // 以下の実装は削除されたテーブルへの参照のためコメント化
-  /*
-  // 既存の進捗を取得
-  const { data: existing } = await supabase
-    .from('user_progress')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('category_id', categoryId)
-    .eq('subcategory_id', subcategoryId || '')
-    .single()
-
-  const progressData = {
-    user_id: userId,
-    category_id: categoryId,
-    subcategory_id: subcategoryId || '',
-    correct_answers: (existing?.correct_answers || 0) + correctAnswers,
-    total_attempts: (existing?.total_attempts || 0) + totalQuestions,
-    last_accessed: new Date().toISOString()
-  }
-
-  */
-}
+// この関数は完全に非推奨です。新しいシステム（user_category_xp_stats_v2）を直接使用してください。
 
 // ユーザーの総合統計を取得（v2統計システムベース）
 export async function getUserStats(userId: string) {

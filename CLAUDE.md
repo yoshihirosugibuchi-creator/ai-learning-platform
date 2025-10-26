@@ -7,6 +7,71 @@
 
 ---
 
+## 🗄️ **データベーステーブル構造理解（絶対に間違えてはいけない）**
+
+### **🚨 CRITICAL: learning_sessions vs 学習トランザクションテーブル**
+
+```typescript
+// ❌ 絶対に間違えてはいけない - learning_sessionsはマスタデータ
+// learning_sessions = コース学習のコンテンツを管理するマスタデータ
+// ユーザーの学習記録ではない！user_idも存在しない！
+
+// ❌ 絶対禁止パターン
+const { data } = await supabase
+  .from('learning_sessions')
+  .select('*')
+  .eq('user_id', userId)  // ← user_idカラムは存在しない！
+
+// ✅ 正しいテーブル使用法
+// learning_sessions: コース学習のセッション構成（マスタデータ）
+const { data: sessionContent } = await supabase
+  .from('learning_sessions')
+  .select('*')
+  .eq('theme_id', themeId)  // テーマごとのセッション取得
+
+// ✅ ユーザーの学習記録が必要な場合
+const { data: userProgress } = await supabase
+  .from('course_session_completions')  // ← ユーザーの学習完了記録
+  .select('*')
+  .eq('user_id', userId)
+
+const { data: dailyRecords } = await supabase
+  .from('daily_xp_records')  // ← ユーザーの日別学習記録
+  .select('*')
+  .eq('user_id', userId)
+
+const { data: quizResults } = await supabase
+  .from('quiz_sessions')  // ← ユーザーのクイズセッション記録
+  .select('*')
+  .eq('user_id', userId)
+```
+
+### **📋 テーブル分類（必須理解）**
+
+#### **マスタデータテーブル（user_idなし）**
+- `learning_sessions` - コース学習セッション構成
+- `learning_themes` - コース学習テーマ 
+- `learning_courses` - コース情報
+- `categories` - カテゴリーマスター
+- `subcategories` - サブカテゴリーマスター
+- `quiz_questions` - クイズ問題
+- `wisdom_cards` - 格言カード
+
+#### **ユーザートランザクションテーブル（user_idあり）**
+- `course_session_completions` - ユーザーのコース学習完了記録
+- `quiz_sessions` - ユーザーのクイズセッション記録
+- `quiz_answers` - ユーザーのクイズ回答記録
+- `daily_xp_records` - ユーザーの日別学習記録
+- `user_xp_stats_v2` - ユーザーの統計情報
+- `skp_transactions` - SKP取引履歴
+
+### **🚫 絶対に避けるべき間違い**
+1. **learning_sessionsでユーザー記録を取得しようとする**
+2. **マスタテーブルでuser_idを使おうとする**  
+3. **トランザクションテーブルとマスタテーブルを混同する**
+
+---
+
 ## 🎨 **UI/UXガイドライン（必須遵守）**
 
 ### **🚫 ブラウザ標準ダイアログの使用禁止**

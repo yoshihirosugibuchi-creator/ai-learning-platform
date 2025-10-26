@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUserRole } from '@/lib/auth-helpers'
-import { getBatchStatistics } from '@/lib/batch-management'
+import { getBatchStats } from '@/lib/batch-management-server'
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get('days') || '30')
 
     // バッチ統計取得
-    const statsResult = await getBatchStatistics(days)
+    const statsResult = await getBatchStats(undefined, days)
 
     return NextResponse.json(statsResult)
 

@@ -46,15 +46,39 @@ export async function GET(request: NextRequest) {
     // Enhanced category analysis with progression tracking
     const categoryBreakdown = await Promise.all(
       (categoryStats || []).map(async (stat: CategoryStatData) => {
-        // Get recent trend for this category
-        const { data: categoryTrend } = await supabaseAdmin
-          .from('quiz_sessions')
-          .select('accuracy_rate, created_at')
-          .eq('user_id', userId)
+        // Get recent trend for this category from quiz_answers (正しい設計)
+        const { data: categoryAnswers } = await supabaseAdmin
+          .from('quiz_answers')
+          .select(`
+            is_correct, 
+            created_at,
+            quiz_sessions!inner(user_id)
+          `)
           .eq('category_id', stat.category_id)
+          .eq('quiz_sessions.user_id', userId)
           .gte('created_at', new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString())
           .order('created_at', { ascending: true })
-          .limit(10)
+          .limit(50)
+
+        // Calculate accuracy per day for trend analysis
+        const dailyAccuracy: Record<string, {correct: number, total: number}> = {}
+        categoryAnswers?.forEach(answer => {
+          const date = new Date(answer.created_at || new Date()).toDateString()
+          if (!dailyAccuracy[date]) {
+            dailyAccuracy[date] = {correct: 0, total: 0}
+          }
+          dailyAccuracy[date].total++
+          if (answer.is_correct) {
+            dailyAccuracy[date].correct++
+          }
+        })
+
+        const categoryTrend = Object.entries(dailyAccuracy)
+          .map(([date, stats]) => ({
+            accuracy_rate: stats.correct / stats.total,
+            created_at: date
+          }))
+          .slice(-10) // 最新10日分
 
         // Calculate improvement trend
         const trend = categoryTrend && categoryTrend.length >= 3 ? 
