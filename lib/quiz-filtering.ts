@@ -1,5 +1,6 @@
 import { Question } from './types'
 import { QuizPersonalizationSettings } from './user-quiz-settings'
+import { getMainCategoryIds, getDifficultyDisplayName } from './categories'
 
 /**
  * セルフパーソナライズクイズ用の問題フィルタリング
@@ -190,4 +191,267 @@ export function estimateUserAccuracy(userStats?: { totalQuestions: number; corre
   }
   
   return 70 // デフォルト値
+}
+
+/**
+ * learningLevel文字列を適切な難易度名に変換
+ */
+function normalizeLearningLevel(learningLevel?: string): 'basic' | 'intermediate' | 'advanced' | 'expert' {
+  switch (learningLevel) {
+    case 'basic':
+    case 'intermediate':
+    case 'advanced':
+    case 'expert':
+      return learningLevel
+    default:
+      return 'basic'
+  }
+}
+
+/**
+ * ビジネスAI用フィルタリング: 基本カテゴリーのみ対象
+ */
+export function filterQuestionsForBusinessAI(questions: Question[]): Question[] {
+  const mainCategoryIds = getMainCategoryIds()
+  const filtered = questions.filter(q => mainCategoryIds.includes(q.category))
+  
+  console.log('🏢 Business AI filtering:', {
+    original: questions.length,
+    filtered: filtered.length,
+    mainCategories: mainCategoryIds.length
+  })
+  
+  return filtered
+}
+
+/**
+ * カテゴリー指定クイズ用フィルタリング（単一難易度対応版）
+ */
+export function filterQuestionsForCategoryQuiz(
+  questions: Question[],
+  category: string,
+  difficulties?: string[]
+): Question[] {
+  let filtered = questions.filter(q => q.category === category)
+  
+  if (difficulties && difficulties.length > 0) {
+    filtered = filtered.filter(q => {
+      const questionDifficultyDisplay = getDifficultyDisplayName(q.difficulty)
+      return difficulties.some(selectedDiff => 
+        getDifficultyDisplayName(selectedDiff) === questionDifficultyDisplay
+      )
+    })
+  }
+  
+  console.log('📋 Category quiz filtering:', {
+    original: questions.length,
+    filtered: filtered.length,
+    category,
+    difficulties: difficulties?.length || 0,
+    isSingleDifficulty: difficulties?.length === 1
+  })
+  
+  return filtered
+}
+
+/**
+ * カテゴリー指定クイズの段階的フォールバック処理（単一難易度対応）
+ */
+function handleCategoryQuizFallback(
+  questions: Question[],
+  category: string,
+  difficulties: string[],
+  initialFiltered: Question[]
+): Question[] {
+  if (initialFiltered.length >= 10) {
+    return initialFiltered
+  }
+
+  console.log('🔄 Applying fallback strategy for category quiz:', {
+    category,
+    difficulties,
+    initialCount: initialFiltered.length
+  })
+
+  // 単一難易度指定の場合の段階的フォールバック
+  if (difficulties.length === 1) {
+    console.log('📋 Single difficulty fallback: expanding to all category difficulties')
+    
+    // Step 1: 同カテゴリーの他難易度も含める
+    const categoryQuestions = questions.filter(q => q.category === category)
+    
+    if (categoryQuestions.length >= 10) {
+      // 指定難易度を優先しつつ、不足分を他難易度で補う
+      const prioritizedQuestions = [
+        ...initialFiltered, // 指定難易度の問題を優先
+        ...categoryQuestions.filter(q => !initialFiltered.some(initial => initial.id === q.id))
+      ]
+      
+      console.log('✅ Single difficulty fallback successful:', {
+        originalDifficulty: initialFiltered.length,
+        otherDifficulties: categoryQuestions.length - initialFiltered.length,
+        total: prioritizedQuestions.length
+      })
+      
+      return prioritizedQuestions
+    }
+  }
+
+  // Step 2: 最終フォールバック - 全問題を対象
+  console.log('🔄 Final fallback: using all available questions')
+  return questions
+}
+
+/**
+ * セルフパーソナライズクイズの段階的フォールバック処理
+ */
+function handlePersonalizedQuizFallback(
+  questions: Question[],
+  userSettings: QuizPersonalizationSettings,
+  initialFiltered: Question[]
+): Question[] {
+  if (initialFiltered.length >= 10) {
+    return initialFiltered
+  }
+
+  console.log('🔄 Applying fallback strategy for personalized quiz')
+  
+  const selectedCategories = [
+    ...(userSettings.basicCategories || []),
+    ...(userSettings.industryCategories || [])
+  ]
+
+  // Step 1: 学習レベル制限緩和（カテゴリー制限は維持）
+  const relaxedByLevel = questions.filter(question => 
+    selectedCategories.includes(question.category)
+    // learningLevel制限を除去
+  )
+  
+  if (relaxedByLevel.length >= 10) {
+    console.log('🔄 Step 1: Learning level restriction relaxed, sufficient questions found')
+    return relaxedByLevel
+  }
+
+  // Step 2: カテゴリー制限も緩和（全問題を対象）
+  console.log('🔄 Step 2: All restrictions relaxed, using all available questions')
+  return questions
+}
+
+/**
+ * クイズタイプ別統合フィルタリング（フォールバック処理統合版）
+ * 統合最適化エンジンの呼び出し前にQuizSessionで使用
+ */
+export function filterQuestionsByQuizType(
+  questions: Question[],
+  quizType: string,
+  options?: {
+    category?: string
+    difficulties?: string[]
+    userSettings?: QuizPersonalizationSettings
+  }
+): {
+  filteredQuestions: Question[]
+  learningLevelRestriction: 'basic' | 'intermediate' | 'advanced' | 'expert' | null
+  fallbackApplied: boolean
+} {
+  console.log('🔍 Starting quiz type filtering:', {
+    quizType,
+    originalCount: questions.length,
+    hasCategory: !!options?.category,
+    hasDifficulties: !!(options?.difficulties?.length),
+    hasUserSettings: !!options?.userSettings
+  })
+
+  switch (quizType) {
+    case 'business-ai': {
+      const filteredQuestions = filterQuestionsForBusinessAI(questions)
+      
+      // ビジネスAIでも問題数不足の場合は全問題を使用
+      const finalQuestions = filteredQuestions.length >= 10 
+        ? filteredQuestions 
+        : questions
+      
+      return {
+        filteredQuestions: finalQuestions,
+        learningLevelRestriction: null,
+        fallbackApplied: filteredQuestions.length < 10
+      }
+    }
+
+    case 'self-personalized': {
+      if (!options?.userSettings) {
+        console.warn('⚠️ Self-personalized quiz without user settings, using all questions')
+        return {
+          filteredQuestions: questions,
+          learningLevelRestriction: null,
+          fallbackApplied: true
+        }
+      }
+      
+      const initialFiltered = filterQuestionsForPersonalizedQuiz(questions, options.userSettings)
+      const finalQuestions = handlePersonalizedQuizFallback(questions, options.userSettings, initialFiltered)
+      
+      const learningLevelRestriction = options.userSettings.learningLevel 
+        ? normalizeLearningLevel(options.userSettings.learningLevel) 
+        : null
+
+      // フォールバックが適用された場合はlearningLevel制限を無効化
+      const effectiveLearningLevel = finalQuestions === initialFiltered 
+        ? learningLevelRestriction 
+        : null
+
+      return {
+        filteredQuestions: finalQuestions,
+        learningLevelRestriction: effectiveLearningLevel,
+        fallbackApplied: finalQuestions !== initialFiltered
+      }
+    }
+
+    case 'category': {
+      if (!options?.category) {
+        console.warn('⚠️ Category quiz without category specified, using all questions')
+        return {
+          filteredQuestions: questions,
+          learningLevelRestriction: null,
+          fallbackApplied: true
+        }
+      }
+      
+      const initialFiltered = filterQuestionsForCategoryQuiz(
+        questions, 
+        options.category, 
+        options.difficulties
+      )
+      
+      // 単一難易度対応の段階的フォールバック処理
+      const finalQuestions = options.difficulties && options.difficulties.length > 0
+        ? handleCategoryQuizFallback(questions, options.category, options.difficulties, initialFiltered)
+        : (initialFiltered.length >= 10 ? initialFiltered : questions)
+      
+      return {
+        filteredQuestions: finalQuestions,
+        learningLevelRestriction: null,
+        fallbackApplied: finalQuestions !== initialFiltered
+      }
+    }
+
+    case 'review': {
+      // 復習クイズは別途API経由で取得されるため空配列
+      console.log('📚 Review quiz - questions handled separately via API')
+      return {
+        filteredQuestions: [],
+        learningLevelRestriction: null,
+        fallbackApplied: false
+      }
+    }
+
+    default: {
+      console.warn('⚠️ Unknown quiz type, using all questions:', quizType)
+      return {
+        filteredQuestions: questions,
+        learningLevelRestriction: null,
+        fallbackApplied: true
+      }
+    }
+  }
 }

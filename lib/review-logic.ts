@@ -1,10 +1,19 @@
+/**
+ * 復習クイズ選定システム - REVIEW_NEEDEDフラグベース
+ * 
+ * ⚠️ 重要: このファイルは実際の復習クイズ選定を担当
+ * reviewReason分類はAI最適化機能専用で、ここでは使用しない
+ * 実際の復習条件: 不正解・ヒント使用・低自信・時間超過・繰り返しミス
+ */
+
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { Question } from '@/lib/types'
 
 // 復習対象問題の優先度
+// ⚠️ reasonフィールドはAI最適化分類専用 - 実際の選定には使用しない
 interface ReviewQuestion extends Question {
   priority: 1 | 2 | 3  // 1: 最高優先度、3: 低優先度
-  reason: 'forgetting_curve' | 'weak_category' | 'repeat_mistakes'
+  reason: 'forgetting_curve' | 'weak_category' | 'repeat_mistakes' // AI最適化分類専用
   lastAttemptDate?: string
   incorrectStreak?: number
   categoryAccuracy?: number
@@ -43,7 +52,7 @@ function calculateMemoryStrength(params: MemoryStrengthParams): boolean {
 /**
  * 忘却曲線ベースの復習対象問題取得
  */
-async function getForgettingQuestions(userId: string, limit: number = 50): Promise<ReviewQuestion[]> {
+export async function getForgettingQuestions(userId: string, limit: number = 50): Promise<ReviewQuestion[]> {
   try {
     console.log(`🧠 Analyzing forgetting curve for user: ${userId}`)
 
@@ -154,7 +163,7 @@ async function getForgettingQuestions(userId: string, limit: number = 50): Promi
 /**
  * カテゴリー別苦手分野の復習対象問題取得
  */
-async function getWeakCategoryQuestions(userId: string, limit: number = 30): Promise<ReviewQuestion[]> {
+export async function getWeakCategoryQuestions(userId: string, limit: number = 30): Promise<ReviewQuestion[]> {
   try {
     console.log(`📊 Analyzing weak categories for user: ${userId}`)
 
@@ -252,7 +261,7 @@ async function getWeakCategoryQuestions(userId: string, limit: number = 30): Pro
 /**
  * 繰り返しミス問題の復習対象問題取得
  */
-async function getRepeatMistakeQuestions(userId: string, limit: number = 20): Promise<ReviewQuestion[]> {
+export async function getRepeatMistakeQuestions(userId: string, limit: number = 20): Promise<ReviewQuestion[]> {
   try {
     console.log(`🔄 Analyzing repeat mistakes for user: ${userId}`)
 
@@ -364,72 +373,96 @@ async function getRepeatMistakeQuestions(userId: string, limit: number = 20): Pr
 }
 
 /**
- * ユーザーの復習対象問題を選定
+ * ユーザーの復習対象問題を選定（REVIEW_NEEDEDフラグベース - 要件準拠版）
  */
 export async function selectReviewQuestions(
   userId: string, 
   requestedCount: number = 10
-): Promise<(Question & { reviewReason?: string; reviewPriority?: number; lastAttemptDate?: string; incorrectStreak?: number; categoryAccuracy?: number })[]> {
+): Promise<Question[]> {
   try {
-    console.log(`🎯 Selecting review questions for user ${userId}, count: ${requestedCount}`)
+    console.log(`🎯 Selecting REVIEW_NEEDED flagged questions for user ${userId}, count: ${requestedCount}`)
 
-    // 1. 各カテゴリーから復習対象問題を取得
-    const [forgettingQuestions, weakCategoryQuestions, repeatMistakeQuestions] = await Promise.all([
-      getForgettingQuestions(userId, Math.ceil(requestedCount * 0.5)), // 50%
-      getWeakCategoryQuestions(userId, Math.ceil(requestedCount * 0.3)), // 30%
-      getRepeatMistakeQuestions(userId, Math.ceil(requestedCount * 0.2))  // 20%
-    ])
+    // REVIEW_NEEDED=true かつ未復習（reviewed_at=null）の問題のみ取得
+    const { data: reviewNeededAnswers, error } = await supabaseAdmin
+      .from('quiz_answers')
+      .select(`
+        question_id,
+        created_at,
+        difficulty,
+        subcategory_id,
+        category_id,
+        confidence_level,
+        max_hint_level,
+        time_spent
+      `)
+      .eq('user_id', userId)
+      .eq('review_needed', true)        // REVIEW_NEEDEDフラグ = true
+      .is('reviewed_at', null)          // 未復習
+      .order('created_at', { ascending: false })
+      .limit(requestedCount * 2) // 余裕をもって取得（問題詳細が取得できない場合に備えて）
 
-    // 2. 優先度順で結合・重複除去
-    const allCandidates = [
-      ...forgettingQuestions,
-      ...weakCategoryQuestions,
-      ...repeatMistakeQuestions
-    ]
+    if (error) {
+      console.error('❌ Error fetching REVIEW_NEEDED questions:', error)
+      return []
+    }
 
-    // 3. 重複除去（question.idベース）
-    const uniqueQuestions = Array.from(
-      new Map(allCandidates.map(q => [q.id, q])).values()
-    )
+    if (!reviewNeededAnswers || reviewNeededAnswers.length === 0) {
+      console.log('ℹ️ No REVIEW_NEEDED questions found')
+      return []
+    }
 
-    // 4. 優先度順ソート・指定数まで選択
-    const selectedQuestions = uniqueQuestions
-      .sort((a, b) => {
-        // 優先度でソート（数字が小さいほど優先度高）
-        if (a.priority !== b.priority) {
-          return a.priority - b.priority
-        }
-        // 同じ優先度内では理由別ソート
-        const reasonOrder = { forgetting_curve: 1, weak_category: 2, repeat_mistakes: 3 }
-        return reasonOrder[a.reason] - reasonOrder[b.reason]
+    // 3日以上経過チェック
+    const now = Date.now()
+    const eligibleAnswers = reviewNeededAnswers.filter(answer => {
+      if (!answer.created_at) return false
+      const daysSinceCreated = Math.floor(
+        (now - new Date(answer.created_at).getTime()) / (1000 * 60 * 60 * 24)
+      )
+      return daysSinceCreated >= 3 // 各問題の出題から3日以上経過
+    })
+
+    console.log(`📅 Filtered by 3+ days: ${eligibleAnswers.length} / ${reviewNeededAnswers.length} questions`)
+
+    if (eligibleAnswers.length === 0) {
+      console.log('ℹ️ No questions have passed the 3-day threshold')
+      return []
+    }
+
+    const reviewQuestions: Question[] = []
+
+    // 問題詳細を取得
+    for (const answer of eligibleAnswers.slice(0, requestedCount)) {
+      const { data: questionData, error: questionError } = await supabaseAdmin
+        .from('quiz_questions')
+        .select('id, question, option1, option2, option3, option4, correct_answer, category_id, subcategory_id, difficulty, time_limit, explanation, source')
+        .eq('id', parseInt(answer.question_id))
+        .eq('is_deleted', false)
+        .single()
+
+      if (questionError || !questionData) {
+        console.warn(`⚠️ Failed to fetch question ${answer.question_id}:`, questionError)
+        continue
+      }
+
+      reviewQuestions.push({
+        id: questionData.id,
+        question: questionData.question || '',
+        options: [questionData.option1, questionData.option2, questionData.option3, questionData.option4].filter(Boolean),
+        correct: questionData.correct_answer || 0,
+        category: questionData.category_id || '',
+        subcategory: questionData.subcategory_id || '',
+        subcategory_id: questionData.subcategory_id || undefined,
+        difficulty: questionData.difficulty || 'intermediate',
+        timeLimit: questionData.time_limit || 60,
+        explanation: questionData.explanation || '',
+        source: questionData.source || '',
+        relatedTopics: []
       })
-      .slice(0, requestedCount)
+    }
 
-    console.log(`✅ Selected ${selectedQuestions.length} review questions:`)
-    console.log(`  - Forgetting curve: ${selectedQuestions.filter(q => q.reason === 'forgetting_curve').length}`)
-    console.log(`  - Weak categories: ${selectedQuestions.filter(q => q.reason === 'weak_category').length}`) 
-    console.log(`  - Repeat mistakes: ${selectedQuestions.filter(q => q.reason === 'repeat_mistakes').length}`)
+    console.log(`✅ Selected ${reviewQuestions.length} REVIEW_NEEDED questions`)
 
-    return selectedQuestions.map(q => ({
-      id: q.id,
-      category: q.category,
-      subcategory: q.subcategory,
-      subcategory_id: q.subcategory_id,
-      question: q.question,
-      options: q.options,
-      correct: q.correct,
-      explanation: q.explanation,
-      difficulty: q.difficulty,
-      timeLimit: q.timeLimit,
-      relatedTopics: q.relatedTopics,
-      source: q.source,
-      // 復習理由の情報を追加
-      reviewReason: q.reason,
-      reviewPriority: q.priority,
-      lastAttemptDate: q.lastAttemptDate,
-      incorrectStreak: q.incorrectStreak,
-      categoryAccuracy: q.categoryAccuracy
-    }))
+    return reviewQuestions
 
   } catch (error) {
     console.error('❌ Error in selectReviewQuestions:', error)
@@ -486,6 +519,7 @@ async function getCorrectStreak(userId: string, questionId: string): Promise<num
 
 /**
  * 復習判定：問題回答時に復習が必要かどうかを判定
+ * ヒント使用と自信レベルに対応
  */
 export async function determineReviewNeed(
   userId: string,
@@ -493,19 +527,52 @@ export async function determineReviewNeed(
   isCorrect: boolean,
   responseTime: number,
   difficulty: string,
-  timeLimit: number
+  timeLimit: number,
+  maxHintLevel?: number,      // 使用した最大ヒントレベル (0-3)
+  confidenceLevel?: number    // 自信レベル (1-5)
 ): Promise<boolean> {
   try {
-    // 即座に復習推奨の条件
-    if (!isCorrect) return true
+    console.log(`🔍 Review need analysis for question ${questionId}:`, {
+      isCorrect,
+      responseTime,
+      timeLimit,
+      maxHintLevel,
+      confidenceLevel,
+      userId: userId.substring(0, 8) + '...'
+    })
+
+    // 条件1: 即座に復習推奨（不正解）
+    if (!isCorrect) {
+      console.log('📌 Review needed: Incorrect answer')
+      return true
+    }
     
-    // 制限時間の80%以上使用で復習推奨
-    if (responseTime > (timeLimit * 0.8 * 1000)) return true
+    // 条件2: ヒントLv2以上使用で復習推奨
+    if (maxHintLevel && maxHintLevel >= 2) {
+      console.log(`📌 Review needed: High hint level used (${maxHintLevel})`)
+      return true
+    }
     
-    // 繰り返しミス判定
+    // 条件3: 自信レベル1-2で復習推奨
+    if (confidenceLevel && confidenceLevel <= 2) {
+      console.log(`📌 Review needed: Low confidence level (${confidenceLevel})`)
+      return true
+    }
+    
+    // 条件4: 制限時間の80%以上使用で復習推奨
+    if (responseTime > (timeLimit * 0.8)) {
+      console.log(`📌 Review needed: Long response time (${responseTime}s > ${timeLimit * 0.8}s)`)
+      return true
+    }
+    
+    // 条件5: 繰り返しミス判定
     const hasRepeatMistakes = await checkRepeatMistakes(userId, questionId, difficulty)
-    if (hasRepeatMistakes) return true
+    if (hasRepeatMistakes) {
+      console.log('📌 Review needed: Repeat mistakes detected')
+      return true
+    }
     
+    console.log('✅ No review needed for this question')
     return false
 
   } catch (error) {

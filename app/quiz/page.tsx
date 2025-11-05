@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { UnifiedQuizType, isValidUnifiedQuizType } from '@/lib/types/quiz'
 import QuizSession from '@/components/quiz/QuizSession'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
@@ -16,7 +17,7 @@ export default function QuizPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { user, profile, loading: authLoading } = useAuth()
-  const mode = searchParams.get('mode')
+  const mode = searchParams.get('mode') as UnifiedQuizType | null
   const categoryParam = searchParams.get('category')
   const difficultiesParam = searchParams.get('difficulties')
   const returnToParam = searchParams.get('returnTo')
@@ -26,13 +27,48 @@ export default function QuizPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [showSettingsPrompt, setShowSettingsPrompt] = useState(false)
   const [proceedWithQuiz, setProceedWithQuiz] = useState(false)
+  const [userSkippedSettings, setUserSkippedSettings] = useState(false)
   const [reviewQuestions, setReviewQuestions] = useState<Question[]>([])
-  const [reviewStats, setReviewStats] = useState<{selectedCount: number, totalAvailable: number} | null>(null)
+
+  // 認証ガード - レンダリング中の副作用を防ぐためuseEffectで実行
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login')
+    }
+  }, [authLoading, user, router])
+
+  // パラメータチェック - レンダリング中の副作用を防ぐためuseEffectで実行
+  useEffect(() => {
+    const hasValidParams = (mode && isValidUnifiedQuizType(mode)) || categoryParam
+    
+    if (!hasValidParams) {
+      console.log('⚠️ Invalid quiz access - redirecting to home')
+      router.push('/')
+    }
+  }, [mode, categoryParam, router])
 
   useEffect(() => {
     const loadQuestions = async () => {
       try {
+        // セルフパーソナライズで既に問題が読み込まれている場合は、設定処理のみ実行
+        if (mode === 'self-personalized' && questions.length > 0 && userSkippedSettings) {
+          console.log('🔍 User skipped settings - proceeding with quiz (no reload)')
+          setShowSettingsPrompt(false)
+          setProceedWithQuiz(true)
+          return
+        }
+        
         if (mode === 'review') {
+          console.log('🔄 [REVIEW MODE] Starting review quiz mode...')
+          console.log('🔄 [REVIEW MODE] Current loading state:', loading)
+          
+          // 復習問題が既に読み込まれている場合は早期リターン
+          if (reviewQuestions.length > 0) {
+            console.log('🔄 [REVIEW MODE] Review questions already loaded, skipping API call')
+            setLoading(false)
+            return
+          }
+          
           // 復習モードの場合は復習問題を取得
           // 既存のSupabaseクライアントを使用（新しいクライアント作成を避ける）
           const { supabase } = await import('@/lib/supabase')
@@ -45,20 +81,34 @@ export default function QuizPage() {
             throw new Error('Authentication required')
           }
 
-          const response = await fetch('/api/review/questions?count=10', {
+          // ユーザー設定に基づいた問題数で復習問題を取得（countパラメータなし）
+          console.log('🔄 [REVIEW MODE] Fetching review questions with token:', token ? 'available' : 'missing')
+          const response = await fetch('/api/review/questions', {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
           })
+          console.log('🔄 [REVIEW MODE] API response status:', response.status)
           if (response.ok) {
             const data = await response.json()
+            console.log('🔄 [REVIEW MODE] Received data:', {
+              success: data.success,
+              questionsCount: data.questions?.length || 0,
+              reviewReasonsAnalyzed: data.reviewReasonsAnalyzed,
+              sampleQuestion: data.questions?.[0] ? {
+                id: data.questions[0].id,
+                hasReviewReason: !!data.questions[0].reviewReason
+              } : null
+            })
             if (data.success && data.questions && data.questions.length > 0) {
+              console.log('🔄 [REVIEW MODE] Setting review questions, count:', data.questions.length)
               setReviewQuestions(data.questions)
-              setReviewStats({
-                selectedCount: data.selectedCount,
-                totalAvailable: data.totalAvailable
-              })
+              console.log('🔄 [REVIEW MODE] Review questions set successfully')
+              console.log('🔄 [REVIEW MODE] Setting loading to false and returning')
+              // 復習モードの場合はここで読み込み完了
+              setLoading(false)
+              return // early return で finally ブロックの setLoading(false) を回避
             } else {
               // 復習問題がない場合はホームにリダイレクト
               console.log('ℹ️ No review questions available - redirecting to home')
@@ -73,17 +123,30 @@ export default function QuizPage() {
           const questionsData = await getAllQuestions()
           setQuestions(questionsData)
           
-          // セルフパーソナライズクイズの場合、設定をチェック
-          if (mode === 'self-personalized' && user) {
+          // セルフパーソナライズクイズの場合、設定をチェック（ユーザーがスキップしていない場合のみ）
+          if (mode === 'self-personalized' && user && !userSkippedSettings) {
             const settings = await getUserQuizSettings(user.id)
             if (isDefaultSettings(settings)) {
+              console.log('🔍 Default settings detected - showing settings prompt modal')
               setShowSettingsPrompt(true)
+              setProceedWithQuiz(false) // 確実にクイズ表示を停止
+            } else {
+              console.log('🔍 Custom settings found - proceeding with quiz')
+              setShowSettingsPrompt(false)
+              setProceedWithQuiz(true)
             }
+          } else if (mode === 'self-personalized' && user && userSkippedSettings) {
+            console.log('🔍 User skipped settings - proceeding with quiz')
+            setShowSettingsPrompt(false)
+            setProceedWithQuiz(true)
           }
+          
+          // 通常モードの場合はここで読み込み完了
+          setLoading(false)
+          return // early return で finally ブロックの setLoading(false) を回避
         }
       } catch (error) {
         console.error('Failed to load questions:', error)
-      } finally {
         setLoading(false)
       }
     }
@@ -91,7 +154,17 @@ export default function QuizPage() {
     if (user && !authLoading) {
       loadQuestions()
     }
-  }, [mode, user, authLoading, router])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, user, authLoading, router, userSkippedSettings]) // 復習モードでquestions.lengthによる不要な再実行を防ぐため削除
+
+  // デバッグ用：状態変更を監視
+  useEffect(() => {
+    console.log('🔍 State change:', { showSettingsPrompt, proceedWithQuiz, userSkippedSettings, mode })
+    if (mode === 'self-personalized') {
+      const shouldShowQuiz = proceedWithQuiz && !showSettingsPrompt
+      console.log('🎯 Self-personalized quiz display condition:', { shouldShowQuiz, proceedWithQuiz, showSettingsPrompt, userSkippedSettings })
+    }
+  }, [showSettingsPrompt, proceedWithQuiz, userSkippedSettings, mode])
 
   const handleQuizComplete = (results: { 
     score: number
@@ -126,8 +199,12 @@ export default function QuizPage() {
   }
 
   const handleSkipToQuiz = () => {
+    console.log('🎯 handleSkipToQuiz called')
+    // ユーザーがスキップしたことを記録し、設定チェックを防ぐ
+    setUserSkippedSettings(true)
     setShowSettingsPrompt(false)
     setProceedWithQuiz(true)
+    console.log('🔧 States updated: userSkippedSettings=true, showSettingsPrompt=false, proceedWithQuiz=true')
   }
 
   // 認証ガード
@@ -136,20 +213,10 @@ export default function QuizPage() {
   }
 
   if (!authLoading && !user) {
-    router.push('/login')
     return <LoadingScreen message="ログインページに移動中..." />
   }
 
-  // パラメータチェック：適切なクイズ開始条件があるかを確認
-  // ai-personalizedはrandomと同じ処理（将来のAI機能実装まではエイリアスとして扱う）
-  const hasValidParams = mode === 'random' || mode === 'ai-personalized' || mode === 'self-personalized' || mode === 'review' || categoryParam
-  
-  if (!hasValidParams) {
-    // パラメータが不適切な場合はホームにリダイレクト
-    console.log('⚠️ Invalid quiz access - redirecting to home')
-    router.push('/')
-    return <LoadingScreen message="ホームページに移動中..." />
-  }
+  // パラメータチェックはuseEffectで実行（レンダリング中の副作用回避）
 
   if (loading) {
     return <LoadingScreen message="問題を読み込んでいます..." />
@@ -170,46 +237,8 @@ export default function QuizPage() {
       />
 
       <main className="container mx-auto px-4 py-6">
-        {user && (mode !== 'self-personalized' || proceedWithQuiz || !showSettingsPrompt) && (
+        {user && (mode !== 'self-personalized' || (proceedWithQuiz && !showSettingsPrompt)) && (
           <div>
-            {/* 復習モード情報表示 */}
-            {mode === 'review' && reviewStats && (
-              <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h2 className="text-lg font-semibold text-orange-900">復習AI推奨クイズ</h2>
-                    <p className="text-sm text-orange-700">
-                      忘却曲線や苦手カテゴリーを分析して選定した問題です
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-orange-600">
-                      選定問題: {reviewStats.selectedCount}問
-                    </div>
-                    <div className="text-xs text-orange-500">
-                      全復習対象: {reviewStats.totalAvailable}問
-                    </div>
-                  </div>
-                </div>
-                
-                {/* 復習理由の説明 */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-                  <div className="flex items-center space-x-2 text-xs">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span className="text-purple-700">🧠 忘却曲線: 時間経過で記憶が薄れている問題</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-xs">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <span className="text-red-700">📊 苦手分野: 正解率が低いカテゴリーの問題</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-xs">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <span className="text-orange-700">🔄 繰り返しミス: 同じパターンで間違えた問題</span>
-                  </div>
-                </div>
-              </div>
-            )}
-            
             <QuizSession
               questions={mode === 'review' ? reviewQuestions : questions}
               category={categoryParam || undefined}
@@ -217,6 +246,7 @@ export default function QuizPage() {
               difficulties={difficulties}
               user={user}
               profile={profile}
+              mode={mode}
               onComplete={handleQuizComplete}
               onExit={handleQuizExit}
               isReviewMode={mode === 'review'}

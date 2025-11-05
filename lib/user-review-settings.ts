@@ -1,15 +1,16 @@
 import { supabase } from './supabase'
 
+// 復習設定のキー定数
+const REVIEW_SETTINGS_KEY = 'review_settings'
+
 // 復習設定の型定義
 export interface ReviewSettings {
   notificationEnabled: boolean      // 復習通知有効フラグ
   notificationIntervalDays: number  // 復習通知間隔（日数）
+  reviewQuestionsCount: number      // 復習問題数（1-30、デフォルト10）
   createdAt: string
   updatedAt: string
 }
-
-// user_settingsテーブルの設定キー
-const REVIEW_SETTINGS_KEY = 'review_settings'
 
 /**
  * デフォルト復習設定を取得
@@ -19,21 +20,21 @@ export function getDefaultReviewSettings(): ReviewSettings {
   return {
     notificationEnabled: true,
     notificationIntervalDays: 7,
+    reviewQuestionsCount: 10,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
 }
 
 /**
- * ユーザーの復習設定を取得
+ * ユーザーの復習設定を取得（クライアントサイド用・RLS保護）
  */
 export async function getUserReviewSettings(userId: string): Promise<ReviewSettings> {
   try {
     const { data, error } = await supabase
-      .from('user_settings')
-      .select('setting_value')
+      .from('review_settings')
+      .select('*')
       .eq('user_id', userId)
-      .eq('setting_key', REVIEW_SETTINGS_KEY)
       .single()
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = No rows returned
@@ -42,22 +43,24 @@ export async function getUserReviewSettings(userId: string): Promise<ReviewSetti
     }
 
     // データが存在しない場合はデフォルト設定を返す
-    if (!data || !data.setting_value) {
+    if (!data) {
       console.log('📝 No review settings found, returning default')
       return getDefaultReviewSettings()
     }
 
-    const settings = JSON.parse(String(data.setting_value)) as ReviewSettings
-    
-    // バリデーション: 必須フィールドが存在しない場合はデフォルト値で補完
+    // review_settingsテーブルの構造に合わせてマッピング
     const validatedSettings: ReviewSettings = {
-      notificationEnabled: settings.notificationEnabled ?? true,
-      notificationIntervalDays: settings.notificationIntervalDays ?? 7,
-      createdAt: settings.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString() // 取得時に更新
+      notificationEnabled: data.notification_enabled ?? true,
+      notificationIntervalDays: data.notification_interval_days ?? 7,
+      reviewQuestionsCount: data.review_questions_count ?? 10,
+      createdAt: data.created_at || new Date().toISOString(),
+      updatedAt: data.updated_at || new Date().toISOString()
     }
 
-    console.log('✅ Review settings loaded for user:', userId)
+    console.log('✅ Review settings loaded for user:', userId, {
+      reviewQuestionsCount: validatedSettings.reviewQuestionsCount,
+      source: 'client-side'
+    })
     return validatedSettings
 
   } catch (error) {
@@ -65,6 +68,9 @@ export async function getUserReviewSettings(userId: string): Promise<ReviewSetti
     return getDefaultReviewSettings()
   }
 }
+
+// Note: getUserReviewSettingsAdmin function removed 
+// Admin operations should be handled via API routes
 
 /**
  * ユーザーの復習設定を保存
@@ -113,7 +119,8 @@ export function isDefaultReviewSettings(settings: ReviewSettings): boolean {
   const defaultSettings = getDefaultReviewSettings()
   return (
     settings.notificationEnabled === defaultSettings.notificationEnabled &&
-    settings.notificationIntervalDays === defaultSettings.notificationIntervalDays
+    settings.notificationIntervalDays === defaultSettings.notificationIntervalDays &&
+    settings.reviewQuestionsCount === defaultSettings.reviewQuestionsCount
   )
 }
 
@@ -145,6 +152,15 @@ export async function shouldShowReviewNotification(
     console.error('❌ Error checking review notification:', error)
     return false
   }
+}
+
+
+/**
+ * 復習問題数の妥当性をチェック
+ */
+export function validateReviewQuestionsCount(count: number): number {
+  // 1-30問の範囲でクランプ
+  return Math.max(1, Math.min(30, Math.floor(count)))
 }
 
 /**

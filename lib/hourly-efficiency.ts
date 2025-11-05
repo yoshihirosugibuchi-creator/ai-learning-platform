@@ -102,7 +102,7 @@ export function calculatePeakHours(hourlyStats: Record<string, HourlyStats>): nu
       efficiency: stats.efficiency,
       sessionCount: stats.session_count
     }))
-    .filter(item => item.sessionCount >= 2) // 最低2セッション必要
+    .filter(item => item.sessionCount >= 1) // 最低1セッション必要
     .sort((a, b) => b.efficiency - a.efficiency)
     .slice(0, 3)
     .map(item => item.hour)

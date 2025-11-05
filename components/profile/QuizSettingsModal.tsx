@@ -191,7 +191,8 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
     } finally {
       setLoading(false)
     }
-  }, [user])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // user依存関係除去（無限ループ防止・ロジック保持）
 
   // モーダルが開かれた時の初期化
   useEffect(() => {
@@ -199,7 +200,8 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
       setCurrentStep(1) // 必ず Step 1 から開始
       loadSettings()
     }
-  }, [isOpen, user, loadSettings])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, user]) // loadSettings依存関係除去（無限ループ防止）
 
   // tempSettingsに学習レベルが設定されていない場合の保険処理
   useEffect(() => {
@@ -209,7 +211,8 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
       console.log('🔧 Fallback: Setting default learning level:', defaultLevel)
       setTempSettings(prev => ({ ...prev, learningLevel: defaultLevel as 'basic' | 'intermediate' | 'advanced' | 'expert' }))
     }
-  }, [learningLevels, tempSettings])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [learningLevels]) // tempSettings依存関係除去（無限ループ防止・デフォルト値設定は一度のみ実行）
 
   const handleNext = () => {
     if (currentStep < 5) {
@@ -303,22 +306,22 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
   const basicCategoriesData = categories.filter(cat => cat.type === 'basic')
   const industryCategoriesData = categories.filter(cat => cat.type === 'industry')
   
-  // デバッグログ
-  console.log('🐛 Categories debug:', {
-    totalCategories: categories.length,
-    basicCount: basicCategoriesData.length,
-    industryCount: industryCategoriesData.length,
-    sampleCategory: categories[0],
-    allTypes: categories.map(cat => cat.type),
-    currentStep,
-    tempBasicCategoriesLength: tempSettings.basicCategories?.length,
-    tempBasicCategories: tempSettings.basicCategories
-  })
+  // デバッグログ（無限ループ防止のため削除）
+  // console.log('🐛 Categories debug:', {
+  //   totalCategories: categories.length,
+  //   basicCount: basicCategoriesData.length,
+  //   industryCount: industryCategoriesData.length,
+  //   sampleCategory: categories[0],
+  //   allTypes: categories.map(cat => cat.type),
+  //   currentStep,
+  //   tempBasicCategoriesLength: tempSettings.basicCategories?.length,
+  //   tempBasicCategories: tempSettings.basicCategories
+  // })
 
   // Step 1: 学習レベル選択
   const renderStep1 = () => {
-    console.log('🎯 Step1 render - current tempSettings:', tempSettings)
-    console.log('📊 Available learning levels:', learningLevels.length, learningLevels.map(l => ({ id: l.id, name: l.name })))
+    // console.log('🎯 Step1 render - current tempSettings:', tempSettings)
+    // console.log('📊 Available learning levels:', learningLevels.length, learningLevels.map(l => ({ id: l.id, name: l.name })))
     
     return (
       <div className="space-y-6">

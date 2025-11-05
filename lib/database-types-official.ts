@@ -332,6 +332,69 @@ export type Database = {
         }
         Relationships: []
       }
+      difficulty_distribution_settings: {
+        Row: {
+          accuracy_range_max: number
+          accuracy_range_min: number
+          advanced_percent: number
+          basic_percent: number
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          expert_percent: number
+          id: string
+          intermediate_percent: number
+          is_active: boolean | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          accuracy_range_max: number
+          accuracy_range_min: number
+          advanced_percent?: number
+          basic_percent?: number
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          expert_percent?: number
+          id?: string
+          intermediate_percent?: number
+          is_active?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          accuracy_range_max?: number
+          accuracy_range_min?: number
+          advanced_percent?: number
+          basic_percent?: number
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          expert_percent?: number
+          id?: string
+          intermediate_percent?: number
+          is_active?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "difficulty_distribution_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "difficulty_distribution_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       industry_level_targets: {
         Row: {
           created_at: string | null
@@ -807,6 +870,51 @@ export type Database = {
           },
         ]
       }
+      precomputed_quiz_sets: {
+        Row: {
+          analysis_data: Json
+          category_filter: string[] | null
+          created_at: string | null
+          difficulty_filter: string[] | null
+          expires_at: string | null
+          id: string
+          question_ids: number[]
+          quiz_type: Database["public"]["Enums"]["quiz_type_enum"]
+          used_at: string | null
+          user_id: string
+          user_settings_hash: string | null
+          version: number | null
+        }
+        Insert: {
+          analysis_data?: Json
+          category_filter?: string[] | null
+          created_at?: string | null
+          difficulty_filter?: string[] | null
+          expires_at?: string | null
+          id?: string
+          question_ids: number[]
+          quiz_type: Database["public"]["Enums"]["quiz_type_enum"]
+          used_at?: string | null
+          user_id: string
+          user_settings_hash?: string | null
+          version?: number | null
+        }
+        Update: {
+          analysis_data?: Json
+          category_filter?: string[] | null
+          created_at?: string | null
+          difficulty_filter?: string[] | null
+          expires_at?: string | null
+          id?: string
+          question_ids?: number[]
+          quiz_type?: Database["public"]["Enums"]["quiz_type_enum"]
+          used_at?: string | null
+          user_id?: string
+          user_settings_hash?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
       quiz_answers: {
         Row: {
           category_id: string
@@ -826,6 +934,8 @@ export type Database = {
           question_id: string
           quiz_session_id: string | null
           review_needed: boolean
+          review_reason: string | null
+          reviewed_at: string | null
           session_type: string | null
           subcategory_id: string
           theme_id: string | null
@@ -851,6 +961,8 @@ export type Database = {
           question_id: string
           quiz_session_id?: string | null
           review_needed?: boolean
+          review_reason?: string | null
+          reviewed_at?: string | null
           session_type?: string | null
           subcategory_id: string
           theme_id?: string | null
@@ -876,6 +988,8 @@ export type Database = {
           question_id?: string
           quiz_session_id?: string | null
           review_needed?: boolean
+          review_reason?: string | null
+          reviewed_at?: string | null
           session_type?: string | null
           subcategory_id?: string
           theme_id?: string | null
@@ -1226,6 +1340,7 @@ export type Database = {
           created_at: string | null
           duration_seconds: number | null
           id: string
+          quiz_type: string
           session_end_time: string | null
           session_start_time: string
           status: string
@@ -1242,6 +1357,7 @@ export type Database = {
           created_at?: string | null
           duration_seconds?: number | null
           id?: string
+          quiz_type?: string
           session_end_time?: string | null
           session_start_time?: string
           status?: string
@@ -1258,6 +1374,7 @@ export type Database = {
           created_at?: string | null
           duration_seconds?: number | null
           id?: string
+          quiz_type?: string
           session_end_time?: string | null
           session_start_time?: string
           status?: string
@@ -1266,6 +1383,39 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           wisdom_cards_awarded?: number | null
+        }
+        Relationships: []
+      }
+      review_settings: {
+        Row: {
+          created_at: string | null
+          notification_enabled: boolean | null
+          notification_interval_days: number | null
+          review_questions_count: number | null
+          streak_reminder_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+          weekly_summary_enabled: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          notification_enabled?: boolean | null
+          notification_interval_days?: number | null
+          review_questions_count?: number | null
+          streak_reminder_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          weekly_summary_enabled?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          notification_enabled?: boolean | null
+          notification_interval_days?: number | null
+          review_questions_count?: number | null
+          streak_reminder_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          weekly_summary_enabled?: boolean | null
         }
         Relationships: []
       }
@@ -2009,6 +2159,59 @@ export type Database = {
           },
         ]
       }
+      user_question_usage: {
+        Row: {
+          avg_time_spent: number | null
+          category_id: string
+          created_at: string | null
+          difficulty: string
+          last_accuracy_rate: number | null
+          last_used_at: string | null
+          question_id: number
+          recent_usage_count: number | null
+          subcategory_id: string | null
+          updated_at: string | null
+          usage_count: number | null
+          user_id: string
+        }
+        Insert: {
+          avg_time_spent?: number | null
+          category_id: string
+          created_at?: string | null
+          difficulty: string
+          last_accuracy_rate?: number | null
+          last_used_at?: string | null
+          question_id: number
+          recent_usage_count?: number | null
+          subcategory_id?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+          user_id: string
+        }
+        Update: {
+          avg_time_spent?: number | null
+          category_id?: string
+          created_at?: string | null
+          difficulty?: string
+          last_accuracy_rate?: number | null
+          last_used_at?: string | null
+          question_id?: number
+          recent_usage_count?: number | null
+          subcategory_id?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_question_usage_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_settings: {
         Row: {
           created_at: string | null
@@ -2573,6 +2776,7 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: number
       }
+      cleanup_expired_precomputed_sets: { Args: never; Returns: number }
       detect_cognitive_overload: {
         Args: {
           p_current_session_id: string
@@ -2646,12 +2850,39 @@ export type Database = {
           question_id: string
         }[]
       }
+      get_question_smart_weights: {
+        Args: {
+          p_category_id: string
+          p_difficulties: string[]
+          p_user_id: string
+        }
+        Returns: {
+          question_id: number
+          smart_weight: number
+        }[]
+      }
       get_xp_setting: { Args: { setting_key: string }; Returns: number }
       initialize_user_learning_profile: {
         Args: { p_user_id: string }
         Returns: undefined
       }
       insert_initial_industry_targets: { Args: never; Returns: undefined }
+      is_admin: { Args: never; Returns: boolean }
+      is_authenticated: { Args: never; Returns: boolean }
+      is_owner_or_admin:
+        | {
+            Args: { user_id: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.is_owner_or_admin(user_id => text), public.is_owner_or_admin(user_id => uuid). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
+        | {
+            Args: { user_id: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.is_owner_or_admin(user_id => text), public.is_owner_or_admin(user_id => uuid). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
+      is_system_admin: { Args: never; Returns: boolean }
       optimize_session_parameters: {
         Args: { p_user_id: string }
         Returns: {
@@ -2710,6 +2941,7 @@ export type Database = {
           total_time_seconds: number
         }[]
       }
+      test_rls_function: { Args: never; Returns: string }
       update_course_session_stats: {
         Args: {
           p_category_id: string
@@ -2736,6 +2968,7 @@ export type Database = {
         Args: { p_session_id: string; p_user_id: string }
         Returns: undefined
       }
+      update_recent_usage_counts: { Args: never; Returns: number }
       update_review_schedule: {
         Args: {
           p_content_id: string
@@ -2764,7 +2997,11 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      quiz_type_enum:
+        | "business-ai"
+        | "self-personalized"
+        | "category"
+        | "review"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2891,11 +3128,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      quiz_type_enum: [
+        "business-ai",
+        "self-personalized",
+        "category",
+        "review",
+      ],
+    },
   },
 } as const
 
-// ============= Existing Type Aliases (preserved from backup) =============
+// ============= Complete Type Aliases (All 56 Types - Updated 2025.11.05) =============
 export type UserXPStatsV2 = Database['public']['Tables']['user_xp_stats_v2']['Row']
 export type SKPTransaction = Database['public']['Tables']['skp_transactions']['Row']
 export type CourseSessionCompletion = Database['public']['Tables']['course_session_completions']['Row']
@@ -2939,22 +3183,16 @@ export type SystemConfigMonitoringUpdate = Database['public']['Tables']['system_
 export type SystemHealthLog = Database['public']['Tables']['system_health_logs']['Row']
 export type SystemHealthLogInsert = Database['public']['Tables']['system_health_logs']['Insert']
 export type SystemHealthLogUpdate = Database['public']['Tables']['system_health_logs']['Update']
-
-// ============= Additional Type Aliases (missing types) =============
-export type WisdomCardMaster = Database['public']['Tables']['wisdom_cards']['Row']
-export type WisdomCardMasterInsert = Database['public']['Tables']['wisdom_cards']['Insert']
-export type WisdomCardMasterUpdate = Database['public']['Tables']['wisdom_cards']['Update']
 export type DailyXPRecord = Database['public']['Tables']['daily_xp_records']['Row']
-export type DailyXPRecordInsert = Database['public']['Tables']['daily_xp_records']['Insert']
-export type DailyXPRecordUpdate = Database['public']['Tables']['daily_xp_records']['Update']
 export type DailyAnalyticsBatchLog = Database['public']['Tables']['daily_analytics_batch_log']['Row']
 export type DailyAnalyticsBatchLogInsert = Database['public']['Tables']['daily_analytics_batch_log']['Insert']
-export type DailyAnalyticsBatchLogUpdate = Database['public']['Tables']['daily_analytics_batch_log']['Update']
-export type QuizHint = Database['public']['Tables']['quiz_hints']['Row']
-export type QuizHintInsert = Database['public']['Tables']['quiz_hints']['Insert']
-export type QuizHintUpdate = Database['public']['Tables']['quiz_hints']['Update']
-
-// ============= Quiz Answers Types with Hint Support =============
+export type WisdomCardMaster = Database['public']['Tables']['wisdom_cards']['Row']
+export type PrecomputedQuizSet = Database['public']['Tables']['precomputed_quiz_sets']['Row']
+export type PrecomputedQuizSetInsert = Database['public']['Tables']['precomputed_quiz_sets']['Insert']
+export type PrecomputedQuizSetUpdate = Database['public']['Tables']['precomputed_quiz_sets']['Update']
+export type UserQuestionUsage = Database['public']['Tables']['user_question_usage']['Row']
+export type UserQuestionUsageInsert = Database['public']['Tables']['user_question_usage']['Insert']
+export type UserQuestionUsageUpdate = Database['public']['Tables']['user_question_usage']['Update']
 export type QuizAnswer = Database['public']['Tables']['quiz_answers']['Row']
 export type QuizAnswerInsert = Database['public']['Tables']['quiz_answers']['Insert']
 export type QuizAnswerUpdate = Database['public']['Tables']['quiz_answers']['Update']

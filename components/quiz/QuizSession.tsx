@@ -17,8 +17,9 @@ import type { User } from '@supabase/supabase-js'
 import { WisdomCard as WisdomCardType } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
 import { getCategoryDisplayName } from '@/lib/category-mapping'
-import { isValidCategoryId, getDifficultyDisplayName, getMainCategoryIds } from '@/lib/categories'
-import { selectQuestionsByPriority } from '@/lib/question-priority'
+import { isValidCategoryId, getMainCategoryIds } from '@/lib/categories'
+import { optimizeQuestionsWithAI } from '@/lib/unified-optimization-engine'
+// import { selectQuestionsByPriority } from '@/lib/question-priority' // Removed - using new API instead
 import { 
   calculateMainCategoryAccuracy,
   getDifficultyDistributionByAccuracy,
@@ -27,9 +28,9 @@ import {
 // Removed: import { addWisdomCardToCollection } from '@/lib/supabase-cards' - moved to server
 import { UnifiedLearningAnalysisEngine } from '@/lib/unified-learning-analytics'
 import { useSearchParams } from 'next/navigation'
-import { getUserQuizSettings, isDefaultSettings } from '@/lib/user-quiz-settings'
-import { filterQuestionsForPersonalizedQuiz } from '@/lib/quiz-filtering'
-// import { supabase } from '@/lib/supabase' // 不要（API分離取りやめのため）
+import { UnifiedQuizType, convertToUnifiedQuizType } from '@/lib/types/quiz'
+import { filterQuestionsByQuizType } from '@/lib/quiz-filtering'
+import { supabase } from '@/lib/supabase'
 // import { saveDetailedQuizData } from '@/lib/supabase-learning' // 未使用のためコメントアウト
 // import { updateProgressAfterQuiz, calculateChallengeQuizRewards, saveChallengeQuizProgressToDatabase } from '@/lib/xp-level-system'
 // import { getSubcategoryId } from '@/lib/categories'
@@ -42,6 +43,7 @@ interface QuizSessionProps {
   difficulties?: string[]
   user: User
   profile: UserProfileWithProgress | null
+  mode?: UnifiedQuizType | null
   onComplete: (results: QuizResults) => void
   onExit: () => void
   isReviewMode?: boolean
@@ -61,7 +63,7 @@ interface QuizResults {
   timeSpent: number
   categoryScores: Record<string, { correct: number; total: number }>
   // カード関連フィールド復活（サーバーから受信）
-  rewardedCard?: WisdomCardType // サーバーから受け取ったカード情報
+  rewardedCard?: WisdomCardType | null // サーバーから受け取ったカード情報
   isNewCard?: boolean
   cardCount?: number
 }
@@ -107,14 +109,28 @@ export default function QuizSession({
   difficulties,
   user,
   profile,
+  mode: propsMode,
   onComplete,
   onExit,
-  isReviewMode: _isReviewMode = false,
+  isReviewMode = false,
   hintsEnabled = true
 }: QuizSessionProps) {
   const _router = useRouter()
   const searchParams = useSearchParams()
-  const mode = searchParams.get('mode')
+  
+  // クイズタイプを優先順位で決定（props > URL > fallback）
+  const modeParam = searchParams.get('mode') as string | null
+  const legacyTypeParam = searchParams.get('type') as string | null
+  const paramValue = modeParam || legacyTypeParam
+  const quizType: UnifiedQuizType = propsMode 
+    || (paramValue ? convertToUnifiedQuizType(paramValue) : null)
+    || (isReviewMode ? 'review' : 'business-ai') // デフォルトフォールバック
+    
+  // mode変数を統一
+  const mode = quizType
+  
+  // セッション状態管理
+  const sessionInitialized = useRef(false)
   
   // New XP System Hook
   const { saveQuizSession } = useXPStats()
@@ -167,7 +183,13 @@ export default function QuizSession({
         }
       } catch (error) {
         attempt++
-        console.warn(`⚠️ Background save attempt ${attempt} failed:`, error)
+        console.warn(`⚠️ Background save attempt ${attempt} failed:`, {
+          name: (error as Error).name,
+          message: (error as Error).message,
+          stack: (error as Error).stack,
+          errorString: String(error),
+          errorJSON: JSON.stringify(error, Object.getOwnPropertyNames(error))
+        })
         
         if (attempt >= maxRetries) {
           console.error('❌ All background save attempts failed')
@@ -279,23 +301,50 @@ export default function QuizSession({
   }, [])
 
   // 学習履歴に基づく問題最適化関数（ランダムクイズ対応）
-  const optimizeQuestionsForUser = useCallback((
+  const optimizeQuestionsForUser = useCallback(async (
     questions: Question[], 
     userId: string, 
     userProfile: UserProfileWithProgress | null,
-    isRandomQuiz: boolean = false
-  ): Question[] => {
+    currentQuizType: UnifiedQuizType = 'business-ai'
+  ): Promise<Question[]> => {
     if (!userProfile || questions.length === 0) {
       return getRandomQuestions(questions, 10)
     }
 
     const categoryProgress = userProfile.categoryProgress || []
 
-    // ランダムクイズの場合の処理
-    if (isRandomQuiz) {
-      console.log('🎲 Random quiz - applying overall accuracy optimization')
+    // 統合AI最適化エンジンを使用（全クイズタイプで統一）
+    try {
+      console.log(`🎲 ${currentQuizType} Quiz - applying unified AI optimization`)
       
-      // type='main'カテゴリーに問題を限定
+      // Step 1: フィルタリング処理（統合フィルタリングシステム）
+      const { filteredQuestions, learningLevelRestriction, fallbackApplied } = filterQuestionsByQuizType(
+        questions,
+        currentQuizType
+      )
+      
+      console.log(`🔍 ${currentQuizType} filtering completed:`, {
+        original: questions.length,
+        filtered: filteredQuestions.length,
+        fallbackApplied
+      })
+
+      // Step 2: 統合AI最適化エンジンを使用（フィルタリング済み問題を渡す）
+      const optimizedQuestions = await optimizeQuestionsWithAI(
+        filteredQuestions,
+        userId,
+        currentQuizType,
+        userProfile,
+        learningLevelRestriction
+      )
+      
+      console.log(`✨ ${currentQuizType} AI optimization completed: ${optimizedQuestions.length} questions selected`)
+      return optimizedQuestions
+      
+    } catch (error) {
+      console.error(`❌ ${currentQuizType} AI optimization failed, falling back to basic optimization:`, error)
+      
+      // フォールバック: 従来の基本最適化
       const mainCategoryIds = getMainCategoryIds()
       const mainCategoryQuestions = questions.filter(q => mainCategoryIds.includes(q.category))
       
@@ -304,19 +353,11 @@ export default function QuizSession({
         return getRandomQuestions(questions, 10)
       }
 
-      // 全体正答率を計算
       const overallAccuracy = calculateMainCategoryAccuracy(categoryProgress, mainCategoryIds)
-      
-      console.log(`📊 Overall accuracy for main categories: ${(overallAccuracy.accuracy * 100).toFixed(1)}% (confidence: ${overallAccuracy.confidence})`)
-      
-      // データ信頼度が低い場合はデフォルト配分
-      if (!overallAccuracy.hasData || overallAccuracy.confidence === 'low') {
-        console.log('⚠️ Low data confidence, using default distribution')
-        return optimizeByDistribution(mainCategoryQuestions, getDefaultDifficultyDistribution())
-      }
-      
-      // 正答率に基づく配分
-      const distribution = getDifficultyDistributionByAccuracy(overallAccuracy.accuracy)
+      const distribution = overallAccuracy.hasData && overallAccuracy.confidence !== 'low'
+        ? getDifficultyDistributionByAccuracy(overallAccuracy.accuracy)
+        : getDefaultDifficultyDistribution()
+        
       return optimizeByDistribution(mainCategoryQuestions, distribution)
     }
 
@@ -346,7 +387,7 @@ export default function QuizSession({
     }
     
     // 正答率に基づく難易度調整
-    const accuracy = categoryStats.correct_answers / Math.max(categoryStats.total_answers, 1)
+    const accuracy = categoryStats!.correct_answers / Math.max(categoryStats!.total_answers, 1)
     console.log(`📈 User accuracy for ${category}: ${(accuracy * 100).toFixed(1)}%`)
     
     // 配分を計算して適用
@@ -355,10 +396,194 @@ export default function QuizSession({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])  // 依存配列を空にして無限ループを防ぐ
 
+  // Note: initializeQuizOptimized will be defined after the helper functions
+
+  // Category Quiz: Smart Random Selection (API call)
+  const handleCategoryQuizOptimized = useCallback(async (
+    categoryId: string,
+    difficulties: string[],
+    token: string
+  ): Promise<Question[]> => {
+    console.log(`🎲 [Category Quiz] Smart random for ${categoryId}`)
+    
+    try {
+      const response = await fetch('/api/quiz/category-init', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          categoryId,
+          difficulties,
+          subcategoryId: subCategory,
+          questionCount: 10
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (!data.success || !data.questions) {
+        throw new Error('Invalid response from category quiz API')
+      }
+
+      console.log(`✅ [Category Quiz] ${data.metadata.method} completed in ${data.metadata.performance_ms}ms`)
+      return data.questions
+      
+    } catch (error) {
+      console.error('❌ [Category Quiz] Smart selection failed:', error)
+      throw error
+    }
+  }, [subCategory])
+
+  // Precomputed Quiz: Business-AI, Self-Personalized, Review
+  // 🚀 NEW: Review Quiz Dedicated Handler
+  const handleReviewQuizOptimized = useCallback(async (
+    token: string
+  ): Promise<Question[]> => {
+    console.log('📚 [Review Quiz] Starting review-specific initialization...')
+    
+    try {
+      const response = await fetch('/api/review/questions', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`Review API error: ${errorData.error || 'Unknown error'}`)
+      }
+      
+      const data = await response.json()
+      
+      if (!data.success || !data.questions || data.questions.length === 0) {
+        console.log('ℹ️ [Review Quiz] No review questions available')
+        return []
+      }
+      
+      console.log(`✅ [Review Quiz] Loaded ${data.questions.length} review questions from precomputed sets`)
+      return data.questions
+      
+    } catch (error) {
+      console.error('❌ [Review Quiz] Failed to load review questions:', error)
+      throw error
+    }
+  }, [])
+
+  const handlePrecomputedQuizOptimized = useCallback(async (
+    quizType: UnifiedQuizType,
+    token: string
+  ): Promise<Question[]> => {
+    console.log(`📦 [Precomputed Quiz] ${quizType} instant start`)
+    
+    try {
+      const response = await fetch('/api/quiz/quick-start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          quiz_type: quizType,
+          count: 10
+        })
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error(`❌ [Quick Start API] Error ${response.status}:`, errorData)
+        throw new Error(errorData.error || errorData.details || `API error: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      console.log(`✅ [Precomputed Quiz] ${data.metadata.selection_method} - ${data.questions.length} questions`)
+      return data.questions
+      
+    } catch (error) {
+      console.error(`❌ [Precomputed Quiz] ${quizType} failed:`, error)
+      throw error
+    }
+  }, [])
+
+  // 🚀 Optimized Quiz Initialization with Pre-computation System
+  const initializeQuizOptimized = useCallback(async (): Promise<Question[]> => {
+    console.log('🚀 [Quiz Init] Starting optimized initialization...')
+    
+    const quizType = convertToUnifiedQuizType(mode)
+    console.log(`🎯 [Quiz Init] Quiz type: ${quizType}`)
+    
+    // Step 1: Get user activity status for 3-pattern logic
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.access_token) {
+      throw new Error('No authentication token available')
+    }
+
+    // Step 2: Route to appropriate strategy based on quiz type and user status
+    if (quizType === 'category' && category) {
+      // Category quizzes always use smart random selection
+      return await handleCategoryQuizOptimized(category, difficulties || [], session.access_token)
+    } else if (quizType === 'review') {
+      // 🚀 FIXED: Review mode uses pre-loaded questions from page.tsx
+      console.log('📚 [Review Quiz] Using pre-loaded questions from page.tsx, count:', questions.length)
+      return questions
+    } else {
+      // Business-AI, Self-Personalized use quick-start API
+      return await handlePrecomputedQuizOptimized(quizType, session.access_token)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, category, difficulties, handleCategoryQuizOptimized, handlePrecomputedQuizOptimized, handleReviewQuizOptimized])
+
+  // Fallback to original logic when new system fails
+  const initializeFallbackQuiz = useCallback(async (): Promise<void> => {
+    console.log('🔄 [Fallback] Using original initialization logic...')
+    
+    try {
+      // Use original heavy optimization as last resort
+      const fallbackQuestions = await optimizeQuestionsForUser(
+        questions,
+        user.id,
+        profile,
+        convertToUnifiedQuizType(mode)
+      )
+      
+      setSessionQuestions(fallbackQuestions)
+      setResults(prev => ({
+        ...prev,
+        totalQuestions: fallbackQuestions.length
+      }))
+      
+    } catch (fallbackError) {
+      console.error('❌ [Fallback] Even fallback failed:', fallbackError)
+      
+      // Final fallback: random selection
+      const randomQuestions = getRandomQuestions(questions, 10)
+      setSessionQuestions(randomQuestions)
+      setResults(prev => ({
+        ...prev,
+        totalQuestions: randomQuestions.length
+      }))
+    }
+  }, [questions, user.id, profile, mode, optimizeQuestionsForUser])
+
   useEffect(() => {
     // 🚨 クイズ進行中の場合はリセットを防ぐ（タブ切り替え対策）
     if (sessionQuestions.length > 0 && currentQuestionIndex > 0 && !isFinished) {
       console.log('⚠️ Quiz in progress - preventing reset to avoid tab-switch issues')
+      return
+    }
+    
+    // 🚨 セッション初期化済みの場合は重複実行を防ぐ
+    if (sessionInitialized.current) {
+      console.log('⚠️ Session already initialized - preventing duplicate execution')
       return
     }
 
@@ -374,132 +599,31 @@ export default function QuizSession({
     completionInProgress.current = false
     setChallengeQuizUpdateData(null)
     
-    // セルフパーソナライズクイズの場合は専用フィルタリング
-    const handleSelfPersonalizedFiltering = async () => {
-      try {
-        console.log('🎯 Self-personalized quiz mode detected')
-        const settings = await getUserQuizSettings(user.id)
-        
-        if (isDefaultSettings(settings)) {
-          console.log('⚠️ User has default settings, proceeding with basic filtering')
-          // デフォルト設定の場合は通常のランダムフィルタリング
-          return questions
-        }
-        
-        console.log('✅ Applying user personalization settings:', settings)
-        const personalizedQuestions = filterQuestionsForPersonalizedQuiz(questions, settings)
-        
-        // 既存の学習履歴ベース最適化を適用（ランダムクイズと同じロジック）
-        return optimizeQuestionsForUser(personalizedQuestions, user.id, profile, false)
-        
-      } catch (error) {
-        console.error('❌ Self-personalized filtering failed:', error)
-        return questions // フォールバック
-      }
-    }
+    // セッション初期化フラグ設定
+    sessionInitialized.current = true
 
-    // フィルタリング処理の分岐
-    let filteredQuestions = questions
-    
-    if (mode === 'self-personalized') {
-      // セルフパーソナライズクイズ: 非同期フィルタリング
-      handleSelfPersonalizedFiltering().then(personalizedQuestions => {
-        console.log(`🎯 Self-personalized questions ready: ${personalizedQuestions.length}`)
-        setSessionQuestions(personalizedQuestions)
+    // 🚀 NEW: Pre-computation System Integration
+    initializeQuizOptimized()
+      .then(selectedQuestions => {
+        console.log(`✅ Quiz initialized with ${selectedQuestions.length} questions`)
+        setSessionQuestions(selectedQuestions)
         setResults(prev => ({
           ...prev,
-          totalQuestions: personalizedQuestions.length
-        }))
-      }).catch(error => {
-        console.error('❌ Self-personalized setup failed, using fallback:', error)
-        const fallbackQuestions = getRandomQuestions(questions, 10)
-        setSessionQuestions(fallbackQuestions)
-        setResults(prev => ({
-          ...prev,
-          totalQuestions: fallbackQuestions.length
+          totalQuestions: selectedQuestions.length
         }))
       })
-      return // 非同期処理のため早期リターン
-    }
-    
-    // 通常のフィルタリング（AI-personalized/random/カテゴリー指定）
-    // カテゴリーでフィルタリング
-    if (category) {
-      filteredQuestions = filteredQuestions.filter(q => q.category === category)
-    }
-    
-    // 難易度でフィルタリング（複数選択対応・英語/日本語両対応）
-    if (difficulties && difficulties.length > 0) {
-      filteredQuestions = filteredQuestions.filter(q => {
-        const questionDifficultyDisplay = getDifficultyDisplayName(q.difficulty)
-        return difficulties.some(selectedDiff => 
-          getDifficultyDisplayName(selectedDiff) === questionDifficultyDisplay
-        )
+      .catch(error => {
+        console.error('❌ Quiz initialization failed:', error)
+        // Fallback to original logic
+        initializeFallbackQuiz()
       })
-      console.log(`📊 Selected difficulties: ${difficulties.join(', ')} (${filteredQuestions.length} questions)`)
-      
-      // 選択した難易度で問題が不足している場合は他の難易度も含める
-      if (filteredQuestions.length < 10) {
-        console.log('⚠️ Not enough questions for selected difficulties, including all difficulties')
-        let allCategoryQuestions = questions
-        if (category) {
-          allCategoryQuestions = allCategoryQuestions.filter(q => q.category === category)
-        }
-        
-        // 選択した難易度を優先しつつ、他の難易度も追加
-        const remainingQuestions = allCategoryQuestions.filter(q => {
-          const questionDifficultyDisplay = getDifficultyDisplayName(q.difficulty)
-          return !difficulties.some(selectedDiff => 
-            getDifficultyDisplayName(selectedDiff) === questionDifficultyDisplay
-          )
-        })
-        filteredQuestions = [...filteredQuestions, ...remainingQuestions]
-      }
-    }
+
     
-    // 学習履歴に基づく最適化
-    const isRandomQuiz = !category // categoryが未指定の場合はランダムクイズ
+    // 🔥 OLD LOGIC REPLACED WITH PRE-COMPUTATION SYSTEM
+    // All filtering and optimization logic moved to the new system above
     
-    if (!difficulties || difficulties.length === 0) {
-      // 難易度未選択: 正答率ベース最適化
-      const selectedQuestions = optimizeQuestionsForUser(filteredQuestions, user.id, profile, isRandomQuiz)
-      setSessionQuestions(selectedQuestions)
-      setResults(prev => ({
-        ...prev,
-        totalQuestions: selectedQuestions.length
-      }))
-    } else if (difficulties.length === 1 && category) {
-      // 単一難易度選択: 優先順位ベース選択（非同期処理）
-      console.log(`🎯 Single difficulty selected: ${difficulties[0]} for category: ${category}`)
-      selectQuestionsByPriority(filteredQuestions, user.id, category, difficulties[0], 10)
-        .then(selectedQuestions => {
-          setSessionQuestions(selectedQuestions)
-          setResults(prev => ({
-            ...prev,
-            totalQuestions: selectedQuestions.length
-          }))
-        })
-        .catch(error => {
-          console.error('❌ Priority selection failed, falling back to random:', error)
-          const fallbackQuestions = getRandomQuestions(filteredQuestions, 10)
-          setSessionQuestions(fallbackQuestions)
-          setResults(prev => ({
-            ...prev,
-            totalQuestions: fallbackQuestions.length
-          }))
-        })
-      return // 非同期処理のため早期リターン
-    } else {
-      // 複数難易度選択またはその他: ランダム選択
-      const selectedQuestions = getRandomQuestions(filteredQuestions, 10)
-      setSessionQuestions(selectedQuestions)
-      setResults(prev => ({
-        ...prev,
-        totalQuestions: selectedQuestions.length
-      }))
-    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questions, category, level, difficulties, user.id, profile?.id, mode])
+  }, []) // All dependencies handled within the optimization logic to prevent infinite loops
 
   // Helper functions for cognitive load and flow state calculation
   const calculateCognitiveLoad = useCallback((responseTime: number, isCorrect: boolean): number => {
@@ -699,6 +823,11 @@ export default function QuizSession({
             console.log('💾 Processing quiz result save in background...')
             let quizResult = null
             
+            // カード関連変数を上位スコープで宣言
+            let selectedCard: WisdomCardType | null = null
+            let isNewCard = false
+            let cardCount = 0
+            
             try {
               console.log('📝 Quiz result data to save:', {
                 user_id: user.id,
@@ -716,13 +845,10 @@ export default function QuizSession({
               const uiResponseStartTime = performance.now()
               console.log('🚨 CLIENT: UI PROCESSING START TIME:', new Date().toISOString())
               
-              // クライアント側でカード判定・選択を即座に実行
+              // クライアント側でカード判定・選択を即座に実行（復習モードでは除外）
               const accuracyRate = (finalResults.correctAnswers / finalResults.totalQuestions) * 100
-              let selectedCard: WisdomCardType | undefined = undefined
-              let isNewCard = false
-              let cardCount = 0
               
-              if (accuracyRate >= 70) {
+              if (!isReviewMode && accuracyRate >= 70) {
                 // DB版カード選択（フォールバック対応）
                 try {
                   const { getRandomWisdomCardFromDB } = await import('@/lib/cards')
@@ -732,11 +858,29 @@ export default function QuizSession({
                   console.log('⚡ CLIENT: Card selected from DB (with fallback):', {
                     cardId: selectedCard.id,
                     author: selectedCard.author,
-                    accuracy: accuracyRate
+                    accuracy: accuracyRate,
+                    isReviewMode: isReviewMode
                   })
                 } catch (cardError) {
-                  console.error('❌ CLIENT: DB Card selection error:', cardError)
+                  console.error('❌ CLIENT: DB Card selection error:', {
+                    name: (cardError as Error).name,
+                    message: (cardError as Error).message,
+                    stack: (cardError as Error).stack,
+                    errorString: String(cardError),
+                    errorJSON: JSON.stringify(cardError, Object.getOwnPropertyNames(cardError))
+                  })
+                  
+                  // カード取得エラー時はデフォルトカードを設定
+                  selectedCard = null
+                  isNewCard = false
+                  cardCount = 0
+                  console.log('🎯 Card selection failed, setting to no card')
                 }
+              } else if (isReviewMode) {
+                console.log('🔄 Review mode: Cards excluded from rewards')
+                selectedCard = null
+                isNewCard = false
+                cardCount = 0
               }
               
               const actualTotalQuestions = sessionQuestions.length || questionAnswers.length
@@ -749,6 +893,7 @@ export default function QuizSession({
                 total_questions: actualTotalQuestions,
                 correct_answers: finalResults.correctAnswers,
                 accuracy_rate: actualTotalQuestions > 0 ? (finalResults.correctAnswers / actualTotalQuestions) * 100 : 0,
+                quiz_type: quizType, // URLパラメータから取得したクイズタイプ
                 answers: questionAnswers.map(qa => ({
                   question_id: qa.questionId,
                   user_answer: qa.selectedOptionIndex, // ユーザーが選択した選択肢のインデックス (0-3)
@@ -771,7 +916,8 @@ export default function QuizSession({
                 accuracy_rate: quizSessionData.accuracy_rate,
                 answers_count: quizSessionData.answers.length,
                 sessionQuestions_length: sessionQuestions.length,
-                questionAnswers_length: questionAnswers.length
+                questionAnswers_length: questionAnswers.length,
+                isReviewMode: isReviewMode
               })
               
               // ヒント使用データの詳細ログ
@@ -788,9 +934,10 @@ export default function QuizSession({
                 }))
               })
               
-              // 選択されたカード情報をAPIデータに含める
+              // 選択されたカード情報をAPIデータに含める（復習モード情報も追加）
               const quizSessionDataWithCard = {
                 ...quizSessionData,
+                is_review_mode: isReviewMode, // 復習モードフラグを追加
                 selected_card: selectedCard ? {
                   id: selectedCard.id,
                   author: selectedCard.author,
@@ -805,7 +952,13 @@ export default function QuizSession({
               
               // 非同期でバックグラウンド保存（UIをブロックしない）
               saveQuizWithRetry(quizSessionDataWithCard, saveQuizSession).catch(error => {
-                console.error('❌ Background save failed completely:', error)
+                console.error('❌ Background save failed completely:', {
+                  name: (error as Error).name,
+                  message: (error as Error).message,
+                  stack: (error as Error).stack,
+                  errorString: String(error),
+                  errorJSON: JSON.stringify(error, Object.getOwnPropertyNames(error))
+                })
               })
               
               // 即座にクライアント側で生成したセッションIDを使用
@@ -904,11 +1057,37 @@ export default function QuizSession({
             } catch (quizSaveError) {
               const error = quizSaveError as Error
               console.error('❌ Quiz save error details:', {
-                error: quizSaveError,
+                name: error.name,
+                message: error.message,
                 stack: error.stack,
-                message: error.message
+                errorString: String(quizSaveError),
+                errorJSON: JSON.stringify(quizSaveError, Object.getOwnPropertyNames(quizSaveError))
               })
-              quizResult = { id: 'error-fallback-' + Date.now() }
+              
+              // エラー発生時でも基本的なクイズ結果は設定
+              quizResult = { 
+                id: 'error-fallback-' + Date.now(),
+                success: false 
+              }
+              
+              // エラーが発生してもカード表示は継続
+              console.log('🎯 Error occurred, but continuing with card display...')
+              
+              // 最終結果をカード情報と共に設定（エラー時も実行）
+              const finalResultsWithCard: QuizResults = {
+                ...finalResults,
+                rewardedCard: selectedCard,
+                isNewCard,
+                cardCount
+              }
+              
+              console.log('🚨 CLIENT: Setting results despite error:', {
+                cardSelected: !!selectedCard,
+                cardId: selectedCard?.id,
+                isNewCard,
+                cardCount
+              })
+              setResults(finalResultsWithCard)
             }
             
             // Save detailed quiz data with enhanced logging
@@ -938,16 +1117,93 @@ export default function QuizSession({
               } catch (detailSaveError) {
                 const error = detailSaveError as Error
                 console.error('❌ Detail save error:', {
-                  error: detailSaveError,
+                  name: error.name,
+                  message: error.message,
                   stack: error.stack,
-                  message: error.message
+                  errorString: String(detailSaveError),
+                  errorJSON: JSON.stringify(detailSaveError, Object.getOwnPropertyNames(detailSaveError))
                 })
               }
             }
+            
+            // 🔄 復習モード完了処理
+            if (isReviewMode) {
+              try {
+                console.log('🔄 Processing review completion...')
+                
+                // 復習完了データの準備
+                const completedAnswers = questionAnswers.map(qa => ({
+                  questionId: qa.questionId,
+                  questionText: qa.questionText,
+                  selectedAnswer: qa.selectedAnswer,
+                  correctAnswer: qa.correctAnswer,
+                  selectedOptionIndex: qa.selectedOptionIndex,
+                  isCorrect: qa.isCorrect,
+                  responseTime: qa.responseTime,
+                  category: qa.category,
+                  subcategory: qa.subcategory,
+                  subcategory_id: qa.subcategory_id,
+                  difficulty: qa.difficulty,
+                  confidenceLevel: qa.confidenceLevel,
+                  maxHintLevel: qa.maxHintLevel,
+                  hintUsed: qa.hintUsed
+                }))
+
+                
+                const sessionId = _sessionData.sessionId
+                
+                // 既存のSupabaseクライアントを使用（新しいクライアント作成を避ける）
+                const { supabase } = await import('@/lib/supabase')
+                
+                const { data: sessionData } = await supabase.auth.getSession()
+                const token = sessionData.session?.access_token
+                
+                if (!token) {
+                  console.warn('No auth token available for review completion')
+                  throw new Error('Authentication required')
+                }
+                
+                // 復習完了API呼び出し
+                const response = await fetch('/api/review/complete', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    sessionId,
+                    completedAnswers
+                  })
+                })
+                
+                if (response.ok) {
+                  const result = await response.json()
+                  console.log('✅ Review completion processed:', result)
+                  
+                  // 統計更新イベントを発火
+                  if (result.triggerStatsUpdate) {
+                    console.log('📚 Triggering review stats update')
+                    window.dispatchEvent(new Event('reviewCompleted'))
+                  }
+                } else {
+                  const errorData = await response.json().catch(() => ({}))
+                  console.error('❌ Review completion failed:', response.status, errorData)
+                }
+                
+              } catch (reviewError) {
+                console.error('❌ Error in review completion:', reviewError)
+              }
+            }
+            
           }, 75); // 75ms遅延でDB処理開始
         } catch (error) {
-          console.error('❌ Error in quiz completion process:', error)
-          console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+          console.error('❌ Error in quiz completion process:', {
+            name: (error as Error).name,
+            message: (error as Error).message,
+            stack: (error as Error).stack,
+            errorString: String(error),
+            errorJSON: JSON.stringify(error, Object.getOwnPropertyNames(error))
+          })
           // エラーが発生してもクイズを完了状態にする
         } finally {
           setIsCompleting(false)
@@ -1097,10 +1353,11 @@ export default function QuizSession({
           ) : null}
 
           <div className="flex space-x-4">
-            <Button onClick={onExit} variant="outline" className="flex-1">
+            <Button onClick={onExit} variant="outline" className={mode === 'review' ? 'w-full' : 'flex-1'}>
               {category ? 'カテゴリーに戻る' : 'ホームに戻る'}
             </Button>
-            <Button onClick={() => {
+            {mode !== 'review' && (
+            <Button onClick={async () => {
               // 状態を完全リセットして新しい問題セットでクイズを再開
               setIsFinished(false)
               setIsCompleting(false)
@@ -1121,77 +1378,60 @@ export default function QuizSession({
                 categoryScores: {}
               })
               
-              // 新しい問題セットを生成（useEffectが再実行される）
-              // questionsが変更されていなくても、keyを変更することで強制的に再生成
-              const now = Date.now()
-              console.log(`🔄 Generating new question set at ${now}`)
+              console.log(`🔄 [Quiz Restart] Regenerating questions with same conditions`)
               
-              // 同じフィルタリング条件で新しい問題セットを生成
-              let filteredQuestions = questions
-              
-              if (category) {
-                filteredQuestions = filteredQuestions.filter(q => q.category === category)
-              }
-              
-              if (difficulties && difficulties.length > 0) {
-                filteredQuestions = filteredQuestions.filter(q => 
-                  q.difficulty && difficulties.includes(q.difficulty)
-                )
+              try {
+                let newQuestions: Question[] = []
                 
-                if (filteredQuestions.length < 10) {
-                  let allCategoryQuestions = questions
-                  if (category) {
-                    allCategoryQuestions = allCategoryQuestions.filter(q => q.category === category)
+                // 同じ条件で新しい問題セットを生成（新しいAPI使用）
+                if (category && mode === 'category') {
+                  // カテゴリークイズ: 新しいAPI経由で取得
+                  const session = await supabase.auth.getSession()
+                  if (session.data.session?.access_token) {
+                    console.log(`🎲 [Quiz Restart] Category quiz: ${category}, difficulties: ${difficulties?.join(', ') || 'ALL'}`)
+                    newQuestions = await handleCategoryQuizOptimized(category, difficulties || [], session.data.session.access_token)
+                  } else {
+                    throw new Error('Authentication required for category quiz restart')
                   }
-                  const remainingQuestions = allCategoryQuestions.filter(q => 
-                    q.difficulty && !difficulties.includes(q.difficulty)
-                  )
-                  filteredQuestions = [...filteredQuestions, ...remainingQuestions]
+                } else {
+                  // その他のクイズタイプ: 既存ロジック使用
+                  const filteredQuestions = questions.filter(q => {
+                    if (category && q.category !== category) return false
+                    if (difficulties && difficulties.length > 0 && q.difficulty && !difficulties.includes(q.difficulty)) return false
+                    return true
+                  })
+                  
+                  if (filteredQuestions.length >= 10) {
+                    newQuestions = getRandomQuestions(filteredQuestions, 10)
+                  } else {
+                    throw new Error('Insufficient questions for restart')
+                  }
                 }
-              }
-              
-              // 新しい問題セットを生成
-              const isRandomQuiz = !category // categoryが未指定の場合はランダムクイズ
-              
-              if (!difficulties || difficulties.length === 0) {
-                const newQuestions = optimizeQuestionsForUser(filteredQuestions, user.id, profile, isRandomQuiz)
+                
+                // 新しい問題セットを設定
                 setSessionQuestions(newQuestions)
                 setResults(prev => ({
                   ...prev,
                   totalQuestions: newQuestions.length
                 }))
-              } else if (difficulties.length === 1 && category) {
-                // 単一難易度選択: 優先順位ベース選択（非同期処理）
-                selectQuestionsByPriority(filteredQuestions, user.id, category, difficulties[0], 10)
-                  .then(newQuestions => {
-                    setSessionQuestions(newQuestions)
-                    setResults(prev => ({
-                      ...prev,
-                      totalQuestions: newQuestions.length
-                    }))
-                  })
-                  .catch(error => {
-                    console.error('❌ Priority selection failed in refresh, falling back to random:', error)
-                    const fallbackQuestions = getRandomQuestions(filteredQuestions, 10)
-                    setSessionQuestions(fallbackQuestions)
-                    setResults(prev => ({
-                      ...prev,
-                      totalQuestions: fallbackQuestions.length
-                    }))
-                  })
-              } else {
-                const newQuestions = getRandomQuestions(filteredQuestions, 10)
-                setSessionQuestions(newQuestions)
+                
+                console.log(`✅ [Quiz Restart] Successfully generated ${newQuestions.length} new questions`)
+                
+              } catch (error) {
+                console.error('❌ [Quiz Restart] Failed to generate new questions:', error)
+                // エラー時は既存の問題セットでランダム選択
+                const fallbackQuestions = getRandomQuestions(questions, 10)
+                setSessionQuestions(fallbackQuestions)
                 setResults(prev => ({
                   ...prev,
-                  totalQuestions: newQuestions.length
+                  totalQuestions: fallbackQuestions.length
                 }))
+                console.log(`🔄 [Quiz Restart] Using fallback: ${fallbackQuestions.length} questions`)
               }
-              
-              console.log(`✅ New question set generation initiated`)
             }} className="flex-1">
               もう一度挑戦
             </Button>
+            )}
           </div>
         </CardContent>
       </Card>

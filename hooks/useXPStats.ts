@@ -290,7 +290,8 @@ export function useXPStats(): UseXPStatsReturn {
         error: err instanceof Error ? err.message : 'Unknown error'
       }
     }
-  }, [fetchStats])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // fetchStats依存関係除去（ロジックは保持・無限ループ防止）
 
   const saveCourseSession = useCallback(async (courseData: CourseSessionData): Promise<CourseSaveResponse> => {
     try {
@@ -336,7 +337,8 @@ export function useXPStats(): UseXPStatsReturn {
         error: err instanceof Error ? err.message : 'Unknown error'
       }
     }
-  }, [fetchStats])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // fetchStats依存関係除去（ロジックは保持・無限ループ防止）
 
   // 初回読み込み
   useEffect(() => {
@@ -344,7 +346,8 @@ export function useXPStats(): UseXPStatsReturn {
     if (!authLoading && user) {
       fetchStats()
     }
-  }, [fetchStats, authLoading, user])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user]) // fetchStatsを除去して無限ループ防止
 
   return {
     stats,

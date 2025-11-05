@@ -12,8 +12,7 @@ import {
   mainCategories, 
   industryCategories, 
   getSubcategoriesByParent,
-  skillLevels,
-  getDifficultyDisplayName 
+  skillLevels
 } from '@/lib/categories'
 import { Question } from '@/lib/types'
 import { getAllQuestions } from '@/lib/questions'
@@ -92,11 +91,13 @@ export default function CategoryDetailPage() {
   const allCategories = [...new Set(questions.map(q => q.category))]
   console.log(`📂 All categories in data:`, allCategories)
   
-  // 実際のデータから難易度を取得して日本語表示名で集計
+  // 実際のデータから難易度を取得して英語IDで集計（API送信と一致）
   const questionsByDifficulty: Record<string, number> = {}
   categoryQuestions.forEach(q => {
-    const displayName = getDifficultyDisplayName(q.difficulty)
-    questionsByDifficulty[displayName] = (questionsByDifficulty[displayName] || 0) + 1
+    const difficultyId = q.difficulty // "basic", "intermediate", "advanced", "expert"
+    if (difficultyId) {
+      questionsByDifficulty[difficultyId] = (questionsByDifficulty[difficultyId] || 0) + 1
+    }
   })
   
   console.log(`📊 Difficulty distribution:`, questionsByDifficulty)
@@ -134,6 +135,7 @@ export default function CategoryDetailPage() {
   // クイズ開始処理
   const startQuiz = () => {
     const params = new URLSearchParams()
+    params.set('mode', 'category')
     params.set('category', categoryId)
     if (selectedDifficulty) {
       params.set('difficulties', selectedDifficulty)
@@ -234,21 +236,22 @@ export default function CategoryDetailPage() {
                         <div className="text-sm font-medium text-muted-foreground">難易度選択（未選択または単一選択）</div>
                         <div className="grid grid-cols-2 gap-2">
                           {skillLevels.map((level) => {
-                            // スキルレベルマスタから日本語名を取得
-                            const difficulty = level.name // '基礎', '中級', '上級', 'エキスパート'
-                            const count = questionsByDifficulty[difficulty] || 0
-                            const isSelected = selectedDifficulty === difficulty
+                            // データベースのIDを使用（API送信用）、表示は日本語名
+                            const difficultyId = level.id // 'basic', 'intermediate', 'advanced', 'expert'
+                            const difficultyName = level.name // '初級', '中級', '上級', 'エキスパート'
+                            const count = questionsByDifficulty[difficultyId] || 0
+                            const isSelected = selectedDifficulty === difficultyId
                             
                             return (
                               <Button
                                 key={level.id}
                                 variant={isSelected ? "default" : "outline"}
                                 size="sm"
-                                onClick={() => selectDifficulty(difficulty)}
+                                onClick={() => selectDifficulty(difficultyId)}
                                 disabled={count === 0}
                                 className={`text-xs justify-between ${isSelected ? 'bg-primary text-primary-foreground' : ''}`}
                               >
-                                <span>{level.name}</span>
+                                <span>{difficultyName}</span>
                                 <Badge 
                                   variant={isSelected ? "secondary" : "outline"} 
                                   className="ml-1 text-xs"
@@ -262,7 +265,7 @@ export default function CategoryDetailPage() {
                         
                         <div className="text-xs text-muted-foreground">
                           {selectedDifficulty 
-                            ? `選択中: ${selectedDifficulty} (${questionsByDifficulty[selectedDifficulty] || 0}問)`
+                            ? `選択中: ${skillLevels.find(level => level.id === selectedDifficulty)?.name || selectedDifficulty} (${questionsByDifficulty[selectedDifficulty] || 0}問)`
                             : '未選択: 学習履歴に基づく最適化された難易度で出題'
                           }
                         </div>
@@ -288,7 +291,7 @@ export default function CategoryDetailPage() {
                         >
                           <Play className="h-4 w-4 mr-2" />
                           {selectedDifficulty 
-                            ? `選択した難易度でクイズに挑戦 (${questionsByDifficulty[selectedDifficulty] || 0}問)`
+                            ? `${skillLevels.find(level => level.id === selectedDifficulty)?.name || selectedDifficulty}レベルでクイズに挑戦 (${questionsByDifficulty[selectedDifficulty] || 0}問)`
                             : realStats.totalQuizzes > 0 ? 'このカテゴリーのクイズに挑戦（最適化出題）' : '問題準備中'
                           }
                         </Button>

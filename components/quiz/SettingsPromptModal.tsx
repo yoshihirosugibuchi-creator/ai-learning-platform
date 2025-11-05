@@ -17,6 +17,13 @@ export default function SettingsPromptModal({
   onConfigureSettings, 
   onSkipToQuiz 
 }: SettingsPromptModalProps) {
+  const handleSkipClick = () => {
+    console.log('✅ Button clicked: Skip to quiz')
+    console.log('📞 Calling onSkipToQuiz...')
+    onSkipToQuiz()
+    console.log('📞 onSkipToQuiz call completed')
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto">
@@ -53,7 +60,7 @@ export default function SettingsPromptModal({
             
             <Button 
               variant="outline" 
-              onClick={onSkipToQuiz}
+              onClick={handleSkipClick}
               className="w-full"
               size="lg"
             >

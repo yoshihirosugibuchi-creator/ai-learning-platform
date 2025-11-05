@@ -21,22 +21,38 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now()
   
   try {
+    console.log('========================================')
     console.log('[Cron] 日次分析バッチ開始:', new Date().toISOString())
+    console.log('[Cron] 環境:', process.env.NODE_ENV || 'unknown')
+    console.log('[Cron] Vercel ENV:', process.env.VERCEL_ENV || 'unknown')
+    console.log('========================================')
 
-    // 1. Vercel Cron Secret による認証
+    // 1. Vercel Cron認証方式対応
     const authHeader = request.headers.get('authorization')
+    const vercelCronHeader = request.headers.get('x-vercel-cron')
     const cronSecret = process.env.CRON_SECRET
     
-    if (!cronSecret) {
-      console.error('[Cron] CRON_SECRET 環境変数が設定されていません')
-      return NextResponse.json(
-        { error: 'Cron secret not configured' },
-        { status: 500 }
-      )
-    }
+    console.log('[Cron] 認証情報チェック:', {
+      authHeader: authHeader ? authHeader.substring(0, 20) + '...' : 'なし',
+      vercelCronHeader,
+      cronSecretSet: !!cronSecret
+    })
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      console.error('[Cron] 認証失敗:', authHeader)
+    // Vercel cron job自動実行の場合（本番環境）
+    if (vercelCronHeader === '1') {
+      console.log('[Cron] ✅ Vercel自動実行として認証成功')
+    }
+    // 手動実行の場合（開発環境・管理画面）
+    else if (authHeader && cronSecret && authHeader === `Bearer ${cronSecret}`) {
+      console.log('[Cron] ✅ 手動実行として認証成功')
+    }
+    // 認証失敗
+    else {
+      console.error('[Cron] ❌ 認証失敗:', {
+        authHeader: authHeader ? authHeader.substring(0, 20) + '...' : 'なし',
+        vercelCronHeader,
+        cronSecretSet: !!cronSecret
+      })
       return NextResponse.json(
         { error: 'Unauthorized cron request' },
         { status: 401 }
@@ -273,9 +289,14 @@ async function recordCronExecution(params: {
  */
 export async function HEAD(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
+  const vercelCronHeader = request.headers.get('x-vercel-cron')
   const cronSecret = process.env.CRON_SECRET
   
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  // Vercel cron job自動実行 または 手動実行の認証チェック
+  const isAuthorized = vercelCronHeader === '1' || 
+    (authHeader && cronSecret && authHeader === `Bearer ${cronSecret}`)
+  
+  if (!isAuthorized) {
     return new NextResponse(null, { status: 401 })
   }
   
@@ -283,7 +304,8 @@ export async function HEAD(request: NextRequest) {
     status: 200,
     headers: {
       'X-Cron-Status': 'ready',
-      'X-Target-Date': getPreviousDateJST()
+      'X-Target-Date': getPreviousDateJST(),
+      'X-Auth-Method': vercelCronHeader === '1' ? 'vercel-cron' : 'manual'
     }
   })
 }

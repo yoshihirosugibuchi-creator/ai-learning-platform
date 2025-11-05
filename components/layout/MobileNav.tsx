@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Home, User, Bookmark, Bell, X, BookOpen, GraduationCap, LogOut, Settings } from 'lucide-react'
+import { Home, User, Bookmark, Bell, X, BookOpen, GraduationCap, LogOut, Settings, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUserContext } from '@/contexts/UserContext'
+import { useUserRole } from '@/hooks/useUserRole'
 
 interface MobileNavProps {
   isOpen: boolean
@@ -14,6 +15,7 @@ interface MobileNavProps {
 export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const router = useRouter()
   const { logout } = useUserContext()
+  const { isAdmin } = useUserRole()
 
   const handleLogout = () => {
     logout()
@@ -81,6 +83,15 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
               設定
             </Link>
           </Button>
+          
+          {isAdmin && (
+            <Button variant="ghost" className="w-full justify-start" onClick={onClose} asChild>
+              <Link href="/admin" prefetch={true}>
+                <Shield className="h-4 w-4 mr-2" />
+                管理者
+              </Link>
+            </Button>
+          )}
           
           <hr className="my-4" />
           

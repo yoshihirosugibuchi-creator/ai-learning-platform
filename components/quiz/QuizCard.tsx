@@ -84,15 +84,7 @@ function HintDisplay({ hints, currentLevel, onRequestHint, disabled, maxLevel }:
         <Button
           variant="outline"
           size="sm"
-          onClick={() => {
-            console.log('🔍 Hint button clicked:', {
-              currentLevel,
-              maxLevel,
-              disabled,
-              canShowMoreHints
-            })
-            onRequestHint()
-          }}
+          onClick={onRequestHint}
           disabled={disabled}
           className="w-full border-yellow-300 text-yellow-700 hover:bg-yellow-100"
         >
@@ -145,8 +137,6 @@ export default function QuizCard({
   // ヒントデータ取得関数
   const loadHintData = useCallback(async () => {
     try {
-      console.log('📡 Fetching hints from API for question:', question.id)
-      
       // 一般ユーザー向け認証（Supabaseクライアント使用）
       const { supabase } = await import('@/lib/supabase')
       
@@ -166,11 +156,8 @@ export default function QuizCard({
         }
       })
       
-      console.log('📡 API Response status:', response.status)
-      
       if (response.ok) {
         const data = await response.json()
-        console.log('📡 Received hint data:', data)
         
         // data.hints構造を確認し、正しい構造でhintDataを設定
         const hintsWithAvailable = {
@@ -178,7 +165,6 @@ export default function QuizCard({
           available: data.available || !!(data.hints?.level1 || data.hints?.level2 || data.hints?.level3)
         }
         
-        console.log('📡 Setting hint data:', hintsWithAvailable)
         setHintData(hintsWithAvailable)
       } else {
         console.warn('Failed to load hint data, status:', response.status)
@@ -194,29 +180,13 @@ export default function QuizCard({
   
   // ヒントデータを取得
   useEffect(() => {
-    console.log('🔍 Quiz Hint Debug:', {
-      hintsEnabled,
-      questionId: question.id,
-      hasHintData: !!hintData,
-      hintDataAvailable: hintData?.available
-    })
-    
     if (hintsEnabled && !hintData) {
-      console.log('📡 Loading hint data for question:', question.id)
       loadHintData()
     }
   }, [hintsEnabled, question.id, hintData, loadHintData])
   
   // ヒント表示処理
   const handleRequestHint = async () => {
-    console.log('🔍 handleRequestHint called:', {
-      hintData,
-      isLoadingHint,
-      showResult,
-      isTimeUp,
-      shouldProceed: !(!hintData || isLoadingHint || showResult || isTimeUp)
-    })
-    
     if (!hintData || isLoadingHint || showResult || isTimeUp) return
     
     setIsLoadingHint(true)
@@ -225,14 +195,6 @@ export default function QuizCard({
       const nextLevel = currentHintLevel + 1
       let hintText = ''
       
-      console.log('🔍 Hint selection:', {
-        nextLevel,
-        hintData,
-        level1Available: !!hintData.level1,
-        level2Available: !!hintData.level2,
-        level3Available: !!hintData.level3
-      })
-      
       if (nextLevel === 1 && hintData.level1) {
         hintText = hintData.level1
       } else if (nextLevel === 2 && hintData.level2) {
@@ -240,8 +202,6 @@ export default function QuizCard({
       } else if (nextLevel === 3 && hintData.level3) {
         hintText = hintData.level3
       }
-      
-      console.log('🔍 Selected hint text:', hintText)
       
       if (hintText) {
         setShownHints(prev => [...prev, hintText])
@@ -311,9 +271,18 @@ export default function QuizCard({
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <Badge variant="outline" className="text-xs w-fit">
-            問題 {questionNumber} / {totalQuestions}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs w-fit">
+              問題 {questionNumber} / {totalQuestions}
+            </Badge>
+            {/* 復習理由表示（復習モード時のみ） - 問題番号の横に小さく配置 */}
+            {question.reviewReason && (
+              <Badge variant="secondary" className="text-xs px-2 py-1 bg-orange-100 text-orange-700 border-orange-200">
+                <span className="text-xs mr-1">{question.reviewReason.icon}</span>
+                <span className="text-xs">{question.reviewReason.label}</span>
+              </Badge>
+            )}
+          </div>
           <Badge variant={getDifficultyBadgeVariant(getDifficultyDisplayName(question.difficulty || 'intermediate'))} className="text-xs w-fit">
             {getDifficultyDisplayName(question.difficulty || 'intermediate')}
           </Badge>
@@ -335,24 +304,6 @@ export default function QuizCard({
           <Badge variant="outline" className="text-xs">
             {getSubcategoryDisplayName(question.subcategory)}
           </Badge>
-          
-          {/* 復習理由バッジ */}
-          {'reviewReason' in question && question.reviewReason && (
-            <Badge 
-              variant="secondary" 
-              className={`text-xs ${
-                question.reviewReason === 'forgetting_curve' 
-                  ? 'bg-purple-100 text-purple-800 border-purple-200' 
-                  : question.reviewReason === 'weak_category'
-                    ? 'bg-red-100 text-red-800 border-red-200'
-                    : 'bg-orange-100 text-orange-800 border-orange-200'
-              }`}
-            >
-              {question.reviewReason === 'forgetting_curve' && '🧠 忘却曲線'}
-              {question.reviewReason === 'weak_category' && '📊 苦手分野'}
-              {question.reviewReason === 'repeat_mistakes' && '🔄 繰り返しミス'}
-            </Badge>
-          )}
         </div>
       </CardHeader>
 
@@ -375,18 +326,6 @@ export default function QuizCard({
         </div>
         
         {/* ヒント表示（回答前のみ） */}
-        {(() => {
-          console.log('🎯 Hint Display Condition Check:', {
-            hintsEnabled,
-            hintData: hintData,
-            hintDataAvailable: hintData?.available,
-            showResult,
-            isTimeUp,
-            shouldShow: hintsEnabled && !showResult && !isTimeUp,
-            questionId: question.id
-          })
-          return null
-        })()}
         {hintsEnabled && !showResult && !isTimeUp && (
           <HintDisplay
             hints={shownHints}

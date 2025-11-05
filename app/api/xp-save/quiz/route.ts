@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { UnifiedQuizType } from '@/lib/types/quiz'
+import type { Json, QuizAnswerInsert } from '@/lib/database-types-official'
 import { loadXPSettings, calculateQuizXP, calculateBonusXP, calculateSKP, type XPSettings } from '@/lib/xp-settings'
 import { 
   mapDifficultyToEnglish
@@ -16,7 +18,7 @@ import { getCurrentHourJST, getDateJST } from '@/lib/time-utils'
 import { getRandomWisdomCard, getRandomWisdomCardFromDB } from '@/lib/cards'
 import { addWisdomCardToCollection } from '@/lib/supabase-cards'
 // ヒント・復習システム
-import { determineReviewNeed } from '@/lib/review-logic'
+import { determineReviewReasonForDB } from '@/lib/review-reason-logic'
 
 // Feature flag for DB version (段階的移行用)
 const USE_DB_CARDS = process.env.NEXT_PUBLIC_USE_DB_WISDOM_CARDS === 'true' || true // デフォルトでDB版使用
@@ -88,6 +90,10 @@ interface QuizSessionRequest {
   correct_answers: number
   accuracy_rate: number
   answers: QuizAnswer[]
+  category_id?: string
+  subcategory_id?: string
+  is_review_mode?: boolean // 復習モードフラグ
+  quiz_type?: UnifiedQuizType // クイズタイプ
   selected_card?: {
     id: number
     author: string
@@ -105,7 +111,7 @@ interface QuizSessionRequest {
 // クイズセッション完了時のXP保存API
 export async function POST(request: Request) {
   try {
-    console.log('💾 Quiz XP Save API Request')
+    console.log('🚨 [DEBUG] Quiz XP Save API Request - checking precomputation trigger')
 
     const body: QuizSessionRequest = await request.json()
     
@@ -200,6 +206,7 @@ export async function POST(request: Request) {
         total_questions: body.total_questions,
         correct_answers: body.correct_answers,
         accuracy_rate: body.accuracy_rate,
+        quiz_type: body.quiz_type || 'business-ai', // デフォルトは'business-ai'
         status: 'completed'
       })
       .select()
@@ -248,25 +255,7 @@ export async function POST(request: Request) {
     })
     
     // 各回答のXP計算と記録（統合システム使用）
-    const answerInserts: Array<{
-      user_id: string;
-      quiz_session_id: string;
-      question_id: string;
-      user_answer: number | null;
-      is_correct: boolean;
-      time_spent: number;
-      is_timeout: boolean;
-      earned_xp: number;
-      category_id: string;
-      subcategory_id: string;
-      difficulty: string;
-      session_type: string;
-      confidence_level?: number | null;
-      hint_used: boolean;
-      max_hint_level?: number | null;
-      hint_usage_details?: object;
-      review_needed: boolean;
-    }> = []
+    const answerInserts: QuizAnswerInsert[] = []
     
     for (const answer of body.answers) {
       let earnedXP = 0
@@ -283,6 +272,7 @@ export async function POST(request: Request) {
 
       // 復習必要判定（問題取得して制限時間確認）
       let reviewNeeded = false
+      let reviewReason = null
       try {
         // 問題の制限時間を取得
         const { data: questionData } = await supabase
@@ -293,18 +283,26 @@ export async function POST(request: Request) {
         
         const timeLimit = questionData?.timeLimit || 45 // デフォルト45秒
         
-        reviewNeeded = await determineReviewNeed(
-          userId,
-          answer.question_id,
-          answer.is_correct,
-          answer.time_spent,
-          answer.difficulty,
-          timeLimit
-        )
+        // 🔄 統一判定：一つのロジックで復習必要性と理由を同時決定
+        reviewReason = determineReviewReasonForDB({
+          question_id: answer.question_id,
+          is_correct: answer.is_correct,
+          max_hint_level: answer.max_hint_level,
+          confidence_level: answer.confidence_level,
+          time_spent: answer.time_spent,
+          time_limit: timeLimit
+        })
+
+        // 復習理由がある = 復習必要
+        reviewNeeded = reviewReason !== null
+
+        console.log(`🔍 [XP Save] Question ${answer.question_id}: reviewNeeded=${reviewNeeded}, reviewReason=${reviewReason} (unified: reason determines need)`)
+        
       } catch (error) {
         console.error('❌ Error determining review need:', error)
         // エラー時は保守的に復習推奨
         reviewNeeded = !answer.is_correct
+        reviewReason = !answer.is_correct ? 'incorrect' : null
       }
 
       answerInserts.push({
@@ -323,8 +321,9 @@ export async function POST(request: Request) {
         confidence_level: answer.confidence_level,
         hint_used: answer.hint_used || false,
         max_hint_level: answer.max_hint_level || 0,  // ヒント使用レベルを追加
-        hint_usage_details: answer.hint_usage_details || {},  // ヒント使用詳細を追加（将来拡張用）
-        review_needed: reviewNeeded
+        hint_usage_details: (answer.hint_usage_details as Json) || null,  // ヒント使用詳細を追加（将来拡張用）
+        review_needed: reviewNeeded,
+        review_reason: reviewReason  // 🆕 復習理由を追加
       })
     }
 
@@ -339,7 +338,7 @@ export async function POST(request: Request) {
 
     // 4. 統合システムでの最終XP/SKP計算
     // 🔧 修正: quiz_answersの実際のearned_xp合計を使用（ハードコード計算を廃止）
-    const actualTotalQuestionXP = answerInserts.reduce((sum, answer) => sum + answer.earned_xp, 0)
+    const actualTotalQuestionXP = answerInserts.reduce((sum, answer) => sum + (answer.earned_xp || 0), 0)
     const totalQuestionXP = actualTotalQuestionXP  // 実際の回答XP合計を使用
     let bonusXP = 0
     // wisdomCardsは削除（実際のカード獲得時に更新されるため不要）
@@ -356,12 +355,14 @@ export async function POST(request: Request) {
       breakdown: unifiedSKPResult.breakdown
     })
     
-    // 精度ボーナス計算（統合システムから設定値取得）
+    // 精度ボーナス計算（統合システムから設定値取得）（復習モードでは除外）
     let accuracyBonus = 0
-    if (body.accuracy_rate >= 100.0) {
-      accuracyBonus = calculateBonusXP('quiz_accuracy_100', xpSettings)
-    } else if (body.accuracy_rate >= 80.0) {
-      accuracyBonus = calculateBonusXP('quiz_accuracy_80', xpSettings)
+    if (!body.is_review_mode) {
+      if (body.accuracy_rate >= 100.0) {
+        accuracyBonus = calculateBonusXP('quiz_accuracy_100', xpSettings)
+      } else if (body.accuracy_rate >= 80.0) {
+        accuracyBonus = calculateBonusXP('quiz_accuracy_80', xpSettings)
+      }
     }
 
     // 格言カード統計カウンター（削除：実際のカード獲得時に更新されるため）
@@ -372,11 +373,13 @@ export async function POST(request: Request) {
     const totalXP = totalQuestionXP + bonusXP
     
     console.log('🎯 Quiz XP calculation (fixed system):', {
+      isReviewMode: body.is_review_mode,
       actualTotalQuestionXP,
       legacyUnifiedXP: unifiedXP, // デバッグ用：旧計算値
       bonusXP,
       totalXP,
       accuracy: body.accuracy_rate,
+      bonusExcluded: body.is_review_mode ? 'true (review mode)' : 'false (normal mode)',
       xpSettingsUsed: {
         basic: xpSettings.xp_quiz.basic,
         intermediate: xpSettings.xp_quiz.intermediate,
@@ -391,7 +394,7 @@ export async function POST(request: Request) {
       }))
     })
     
-    // 5. カード処理（70%以上で付与）- セッション更新前に実行
+    // 5. カード処理（70%以上で付与）- セッション更新前に実行（復習モードでは除外）
     let awardedCard = null
     let isNewCard = false
     let cardCount = 0
@@ -399,7 +402,8 @@ export async function POST(request: Request) {
     
     const cardAccuracyRate = (body.correct_answers / body.total_questions) * 100
     
-    if (cardAccuracyRate >= 70) {
+    // 復習モードではカード付与を除外
+    if (!body.is_review_mode && cardAccuracyRate >= 70) {
       try {
         // 🔧 修正: クライアント選択カードを優先使用（二重選択問題の解決）
         if (body.selected_card) {
@@ -1032,7 +1036,8 @@ export async function POST(request: Request) {
 
     console.log(`✅ Quiz XP Save Success: Session ${sessionId}, Total XP: ${updatedSession.total_xp}`)
 
-    return NextResponse.json({
+    // Response object to return
+    const response = NextResponse.json({
       success: true,
       session_id: sessionId,
       total_xp: updatedSession.total_xp,
@@ -1046,6 +1051,21 @@ export async function POST(request: Request) {
       message: 'Quiz session saved and XP calculated successfully'
     })
 
+    // 🚀 Trigger precomputation AFTER response is sent (in background)
+    // 🔧 重要: レスポンス送信後に実行して、quiz_answers更新完了後に事前セット生成
+    setImmediate(async () => {
+      console.log('🚨 [DEBUG] Starting precomputation generation after response sent...')
+      await triggerPrecomputationGeneration(userId, body, {
+        selected_categories: null,
+        selected_industry_categories: null,
+        learning_goals: null,
+        learning_level: null
+      })
+      console.log('🚨 [DEBUG] Precomputation generation completed')
+    })
+
+    return response
+
   } catch (error) {
     console.error('❌ Quiz XP Save API Error:', error)
     
@@ -1056,5 +1076,69 @@ export async function POST(request: Request) {
       },
       { status: 500 }
     )
+  }
+}
+
+// =================================================================
+// Background Precomputation Integration
+// =================================================================
+
+/**
+ * Trigger precomputation generation for next quiz sessions
+ * 🔧 修正: quiz_answers更新完了後に確実に実行
+ */
+async function triggerPrecomputationGeneration(
+  userId: string, 
+  quizResult: QuizSessionRequest, 
+  userProfile: { 
+    selected_categories?: Json | null
+    selected_industry_categories?: Json | null
+    learning_goals?: Json | null
+    learning_level?: string | null
+  }
+): Promise<void> {
+  console.log('🚨 [DEBUG] triggerPrecomputationGeneration called with userId:', userId)
+  console.log('🚀 [Precomputation] Starting generation after quiz_answers update...')
+  
+  try {
+    // Import and use the precompute engine directly to avoid authentication issues
+    const { generateAllPrecomputedSets } = await import('@/lib/precomputed-quiz-engine')
+    
+    console.log('🚨 [DEBUG] Calling generateAllPrecomputedSets with latest quiz data...')
+    
+    const context = {
+      userId,
+      quizResult: {
+        category_id: quizResult.category_id,
+        subcategory_id: quizResult.subcategory_id,
+        accuracy_rate: quizResult.accuracy_rate,
+        total_questions: quizResult.total_questions,
+        correct_answers: quizResult.correct_answers,
+        answers: quizResult.answers.map(answer => ({
+          question_id: parseInt(answer.question_id, 10),
+          is_correct: answer.is_correct,
+          time_spent: answer.time_spent,
+          max_hint_level: answer.max_hint_level,
+          confidence_level: answer.confidence_level,
+          difficulty: answer.difficulty
+        }))
+      },
+      userProfile,
+      forceRegenerate: true  // Always regenerate after quiz completion to reflect latest learning results
+    }
+    
+    const results = await generateAllPrecomputedSets(context)
+    
+    const successCount = results.filter(r => r.success).length
+    const failedCount = results.filter(r => !r.success).length
+    
+    console.log('✅ [Precomputation] Generation completed with latest quiz_answers:', {
+      successful: successCount,
+      failed: failedCount,
+      results: results.map(r => ({ quiz_type: r.quiz_type, success: r.success, error: r.error }))
+    })
+    
+  } catch (error) {
+    console.warn('⚠️ [Precomputation] Generation error (non-critical):', error)
   }
 }

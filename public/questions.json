@@ -10189,7 +10189,7 @@
     }
   ],
   "metadata": {
-    "generatedAt": "2025-10-26T02:30:48.015Z",
+    "generatedAt": "2025-11-05T04:08:06.115Z",
     "sourceRecordCount": 407,
     "databaseSource": "quiz_questions",
     "generatorScript": "scripts/sync-all-fallback-data.ts"

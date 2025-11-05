@@ -131,7 +131,7 @@ class QuizDataSyncer {
           subcategory_id: row.subcategory_id,
           question: row.question,
           options: [row.option1, row.option2, row.option3, row.option4],
-          correct: row.correct_answer - 1, // 0-based indexに変換
+          correct: row.correct_answer, // DB is already 0-based
           explanation: row.explanation,
           difficulty: row.difficulty,
           timeLimit: row.time_limit,

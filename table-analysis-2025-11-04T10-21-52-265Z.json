@@ -1,0 +1,6120 @@
+{
+  "totalTables": 44,
+  "byClassification": {
+    "USER_DATA": [
+      {
+        "name": "course_completions",
+        "columns": [
+          {
+            "name": "badges_awarded",
+            "type": "number | null"
+          },
+          {
+            "name": "completed_sessions",
+            "type": "number"
+          },
+          {
+            "name": "completed_themes",
+            "type": "number"
+          },
+          {
+            "name": "completion_bonus_xp",
+            "type": "number"
+          },
+          {
+            "name": "completion_rate",
+            "type": "number"
+          },
+          {
+            "name": "course_id",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "first_completion_time",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "total_earned_xp",
+            "type": "number"
+          },
+          {
+            "name": "total_session_xp",
+            "type": "number"
+          },
+          {
+            "name": "total_sessions",
+            "type": "number"
+          },
+          {
+            "name": "total_themes",
+            "type": "number"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "badges_awarded: number | null\n          completed_sessions: number\n          completed_themes: number\n          completion_bonus_xp: number\n          completion_rate: number\n          course_id: string\n          created_at: string | null\n          first_completion_time: string\n          id: string\n          total_earned_xp: number\n          total_session_xp: number\n          total_sessions: number\n          total_themes: number\n          updated_at: string | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "course_session_completions",
+        "columns": [
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "completion_time",
+            "type": "string"
+          },
+          {
+            "name": "course_id",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "duration_seconds",
+            "type": "number | null"
+          },
+          {
+            "name": "earned_xp",
+            "type": "number"
+          },
+          {
+            "name": "genre_id",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "is_first_completion",
+            "type": "boolean"
+          },
+          {
+            "name": "review_count",
+            "type": "number"
+          },
+          {
+            "name": "session_end_time",
+            "type": "string | null"
+          },
+          {
+            "name": "session_id",
+            "type": "string"
+          },
+          {
+            "name": "session_quiz_correct",
+            "type": "boolean"
+          },
+          {
+            "name": "session_start_time",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "theme_id",
+            "type": "string"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "category_id: string\n          completion_time: string\n          course_id: string\n          created_at: string | null\n          duration_seconds: number | null\n          earned_xp: number\n          genre_id: string\n          id: string\n          is_first_completion: boolean\n          review_count: number\n          session_end_time: string | null\n          session_id: string\n          session_quiz_correct: boolean\n          session_start_time: string | null\n          subcategory_id: string\n          theme_id: string\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "course_theme_completions",
+        "columns": [
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "completed_sessions",
+            "type": "number"
+          },
+          {
+            "name": "completion_rate",
+            "type": "number"
+          },
+          {
+            "name": "course_id",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "first_completion_time",
+            "type": "string"
+          },
+          {
+            "name": "genre_id",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "knowledge_cards_awarded",
+            "type": "number | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "theme_id",
+            "type": "string"
+          },
+          {
+            "name": "total_sessions",
+            "type": "number"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "category_id: string\n          completed_sessions: number\n          completion_rate: number\n          course_id: string\n          created_at: string | null\n          first_completion_time: string\n          genre_id: string\n          id: string\n          knowledge_cards_awarded: number | null\n          subcategory_id: string\n          theme_id: string\n          total_sessions: number\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "daily_xp_records",
+        "columns": [
+          {
+            "name": "bonus_xp_earned",
+            "type": "number"
+          },
+          {
+            "name": "course_sessions",
+            "type": "number"
+          },
+          {
+            "name": "course_time_seconds",
+            "type": "number | null"
+          },
+          {
+            "name": "course_xp_earned",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "date",
+            "type": "string"
+          },
+          {
+            "name": "hourly_efficiency_data",
+            "type": "Json | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "learning_quality_score",
+            "type": "number | null"
+          },
+          {
+            "name": "peak_study_hour",
+            "type": "number | null"
+          },
+          {
+            "name": "quiz_sessions",
+            "type": "number"
+          },
+          {
+            "name": "quiz_time_seconds",
+            "type": "number | null"
+          },
+          {
+            "name": "quiz_xp_earned",
+            "type": "number"
+          },
+          {
+            "name": "study_time_minutes",
+            "type": "number"
+          },
+          {
+            "name": "total_time_seconds",
+            "type": "number | null"
+          },
+          {
+            "name": "total_xp_earned",
+            "type": "number"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "bonus_xp_earned: number\n          course_sessions: number\n          course_time_seconds: number | null\n          course_xp_earned: number\n          created_at: string | null\n          date: string\n          hourly_efficiency_data: Json | null\n          id: string\n          learning_quality_score: number | null\n          peak_study_hour: number | null\n          quiz_sessions: number\n          quiz_time_seconds: number | null\n          quiz_xp_earned: number\n          study_time_minutes: number\n          total_time_seconds: number | null\n          total_xp_earned: number\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "knowledge_card_collection",
+        "columns": [
+          {
+            "name": "card_id",
+            "type": "number"
+          },
+          {
+            "name": "count",
+            "type": "number | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "last_obtained_at",
+            "type": "string | null"
+          },
+          {
+            "name": "obtained_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "card_id: number\n          count: number | null\n          created_at: string | null\n          id: string\n          last_obtained_at: string | null\n          obtained_at: string | null\n          user_id: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "learning_effectiveness_tracking",
+        "columns": [
+          {
+            "name": "after_metrics",
+            "type": "Json | null"
+          },
+          {
+            "name": "before_metrics",
+            "type": "Json"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "improvement_score",
+            "type": "number | null"
+          },
+          {
+            "name": "intervention_at",
+            "type": "string"
+          },
+          {
+            "name": "intervention_data",
+            "type": "Json"
+          },
+          {
+            "name": "intervention_type",
+            "type": "string"
+          },
+          {
+            "name": "measurement_completed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "measurement_period_days",
+            "type": "number | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "after_metrics: Json | null\n          before_metrics: Json\n          created_at: string | null\n          id: string\n          improvement_score: number | null\n          intervention_at: string\n          intervention_data: Json\n          intervention_type: string\n          measurement_completed_at: string | null\n          measurement_period_days: number | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "learning_sessions",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "estimated_minutes",
+            "type": "number"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "session_type",
+            "type": "string"
+          },
+          {
+            "name": "theme_id",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "USER_DATA",
+        "rowDefinition": "created_at: string | null\n          display_order: number\n          estimated_minutes: number\n          id: string\n          session_type: string\n          theme_id: string\n          title: string\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー関連データの適切な分離ポリシー必要",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "precomputed_quiz_sets",
+        "columns": [
+          {
+            "name": "analysis_data",
+            "type": "Json"
+          },
+          {
+            "name": "category_filter",
+            "type": "string[] | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty_filter",
+            "type": "string[] | null"
+          },
+          {
+            "name": "expires_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "question_ids",
+            "type": "number[]"
+          },
+          {
+            "name": "quiz_type",
+            "type": "Database[\"public\"][\"Enums\"][\"quiz_type_enum\"]"
+          },
+          {
+            "name": "used_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          },
+          {
+            "name": "user_settings_hash",
+            "type": "string | null"
+          },
+          {
+            "name": "version",
+            "type": "number | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "analysis_data: Json\n          category_filter: string[] | null\n          created_at: string | null\n          difficulty_filter: string[] | null\n          expires_at: string | null\n          id: string\n          question_ids: number[]\n          quiz_type: Database[\"public\"][\"Enums\"][\"quiz_type_enum\"]\n          used_at: string | null\n          user_id: string\n          user_settings_hash: string | null\n          version: number | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "quiz_answers",
+        "columns": [
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "confidence_level",
+            "type": "number | null"
+          },
+          {
+            "name": "course_id",
+            "type": "string | null"
+          },
+          {
+            "name": "course_session_id",
+            "type": "string | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty",
+            "type": "string"
+          },
+          {
+            "name": "earned_xp",
+            "type": "number"
+          },
+          {
+            "name": "genre_id",
+            "type": "string | null"
+          },
+          {
+            "name": "hint_usage_details",
+            "type": "Json | null"
+          },
+          {
+            "name": "hint_used",
+            "type": "boolean"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "is_correct",
+            "type": "boolean"
+          },
+          {
+            "name": "is_timeout",
+            "type": "boolean"
+          },
+          {
+            "name": "max_hint_level",
+            "type": "number | null"
+          },
+          {
+            "name": "question_id",
+            "type": "string"
+          },
+          {
+            "name": "quiz_session_id",
+            "type": "string | null"
+          },
+          {
+            "name": "review_needed",
+            "type": "boolean"
+          },
+          {
+            "name": "reviewed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "session_type",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "theme_id",
+            "type": "string | null"
+          },
+          {
+            "name": "time_spent",
+            "type": "number"
+          },
+          {
+            "name": "user_answer",
+            "type": "number | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "category_id: string\n          confidence_level: number | null\n          course_id: string | null\n          course_session_id: string | null\n          created_at: string | null\n          difficulty: string\n          earned_xp: number\n          genre_id: string | null\n          hint_usage_details: Json | null\n          hint_used: boolean\n          id: string\n          is_correct: boolean\n          is_timeout: boolean\n          max_hint_level: number | null\n          question_id: string\n          quiz_session_id: string | null\n          review_needed: boolean\n          reviewed_at: string | null\n          session_type: string | null\n          subcategory_id: string\n          theme_id: string | null\n          time_spent: number\n          user_answer: number | null\n          user_id: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "quiz_review_history",
+        "columns": [
+          {
+            "name": "action_type",
+            "type": "string"
+          },
+          {
+            "name": "changes",
+            "type": "Json | null"
+          },
+          {
+            "name": "comment",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "new_status",
+            "type": "string | null"
+          },
+          {
+            "name": "performed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "performed_by",
+            "type": "string"
+          },
+          {
+            "name": "previous_status",
+            "type": "string | null"
+          },
+          {
+            "name": "review_question_id",
+            "type": "number"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "USER_DATA",
+        "rowDefinition": "action_type: string\n          changes: Json | null\n          comment: string | null\n          id: number\n          new_status: string | null\n          performed_at: string | null\n          performed_by: string\n          previous_status: string | null\n          review_question_id: number",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー関連データの適切な分離ポリシー必要",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "quiz_sessions",
+        "columns": [
+          {
+            "name": "accuracy_rate",
+            "type": "number"
+          },
+          {
+            "name": "bonus_xp",
+            "type": "number"
+          },
+          {
+            "name": "correct_answers",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "duration_seconds",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "quiz_type",
+            "type": "string"
+          },
+          {
+            "name": "session_end_time",
+            "type": "string | null"
+          },
+          {
+            "name": "session_start_time",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          },
+          {
+            "name": "total_questions",
+            "type": "number"
+          },
+          {
+            "name": "total_xp",
+            "type": "number"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          },
+          {
+            "name": "wisdom_cards_awarded",
+            "type": "number | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "accuracy_rate: number\n          bonus_xp: number\n          correct_answers: number\n          created_at: string | null\n          duration_seconds: number | null\n          id: string\n          quiz_type: string\n          session_end_time: string | null\n          session_start_time: string\n          status: string\n          total_questions: number\n          total_xp: number\n          updated_at: string | null\n          user_id: string\n          wisdom_cards_awarded: number | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "skp_transactions",
+        "columns": [
+          {
+            "name": "amount",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "source",
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "type": "string | null"
+          },
+          {
+            "name": "type",
+            "type": "string"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "amount: number\n          created_at: string | null\n          description: string\n          id: string\n          source: string\n          timestamp: string | null\n          type: string\n          user_id: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "spaced_repetition_schedule",
+        "columns": [
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "content_id",
+            "type": "string"
+          },
+          {
+            "name": "content_type",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty_adjustment",
+            "type": "number | null"
+          },
+          {
+            "name": "forgetting_curve_slope",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "initial_learning_date",
+            "type": "string"
+          },
+          {
+            "name": "is_mastered",
+            "type": "boolean | null"
+          },
+          {
+            "name": "last_review_date",
+            "type": "string | null"
+          },
+          {
+            "name": "mastery_level",
+            "type": "number | null"
+          },
+          {
+            "name": "next_review_date",
+            "type": "string"
+          },
+          {
+            "name": "optimal_interval_days",
+            "type": "number | null"
+          },
+          {
+            "name": "priority_score",
+            "type": "number | null"
+          },
+          {
+            "name": "retention_strength",
+            "type": "number | null"
+          },
+          {
+            "name": "review_count",
+            "type": "number | null"
+          },
+          {
+            "name": "scheduled_by",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "category_id: string\n          content_id: string\n          content_type: string\n          created_at: string | null\n          difficulty_adjustment: number | null\n          forgetting_curve_slope: number | null\n          id: string\n          initial_learning_date: string\n          is_mastered: boolean | null\n          last_review_date: string | null\n          mastery_level: number | null\n          next_review_date: string\n          optimal_interval_days: number | null\n          priority_score: number | null\n          retention_strength: number | null\n          review_count: number | null\n          scheduled_by: string | null\n          subcategory_id: string\n          updated_at: string | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "user_badges",
+        "columns": [
+          {
+            "name": "badge_color",
+            "type": "string | null"
+          },
+          {
+            "name": "badge_description",
+            "type": "string | null"
+          },
+          {
+            "name": "badge_id",
+            "type": "string"
+          },
+          {
+            "name": "badge_image_url",
+            "type": "string | null"
+          },
+          {
+            "name": "badge_title",
+            "type": "string"
+          },
+          {
+            "name": "course_id",
+            "type": "string"
+          },
+          {
+            "name": "course_name",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty",
+            "type": "string"
+          },
+          {
+            "name": "earned_at",
+            "type": "string"
+          },
+          {
+            "name": "expires_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          },
+          {
+            "name": "validity_period_months",
+            "type": "number | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "badge_color: string | null\n          badge_description: string | null\n          badge_id: string\n          badge_image_url: string | null\n          badge_title: string\n          course_id: string\n          course_name: string\n          created_at: string | null\n          difficulty: string\n          earned_at: string\n          expires_at: string | null\n          id: string\n          user_id: string | null\n          validity_period_months: number | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "user_learning_profiles",
+        "columns": [
+          {
+            "name": "attention_span_minutes",
+            "type": "number | null"
+          },
+          {
+            "name": "chronotype",
+            "type": "string | null"
+          },
+          {
+            "name": "cognitive_load_tolerance",
+            "type": "number | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty_progression_rate",
+            "type": "number | null"
+          },
+          {
+            "name": "fatigue_threshold",
+            "type": "number | null"
+          },
+          {
+            "name": "flow_state_preference",
+            "type": "Json | null"
+          },
+          {
+            "name": "forgetting_curve_parameters",
+            "type": "Json | null"
+          },
+          {
+            "name": "last_analysis_update",
+            "type": "string | null"
+          },
+          {
+            "name": "learning_style_type",
+            "type": "string | null"
+          },
+          {
+            "name": "motivation_factors",
+            "type": "string[] | null"
+          },
+          {
+            "name": "optimal_review_intervals",
+            "type": "number[] | null"
+          },
+          {
+            "name": "optimal_session_length",
+            "type": "number | null"
+          },
+          {
+            "name": "peak_performance_hours",
+            "type": "number[] | null"
+          },
+          {
+            "name": "recovery_time_needed",
+            "type": "number | null"
+          },
+          {
+            "name": "stress_indicators",
+            "type": "Json | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "attention_span_minutes: number | null\n          chronotype: string | null\n          cognitive_load_tolerance: number | null\n          created_at: string | null\n          difficulty_progression_rate: number | null\n          fatigue_threshold: number | null\n          flow_state_preference: Json | null\n          forgetting_curve_parameters: Json | null\n          last_analysis_update: string | null\n          learning_style_type: string | null\n          motivation_factors: string[] | null\n          optimal_review_intervals: number[] | null\n          optimal_session_length: number | null\n          peak_performance_hours: number[] | null\n          recovery_time_needed: number | null\n          stress_indicators: Json | null\n          updated_at: string | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "user_question_usage",
+        "columns": [
+          {
+            "name": "avg_time_spent",
+            "type": "number | null"
+          },
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty",
+            "type": "string"
+          },
+          {
+            "name": "last_accuracy_rate",
+            "type": "number | null"
+          },
+          {
+            "name": "last_used_at",
+            "type": "string | null"
+          },
+          {
+            "name": "question_id",
+            "type": "number"
+          },
+          {
+            "name": "recent_usage_count",
+            "type": "number | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "usage_count",
+            "type": "number | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "avg_time_spent: number | null\n          category_id: string\n          created_at: string | null\n          difficulty: string\n          last_accuracy_rate: number | null\n          last_used_at: string | null\n          question_id: number\n          recent_usage_count: number | null\n          subcategory_id: string | null\n          updated_at: string | null\n          usage_count: number | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "wisdom_card_collection",
+        "columns": [
+          {
+            "name": "card_id",
+            "type": "number"
+          },
+          {
+            "name": "count",
+            "type": "number | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "last_obtained_at",
+            "type": "string | null"
+          },
+          {
+            "name": "obtained_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "card_id: number\n          count: number | null\n          created_at: string | null\n          id: string\n          last_obtained_at: string | null\n          obtained_at: string | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      }
+    ],
+    "MASTER_DATA": [
+      {
+        "name": "difficulty_distribution_settings",
+        "columns": [
+          {
+            "name": "accuracy_range_max",
+            "type": "number"
+          },
+          {
+            "name": "accuracy_range_min",
+            "type": "number"
+          },
+          {
+            "name": "advanced_percent",
+            "type": "number"
+          },
+          {
+            "name": "basic_percent",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "created_by",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string | null"
+          },
+          {
+            "name": "expert_percent",
+            "type": "number"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "intermediate_percent",
+            "type": "number"
+          },
+          {
+            "name": "is_active",
+            "type": "boolean | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_by",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "accuracy_range_max: number\n          accuracy_range_min: number\n          advanced_percent: number\n          basic_percent: number\n          created_at: string | null\n          created_by: string | null\n          description: string | null\n          expert_percent: number\n          id: string\n          intermediate_percent: number\n          is_active: boolean | null\n          updated_at: string | null\n          updated_by: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "learning_courses",
+        "columns": [
+          {
+            "name": "badge_data",
+            "type": "Json | null"
+          },
+          {
+            "name": "color",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "difficulty",
+            "type": "string"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "estimated_days",
+            "type": "number"
+          },
+          {
+            "name": "icon",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "badge_data: Json | null\n          color: string\n          created_at: string | null\n          description: string\n          difficulty: string\n          display_order: number\n          estimated_days: number\n          icon: string\n          id: string\n          status: string\n          title: string\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "learning_themes",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "estimated_minutes",
+            "type": "number"
+          },
+          {
+            "name": "genre_id",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "reward_card_data",
+            "type": "Json | null"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "created_at: string | null\n          description: string\n          display_order: number\n          estimated_minutes: number\n          genre_id: string\n          id: string\n          reward_card_data: Json | null\n          title: string\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "quiz_questions",
+        "columns": [
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "correct_answer",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty",
+            "type": "string | null"
+          },
+          {
+            "name": "explanation",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "is_deleted",
+            "type": "boolean | null"
+          },
+          {
+            "name": "legacy_id",
+            "type": "number"
+          },
+          {
+            "name": "option1",
+            "type": "string"
+          },
+          {
+            "name": "option2",
+            "type": "string"
+          },
+          {
+            "name": "option3",
+            "type": "string"
+          },
+          {
+            "name": "option4",
+            "type": "string"
+          },
+          {
+            "name": "question",
+            "type": "string"
+          },
+          {
+            "name": "related_topics",
+            "type": "Json | null"
+          },
+          {
+            "name": "source",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string | null"
+          },
+          {
+            "name": "time_limit",
+            "type": "number | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "category_id: string\n          correct_answer: number\n          created_at: string | null\n          difficulty: string | null\n          explanation: string | null\n          id: number\n          is_deleted: boolean | null\n          legacy_id: number\n          option1: string\n          option2: string\n          option3: string\n          option4: string\n          question: string\n          related_topics: Json | null\n          source: string | null\n          subcategory: string | null\n          subcategory_id: string | null\n          time_limit: number | null\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "quiz_questions_review",
+        "columns": [
+          {
+            "name": "ai_model",
+            "type": "string | null"
+          },
+          {
+            "name": "ai_prompt",
+            "type": "string | null"
+          },
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "correct_answer",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty",
+            "type": "string"
+          },
+          {
+            "name": "explanation",
+            "type": "string | null"
+          },
+          {
+            "name": "generated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "generated_by",
+            "type": "string"
+          },
+          {
+            "name": "generation_batch_id",
+            "type": "string | null"
+          },
+          {
+            "name": "generation_params",
+            "type": "Json | null"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "import_batch_id",
+            "type": "string | null"
+          },
+          {
+            "name": "imported_at",
+            "type": "string | null"
+          },
+          {
+            "name": "imported_by",
+            "type": "string | null"
+          },
+          {
+            "name": "option_a",
+            "type": "string"
+          },
+          {
+            "name": "option_b",
+            "type": "string"
+          },
+          {
+            "name": "option_c",
+            "type": "string"
+          },
+          {
+            "name": "option_d",
+            "type": "string"
+          },
+          {
+            "name": "priority",
+            "type": "number | null"
+          },
+          {
+            "name": "production_question_id",
+            "type": "number | null"
+          },
+          {
+            "name": "question",
+            "type": "string"
+          },
+          {
+            "name": "review_changes",
+            "type": "Json | null"
+          },
+          {
+            "name": "review_notes",
+            "type": "string | null"
+          },
+          {
+            "name": "review_score",
+            "type": "number | null"
+          },
+          {
+            "name": "reviewed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "reviewed_by",
+            "type": "string | null"
+          },
+          {
+            "name": "source",
+            "type": "string | null"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          },
+          {
+            "name": "subcategory",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string | null"
+          },
+          {
+            "name": "tags",
+            "type": "string[] | null"
+          },
+          {
+            "name": "time_limit",
+            "type": "number | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "ai_model: string | null\n          ai_prompt: string | null\n          category_id: string\n          correct_answer: number\n          created_at: string | null\n          difficulty: string\n          explanation: string | null\n          generated_at: string | null\n          generated_by: string\n          generation_batch_id: string | null\n          generation_params: Json | null\n          id: number\n          import_batch_id: string | null\n          imported_at: string | null\n          imported_by: string | null\n          option_a: string\n          option_b: string\n          option_c: string\n          option_d: string\n          priority: number | null\n          production_question_id: number | null\n          question: string\n          review_changes: Json | null\n          review_notes: string | null\n          review_score: number | null\n          reviewed_at: string | null\n          reviewed_by: string | null\n          source: string | null\n          status: string\n          subcategory: string | null\n          subcategory_id: string | null\n          tags: string[] | null\n          time_limit: number | null\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "review_settings",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "notification_enabled",
+            "type": "boolean | null"
+          },
+          {
+            "name": "notification_interval_days",
+            "type": "number | null"
+          },
+          {
+            "name": "review_questions_count",
+            "type": "number | null"
+          },
+          {
+            "name": "streak_reminder_enabled",
+            "type": "boolean | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          },
+          {
+            "name": "weekly_summary_enabled",
+            "type": "boolean | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "created_at: string | null\n          notification_enabled: boolean | null\n          notification_interval_days: number | null\n          review_questions_count: number | null\n          streak_reminder_enabled: boolean | null\n          updated_at: string | null\n          user_id: string\n          weekly_summary_enabled: boolean | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "skill_levels",
+        "columns": [
+          {
+            "name": "color",
+            "type": "string | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string | null"
+          },
+          {
+            "name": "display_name",
+            "type": "string"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "target_experience",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "color: string | null\n          created_at: string | null\n          description: string | null\n          display_name: string\n          display_order: number\n          id: string\n          name: string\n          target_experience: string | null\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "subcategories",
+        "columns": [
+          {
+            "name": "activation_date",
+            "type": "string | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "created_by",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string | null"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "icon",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "type": "boolean"
+          },
+          {
+            "name": "is_visible",
+            "type": "boolean"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "parent_category_id",
+            "type": "string"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_by",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "activation_date: string | null\n          created_at: string | null\n          created_by: string | null\n          description: string | null\n          display_order: number\n          icon: string | null\n          id: string\n          is_active: boolean\n          is_visible: boolean\n          name: string\n          parent_category_id: string\n          subcategory_id: string\n          updated_at: string | null\n          updated_by: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "user_settings",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "setting_key",
+            "type": "string"
+          },
+          {
+            "name": "setting_value",
+            "type": "Json"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "created_at: string | null\n          id: string\n          setting_key: string\n          setting_value: Json\n          updated_at: string | null\n          user_id: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "users",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "current_level",
+            "type": "number | null"
+          },
+          {
+            "name": "display_name",
+            "type": "string | null"
+          },
+          {
+            "name": "email",
+            "type": "string"
+          },
+          {
+            "name": "experience_level",
+            "type": "string | null"
+          },
+          {
+            "name": "experience_years",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "industry",
+            "type": "string | null"
+          },
+          {
+            "name": "interested_industries",
+            "type": "Json | null"
+          },
+          {
+            "name": "job_title",
+            "type": "string | null"
+          },
+          {
+            "name": "last_active",
+            "type": "string | null"
+          },
+          {
+            "name": "last_profile_update",
+            "type": "string | null"
+          },
+          {
+            "name": "learning_goals",
+            "type": "Json | null"
+          },
+          {
+            "name": "learning_level",
+            "type": "string | null"
+          },
+          {
+            "name": "learning_style",
+            "type": "string | null"
+          },
+          {
+            "name": "name",
+            "type": "string | null"
+          },
+          {
+            "name": "position_level",
+            "type": "string | null"
+          },
+          {
+            "name": "profile_completed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "role",
+            "type": "string | null"
+          },
+          {
+            "name": "selected_categories",
+            "type": "Json | null"
+          },
+          {
+            "name": "selected_industry_categories",
+            "type": "Json | null"
+          },
+          {
+            "name": "skill_level",
+            "type": "string | null"
+          },
+          {
+            "name": "streak",
+            "type": "number | null"
+          },
+          {
+            "name": "total_xp",
+            "type": "number | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "weekly_goal",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "created_at: string | null\n          current_level: number | null\n          display_name: string | null\n          email: string\n          experience_level: string | null\n          experience_years: number | null\n          id: string\n          industry: string | null\n          interested_industries: Json | null\n          job_title: string | null\n          last_active: string | null\n          last_profile_update: string | null\n          learning_goals: Json | null\n          learning_level: string | null\n          learning_style: string | null\n          name: string | null\n          position_level: string | null\n          profile_completed_at: string | null\n          role: string | null\n          selected_categories: Json | null\n          selected_industry_categories: Json | null\n          skill_level: string | null\n          streak: number | null\n          total_xp: number | null\n          updated_at: string | null\n          weekly_goal: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "wisdom_cards",
+        "columns": [
+          {
+            "name": "animation_url",
+            "type": "string | null"
+          },
+          {
+            "name": "application_area",
+            "type": "string"
+          },
+          {
+            "name": "author",
+            "type": "string"
+          },
+          {
+            "name": "author_portrait_url",
+            "type": "string | null"
+          },
+          {
+            "name": "background_image_url",
+            "type": "string | null"
+          },
+          {
+            "name": "card_image_url",
+            "type": "string | null"
+          },
+          {
+            "name": "category_icon_url",
+            "type": "string | null"
+          },
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "context",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "display_order",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "is_active",
+            "type": "boolean | null"
+          },
+          {
+            "name": "particle_effect_config",
+            "type": "Json | null"
+          },
+          {
+            "name": "quote",
+            "type": "string"
+          },
+          {
+            "name": "rarity",
+            "type": "string"
+          },
+          {
+            "name": "rarity_frame_url",
+            "type": "string | null"
+          },
+          {
+            "name": "special_badge_url",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "animation_url: string | null\n          application_area: string\n          author: string\n          author_portrait_url: string | null\n          background_image_url: string | null\n          card_image_url: string | null\n          category_icon_url: string | null\n          category_id: string\n          context: string\n          created_at: string | null\n          display_order: number | null\n          id: number\n          is_active: boolean | null\n          particle_effect_config: Json | null\n          quote: string\n          rarity: string\n          rarity_frame_url: string | null\n          special_badge_url: string | null\n          subcategory_id: string | null\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "xp_level_skp_settings",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "is_active",
+            "type": "boolean | null"
+          },
+          {
+            "name": "setting_category",
+            "type": "string"
+          },
+          {
+            "name": "setting_description",
+            "type": "string | null"
+          },
+          {
+            "name": "setting_key",
+            "type": "string"
+          },
+          {
+            "name": "setting_value",
+            "type": "number"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "created_at: string | null\n          id: number\n          is_active: boolean | null\n          setting_category: string\n          setting_description: string | null\n          setting_key: string\n          setting_value: number\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      }
+    ],
+    "SYSTEM": [
+      {
+        "name": "quiz_review_batches",
+        "columns": [
+          {
+            "name": "batch_type",
+            "type": "string"
+          },
+          {
+            "name": "completed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "errors",
+            "type": "Json | null"
+          },
+          {
+            "name": "executed_by",
+            "type": "string"
+          },
+          {
+            "name": "failed_count",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "parameters",
+            "type": "Json | null"
+          },
+          {
+            "name": "started_at",
+            "type": "string | null"
+          },
+          {
+            "name": "success_count",
+            "type": "number | null"
+          },
+          {
+            "name": "total_count",
+            "type": "number"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "SYSTEM",
+        "rowDefinition": "batch_type: string\n          completed_at: string | null\n          errors: Json | null\n          executed_by: string\n          failed_count: number | null\n          id: string\n          parameters: Json | null\n          started_at: string | null\n          success_count: number | null\n          total_count: number",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "ADMIN_ONLY",
+          "policyDescription": "システム管理者のみアクセス可能",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "system_alerts",
+        "columns": [
+          {
+            "name": "alert_type",
+            "type": "string"
+          },
+          {
+            "name": "context",
+            "type": "Json | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "message",
+            "type": "string"
+          },
+          {
+            "name": "resolution_notes",
+            "type": "string | null"
+          },
+          {
+            "name": "resolved",
+            "type": "boolean | null"
+          },
+          {
+            "name": "resolved_at",
+            "type": "string | null"
+          },
+          {
+            "name": "resolved_by",
+            "type": "string | null"
+          },
+          {
+            "name": "severity",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "SYSTEM",
+        "rowDefinition": "alert_type: string\n          context: Json | null\n          created_at: string | null\n          id: string\n          message: string\n          resolution_notes: string | null\n          resolved: boolean | null\n          resolved_at: string | null\n          resolved_by: string | null\n          severity: string\n          title: string\n          updated_at: string | null\n          user_id: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "ADMIN_ONLY",
+          "policyDescription": "システム管理者のみアクセス可能",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "system_config_monitoring",
+        "columns": [
+          {
+            "name": "change_reason",
+            "type": "string | null"
+          },
+          {
+            "name": "changed_by",
+            "type": "string | null"
+          },
+          {
+            "name": "config_type",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "new_value",
+            "type": "Json | null"
+          },
+          {
+            "name": "old_value",
+            "type": "Json | null"
+          },
+          {
+            "name": "setting_key",
+            "type": "string"
+          },
+          {
+            "name": "validated",
+            "type": "boolean | null"
+          },
+          {
+            "name": "validation_errors",
+            "type": "Json | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "SYSTEM",
+        "rowDefinition": "change_reason: string | null\n          changed_by: string | null\n          config_type: string\n          created_at: string | null\n          id: string\n          new_value: Json | null\n          old_value: Json | null\n          setting_key: string\n          validated: boolean | null\n          validation_errors: Json | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "ADMIN_ONLY",
+          "policyDescription": "システム管理者のみアクセス可能",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "system_health_logs",
+        "columns": [
+          {
+            "name": "check_type",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "details",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "metrics",
+            "type": "Json"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          },
+          {
+            "name": "thresholds",
+            "type": "Json | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "SYSTEM",
+        "rowDefinition": "check_type: string\n          created_at: string | null\n          details: string | null\n          id: string\n          metrics: Json\n          status: string\n          thresholds: Json | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "ADMIN_ONLY",
+          "policyDescription": "システム管理者のみアクセス可能",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      }
+    ],
+    "VIEW_OR_COMPUTED": [
+      {
+        "name": "daily_analytics_batch_log",
+        "columns": [
+          {
+            "name": "completed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "error_message",
+            "type": "string | null"
+          },
+          {
+            "name": "force_reprocess",
+            "type": "boolean | null"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "process_date",
+            "type": "string"
+          },
+          {
+            "name": "process_type",
+            "type": "string"
+          },
+          {
+            "name": "processed_users",
+            "type": "number | null"
+          },
+          {
+            "name": "started_at",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "VIEW_OR_COMPUTED",
+        "rowDefinition": "completed_at: string | null\n          created_at: string | null\n          error_message: string | null\n          force_reprocess: boolean | null\n          id: number\n          process_date: string\n          process_type: string\n          processed_users: number | null\n          started_at: string\n          status: string\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_BASED_OR_READ_ONLY",
+          "policyDescription": "認証済みユーザー読み取り専用",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "learning_analytics_summary",
+        "columns": [
+          {
+            "name": "average_session_duration",
+            "type": "number"
+          },
+          {
+            "name": "calculation_date",
+            "type": "string"
+          },
+          {
+            "name": "category_breakdown",
+            "type": "Json | null"
+          },
+          {
+            "name": "course_completion_rate",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "current_level",
+            "type": "number"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "learning_streak_days",
+            "type": "number"
+          },
+          {
+            "name": "overall_accuracy",
+            "type": "number"
+          },
+          {
+            "name": "quiz_accuracy",
+            "type": "number"
+          },
+          {
+            "name": "session_count",
+            "type": "number"
+          },
+          {
+            "name": "time_pattern_analysis",
+            "type": "Json | null"
+          },
+          {
+            "name": "total_study_time_minutes",
+            "type": "number"
+          },
+          {
+            "name": "total_xp",
+            "type": "number"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          },
+          {
+            "name": "weakness_analysis",
+            "type": "Json | null"
+          },
+          {
+            "name": "xp_growth_rate",
+            "type": "number"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "VIEW_OR_COMPUTED",
+        "rowDefinition": "average_session_duration: number\n          calculation_date: string\n          category_breakdown: Json | null\n          course_completion_rate: number\n          created_at: string | null\n          current_level: number\n          id: string\n          learning_streak_days: number\n          overall_accuracy: number\n          quiz_accuracy: number\n          session_count: number\n          time_pattern_analysis: Json | null\n          total_study_time_minutes: number\n          total_xp: number\n          updated_at: string | null\n          user_id: string\n          weakness_analysis: Json | null\n          xp_growth_rate: number",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_BASED_OR_READ_ONLY",
+          "policyDescription": "ユーザーベースのアクセス制御",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "learning_progress",
+        "columns": [
+          {
+            "name": "completed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "completion_percentage",
+            "type": "number | null"
+          },
+          {
+            "name": "course_id",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "duration_seconds",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "progress_data",
+            "type": "Json | null"
+          },
+          {
+            "name": "session_end_time",
+            "type": "string | null"
+          },
+          {
+            "name": "session_id",
+            "type": "string | null"
+          },
+          {
+            "name": "session_start_time",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "VIEW_OR_COMPUTED",
+        "rowDefinition": "completed_at: string | null\n          completion_percentage: number | null\n          course_id: string\n          created_at: string | null\n          duration_seconds: number | null\n          id: string\n          progress_data: Json | null\n          session_end_time: string | null\n          session_id: string | null\n          session_start_time: string | null\n          updated_at: string | null\n          user_id: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_BASED_OR_READ_ONLY",
+          "policyDescription": "ユーザーベースのアクセス制御",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "learning_recommendations",
+        "columns": [
+          {
+            "name": "completed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "confidence_score",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "expected_improvement",
+            "type": "Json | null"
+          },
+          {
+            "name": "expires_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "presented_at",
+            "type": "string | null"
+          },
+          {
+            "name": "priority",
+            "type": "number"
+          },
+          {
+            "name": "reasoning",
+            "type": "string"
+          },
+          {
+            "name": "recommendation_type",
+            "type": "string"
+          },
+          {
+            "name": "recommended_content_id",
+            "type": "string"
+          },
+          {
+            "name": "recommended_content_type",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string | null"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "VIEW_OR_COMPUTED",
+        "rowDefinition": "completed_at: string | null\n          confidence_score: number\n          created_at: string | null\n          description: string\n          expected_improvement: Json | null\n          expires_at: string | null\n          id: string\n          presented_at: string | null\n          priority: number\n          reasoning: string\n          recommendation_type: string\n          recommended_content_id: string\n          recommended_content_type: string\n          status: string | null\n          title: string\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_BASED_OR_READ_ONLY",
+          "policyDescription": "ユーザーベースのアクセス制御",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "unified_learning_session_analytics",
+        "columns": [
+          {
+            "name": "accuracy_rate",
+            "type": "number | null"
+          },
+          {
+            "name": "attention_breaks",
+            "type": "number | null"
+          },
+          {
+            "name": "average_response_time_ms",
+            "type": "number | null"
+          },
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "cognitive_load_score",
+            "type": "number | null"
+          },
+          {
+            "name": "completion_rate",
+            "type": "number | null"
+          },
+          {
+            "name": "course_id",
+            "type": "string | null"
+          },
+          {
+            "name": "course_session_id",
+            "type": "string | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "day_of_week",
+            "type": "number"
+          },
+          {
+            "name": "device_type",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty_level",
+            "type": "string"
+          },
+          {
+            "name": "duration_seconds",
+            "type": "number"
+          },
+          {
+            "name": "energy_level_reported",
+            "type": "number | null"
+          },
+          {
+            "name": "engagement_score",
+            "type": "number | null"
+          },
+          {
+            "name": "flow_state_duration",
+            "type": "number | null"
+          },
+          {
+            "name": "flow_state_index",
+            "type": "number | null"
+          },
+          {
+            "name": "forgetting_curve_data",
+            "type": "Json | null"
+          },
+          {
+            "name": "genre_id",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "interruption_count",
+            "type": "number | null"
+          },
+          {
+            "name": "optimal_review_interval",
+            "type": "number | null"
+          },
+          {
+            "name": "questions_correct",
+            "type": "number | null"
+          },
+          {
+            "name": "questions_total",
+            "type": "number | null"
+          },
+          {
+            "name": "quiz_session_id",
+            "type": "string | null"
+          },
+          {
+            "name": "session_end_time",
+            "type": "string"
+          },
+          {
+            "name": "session_start_time",
+            "type": "string"
+          },
+          {
+            "name": "session_type",
+            "type": "string"
+          },
+          {
+            "name": "spaced_repetition_due",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "theme_id",
+            "type": "string | null"
+          },
+          {
+            "name": "time_of_day",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "VIEW_OR_COMPUTED",
+        "rowDefinition": "accuracy_rate: number | null\n          attention_breaks: number | null\n          average_response_time_ms: number | null\n          category_id: string\n          cognitive_load_score: number | null\n          completion_rate: number | null\n          course_id: string | null\n          course_session_id: string | null\n          created_at: string | null\n          day_of_week: number\n          device_type: string | null\n          difficulty_level: string\n          duration_seconds: number\n          energy_level_reported: number | null\n          engagement_score: number | null\n          flow_state_duration: number | null\n          flow_state_index: number | null\n          forgetting_curve_data: Json | null\n          genre_id: string | null\n          id: string\n          interruption_count: number | null\n          optimal_review_interval: number | null\n          questions_correct: number | null\n          questions_total: number | null\n          quiz_session_id: string | null\n          session_end_time: string\n          session_start_time: string\n          session_type: string\n          spaced_repetition_due: string | null\n          subcategory_id: string\n          theme_id: string | null\n          time_of_day: string\n          updated_at: string | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_BASED_OR_READ_ONLY",
+          "policyDescription": "ユーザーベースのアクセス制御",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      }
+    ],
+    "UNKNOWN": [
+      {
+        "name": "public",
+        "columns": [
+          {
+            "name": "activation_date",
+            "type": "string | null"
+          },
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "color",
+            "type": "string | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "created_by",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string | null"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "icon",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "type": "boolean"
+          },
+          {
+            "name": "is_visible",
+            "type": "boolean"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_by",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "UNKNOWN",
+        "rowDefinition": "activation_date: string | null\n          category_id: string\n          color: string | null\n          created_at: string | null\n          created_by: string | null\n          description: string | null\n          display_order: number\n          icon: string | null\n          id: string\n          is_active: boolean\n          is_visible: boolean\n          name: string\n          type: string\n          updated_at: string | null\n          updated_by: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "INVESTIGATION_NEEDED",
+          "policyDescription": "詳細調査が必要",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "industry_level_targets",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "display_in_radar",
+            "type": "boolean | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "importance_weight",
+            "type": "number | null"
+          },
+          {
+            "name": "industry_category_id",
+            "type": "string"
+          },
+          {
+            "name": "level",
+            "type": "string"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "target_xp",
+            "type": "number"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "UNKNOWN",
+        "rowDefinition": "created_at: string | null\n          display_in_radar: boolean | null\n          id: string\n          importance_weight: number | null\n          industry_category_id: string\n          level: string\n          subcategory_id: string\n          target_xp: number\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "INVESTIGATION_NEEDED",
+          "policyDescription": "詳細調査が必要",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "learning_genres",
+        "columns": [
+          {
+            "name": "badge_data",
+            "type": "Json | null"
+          },
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "course_id",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "estimated_days",
+            "type": "number"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string | null"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "UNKNOWN",
+        "rowDefinition": "badge_data: Json | null\n          category_id: string\n          course_id: string\n          created_at: string | null\n          description: string\n          display_order: number\n          estimated_days: number\n          id: string\n          subcategory_id: string | null\n          title: string\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "INVESTIGATION_NEEDED",
+          "policyDescription": "詳細調査が必要",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "quiz_hints",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "created_by",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "level1_hint",
+            "type": "string | null"
+          },
+          {
+            "name": "level2_hint",
+            "type": "string | null"
+          },
+          {
+            "name": "level3_hint",
+            "type": "string | null"
+          },
+          {
+            "name": "question_id",
+            "type": "number"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_by",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "UNKNOWN",
+        "rowDefinition": "created_at: string | null\n          created_by: string | null\n          id: string\n          level1_hint: string | null\n          level2_hint: string | null\n          level3_hint: string | null\n          question_id: number\n          updated_at: string | null\n          updated_by: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "INVESTIGATION_NEEDED",
+          "policyDescription": "詳細調査が必要",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "session_contents",
+        "columns": [
+          {
+            "name": "content",
+            "type": "string"
+          },
+          {
+            "name": "content_type",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "duration",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "session_id",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "UNKNOWN",
+        "rowDefinition": "content: string\n          content_type: string\n          created_at: string | null\n          display_order: number\n          duration: number | null\n          id: string\n          session_id: string\n          title: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "INVESTIGATION_NEEDED",
+          "policyDescription": "詳細調査が必要",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "session_quizzes",
+        "columns": [
+          {
+            "name": "correct_answer",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "explanation",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "options",
+            "type": "Json"
+          },
+          {
+            "name": "question",
+            "type": "string"
+          },
+          {
+            "name": "quiz_type",
+            "type": "string"
+          },
+          {
+            "name": "session_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "UNKNOWN",
+        "rowDefinition": "correct_answer: number\n          created_at: string | null\n          display_order: number\n          explanation: string\n          id: string\n          options: Json\n          question: string\n          quiz_type: string\n          session_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "INVESTIGATION_NEEDED",
+          "policyDescription": "詳細調査が必要",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      }
+    ]
+  },
+  "rlsRequirements": {
+    "CRITICAL": [
+      {
+        "name": "course_completions",
+        "columns": [
+          {
+            "name": "badges_awarded",
+            "type": "number | null"
+          },
+          {
+            "name": "completed_sessions",
+            "type": "number"
+          },
+          {
+            "name": "completed_themes",
+            "type": "number"
+          },
+          {
+            "name": "completion_bonus_xp",
+            "type": "number"
+          },
+          {
+            "name": "completion_rate",
+            "type": "number"
+          },
+          {
+            "name": "course_id",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "first_completion_time",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "total_earned_xp",
+            "type": "number"
+          },
+          {
+            "name": "total_session_xp",
+            "type": "number"
+          },
+          {
+            "name": "total_sessions",
+            "type": "number"
+          },
+          {
+            "name": "total_themes",
+            "type": "number"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "badges_awarded: number | null\n          completed_sessions: number\n          completed_themes: number\n          completion_bonus_xp: number\n          completion_rate: number\n          course_id: string\n          created_at: string | null\n          first_completion_time: string\n          id: string\n          total_earned_xp: number\n          total_session_xp: number\n          total_sessions: number\n          total_themes: number\n          updated_at: string | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "course_session_completions",
+        "columns": [
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "completion_time",
+            "type": "string"
+          },
+          {
+            "name": "course_id",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "duration_seconds",
+            "type": "number | null"
+          },
+          {
+            "name": "earned_xp",
+            "type": "number"
+          },
+          {
+            "name": "genre_id",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "is_first_completion",
+            "type": "boolean"
+          },
+          {
+            "name": "review_count",
+            "type": "number"
+          },
+          {
+            "name": "session_end_time",
+            "type": "string | null"
+          },
+          {
+            "name": "session_id",
+            "type": "string"
+          },
+          {
+            "name": "session_quiz_correct",
+            "type": "boolean"
+          },
+          {
+            "name": "session_start_time",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "theme_id",
+            "type": "string"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "category_id: string\n          completion_time: string\n          course_id: string\n          created_at: string | null\n          duration_seconds: number | null\n          earned_xp: number\n          genre_id: string\n          id: string\n          is_first_completion: boolean\n          review_count: number\n          session_end_time: string | null\n          session_id: string\n          session_quiz_correct: boolean\n          session_start_time: string | null\n          subcategory_id: string\n          theme_id: string\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "course_theme_completions",
+        "columns": [
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "completed_sessions",
+            "type": "number"
+          },
+          {
+            "name": "completion_rate",
+            "type": "number"
+          },
+          {
+            "name": "course_id",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "first_completion_time",
+            "type": "string"
+          },
+          {
+            "name": "genre_id",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "knowledge_cards_awarded",
+            "type": "number | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "theme_id",
+            "type": "string"
+          },
+          {
+            "name": "total_sessions",
+            "type": "number"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "category_id: string\n          completed_sessions: number\n          completion_rate: number\n          course_id: string\n          created_at: string | null\n          first_completion_time: string\n          genre_id: string\n          id: string\n          knowledge_cards_awarded: number | null\n          subcategory_id: string\n          theme_id: string\n          total_sessions: number\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "daily_xp_records",
+        "columns": [
+          {
+            "name": "bonus_xp_earned",
+            "type": "number"
+          },
+          {
+            "name": "course_sessions",
+            "type": "number"
+          },
+          {
+            "name": "course_time_seconds",
+            "type": "number | null"
+          },
+          {
+            "name": "course_xp_earned",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "date",
+            "type": "string"
+          },
+          {
+            "name": "hourly_efficiency_data",
+            "type": "Json | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "learning_quality_score",
+            "type": "number | null"
+          },
+          {
+            "name": "peak_study_hour",
+            "type": "number | null"
+          },
+          {
+            "name": "quiz_sessions",
+            "type": "number"
+          },
+          {
+            "name": "quiz_time_seconds",
+            "type": "number | null"
+          },
+          {
+            "name": "quiz_xp_earned",
+            "type": "number"
+          },
+          {
+            "name": "study_time_minutes",
+            "type": "number"
+          },
+          {
+            "name": "total_time_seconds",
+            "type": "number | null"
+          },
+          {
+            "name": "total_xp_earned",
+            "type": "number"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "bonus_xp_earned: number\n          course_sessions: number\n          course_time_seconds: number | null\n          course_xp_earned: number\n          created_at: string | null\n          date: string\n          hourly_efficiency_data: Json | null\n          id: string\n          learning_quality_score: number | null\n          peak_study_hour: number | null\n          quiz_sessions: number\n          quiz_time_seconds: number | null\n          quiz_xp_earned: number\n          study_time_minutes: number\n          total_time_seconds: number | null\n          total_xp_earned: number\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "knowledge_card_collection",
+        "columns": [
+          {
+            "name": "card_id",
+            "type": "number"
+          },
+          {
+            "name": "count",
+            "type": "number | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "last_obtained_at",
+            "type": "string | null"
+          },
+          {
+            "name": "obtained_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "card_id: number\n          count: number | null\n          created_at: string | null\n          id: string\n          last_obtained_at: string | null\n          obtained_at: string | null\n          user_id: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "learning_effectiveness_tracking",
+        "columns": [
+          {
+            "name": "after_metrics",
+            "type": "Json | null"
+          },
+          {
+            "name": "before_metrics",
+            "type": "Json"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "improvement_score",
+            "type": "number | null"
+          },
+          {
+            "name": "intervention_at",
+            "type": "string"
+          },
+          {
+            "name": "intervention_data",
+            "type": "Json"
+          },
+          {
+            "name": "intervention_type",
+            "type": "string"
+          },
+          {
+            "name": "measurement_completed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "measurement_period_days",
+            "type": "number | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "after_metrics: Json | null\n          before_metrics: Json\n          created_at: string | null\n          id: string\n          improvement_score: number | null\n          intervention_at: string\n          intervention_data: Json\n          intervention_type: string\n          measurement_completed_at: string | null\n          measurement_period_days: number | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "learning_sessions",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "estimated_minutes",
+            "type": "number"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "session_type",
+            "type": "string"
+          },
+          {
+            "name": "theme_id",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "USER_DATA",
+        "rowDefinition": "created_at: string | null\n          display_order: number\n          estimated_minutes: number\n          id: string\n          session_type: string\n          theme_id: string\n          title: string\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー関連データの適切な分離ポリシー必要",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "precomputed_quiz_sets",
+        "columns": [
+          {
+            "name": "analysis_data",
+            "type": "Json"
+          },
+          {
+            "name": "category_filter",
+            "type": "string[] | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty_filter",
+            "type": "string[] | null"
+          },
+          {
+            "name": "expires_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "question_ids",
+            "type": "number[]"
+          },
+          {
+            "name": "quiz_type",
+            "type": "Database[\"public\"][\"Enums\"][\"quiz_type_enum\"]"
+          },
+          {
+            "name": "used_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          },
+          {
+            "name": "user_settings_hash",
+            "type": "string | null"
+          },
+          {
+            "name": "version",
+            "type": "number | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "analysis_data: Json\n          category_filter: string[] | null\n          created_at: string | null\n          difficulty_filter: string[] | null\n          expires_at: string | null\n          id: string\n          question_ids: number[]\n          quiz_type: Database[\"public\"][\"Enums\"][\"quiz_type_enum\"]\n          used_at: string | null\n          user_id: string\n          user_settings_hash: string | null\n          version: number | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "quiz_answers",
+        "columns": [
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "confidence_level",
+            "type": "number | null"
+          },
+          {
+            "name": "course_id",
+            "type": "string | null"
+          },
+          {
+            "name": "course_session_id",
+            "type": "string | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty",
+            "type": "string"
+          },
+          {
+            "name": "earned_xp",
+            "type": "number"
+          },
+          {
+            "name": "genre_id",
+            "type": "string | null"
+          },
+          {
+            "name": "hint_usage_details",
+            "type": "Json | null"
+          },
+          {
+            "name": "hint_used",
+            "type": "boolean"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "is_correct",
+            "type": "boolean"
+          },
+          {
+            "name": "is_timeout",
+            "type": "boolean"
+          },
+          {
+            "name": "max_hint_level",
+            "type": "number | null"
+          },
+          {
+            "name": "question_id",
+            "type": "string"
+          },
+          {
+            "name": "quiz_session_id",
+            "type": "string | null"
+          },
+          {
+            "name": "review_needed",
+            "type": "boolean"
+          },
+          {
+            "name": "reviewed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "session_type",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "theme_id",
+            "type": "string | null"
+          },
+          {
+            "name": "time_spent",
+            "type": "number"
+          },
+          {
+            "name": "user_answer",
+            "type": "number | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "category_id: string\n          confidence_level: number | null\n          course_id: string | null\n          course_session_id: string | null\n          created_at: string | null\n          difficulty: string\n          earned_xp: number\n          genre_id: string | null\n          hint_usage_details: Json | null\n          hint_used: boolean\n          id: string\n          is_correct: boolean\n          is_timeout: boolean\n          max_hint_level: number | null\n          question_id: string\n          quiz_session_id: string | null\n          review_needed: boolean\n          reviewed_at: string | null\n          session_type: string | null\n          subcategory_id: string\n          theme_id: string | null\n          time_spent: number\n          user_answer: number | null\n          user_id: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "quiz_review_history",
+        "columns": [
+          {
+            "name": "action_type",
+            "type": "string"
+          },
+          {
+            "name": "changes",
+            "type": "Json | null"
+          },
+          {
+            "name": "comment",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "new_status",
+            "type": "string | null"
+          },
+          {
+            "name": "performed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "performed_by",
+            "type": "string"
+          },
+          {
+            "name": "previous_status",
+            "type": "string | null"
+          },
+          {
+            "name": "review_question_id",
+            "type": "number"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "USER_DATA",
+        "rowDefinition": "action_type: string\n          changes: Json | null\n          comment: string | null\n          id: number\n          new_status: string | null\n          performed_at: string | null\n          performed_by: string\n          previous_status: string | null\n          review_question_id: number",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー関連データの適切な分離ポリシー必要",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "quiz_sessions",
+        "columns": [
+          {
+            "name": "accuracy_rate",
+            "type": "number"
+          },
+          {
+            "name": "bonus_xp",
+            "type": "number"
+          },
+          {
+            "name": "correct_answers",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "duration_seconds",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "quiz_type",
+            "type": "string"
+          },
+          {
+            "name": "session_end_time",
+            "type": "string | null"
+          },
+          {
+            "name": "session_start_time",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          },
+          {
+            "name": "total_questions",
+            "type": "number"
+          },
+          {
+            "name": "total_xp",
+            "type": "number"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          },
+          {
+            "name": "wisdom_cards_awarded",
+            "type": "number | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "accuracy_rate: number\n          bonus_xp: number\n          correct_answers: number\n          created_at: string | null\n          duration_seconds: number | null\n          id: string\n          quiz_type: string\n          session_end_time: string | null\n          session_start_time: string\n          status: string\n          total_questions: number\n          total_xp: number\n          updated_at: string | null\n          user_id: string\n          wisdom_cards_awarded: number | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "skp_transactions",
+        "columns": [
+          {
+            "name": "amount",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "source",
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "type": "string | null"
+          },
+          {
+            "name": "type",
+            "type": "string"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "amount: number\n          created_at: string | null\n          description: string\n          id: string\n          source: string\n          timestamp: string | null\n          type: string\n          user_id: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "spaced_repetition_schedule",
+        "columns": [
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "content_id",
+            "type": "string"
+          },
+          {
+            "name": "content_type",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty_adjustment",
+            "type": "number | null"
+          },
+          {
+            "name": "forgetting_curve_slope",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "initial_learning_date",
+            "type": "string"
+          },
+          {
+            "name": "is_mastered",
+            "type": "boolean | null"
+          },
+          {
+            "name": "last_review_date",
+            "type": "string | null"
+          },
+          {
+            "name": "mastery_level",
+            "type": "number | null"
+          },
+          {
+            "name": "next_review_date",
+            "type": "string"
+          },
+          {
+            "name": "optimal_interval_days",
+            "type": "number | null"
+          },
+          {
+            "name": "priority_score",
+            "type": "number | null"
+          },
+          {
+            "name": "retention_strength",
+            "type": "number | null"
+          },
+          {
+            "name": "review_count",
+            "type": "number | null"
+          },
+          {
+            "name": "scheduled_by",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "category_id: string\n          content_id: string\n          content_type: string\n          created_at: string | null\n          difficulty_adjustment: number | null\n          forgetting_curve_slope: number | null\n          id: string\n          initial_learning_date: string\n          is_mastered: boolean | null\n          last_review_date: string | null\n          mastery_level: number | null\n          next_review_date: string\n          optimal_interval_days: number | null\n          priority_score: number | null\n          retention_strength: number | null\n          review_count: number | null\n          scheduled_by: string | null\n          subcategory_id: string\n          updated_at: string | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "user_badges",
+        "columns": [
+          {
+            "name": "badge_color",
+            "type": "string | null"
+          },
+          {
+            "name": "badge_description",
+            "type": "string | null"
+          },
+          {
+            "name": "badge_id",
+            "type": "string"
+          },
+          {
+            "name": "badge_image_url",
+            "type": "string | null"
+          },
+          {
+            "name": "badge_title",
+            "type": "string"
+          },
+          {
+            "name": "course_id",
+            "type": "string"
+          },
+          {
+            "name": "course_name",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty",
+            "type": "string"
+          },
+          {
+            "name": "earned_at",
+            "type": "string"
+          },
+          {
+            "name": "expires_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          },
+          {
+            "name": "validity_period_months",
+            "type": "number | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "badge_color: string | null\n          badge_description: string | null\n          badge_id: string\n          badge_image_url: string | null\n          badge_title: string\n          course_id: string\n          course_name: string\n          created_at: string | null\n          difficulty: string\n          earned_at: string\n          expires_at: string | null\n          id: string\n          user_id: string | null\n          validity_period_months: number | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "user_learning_profiles",
+        "columns": [
+          {
+            "name": "attention_span_minutes",
+            "type": "number | null"
+          },
+          {
+            "name": "chronotype",
+            "type": "string | null"
+          },
+          {
+            "name": "cognitive_load_tolerance",
+            "type": "number | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty_progression_rate",
+            "type": "number | null"
+          },
+          {
+            "name": "fatigue_threshold",
+            "type": "number | null"
+          },
+          {
+            "name": "flow_state_preference",
+            "type": "Json | null"
+          },
+          {
+            "name": "forgetting_curve_parameters",
+            "type": "Json | null"
+          },
+          {
+            "name": "last_analysis_update",
+            "type": "string | null"
+          },
+          {
+            "name": "learning_style_type",
+            "type": "string | null"
+          },
+          {
+            "name": "motivation_factors",
+            "type": "string[] | null"
+          },
+          {
+            "name": "optimal_review_intervals",
+            "type": "number[] | null"
+          },
+          {
+            "name": "optimal_session_length",
+            "type": "number | null"
+          },
+          {
+            "name": "peak_performance_hours",
+            "type": "number[] | null"
+          },
+          {
+            "name": "recovery_time_needed",
+            "type": "number | null"
+          },
+          {
+            "name": "stress_indicators",
+            "type": "Json | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "attention_span_minutes: number | null\n          chronotype: string | null\n          cognitive_load_tolerance: number | null\n          created_at: string | null\n          difficulty_progression_rate: number | null\n          fatigue_threshold: number | null\n          flow_state_preference: Json | null\n          forgetting_curve_parameters: Json | null\n          last_analysis_update: string | null\n          learning_style_type: string | null\n          motivation_factors: string[] | null\n          optimal_review_intervals: number[] | null\n          optimal_session_length: number | null\n          peak_performance_hours: number[] | null\n          recovery_time_needed: number | null\n          stress_indicators: Json | null\n          updated_at: string | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "user_question_usage",
+        "columns": [
+          {
+            "name": "avg_time_spent",
+            "type": "number | null"
+          },
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty",
+            "type": "string"
+          },
+          {
+            "name": "last_accuracy_rate",
+            "type": "number | null"
+          },
+          {
+            "name": "last_used_at",
+            "type": "string | null"
+          },
+          {
+            "name": "question_id",
+            "type": "number"
+          },
+          {
+            "name": "recent_usage_count",
+            "type": "number | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "usage_count",
+            "type": "number | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "avg_time_spent: number | null\n          category_id: string\n          created_at: string | null\n          difficulty: string\n          last_accuracy_rate: number | null\n          last_used_at: string | null\n          question_id: number\n          recent_usage_count: number | null\n          subcategory_id: string | null\n          updated_at: string | null\n          usage_count: number | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      },
+      {
+        "name": "wisdom_card_collection",
+        "columns": [
+          {
+            "name": "card_id",
+            "type": "number"
+          },
+          {
+            "name": "count",
+            "type": "number | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "last_obtained_at",
+            "type": "string | null"
+          },
+          {
+            "name": "obtained_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "USER_DATA",
+        "rowDefinition": "card_id: number\n          count: number | null\n          created_at: string | null\n          id: string\n          last_obtained_at: string | null\n          obtained_at: string | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_ISOLATION",
+          "policyDescription": "ユーザー分離: user_id = auth.uid()",
+          "priority": "HIGH",
+          "urgency": "CRITICAL"
+        }
+      }
+    ],
+    "HIGH": [
+      {
+        "name": "public",
+        "columns": [
+          {
+            "name": "activation_date",
+            "type": "string | null"
+          },
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "color",
+            "type": "string | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "created_by",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string | null"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "icon",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "type": "boolean"
+          },
+          {
+            "name": "is_visible",
+            "type": "boolean"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_by",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "UNKNOWN",
+        "rowDefinition": "activation_date: string | null\n          category_id: string\n          color: string | null\n          created_at: string | null\n          created_by: string | null\n          description: string | null\n          display_order: number\n          icon: string | null\n          id: string\n          is_active: boolean\n          is_visible: boolean\n          name: string\n          type: string\n          updated_at: string | null\n          updated_by: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "INVESTIGATION_NEEDED",
+          "policyDescription": "詳細調査が必要",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "industry_level_targets",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "display_in_radar",
+            "type": "boolean | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "importance_weight",
+            "type": "number | null"
+          },
+          {
+            "name": "industry_category_id",
+            "type": "string"
+          },
+          {
+            "name": "level",
+            "type": "string"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "target_xp",
+            "type": "number"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "UNKNOWN",
+        "rowDefinition": "created_at: string | null\n          display_in_radar: boolean | null\n          id: string\n          importance_weight: number | null\n          industry_category_id: string\n          level: string\n          subcategory_id: string\n          target_xp: number\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "INVESTIGATION_NEEDED",
+          "policyDescription": "詳細調査が必要",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "learning_genres",
+        "columns": [
+          {
+            "name": "badge_data",
+            "type": "Json | null"
+          },
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "course_id",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "estimated_days",
+            "type": "number"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string | null"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "UNKNOWN",
+        "rowDefinition": "badge_data: Json | null\n          category_id: string\n          course_id: string\n          created_at: string | null\n          description: string\n          display_order: number\n          estimated_days: number\n          id: string\n          subcategory_id: string | null\n          title: string\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "INVESTIGATION_NEEDED",
+          "policyDescription": "詳細調査が必要",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "quiz_hints",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "created_by",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "level1_hint",
+            "type": "string | null"
+          },
+          {
+            "name": "level2_hint",
+            "type": "string | null"
+          },
+          {
+            "name": "level3_hint",
+            "type": "string | null"
+          },
+          {
+            "name": "question_id",
+            "type": "number"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_by",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "UNKNOWN",
+        "rowDefinition": "created_at: string | null\n          created_by: string | null\n          id: string\n          level1_hint: string | null\n          level2_hint: string | null\n          level3_hint: string | null\n          question_id: number\n          updated_at: string | null\n          updated_by: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "INVESTIGATION_NEEDED",
+          "policyDescription": "詳細調査が必要",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "quiz_review_batches",
+        "columns": [
+          {
+            "name": "batch_type",
+            "type": "string"
+          },
+          {
+            "name": "completed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "errors",
+            "type": "Json | null"
+          },
+          {
+            "name": "executed_by",
+            "type": "string"
+          },
+          {
+            "name": "failed_count",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "parameters",
+            "type": "Json | null"
+          },
+          {
+            "name": "started_at",
+            "type": "string | null"
+          },
+          {
+            "name": "success_count",
+            "type": "number | null"
+          },
+          {
+            "name": "total_count",
+            "type": "number"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "SYSTEM",
+        "rowDefinition": "batch_type: string\n          completed_at: string | null\n          errors: Json | null\n          executed_by: string\n          failed_count: number | null\n          id: string\n          parameters: Json | null\n          started_at: string | null\n          success_count: number | null\n          total_count: number",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "ADMIN_ONLY",
+          "policyDescription": "システム管理者のみアクセス可能",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "session_contents",
+        "columns": [
+          {
+            "name": "content",
+            "type": "string"
+          },
+          {
+            "name": "content_type",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "duration",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "session_id",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "UNKNOWN",
+        "rowDefinition": "content: string\n          content_type: string\n          created_at: string | null\n          display_order: number\n          duration: number | null\n          id: string\n          session_id: string\n          title: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "INVESTIGATION_NEEDED",
+          "policyDescription": "詳細調査が必要",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "session_quizzes",
+        "columns": [
+          {
+            "name": "correct_answer",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "explanation",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "options",
+            "type": "Json"
+          },
+          {
+            "name": "question",
+            "type": "string"
+          },
+          {
+            "name": "quiz_type",
+            "type": "string"
+          },
+          {
+            "name": "session_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "UNKNOWN",
+        "rowDefinition": "correct_answer: number\n          created_at: string | null\n          display_order: number\n          explanation: string\n          id: string\n          options: Json\n          question: string\n          quiz_type: string\n          session_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "INVESTIGATION_NEEDED",
+          "policyDescription": "詳細調査が必要",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "system_alerts",
+        "columns": [
+          {
+            "name": "alert_type",
+            "type": "string"
+          },
+          {
+            "name": "context",
+            "type": "Json | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "message",
+            "type": "string"
+          },
+          {
+            "name": "resolution_notes",
+            "type": "string | null"
+          },
+          {
+            "name": "resolved",
+            "type": "boolean | null"
+          },
+          {
+            "name": "resolved_at",
+            "type": "string | null"
+          },
+          {
+            "name": "resolved_by",
+            "type": "string | null"
+          },
+          {
+            "name": "severity",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "SYSTEM",
+        "rowDefinition": "alert_type: string\n          context: Json | null\n          created_at: string | null\n          id: string\n          message: string\n          resolution_notes: string | null\n          resolved: boolean | null\n          resolved_at: string | null\n          resolved_by: string | null\n          severity: string\n          title: string\n          updated_at: string | null\n          user_id: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "ADMIN_ONLY",
+          "policyDescription": "システム管理者のみアクセス可能",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "system_config_monitoring",
+        "columns": [
+          {
+            "name": "change_reason",
+            "type": "string | null"
+          },
+          {
+            "name": "changed_by",
+            "type": "string | null"
+          },
+          {
+            "name": "config_type",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "new_value",
+            "type": "Json | null"
+          },
+          {
+            "name": "old_value",
+            "type": "Json | null"
+          },
+          {
+            "name": "setting_key",
+            "type": "string"
+          },
+          {
+            "name": "validated",
+            "type": "boolean | null"
+          },
+          {
+            "name": "validation_errors",
+            "type": "Json | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "SYSTEM",
+        "rowDefinition": "change_reason: string | null\n          changed_by: string | null\n          config_type: string\n          created_at: string | null\n          id: string\n          new_value: Json | null\n          old_value: Json | null\n          setting_key: string\n          validated: boolean | null\n          validation_errors: Json | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "ADMIN_ONLY",
+          "policyDescription": "システム管理者のみアクセス可能",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      },
+      {
+        "name": "system_health_logs",
+        "columns": [
+          {
+            "name": "check_type",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "details",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "metrics",
+            "type": "Json"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          },
+          {
+            "name": "thresholds",
+            "type": "Json | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "SYSTEM",
+        "rowDefinition": "check_type: string\n          created_at: string | null\n          details: string | null\n          id: string\n          metrics: Json\n          status: string\n          thresholds: Json | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "ADMIN_ONLY",
+          "policyDescription": "システム管理者のみアクセス可能",
+          "priority": "HIGH",
+          "urgency": "HIGH"
+        }
+      }
+    ],
+    "MEDIUM": [
+      {
+        "name": "daily_analytics_batch_log",
+        "columns": [
+          {
+            "name": "completed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "error_message",
+            "type": "string | null"
+          },
+          {
+            "name": "force_reprocess",
+            "type": "boolean | null"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "process_date",
+            "type": "string"
+          },
+          {
+            "name": "process_type",
+            "type": "string"
+          },
+          {
+            "name": "processed_users",
+            "type": "number | null"
+          },
+          {
+            "name": "started_at",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "VIEW_OR_COMPUTED",
+        "rowDefinition": "completed_at: string | null\n          created_at: string | null\n          error_message: string | null\n          force_reprocess: boolean | null\n          id: number\n          process_date: string\n          process_type: string\n          processed_users: number | null\n          started_at: string\n          status: string\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_BASED_OR_READ_ONLY",
+          "policyDescription": "認証済みユーザー読み取り専用",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "difficulty_distribution_settings",
+        "columns": [
+          {
+            "name": "accuracy_range_max",
+            "type": "number"
+          },
+          {
+            "name": "accuracy_range_min",
+            "type": "number"
+          },
+          {
+            "name": "advanced_percent",
+            "type": "number"
+          },
+          {
+            "name": "basic_percent",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "created_by",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string | null"
+          },
+          {
+            "name": "expert_percent",
+            "type": "number"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "intermediate_percent",
+            "type": "number"
+          },
+          {
+            "name": "is_active",
+            "type": "boolean | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_by",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "accuracy_range_max: number\n          accuracy_range_min: number\n          advanced_percent: number\n          basic_percent: number\n          created_at: string | null\n          created_by: string | null\n          description: string | null\n          expert_percent: number\n          id: string\n          intermediate_percent: number\n          is_active: boolean | null\n          updated_at: string | null\n          updated_by: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "learning_analytics_summary",
+        "columns": [
+          {
+            "name": "average_session_duration",
+            "type": "number"
+          },
+          {
+            "name": "calculation_date",
+            "type": "string"
+          },
+          {
+            "name": "category_breakdown",
+            "type": "Json | null"
+          },
+          {
+            "name": "course_completion_rate",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "current_level",
+            "type": "number"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "learning_streak_days",
+            "type": "number"
+          },
+          {
+            "name": "overall_accuracy",
+            "type": "number"
+          },
+          {
+            "name": "quiz_accuracy",
+            "type": "number"
+          },
+          {
+            "name": "session_count",
+            "type": "number"
+          },
+          {
+            "name": "time_pattern_analysis",
+            "type": "Json | null"
+          },
+          {
+            "name": "total_study_time_minutes",
+            "type": "number"
+          },
+          {
+            "name": "total_xp",
+            "type": "number"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          },
+          {
+            "name": "weakness_analysis",
+            "type": "Json | null"
+          },
+          {
+            "name": "xp_growth_rate",
+            "type": "number"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "VIEW_OR_COMPUTED",
+        "rowDefinition": "average_session_duration: number\n          calculation_date: string\n          category_breakdown: Json | null\n          course_completion_rate: number\n          created_at: string | null\n          current_level: number\n          id: string\n          learning_streak_days: number\n          overall_accuracy: number\n          quiz_accuracy: number\n          session_count: number\n          time_pattern_analysis: Json | null\n          total_study_time_minutes: number\n          total_xp: number\n          updated_at: string | null\n          user_id: string\n          weakness_analysis: Json | null\n          xp_growth_rate: number",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_BASED_OR_READ_ONLY",
+          "policyDescription": "ユーザーベースのアクセス制御",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "learning_courses",
+        "columns": [
+          {
+            "name": "badge_data",
+            "type": "Json | null"
+          },
+          {
+            "name": "color",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "difficulty",
+            "type": "string"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "estimated_days",
+            "type": "number"
+          },
+          {
+            "name": "icon",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "badge_data: Json | null\n          color: string\n          created_at: string | null\n          description: string\n          difficulty: string\n          display_order: number\n          estimated_days: number\n          icon: string\n          id: string\n          status: string\n          title: string\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "learning_progress",
+        "columns": [
+          {
+            "name": "completed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "completion_percentage",
+            "type": "number | null"
+          },
+          {
+            "name": "course_id",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "duration_seconds",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "progress_data",
+            "type": "Json | null"
+          },
+          {
+            "name": "session_end_time",
+            "type": "string | null"
+          },
+          {
+            "name": "session_id",
+            "type": "string | null"
+          },
+          {
+            "name": "session_start_time",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "VIEW_OR_COMPUTED",
+        "rowDefinition": "completed_at: string | null\n          completion_percentage: number | null\n          course_id: string\n          created_at: string | null\n          duration_seconds: number | null\n          id: string\n          progress_data: Json | null\n          session_end_time: string | null\n          session_id: string | null\n          session_start_time: string | null\n          updated_at: string | null\n          user_id: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_BASED_OR_READ_ONLY",
+          "policyDescription": "ユーザーベースのアクセス制御",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "learning_recommendations",
+        "columns": [
+          {
+            "name": "completed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "confidence_score",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "expected_improvement",
+            "type": "Json | null"
+          },
+          {
+            "name": "expires_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "presented_at",
+            "type": "string | null"
+          },
+          {
+            "name": "priority",
+            "type": "number"
+          },
+          {
+            "name": "reasoning",
+            "type": "string"
+          },
+          {
+            "name": "recommendation_type",
+            "type": "string"
+          },
+          {
+            "name": "recommended_content_id",
+            "type": "string"
+          },
+          {
+            "name": "recommended_content_type",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string | null"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "VIEW_OR_COMPUTED",
+        "rowDefinition": "completed_at: string | null\n          confidence_score: number\n          created_at: string | null\n          description: string\n          expected_improvement: Json | null\n          expires_at: string | null\n          id: string\n          presented_at: string | null\n          priority: number\n          reasoning: string\n          recommendation_type: string\n          recommended_content_id: string\n          recommended_content_type: string\n          status: string | null\n          title: string\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_BASED_OR_READ_ONLY",
+          "policyDescription": "ユーザーベースのアクセス制御",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "learning_themes",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "estimated_minutes",
+            "type": "number"
+          },
+          {
+            "name": "genre_id",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "reward_card_data",
+            "type": "Json | null"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "created_at: string | null\n          description: string\n          display_order: number\n          estimated_minutes: number\n          genre_id: string\n          id: string\n          reward_card_data: Json | null\n          title: string\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "quiz_questions",
+        "columns": [
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "correct_answer",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty",
+            "type": "string | null"
+          },
+          {
+            "name": "explanation",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "is_deleted",
+            "type": "boolean | null"
+          },
+          {
+            "name": "legacy_id",
+            "type": "number"
+          },
+          {
+            "name": "option1",
+            "type": "string"
+          },
+          {
+            "name": "option2",
+            "type": "string"
+          },
+          {
+            "name": "option3",
+            "type": "string"
+          },
+          {
+            "name": "option4",
+            "type": "string"
+          },
+          {
+            "name": "question",
+            "type": "string"
+          },
+          {
+            "name": "related_topics",
+            "type": "Json | null"
+          },
+          {
+            "name": "source",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string | null"
+          },
+          {
+            "name": "time_limit",
+            "type": "number | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "category_id: string\n          correct_answer: number\n          created_at: string | null\n          difficulty: string | null\n          explanation: string | null\n          id: number\n          is_deleted: boolean | null\n          legacy_id: number\n          option1: string\n          option2: string\n          option3: string\n          option4: string\n          question: string\n          related_topics: Json | null\n          source: string | null\n          subcategory: string | null\n          subcategory_id: string | null\n          time_limit: number | null\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "quiz_questions_review",
+        "columns": [
+          {
+            "name": "ai_model",
+            "type": "string | null"
+          },
+          {
+            "name": "ai_prompt",
+            "type": "string | null"
+          },
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "correct_answer",
+            "type": "number"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty",
+            "type": "string"
+          },
+          {
+            "name": "explanation",
+            "type": "string | null"
+          },
+          {
+            "name": "generated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "generated_by",
+            "type": "string"
+          },
+          {
+            "name": "generation_batch_id",
+            "type": "string | null"
+          },
+          {
+            "name": "generation_params",
+            "type": "Json | null"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "import_batch_id",
+            "type": "string | null"
+          },
+          {
+            "name": "imported_at",
+            "type": "string | null"
+          },
+          {
+            "name": "imported_by",
+            "type": "string | null"
+          },
+          {
+            "name": "option_a",
+            "type": "string"
+          },
+          {
+            "name": "option_b",
+            "type": "string"
+          },
+          {
+            "name": "option_c",
+            "type": "string"
+          },
+          {
+            "name": "option_d",
+            "type": "string"
+          },
+          {
+            "name": "priority",
+            "type": "number | null"
+          },
+          {
+            "name": "production_question_id",
+            "type": "number | null"
+          },
+          {
+            "name": "question",
+            "type": "string"
+          },
+          {
+            "name": "review_changes",
+            "type": "Json | null"
+          },
+          {
+            "name": "review_notes",
+            "type": "string | null"
+          },
+          {
+            "name": "review_score",
+            "type": "number | null"
+          },
+          {
+            "name": "reviewed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "reviewed_by",
+            "type": "string | null"
+          },
+          {
+            "name": "source",
+            "type": "string | null"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          },
+          {
+            "name": "subcategory",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string | null"
+          },
+          {
+            "name": "tags",
+            "type": "string[] | null"
+          },
+          {
+            "name": "time_limit",
+            "type": "number | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "ai_model: string | null\n          ai_prompt: string | null\n          category_id: string\n          correct_answer: number\n          created_at: string | null\n          difficulty: string\n          explanation: string | null\n          generated_at: string | null\n          generated_by: string\n          generation_batch_id: string | null\n          generation_params: Json | null\n          id: number\n          import_batch_id: string | null\n          imported_at: string | null\n          imported_by: string | null\n          option_a: string\n          option_b: string\n          option_c: string\n          option_d: string\n          priority: number | null\n          production_question_id: number | null\n          question: string\n          review_changes: Json | null\n          review_notes: string | null\n          review_score: number | null\n          reviewed_at: string | null\n          reviewed_by: string | null\n          source: string | null\n          status: string\n          subcategory: string | null\n          subcategory_id: string | null\n          tags: string[] | null\n          time_limit: number | null\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "review_settings",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "notification_enabled",
+            "type": "boolean | null"
+          },
+          {
+            "name": "notification_interval_days",
+            "type": "number | null"
+          },
+          {
+            "name": "review_questions_count",
+            "type": "number | null"
+          },
+          {
+            "name": "streak_reminder_enabled",
+            "type": "boolean | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          },
+          {
+            "name": "weekly_summary_enabled",
+            "type": "boolean | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "created_at: string | null\n          notification_enabled: boolean | null\n          notification_interval_days: number | null\n          review_questions_count: number | null\n          streak_reminder_enabled: boolean | null\n          updated_at: string | null\n          user_id: string\n          weekly_summary_enabled: boolean | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "skill_levels",
+        "columns": [
+          {
+            "name": "color",
+            "type": "string | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string | null"
+          },
+          {
+            "name": "display_name",
+            "type": "string"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "target_experience",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "color: string | null\n          created_at: string | null\n          description: string | null\n          display_name: string\n          display_order: number\n          id: string\n          name: string\n          target_experience: string | null\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "subcategories",
+        "columns": [
+          {
+            "name": "activation_date",
+            "type": "string | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "created_by",
+            "type": "string | null"
+          },
+          {
+            "name": "description",
+            "type": "string | null"
+          },
+          {
+            "name": "display_order",
+            "type": "number"
+          },
+          {
+            "name": "icon",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "type": "boolean"
+          },
+          {
+            "name": "is_visible",
+            "type": "boolean"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "parent_category_id",
+            "type": "string"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_by",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "activation_date: string | null\n          created_at: string | null\n          created_by: string | null\n          description: string | null\n          display_order: number\n          icon: string | null\n          id: string\n          is_active: boolean\n          is_visible: boolean\n          name: string\n          parent_category_id: string\n          subcategory_id: string\n          updated_at: string | null\n          updated_by: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "unified_learning_session_analytics",
+        "columns": [
+          {
+            "name": "accuracy_rate",
+            "type": "number | null"
+          },
+          {
+            "name": "attention_breaks",
+            "type": "number | null"
+          },
+          {
+            "name": "average_response_time_ms",
+            "type": "number | null"
+          },
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "cognitive_load_score",
+            "type": "number | null"
+          },
+          {
+            "name": "completion_rate",
+            "type": "number | null"
+          },
+          {
+            "name": "course_id",
+            "type": "string | null"
+          },
+          {
+            "name": "course_session_id",
+            "type": "string | null"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "day_of_week",
+            "type": "number"
+          },
+          {
+            "name": "device_type",
+            "type": "string | null"
+          },
+          {
+            "name": "difficulty_level",
+            "type": "string"
+          },
+          {
+            "name": "duration_seconds",
+            "type": "number"
+          },
+          {
+            "name": "energy_level_reported",
+            "type": "number | null"
+          },
+          {
+            "name": "engagement_score",
+            "type": "number | null"
+          },
+          {
+            "name": "flow_state_duration",
+            "type": "number | null"
+          },
+          {
+            "name": "flow_state_index",
+            "type": "number | null"
+          },
+          {
+            "name": "forgetting_curve_data",
+            "type": "Json | null"
+          },
+          {
+            "name": "genre_id",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "interruption_count",
+            "type": "number | null"
+          },
+          {
+            "name": "optimal_review_interval",
+            "type": "number | null"
+          },
+          {
+            "name": "questions_correct",
+            "type": "number | null"
+          },
+          {
+            "name": "questions_total",
+            "type": "number | null"
+          },
+          {
+            "name": "quiz_session_id",
+            "type": "string | null"
+          },
+          {
+            "name": "session_end_time",
+            "type": "string"
+          },
+          {
+            "name": "session_start_time",
+            "type": "string"
+          },
+          {
+            "name": "session_type",
+            "type": "string"
+          },
+          {
+            "name": "spaced_repetition_due",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string"
+          },
+          {
+            "name": "theme_id",
+            "type": "string | null"
+          },
+          {
+            "name": "time_of_day",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "VIEW_OR_COMPUTED",
+        "rowDefinition": "accuracy_rate: number | null\n          attention_breaks: number | null\n          average_response_time_ms: number | null\n          category_id: string\n          cognitive_load_score: number | null\n          completion_rate: number | null\n          course_id: string | null\n          course_session_id: string | null\n          created_at: string | null\n          day_of_week: number\n          device_type: string | null\n          difficulty_level: string\n          duration_seconds: number\n          energy_level_reported: number | null\n          engagement_score: number | null\n          flow_state_duration: number | null\n          flow_state_index: number | null\n          forgetting_curve_data: Json | null\n          genre_id: string | null\n          id: string\n          interruption_count: number | null\n          optimal_review_interval: number | null\n          questions_correct: number | null\n          questions_total: number | null\n          quiz_session_id: string | null\n          session_end_time: string\n          session_start_time: string\n          session_type: string\n          spaced_repetition_due: string | null\n          subcategory_id: string\n          theme_id: string | null\n          time_of_day: string\n          updated_at: string | null\n          user_id: string",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "USER_BASED_OR_READ_ONLY",
+          "policyDescription": "ユーザーベースのアクセス制御",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "user_settings",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "setting_key",
+            "type": "string"
+          },
+          {
+            "name": "setting_value",
+            "type": "Json"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "user_id",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": true,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "created_at: string | null\n          id: string\n          setting_key: string\n          setting_value: Json\n          updated_at: string | null\n          user_id: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "users",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "current_level",
+            "type": "number | null"
+          },
+          {
+            "name": "display_name",
+            "type": "string | null"
+          },
+          {
+            "name": "email",
+            "type": "string"
+          },
+          {
+            "name": "experience_level",
+            "type": "string | null"
+          },
+          {
+            "name": "experience_years",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "industry",
+            "type": "string | null"
+          },
+          {
+            "name": "interested_industries",
+            "type": "Json | null"
+          },
+          {
+            "name": "job_title",
+            "type": "string | null"
+          },
+          {
+            "name": "last_active",
+            "type": "string | null"
+          },
+          {
+            "name": "last_profile_update",
+            "type": "string | null"
+          },
+          {
+            "name": "learning_goals",
+            "type": "Json | null"
+          },
+          {
+            "name": "learning_level",
+            "type": "string | null"
+          },
+          {
+            "name": "learning_style",
+            "type": "string | null"
+          },
+          {
+            "name": "name",
+            "type": "string | null"
+          },
+          {
+            "name": "position_level",
+            "type": "string | null"
+          },
+          {
+            "name": "profile_completed_at",
+            "type": "string | null"
+          },
+          {
+            "name": "role",
+            "type": "string | null"
+          },
+          {
+            "name": "selected_categories",
+            "type": "Json | null"
+          },
+          {
+            "name": "selected_industry_categories",
+            "type": "Json | null"
+          },
+          {
+            "name": "skill_level",
+            "type": "string | null"
+          },
+          {
+            "name": "streak",
+            "type": "number | null"
+          },
+          {
+            "name": "total_xp",
+            "type": "number | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          },
+          {
+            "name": "weekly_goal",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "created_at: string | null\n          current_level: number | null\n          display_name: string | null\n          email: string\n          experience_level: string | null\n          experience_years: number | null\n          id: string\n          industry: string | null\n          interested_industries: Json | null\n          job_title: string | null\n          last_active: string | null\n          last_profile_update: string | null\n          learning_goals: Json | null\n          learning_level: string | null\n          learning_style: string | null\n          name: string | null\n          position_level: string | null\n          profile_completed_at: string | null\n          role: string | null\n          selected_categories: Json | null\n          selected_industry_categories: Json | null\n          skill_level: string | null\n          streak: number | null\n          total_xp: number | null\n          updated_at: string | null\n          weekly_goal: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "wisdom_cards",
+        "columns": [
+          {
+            "name": "animation_url",
+            "type": "string | null"
+          },
+          {
+            "name": "application_area",
+            "type": "string"
+          },
+          {
+            "name": "author",
+            "type": "string"
+          },
+          {
+            "name": "author_portrait_url",
+            "type": "string | null"
+          },
+          {
+            "name": "background_image_url",
+            "type": "string | null"
+          },
+          {
+            "name": "card_image_url",
+            "type": "string | null"
+          },
+          {
+            "name": "category_icon_url",
+            "type": "string | null"
+          },
+          {
+            "name": "category_id",
+            "type": "string"
+          },
+          {
+            "name": "context",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "display_order",
+            "type": "number | null"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "is_active",
+            "type": "boolean | null"
+          },
+          {
+            "name": "particle_effect_config",
+            "type": "Json | null"
+          },
+          {
+            "name": "quote",
+            "type": "string"
+          },
+          {
+            "name": "rarity",
+            "type": "string"
+          },
+          {
+            "name": "rarity_frame_url",
+            "type": "string | null"
+          },
+          {
+            "name": "special_badge_url",
+            "type": "string | null"
+          },
+          {
+            "name": "subcategory_id",
+            "type": "string | null"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "animation_url: string | null\n          application_area: string\n          author: string\n          author_portrait_url: string | null\n          background_image_url: string | null\n          card_image_url: string | null\n          category_icon_url: string | null\n          category_id: string\n          context: string\n          created_at: string | null\n          display_order: number | null\n          id: number\n          is_active: boolean | null\n          particle_effect_config: Json | null\n          quote: string\n          rarity: string\n          rarity_frame_url: string | null\n          special_badge_url: string | null\n          subcategory_id: string | null\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      },
+      {
+        "name": "xp_level_skp_settings",
+        "columns": [
+          {
+            "name": "created_at",
+            "type": "string | null"
+          },
+          {
+            "name": "id",
+            "type": "number"
+          },
+          {
+            "name": "is_active",
+            "type": "boolean | null"
+          },
+          {
+            "name": "setting_category",
+            "type": "string"
+          },
+          {
+            "name": "setting_description",
+            "type": "string | null"
+          },
+          {
+            "name": "setting_key",
+            "type": "string"
+          },
+          {
+            "name": "setting_value",
+            "type": "number"
+          },
+          {
+            "name": "updated_at",
+            "type": "string | null"
+          }
+        ],
+        "hasUserId": false,
+        "classification": "MASTER_DATA",
+        "rowDefinition": "created_at: string | null\n          id: number\n          is_active: boolean | null\n          setting_category: string\n          setting_description: string | null\n          setting_key: string\n          setting_value: number\n          updated_at: string | null",
+        "rlsRequirement": {
+          "rlsRequired": true,
+          "rlsType": "READ_ONLY_OR_ADMIN",
+          "policyDescription": "認証済みユーザー読み取り可、管理者のみ書き込み可",
+          "priority": "MEDIUM",
+          "urgency": "STANDARD"
+        }
+      }
+    ],
+    "LOW": []
+  }
+}

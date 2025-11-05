@@ -23,6 +23,8 @@ interface APIQuestion {
 // DB行をQuestion型に変換
 function dbRowToQuestion(row: unknown): APIQuestion {
   const dbRow = row as Record<string, unknown>
+  
+  
   return {
     id: dbRow.id as number,
     legacy_id: dbRow.legacy_id as number | undefined,
@@ -31,7 +33,7 @@ function dbRowToQuestion(row: unknown): APIQuestion {
     subcategory_id: dbRow.subcategory_id as string | undefined,
     question: dbRow.question as string,
     options: [dbRow.option1 as string, dbRow.option2 as string, dbRow.option3 as string, dbRow.option4 as string],
-    correct: dbRow.correct_answer as number,
+    correct: dbRow.correct_answer as number, // DB is already 0-based
     explanation: dbRow.explanation as string | undefined,
     difficulty: dbRow.difficulty as string | undefined,
     timeLimit: dbRow.time_limit as number | undefined,

@@ -148,7 +148,7 @@ export default function Home() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Link href="/quiz?mode=ai-personalized" prefetch={true}>
+                      <Link href="/quiz?mode=business-ai" prefetch={true}>
                         <Button className="w-full">
                           <Play className="h-4 w-4 mr-2" />
                           クイズ開始
@@ -183,68 +183,76 @@ export default function Home() {
                   </Card>
 
                   {/* 統合復習AIクイズ */}
-                  <Card className={`border-2 transition-all ${
+                  <Card className={`border-2 transition-all relative ${
                     (reviewStats?.totalReviewNeeded ?? 0) > 0 
                       ? 'border-orange-200 bg-orange-50 hover:border-orange-400' 
                       : 'border-purple-200 hover:border-purple-400'
                   }`}>
+                    {/* 復習必要な場合のみバッジ表示 - 右上に配置 */}
+                    {(reviewStats?.totalReviewNeeded ?? 0) > 0 && (
+                      <Badge variant="destructive" className="absolute top-3 right-3 bg-orange-500 text-xs z-10">
+                        {reviewStats?.totalReviewNeeded}問
+                      </Badge>
+                    )}
+                    
                     <CardHeader className="text-center">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <div className={`p-3 rounded-full w-fit ${
-                            (reviewStats?.totalReviewNeeded ?? 0) > 0 ? 'bg-orange-100' : 'bg-purple-100'
-                          }`}>
-                            <RefreshCw className={`h-6 w-6 ${
-                              (reviewStats?.totalReviewNeeded ?? 0) > 0 ? 'text-orange-600' : 'text-purple-600'
-                            }`} />
-                          </div>
-                          <div className="text-left">
-                            <CardTitle className={`text-sm ${
-                              (reviewStats?.totalReviewNeeded ?? 0) > 0 ? 'text-orange-900' : ''
-                            }`}>
-                              復習推奨AIクイズ
-                            </CardTitle>
-                            <CardDescription className="text-xs">
-                              忘却曲線と苦手分野を分析したAI復習問題
-                            </CardDescription>
-                          </div>
-                        </div>
-                        
-                        {/* 復習必要な場合のみバッジ表示 */}
-                        {(reviewStats?.totalReviewNeeded ?? 0) > 0 && (
-                          <Badge variant="destructive" className="bg-orange-500 text-xs">
-                            {reviewStats?.totalReviewNeeded}問
-                          </Badge>
-                        )}
+                      <div className={`mx-auto mb-2 p-3 rounded-full w-fit ${
+                        (reviewStats?.totalReviewNeeded ?? 0) > 0 ? 'bg-orange-100' : 'bg-purple-100'
+                      }`}>
+                        <RefreshCw className={`h-6 w-6 ${
+                          (reviewStats?.totalReviewNeeded ?? 0) > 0 ? 'text-orange-600' : 'text-purple-600'
+                        }`} />
                       </div>
+                      <CardTitle>復習推奨AIクイズ</CardTitle>
+                      <CardDescription>
+                        {(reviewStats?.totalReviewNeeded ?? 0) > 0 
+                          ? '間違えた問題や回答に困った問題の復習'
+                          : '復習が必要な問題が見つかったら通知します'
+                        }
+                      </CardDescription>
                     </CardHeader>
                     
                     <CardContent className="space-y-3">
                       {/* 復習必要な場合のみ詳細統計表示 */}
-                      {(reviewStats?.totalReviewNeeded ?? 0) > 0 && (
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-orange-700">
-                            今日の復習完了: {reviewStats?.todayCompleted ?? 0}問
-                          </span>
+                      {(reviewStats?.totalReviewNeeded ?? 0) > 0 ? (
+                        <>
                           {(reviewStats?.reviewEffectiveness?.improvement ?? 0) > 0 && (
-                            <span className="text-green-600 flex items-center">
-                              <Target className="h-3 w-3 mr-1" />
-                              効果: +{reviewStats?.reviewEffectiveness?.improvement}%
-                            </span>
+                            <div className="text-xs">
+                              <span className="text-green-600 flex items-center">
+                                <Target className="h-3 w-3 mr-1" />
+                                効果: +{reviewStats?.reviewEffectiveness?.improvement}%
+                              </span>
+                            </div>
                           )}
+                        </>
+                      ) : (
+                        <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <RefreshCw className="h-4 w-4 text-gray-400" />
+                            <span>現在復習対象の問題はありません</span>
+                          </div>
+                          <div className="mt-1 text-gray-500">
+                            クイズを解いて学習を進めると、復習推奨問題が表示されます
+                          </div>
                         </div>
                       )}
                       
-                      <Link href="/quiz?mode=review" prefetch={true}>
-                        <Button className={`w-full ${
-                          (reviewStats?.totalReviewNeeded ?? 0) > 0 
-                            ? 'bg-orange-600 hover:bg-orange-700' 
-                            : 'bg-purple-600 hover:bg-purple-700'
-                        }`}>
+                      {(reviewStats?.totalReviewNeeded ?? 0) > 0 ? (
+                        <Link href="/quiz?mode=review" prefetch={true}>
+                          <Button className="w-full bg-orange-600 hover:bg-orange-700">
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            復習開始
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button 
+                          disabled 
+                          className="w-full bg-gray-400 cursor-not-allowed"
+                        >
                           <RefreshCw className="h-4 w-4 mr-2" />
-                          復習開始
+                          復習が必要になるまでお待ちください
                         </Button>
-                      </Link>
+                      )}
                     </CardContent>
                   </Card>
 

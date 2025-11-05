@@ -46,6 +46,7 @@ import type { Subcategory, IndustryCategory, MainCategory } from '@/lib/types/ca
 import { useXPStats } from '@/hooks/useXPStats'
 import ProfileEditModal from '@/components/profile/ProfileEditModal'
 import QuizSettingsModal from '@/components/profile/QuizSettingsModal'
+import ReviewSettingsModal from '@/components/profile/ReviewSettingsModal'
 
 export default function ProfilePage() {
   const searchParams = useSearchParams()
@@ -183,6 +184,9 @@ export default function ProfilePage() {
   
   // クイズ設定モーダル状態
   const [quizSettingsModalOpen, setQuizSettingsModalOpen] = useState(false)
+  
+  // 復習設定モーダル状態
+  const [reviewSettingsModalOpen, setReviewSettingsModalOpen] = useState(false)
   
   // プロフィール編集状態
   const [profileData, setProfileData] = useState({
@@ -331,10 +335,10 @@ export default function ProfilePage() {
     return <div className="min-h-screen bg-background flex items-center justify-center">ログインが必要です</div>
   }
 
-  // デバッグ情報表示
-  console.log('Profile page render - User:', user?.email)
-  console.log('Profile page render - Profile:', profile)
-  console.log('Profile page render - ProfileData:', profileData)
+  // デバッグ情報表示（無限ループ防止のため削除）
+  // console.log('Profile page render - User:', user?.email)
+  // console.log('Profile page render - Profile:', profile)
+  // console.log('Profile page render - ProfileData:', profileData)
 
   // XPStatsから連続学習日数を取得
   const learningStreak = xpStats?.user.learning_streak || 0
@@ -669,7 +673,6 @@ export default function ProfilePage() {
                 <CardTitle className="flex items-center space-x-2">
                   <Bell className="h-5 w-5" />
                   <span>復習通知設定</span>
-                  <Badge variant="secondary" className="text-xs">準備中</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -677,56 +680,17 @@ export default function ProfilePage() {
                   <p className="text-sm text-gray-600">
                     忘却曲線に基づいた最適なタイミングで復習通知を受け取ることができます。
                   </p>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between py-2 px-3 bg-white rounded border">
-                      <div>
-                        <p className="text-sm font-medium">復習推奨通知</p>
-                        <p className="text-xs text-gray-500">苦手問題や忘却曲線に基づく復習タイミング</p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="review-notifications"
-                          className="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                          disabled
-                        />
-                        <label htmlFor="review-notifications" className="text-sm text-gray-500">有効</label>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between py-2 px-3 bg-white rounded border">
-                      <div>
-                        <p className="text-sm font-medium">学習継続リマインダー</p>
-                        <p className="text-xs text-gray-500">連続学習記録を維持するための通知</p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="streak-notifications"
-                          className="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                          disabled
-                        />
-                        <label htmlFor="streak-notifications" className="text-sm text-gray-500">有効</label>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between py-2 px-3 bg-white rounded border">
-                      <div>
-                        <p className="text-sm font-medium">週次学習サマリー</p>
-                        <p className="text-xs text-gray-500">学習進捗と成果の週次レポート</p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="weekly-summary"
-                          className="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                          disabled
-                        />
-                        <label htmlFor="weekly-summary" className="text-sm text-gray-500">有効</label>
-                      </div>
-                    </div>
-                  </div>
+                  <Button 
+                    onClick={() => setReviewSettingsModalOpen(true)}
+                    className="w-full sm:w-auto"
+                    variant="outline"
+                  >
+                    <Bell className="h-4 w-4 mr-2" />
+                    復習設定を変更
+                  </Button>
                   <div className="mt-4 p-3 bg-orange-100 rounded-lg">
                     <p className="text-xs text-orange-700">
-                      <strong>実装予定：</strong> プッシュ通知、メール通知、アプリ内通知の設定が可能になります。現在は復習推奨機能のみ利用可能です。
+                      <strong>設定可能項目：</strong> 復習問題数（1-30問）、通知間隔（1-7日）、学習継続リマインダー、週次サマリー通知
                     </p>
                   </div>
                 </div>
@@ -1292,6 +1256,12 @@ export default function ProfilePage() {
           // モーダル閉じた時はセッションストレージもクリア
           sessionStorage.removeItem('quiz-settings-modal-open')
         }} 
+      />
+
+      {/* 復習設定モーダル */}
+      <ReviewSettingsModal 
+        isOpen={reviewSettingsModalOpen} 
+        onClose={() => setReviewSettingsModalOpen(false)} 
       />
     </div>
   )
