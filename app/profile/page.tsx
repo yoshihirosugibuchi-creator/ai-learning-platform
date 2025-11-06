@@ -37,6 +37,7 @@ import {
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { supabase } from '@/lib/supabase'
 import { getUserStats } from '@/lib/supabase-quiz'
 import { getUserSKPBalance, getUserSKPTransactions, SKPTransaction } from '@/lib/supabase-learning'
 import { getUserBadges } from '@/lib/supabase-badges'
@@ -256,41 +257,88 @@ export default function ProfilePage() {
       
       // XP統計は useXPStats フックで自動的に取得されます
       
-      // プロフィールデータを初期化
-      const profileRecord = profile as unknown as Record<string, unknown>
-      console.log('Setting profile data from profile:', profile)
-      console.log('Profile record keys:', Object.keys(profileRecord))
-      console.log('Raw profile data:', profileRecord)
+      // プロフィールデータを初期化（本番環境対応）
+      const loadProfileData = async () => {
+        try {
+          // 🔧 本番環境でプロフィールが空の場合、APIから直接取得
+          console.log('🔍 Checking profile data availability...')
+          
+          if (!profile || !profile.name) {
+            console.log('⚠️ Profile data missing, fetching from API...')
+            
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session) {
+              const response = await fetch('/api/profile', {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${session.access_token}`,
+                  'Content-Type': 'application/json'
+                }
+              })
+
+              if (response.ok) {
+                const { profile: apiProfile } = await response.json()
+                if (apiProfile) {
+                  console.log('✅ Profile data loaded from API')
+                  setProfileData({
+                    name: apiProfile.name || '',
+                    displayName: apiProfile.display_name || '',
+                    industry: apiProfile.industry || '',
+                    jobTitle: apiProfile.job_title || '',
+                    positionLevel: apiProfile.position_level || '',
+                    learningLevel: apiProfile.learning_level || '',
+                    experienceYears: Number(apiProfile.experience_years) || 0,
+                    interestedIndustries: Array.isArray(apiProfile.interested_industries) 
+                      ? apiProfile.interested_industries : [],
+                    learningGoals: Array.isArray(apiProfile.learning_goals) 
+                      ? apiProfile.learning_goals : [],
+                    selectedCategories: Array.isArray(apiProfile.selected_categories) 
+                      ? apiProfile.selected_categories : [],
+                    selectedIndustryCategories: Array.isArray(apiProfile.selected_industry_categories) 
+                      ? apiProfile.selected_industry_categories : [],
+                    weeklyGoal: apiProfile.weekly_goal || ''
+                  })
+                  return
+                }
+              }
+            }
+          }
+          
+          // フォールバック: useAuthのprofileデータを使用
+          const profileRecord = profile as unknown as Record<string, unknown>
+          console.log('Setting profile data from profile:', profile)
+          console.log('Profile record keys:', Object.keys(profileRecord))
+          console.log('Raw profile data:', profileRecord)
+          
+          setProfileData({
+            name: profile.name || '',
+            displayName: (profileRecord.display_name as string) || '',
+            industry: (profileRecord.industry as string) || '',
+            jobTitle: (profileRecord.job_title as string) || '',
+            positionLevel: (profileRecord.position_level as string) || '',
+            learningLevel: (profileRecord.learning_level as string) || '',
+            experienceYears: Number(profileRecord.experience_years) || 0,
+            interestedIndustries: Array.isArray(profileRecord.interested_industries) 
+              ? (profileRecord.interested_industries as string[]) 
+              : [],
+            learningGoals: Array.isArray(profileRecord.learning_goals) 
+              ? (profileRecord.learning_goals as string[]) 
+              : [],
+            selectedCategories: Array.isArray(profileRecord.selected_categories) 
+              ? (profileRecord.selected_categories as string[]) 
+              : [],
+            selectedIndustryCategories: Array.isArray(profileRecord.selected_industry_categories) 
+              ? (profileRecord.selected_industry_categories as string[]) 
+              : [],
+            weeklyGoal: (profileRecord.weekly_goal as string) || ''
+          })
+          
+        } catch (error) {
+          console.error('❌ Error in loadProfileData:', error)
+        }
+      }
       
-      setProfileData({
-        name: profile.name || '',
-        displayName: (profileRecord.display_name as string) || '',
-        industry: (profileRecord.industry as string) || '',
-        jobTitle: (profileRecord.job_title as string) || '',
-        positionLevel: (profileRecord.position_level as string) || '',
-        learningLevel: (profileRecord.learning_level as string) || '',
-        experienceYears: Number(profileRecord.experience_years) || 0,
-        interestedIndustries: Array.isArray(profileRecord.interested_industries) 
-          ? (profileRecord.interested_industries as string[]) 
-          : [],
-        learningGoals: Array.isArray(profileRecord.learning_goals) 
-          ? (profileRecord.learning_goals as string[]) 
-          : [],
-        selectedCategories: Array.isArray(profileRecord.selected_categories) 
-          ? (profileRecord.selected_categories as string[]) 
-          : [],
-        selectedIndustryCategories: Array.isArray(profileRecord.selected_industry_categories) 
-          ? (profileRecord.selected_industry_categories as string[]) 
-          : [],
-        weeklyGoal: (profileRecord.weekly_goal as string) || ''
-      })
-      
-      console.log('Final profileData state:', {
-        name: profile.name || '',
-        displayName: (profileRecord.display_name as string) || '',
-        industry: (profileRecord.industry as string) || '',
-        jobTitle: (profileRecord.job_title as string) || ''
-      })
+      loadProfileData()
     }
   }, [user, profile])
 
