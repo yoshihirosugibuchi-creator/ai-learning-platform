@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useToast } from '@/hooks/use-toast'
 import { loadXPSettings, type XPSettings } from '@/lib/xp-settings'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -53,6 +54,7 @@ export default function ProfilePage() {
   const router = useRouter()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user, profile, loading, refreshProfile } = useAuth()
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState('basic')
   
   // カテゴリーデータ状態
@@ -318,10 +320,20 @@ export default function ProfilePage() {
       await refreshProfile()
       
       console.log('Profile updated successfully')
-      alert('プロフィールが正常に更新されました！')
+      // 🚨 CRITICAL: CLAUDE.mdに従いtoast使用（alert禁止）
+      toast({
+        title: "プロフィール更新完了",
+        description: "プロフィールが正常に更新されました！",
+        variant: "default"
+      })
     } catch (error) {
       console.error('Failed to update profile:', error)
-      alert(`プロフィールの更新に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`)
+      // 🚨 CRITICAL: CLAUDE.mdに従いtoast使用（alert禁止）
+      toast({
+        title: "プロフィール更新エラー",
+        description: `プロフィールの更新に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`,
+        variant: "destructive"
+      })
       throw error // Re-throw to let modal handle the error state
     }
   }

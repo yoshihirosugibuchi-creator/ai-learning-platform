@@ -70,25 +70,32 @@ export interface UserProfileWithProgress extends UserProfile {
 // ユーザープロファイルを取得
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single()
+    // RLS権限問題を回避するためAPIエンドポイント経由で取得
+    console.log('🔄 Fetching user profile via API for user:', userId)
+    
+    // 認証ヘッダーを取得
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      console.error('❌ No session available for profile API call')
+      return null
+    }
 
-    if (error) {
-      // If profile doesn't exist, don't treat it as an error
-      if (error.code === 'PGRST116') { // No rows returned
-        return null
+    const response = await fetch('/api/profile', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json'
       }
-      
-      // If the table doesn't exist, return null to trigger profile creation
-      if (error.code === '42P01' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
-        console.warn('⚠️ Users table does not exist')
-        return null
-      }
-      
-      console.error('❌ Error fetching user profile:', error.message)
+    })
+
+    if (!response.ok) {
+      console.error('❌ Profile API request failed:', response.status, response.statusText)
+      return null
+    }
+
+    const { profile: data } = await response.json()
+    if (!data) {
+      console.log('📝 No profile data returned from API')
       return null
     }
 

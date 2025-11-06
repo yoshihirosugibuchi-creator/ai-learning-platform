@@ -259,13 +259,31 @@ export async function generateSelfPersonalizedSet(
   }
   
   try {
-    // 1. Get user profile settings
-    const userSettings = await getUserQuizSettings(userId)
-    
-    const hasCategories = userSettings?.selected_categories || userSettings?.selected_industry_categories
+    // 1. Get user profile settings from users table (not user_settings)
+    // セルフパーソナライズ設定はuser_settingsではなく、usersテーブルに保存されている
+    const { data: userProfile, error: profileError } = await supabaseAdmin
+      .from('users')
+      .select('selected_categories, selected_industry_categories, learning_goals, learning_level')
+      .eq('id', userId)
+      .single()
+
+    if (profileError) {
+      console.error('❌ [Self-Personalized] Error fetching user profile:', profileError)
+      return { skipped: true, reason: 'User profile not found' }
+    }
+
+    const hasCategories = userProfile?.selected_categories || userProfile?.selected_industry_categories
     if (!hasCategories) {
       console.log('ℹ️ [Self-Personalized] Categories not configured, skipping')
       return { skipped: true, reason: 'Categories not configured' }
+    }
+
+    // user_settings形式に変換してcompatibilityを保つ
+    const userSettings = {
+      selected_categories: userProfile.selected_categories,
+      selected_industry_categories: userProfile.selected_industry_categories,
+      learning_goals: userProfile.learning_goals,
+      learning_level: userProfile.learning_level
     }
     
     // 2. Calculate settings hash for change detection
@@ -416,69 +434,8 @@ export async function generateReviewSet(
 // Data Access Functions
 // =================================================================
 
-async function getUserProfile(userId: string): Promise<UserProfileData | null> {
-  try {
-    // user_settingsテーブルからセルフパーソナライズ設定を取得
-    // 実際のデータ構造: setting_key = 'quiz_personalization'
-    const { data: userSettings, error } = await supabaseAdmin
-      .from('user_settings')
-      .select('setting_key, setting_value')
-      .eq('user_id', userId)
-      .eq('setting_key', 'quiz_personalization')
-      .single()
+// getUserProfile関数は削除 - 使用されていない
 
-    if (error) {
-      console.warn('⚠️ Failed to get user quiz_personalization settings:', error)
-      return null
-    }
-
-    if (!userSettings || !userSettings.setting_value) {
-      console.log('📝 No quiz_personalization settings found')
-      return null
-    }
-
-    try {
-      // setting_valueからパーソナライズ設定を取得
-      const personalizedSettings = typeof userSettings.setting_value === 'string' 
-        ? JSON.parse(userSettings.setting_value) 
-        : userSettings.setting_value
-
-      // 設定をUserProfileData形式に変換
-      const profileData: UserProfileData = {
-        selected_categories: personalizedSettings.basicCategories || [],
-        selected_industry_categories: personalizedSettings.industryCategories || [],
-        learning_level: personalizedSettings.learningLevel || undefined,
-        // industrySubcategoriesも利用可能
-        selected_subcategories: personalizedSettings.industrySubcategories || []
-      }
-
-      console.log('✅ User profile loaded from user_settings (quiz_personalization):', {
-        userId: userId.substring(0, 8) + '...',
-        hasBasicCategories: !!profileData.selected_categories,
-        hasIndustryCategories: !!profileData.selected_industry_categories,
-        basicCategoriesCount: Array.isArray(profileData.selected_categories) ? profileData.selected_categories.length : 0,
-        industryCategoriesCount: Array.isArray(profileData.selected_industry_categories) ? profileData.selected_industry_categories.length : 0,
-        learningLevel: profileData.learning_level,
-        dataSource: 'user_settings.quiz_personalization'
-      })
-
-      return profileData
-
-    } catch (parseError) {
-      console.warn('⚠️ Failed to parse quiz_personalization settings:', parseError)
-      return null
-    }
-
-  } catch (error) {
-    console.error('❌ Error in getUserProfile:', error)
-    return null
-  }
-}
-
-async function getUserQuizSettings(userId: string): Promise<UserProfileData | null> {
-  // セルフパーソナライズ用: user_settingsから取得
-  return await getUserProfile(userId)
-}
 
 async function getUserProfileForBusinessAI(userId: string): Promise<UserProfileData | null> {
   // Business-AI用: usersテーブルから取得
