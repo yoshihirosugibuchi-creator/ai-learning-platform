@@ -171,26 +171,54 @@ function getTimeSlotFromHour(hour: number): string {
  * hourly_efficiency_data のバリデーション
  */
 export function validateHourlyEfficiencyData(data: unknown): data is HourlyEfficiencyData {
-  if (!data || typeof data !== 'object') return false
+  console.log('🔍 validateHourlyEfficiencyData input:', typeof data, data)
+  
+  if (!data || typeof data !== 'object') {
+    console.log('❌ Invalid: not an object')
+    return false
+  }
   
   const obj = data as Record<string, unknown>
   const required = ['timezone', 'hourly_stats', 'peak_hours', 'total_thinking_time', 'daily_session_count']
-  if (!required.every(key => key in obj)) return false
+  const missingKeys = required.filter(key => !(key in obj))
+  if (missingKeys.length > 0) {
+    console.log('❌ Missing required keys:', missingKeys, 'Available keys:', Object.keys(obj))
+    return false
+  }
   
   // timezone チェック
-  if (obj.timezone !== 'Asia/Tokyo') return false
+  if (obj.timezone !== 'Asia/Tokyo') {
+    console.log('❌ Invalid timezone:', obj.timezone)
+    return false
+  }
   
   // hourly_stats チェック
-  if (typeof obj.hourly_stats !== 'object') return false
+  if (typeof obj.hourly_stats !== 'object') {
+    console.log('❌ Invalid hourly_stats type:', typeof obj.hourly_stats)
+    return false
+  }
   
   // peak_hours チェック
-  if (!Array.isArray(obj.peak_hours)) return false
-  if (!obj.peak_hours.every((h: unknown) => typeof h === 'number' && isValidHour(h))) return false
+  if (!Array.isArray(obj.peak_hours)) {
+    console.log('❌ peak_hours is not array:', typeof obj.peak_hours)
+    return false
+  }
+  if (!obj.peak_hours.every((h: unknown) => typeof h === 'number' && isValidHour(h))) {
+    console.log('❌ Invalid peak_hours values:', obj.peak_hours)
+    return false
+  }
   
   // 数値フィールドチェック
-  if (typeof obj.total_thinking_time !== 'number' || obj.total_thinking_time < 0) return false
-  if (typeof obj.daily_session_count !== 'number' || obj.daily_session_count < 0) return false
+  if (typeof obj.total_thinking_time !== 'number' || obj.total_thinking_time < 0) {
+    console.log('❌ Invalid total_thinking_time:', obj.total_thinking_time)
+    return false
+  }
+  if (typeof obj.daily_session_count !== 'number' || obj.daily_session_count < 0) {
+    console.log('❌ Invalid daily_session_count:', obj.daily_session_count)
+    return false
+  }
   
+  console.log('✅ Validation passed')
   return true
 }
 
@@ -198,11 +226,14 @@ export function validateHourlyEfficiencyData(data: unknown): data is HourlyEffic
  * 安全なhourly_efficiency_data パース
  */
 export function parseHourlyEfficiencyData(jsonData: unknown): HourlyEfficiencyData {
+  console.log('🔍 parseHourlyEfficiencyData input:', typeof jsonData, jsonData)
+  
   if (validateHourlyEfficiencyData(jsonData)) {
+    console.log('✅ Valid hourly efficiency data found')
     return jsonData
   }
   
-  console.warn('Invalid hourly_efficiency_data, creating empty data:', jsonData)
+  console.warn('❌ Invalid hourly_efficiency_data, creating empty data:', jsonData)
   return createEmptyHourlyEfficiencyData()
 }
 

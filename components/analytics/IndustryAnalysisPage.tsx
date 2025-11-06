@@ -15,7 +15,11 @@ import { Building2, TrendingUp, Target, AlertCircle, RefreshCw } from 'lucide-re
 import { useAuth } from '@/components/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
 
-export default function IndustryAnalysisPage() {
+interface IndustryAnalysisPageProps {
+  refreshTrigger?: number
+}
+
+export default function IndustryAnalysisPage({ refreshTrigger = 0 }: IndustryAnalysisPageProps) {
   const { user } = useAuth()
   const [selectedIndustry, setSelectedIndustry] = useState<string>('')
   const [selectedLevel, setSelectedLevel] = useState<'basic' | 'intermediate' | 'advanced' | 'expert'>('basic')
@@ -101,6 +105,13 @@ export default function IndustryAnalysisPage() {
     }
   }, [selectedIndustry, loadAnalysisData])
 
+  // 外部からの更新トリガー
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      loadAnalysisData()
+    }
+  }, [refreshTrigger, loadAnalysisData])
+
   // 選択された業界のデータを取得
   const currentIndustryData = analysisData.find(data => data.industryId === selectedIndustry)
 
@@ -117,26 +128,12 @@ export default function IndustryAnalysisPage() {
   return (
     <div className="space-y-6">
       {/* ヘッダー */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center space-x-2">
-            <Building2 className="h-6 w-6" />
-            <span>業界別スキル分析</span>
-          </h1>
-          <p className="text-gray-600 mt-1">業界特化スキルの習得状況を分析します</p>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadAnalysisData}
-            disabled={loading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            更新
-          </Button>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold flex items-center space-x-2">
+          <Building2 className="h-6 w-6" />
+          <span>業界別スキル分析</span>
+        </h1>
+        <p className="text-gray-600 mt-1">業界特化スキルの習得状況を分析します</p>
       </div>
 
       {/* コントロールパネル */}

@@ -2790,9 +2790,7 @@ export type Database = {
       }
       insert_initial_industry_targets: { Args: never; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
-      is_admin_safe: { Args: never; Returns: boolean }
       is_authenticated: { Args: never; Returns: boolean }
-      is_authenticated_user: { Args: never; Returns: boolean }
       is_owner_or_admin:
         | {
             Args: { user_id: string }
@@ -2806,9 +2804,7 @@ export type Database = {
               error: true
             } & "Could not choose the best candidate function between: public.is_owner_or_admin(user_id => text), public.is_owner_or_admin(user_id => uuid). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
           }
-      is_owner_or_admin_safe: { Args: { user_id: string }; Returns: boolean }
       is_system_admin: { Args: never; Returns: boolean }
-      is_system_admin_safe: { Args: never; Returns: boolean }
       optimize_session_parameters: {
         Args: { p_user_id: string }
         Returns: {

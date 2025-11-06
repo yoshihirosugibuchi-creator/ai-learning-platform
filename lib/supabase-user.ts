@@ -2,6 +2,61 @@ import { supabase } from './supabase'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import type { CategoryProgress } from './supabase-learning'
 
+// ヘルパー関数: フォールバックプロフィール作成
+function createFallbackProfile(userId: string): UserProfile {
+  return {
+    id: userId,
+    email: '',
+    name: 'User',
+    role: 'user',
+    skill_level: 'basic',
+    learning_style: 'mixed',
+    experience_level: 'basic',
+    total_xp: 0,
+    current_level: 1,
+    streak: 0,
+    last_active: new Date().toISOString()
+  }
+}
+
+// ヘルパー関数: API レスポンスをUserProfile形式に変換
+function convertApiProfileToUserProfile(apiProfile: Record<string, unknown>): UserProfile {
+  console.log('🔄 Converting API profile to UserProfile:', apiProfile)
+  
+  const converted = {
+    id: apiProfile.id as string,
+    email: (apiProfile.email as string) || '',
+    name: (apiProfile.name as string) || undefined,
+    role: (apiProfile.role as string) || 'user',
+    skill_level: (apiProfile.skill_level as 'basic' | 'intermediate' | 'advanced') || 'basic',
+    learning_style: (apiProfile.learning_style as 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed') || 'mixed',
+    experience_level: (apiProfile.experience_level as string) || 'basic',
+    total_xp: (apiProfile.total_xp as number) || 0,
+    current_level: (apiProfile.current_level as number) || 1,
+    streak: (apiProfile.streak as number) || 0,
+    last_active: (apiProfile.last_active as string) || new Date().toISOString(),
+    selected_industry_categories: (apiProfile.selected_industry_categories as string[]) || undefined,
+    created_at: (apiProfile.created_at as string) || undefined,
+    updated_at: (apiProfile.updated_at as string) || undefined,
+    // 🚨 プロフィールページで使用される拡張フィールドも追加
+    display_name: (apiProfile.display_name as string) || undefined,
+    job_title: (apiProfile.job_title as string) || undefined,
+    position_level: (apiProfile.position_level as string) || undefined,
+    learning_level: (apiProfile.learning_level as string) || undefined,
+    industry: (apiProfile.industry as string) || undefined,
+    experience_years: (apiProfile.experience_years as number) || undefined,
+    interested_industries: (apiProfile.interested_industries as string[]) || undefined,
+    learning_goals: (apiProfile.learning_goals as string[]) || undefined,
+    selected_categories: (apiProfile.selected_categories as string[]) || undefined,
+    weekly_goal: (apiProfile.weekly_goal as string) || undefined,
+    profile_completed_at: (apiProfile.profile_completed_at as string) || undefined,
+    last_profile_update: (apiProfile.last_profile_update as string) || undefined
+  } as UserProfile & Record<string, unknown>
+  
+  console.log('✅ Converted profile:', converted)
+  return converted
+}
+
 // デバッグ用: データベース接続とテーブル存在確認
 export async function debugDatabaseAccess(): Promise<void> {
   console.log('🔍 DEBUGGING DATABASE ACCESS')
@@ -67,76 +122,55 @@ export interface UserProfileWithProgress extends UserProfile {
 }
 
 
-// ユーザープロファイルを取得
+// ユーザープロファイルを取得（AuthProvider用 - API経由でRLS権限回避）
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
-    // RLS権限問題を回避するためAPIエンドポイント経由で取得
     console.log('🔄 Fetching user profile via API for user:', userId)
     
-    // 認証ヘッダーを取得
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      console.error('❌ No session available for profile API call')
-      return null
+    // 🚨 CRITICAL: CLAUDE.mdに従い、クライアントサイドからは直接usersテーブルにアクセスしない
+    // 代わりに/api/profileエンドポイントを使用してRLS問題を回避
+    
+    // まずセッションを取得
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    
+    if (sessionError || !session) {
+      console.warn('⚠️ No valid session for API call:', sessionError?.message)
+      return createFallbackProfile(userId)
     }
-
-    const response = await fetch('/api/profile', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json'
+    
+    try {
+      // API経由でプロフィール取得（RLS回避）
+      const response = await fetch('/api/profile', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        console.warn(`⚠️ Profile API error: ${response.status} ${response.statusText}`)
+        return createFallbackProfile(userId)
       }
-    })
-
-    if (!response.ok) {
-      console.error('❌ Profile API request failed:', response.status, response.statusText)
-      return null
+      
+      const { profile } = await response.json()
+      
+      if (!profile) {
+        console.warn('⚠️ No profile data from API')
+        return createFallbackProfile(userId)
+      }
+      
+      // APIから取得したデータをUserProfile形式に変換
+      console.log('✅ Profile fetched successfully via API')
+      return convertApiProfileToUserProfile(profile)
+      
+    } catch (apiError) {
+      console.warn('⚠️ API call failed:', apiError)
+      return createFallbackProfile(userId)
     }
-
-    const { profile: data } = await response.json()
-    if (!data) {
-      console.log('📝 No profile data returned from API')
-      return null
-    }
-
-    // DBデータをUserProfile形式に変換（NULL→未設定）
-    console.log('🔍 getUserProfile - Raw DB data:', data)
-    
-    const profile = {
-      id: data.id,
-      email: data.email,
-      name: data.name || undefined,
-      skill_level: data.skill_level as 'basic' | 'intermediate' | 'advanced' | undefined,
-      learning_style: data.learning_style as 'visual' | 'auditory' | 'reading' | 'kinesthetic' | 'mixed' | undefined,
-      experience_level: data.experience_level || undefined,
-      role: data.role || 'user', // 重要: role フィールドを追加
-      total_xp: data.total_xp || 0,
-      current_level: data.current_level || 1,
-      streak: data.streak || 0,
-      last_active: data.last_active || new Date().toISOString(),
-      selected_industry_categories: data.selected_industry_categories as string[] | undefined,
-      created_at: data.created_at || undefined,
-      updated_at: data.updated_at || undefined,
-      // 拡張プロフィール情報（Database型対応）
-      display_name: data.display_name || undefined,
-      job_title: data.job_title || undefined,
-      position_level: data.position_level || undefined,
-      learning_level: data.learning_level || undefined,
-      industry: data.industry || undefined,
-      experience_years: data.experience_years || undefined,
-      interested_industries: data.interested_industries || undefined,
-      learning_goals: data.learning_goals || undefined,
-      selected_categories: data.selected_categories || undefined,
-      weekly_goal: data.weekly_goal || undefined,
-      profile_completed_at: data.profile_completed_at || undefined,
-      last_profile_update: data.last_profile_update || undefined
-    } as UserProfile & Record<string, unknown>
-    
-    console.log('✅ getUserProfile - Converted profile:', profile)
-    return profile
   } catch (error) {
-    console.error('❌ Exception in getUserProfile:', error)
-    return null
+    console.error('❌ Error fetching user profile:', error)
+    return createFallbackProfile(userId)
   }
 }
 
@@ -330,17 +364,11 @@ export async function getOrCreateUserProfile(user: SupabaseUser): Promise<UserPr
       }
     }
     
-    // プロファイル作成を試行（非同期で実行、失敗してもフォールバックを返す）
-    console.log('👤 No existing profile found, attempting background creation...')
+    // 🚨 RLS修正後: プロフィール作成はサーバーサイドで行う
+    // クライアントサイドでのusersテーブル直接作成は停止
+    console.log('👤 No existing profile found, will rely on server-side creation')
     
-    // バックグラウンドでプロファイル作成を試行（結果を待たない）
-    createUserProfile(user).then(createdProfile => {
-      if (createdProfile) {
-        console.log('✅ Profile created in background:', createdProfile)
-      }
-    }).catch(createError => {
-      console.warn('⚠️ Background profile creation failed:', createError)
-    })
+    // Note: プロフィール作成は必要に応じて/api/profileでサーバーサイドで実装
     
     // フォールバックプロファイルを即座に返す
     console.log('🔄 Using fallback profile for immediate use')

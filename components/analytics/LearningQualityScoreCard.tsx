@@ -191,19 +191,9 @@ export default function LearningQualityScoreCard({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            学習品質総合スコア
-          </div>
-          <Button 
-            onClick={loadQualityScore} 
-            disabled={isLoading}
-            variant="ghost" 
-            size="sm"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </Button>
+        <CardTitle className="flex items-center gap-2">
+          <TrendingUp className="h-5 w-5" />
+          学習品質総合スコア
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">

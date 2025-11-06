@@ -57,9 +57,12 @@ export async function POST(request: NextRequest) {
     let userId = null
     let isServiceRole = false
     
-    // サービスロールキーかどうかチェック
+    // サービスロールキーまたはシステム認証トークンかどうかチェック
     if (token === process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.log('[バッチAPI] サービスロールキー認証')
+      console.log('[バッチAPI] ✅ サービスロールキー認証成功')
+      isServiceRole = true
+    } else if (token === process.env.SYSTEM_AUTH_TOKEN) {
+      console.log('[バッチAPI] ✅ システム認証トークン認証成功')
       isServiceRole = true
     } else {
       // ユーザートークンとして認証を試行
@@ -67,7 +70,7 @@ export async function POST(request: NextRequest) {
       
       if (authError || !user) {
         return NextResponse.json(
-          { error: '認証に失敗しました: 有効なユーザートークンまたはサービスロールキーが必要です' },
+          { error: '認証に失敗しました: 有効なユーザートークン、サービスロールキー、またはシステム認証トークンが必要です' },
           { status: 401 }
         )
       }

@@ -35,13 +35,12 @@ export default function BatchAnalyticsPage() {
   const [batchLogs, setBatchLogs] = useState<DailyAnalyticsBatchLog[]>([])
   const [statistics, setStatistics] = useState<{
     total_executions: number
-    successful_executions: number
-    failed_executions: number
+    completed: number
+    failed: number
+    running: number
     success_rate: number
     avg_processing_time_seconds: number
     avg_processed_users: number
-    process_type_breakdown: Record<string, number>
-    recent_errors: string[]
   } | null>(null)
   const [healthStatus, setHealthStatus] = useState<{
     status: 'healthy' | 'warning' | 'critical'
@@ -113,15 +112,25 @@ export default function BatchAnalyticsPage() {
       // バッチ統計処理
       if (statsResponse.ok) {
         const statsResult = await statsResponse.json()
+        console.log('📊 統計API結果:', statsResult)
+        
         if (statsResult.error) {
+          console.error('❌ 統計APIエラー:', statsResult.error)
           toast({
             title: 'データ取得エラー',
             description: statsResult.error,
             variant: 'destructive'
           })
         } else if (statsResult.stats) {
+          console.log('✅ 統計データ設定:', statsResult.stats)
           setStatistics(statsResult.stats)
+        } else {
+          console.warn('⚠️ 統計データが空:', statsResult)
         }
+      } else {
+        console.error('❌ 統計APIレスポンスエラー:', statsResponse.status, statsResponse.statusText)
+        const errorText = await statsResponse.text()
+        console.error('❌ 統計APIエラー詳細:', errorText)
       }
 
       // ヘルス監視処理

@@ -531,33 +531,22 @@ export default function LearningPatternComparison({
             <Brain className="h-5 w-5" />
             学習パターン比較分析
           </div>
-          <div className="flex items-center gap-2">
-            {/* ビュー切り替え */}
-            <div className="flex gap-1">
-              {[
-                { key: 'overview', label: '概要' },
-                { key: 'detailed', label: '詳細' },
-                { key: 'categories', label: 'カテゴリー' }
-              ].map(view => (
-                <Button
-                  key={view.key}
-                  onClick={() => setSelectedView(view.key as 'overview' | 'detailed' | 'categories')}
-                  variant={selectedView === view.key ? "default" : "outline"}
-                  size="sm"
-                  className="text-xs"
-                >
-                  {view.label}
-                </Button>
-              ))}
-            </div>
-            <Button 
-              onClick={loadPatternComparison} 
-              disabled={isLoading}
-              variant="ghost" 
-              size="sm"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </Button>
+          <div className="flex gap-1">
+            {[
+              { key: 'overview', label: '概要' },
+              { key: 'detailed', label: '詳細' },
+              { key: 'categories', label: 'カテゴリー' }
+            ].map(view => (
+              <Button
+                key={view.key}
+                onClick={() => setSelectedView(view.key as 'overview' | 'detailed' | 'categories')}
+                variant={selectedView === view.key ? "default" : "outline"}
+                size="sm"
+                className="text-xs"
+              >
+                {view.label}
+              </Button>
+            ))}
           </div>
         </CardTitle>
       </CardHeader>

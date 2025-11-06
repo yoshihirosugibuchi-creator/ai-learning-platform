@@ -257,12 +257,15 @@ export async function getRunningBatches(): Promise<{
  * バッチ統計の取得
  */
 export interface BatchStats {
-  total_batches: number
+  total_executions: number
+  total_batches: number // 下位互換性のため残す
   completed: number
   failed: number
   running: number
   success_rate: number
   avg_processing_time: number
+  avg_processing_time_seconds: number
+  avg_processed_users: number
   last_successful_run?: string
 }
 
@@ -288,12 +291,15 @@ export async function getBatchStats(
       console.error('❌ Error fetching batch stats:', error)
       return { 
         stats: {
+          total_executions: 0,
           total_batches: 0,
           completed: 0,
           failed: 0,
           running: 0,
           success_rate: 0,
-          avg_processing_time: 0
+          avg_processing_time: 0,
+          avg_processing_time_seconds: 0,
+          avg_processed_users: 0
         }, 
         error: error.message 
       }
@@ -318,18 +324,26 @@ export async function getBatchStats(
         }, 0) / completedLogs.length
       : 0
 
+    // 処理ユーザー数の平均計算
+    const avgProcessedUsers = total > 0 
+      ? Math.round(logs.reduce((sum, log) => sum + (log.processed_users || 0), 0) / total)
+      : 0
+
     const lastSuccess = logs
       .filter(log => log.status === 'completed')
       .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())[0]
 
     return {
       stats: {
-        total_batches: total,
+        total_executions: total,
+        total_batches: total, // 下位互換性
         completed,
         failed,
         running,
         success_rate: Math.round(successRate * 100) / 100,
         avg_processing_time: Math.round(avgTime * 100) / 100,
+        avg_processing_time_seconds: Math.round(avgTime * 100) / 100,
+        avg_processed_users: avgProcessedUsers,
         last_successful_run: lastSuccess?.created_at || undefined
       }
     }
@@ -338,12 +352,15 @@ export async function getBatchStats(
     console.error('❌ Error in getBatchStats:', error)
     return { 
       stats: {
+        total_executions: 0,
         total_batches: 0,
         completed: 0,
         failed: 0,
         running: 0,
         success_rate: 0,
-        avg_processing_time: 0
+        avg_processing_time: 0,
+        avg_processing_time_seconds: 0,
+        avg_processed_users: 0
       }, 
       error: 'システムエラー' 
     }

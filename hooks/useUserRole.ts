@@ -60,7 +60,11 @@ export function useUserRole() {
         const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise])
         
         if (!session?.access_token) {
-          throw new Error('No session token available')
+          console.debug('No session token available, user not authenticated')
+          setUserRole(null)
+          setLoading(false)
+          cachedUserRole = null
+          return
         }
 
         const response = await fetch('/api/auth/user', {
@@ -71,6 +75,14 @@ export function useUserRole() {
         })
 
         if (!response.ok) {
+          // 401エラー（認証失敗）の場合は静かに処理
+          if (response.status === 401) {
+            console.debug('User not authenticated, skipping role fetch')
+            setUserRole(null)
+            setLoading(false)
+            cachedUserRole = null
+            return
+          }
           throw new Error(`Failed to fetch user role: ${response.status}`)
         }
 
@@ -101,6 +113,14 @@ export function useUserRole() {
         
         if (err instanceof Error) {
           const errorMsg = err.message.toLowerCase()
+          
+          // 401エラーやセッション関連エラーは静かに処理（ログアウト状態は正常）
+          if (errorMsg.includes('401') || errorMsg.includes('no session token')) {
+            console.debug('User session invalid or expired, this is expected after logout')
+            setError(null) // エラーとして表示しない
+            setLoading(false)
+            return
+          }
           
           if (errorMsg.includes('permission denied') || errorMsg.includes('insufficient_privilege')) {
             userMessage = 'このページにアクセスする権限がありません。'

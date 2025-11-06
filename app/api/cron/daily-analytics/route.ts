@@ -99,6 +99,24 @@ export async function GET(request: NextRequest) {
         hasAuthToken: !!systemAuthToken,
         authTokenLength: systemAuthToken?.length || 0
       })
+      
+      // 409エラー（重複実行）の場合は成功として扱う
+      if (batchResponse.status === 409 || errorText.includes('duplicate') || errorText.includes('既に実行済み')) {
+        console.log('[Cron] ✅ 重複実行検知、既に処理済みとして正常終了')
+        return NextResponse.json({
+          success: true,
+          message: `バッチ処理済み: ${targetDate} は既に処理完了`,
+          execution_summary: {
+            target_date: targetDate,
+            processed_users: 0,
+            execution_time_seconds: Math.round((Date.now() - startTime) / 1000),
+            success_count: 1,
+            error_count: 0
+          },
+          duplicate_execution: true
+        })
+      }
+      
       throw new Error(`バッチAPI呼び出し失敗: ${batchResponse.status} ${batchResponse.statusText} - ${errorText}`)
     }
 
@@ -270,6 +288,22 @@ async function recordCronExecution(params: {
       .single()
 
     if (error) {
+      // ユニーク制約違反の場合は既存ログIDを取得
+      if (error.code === '23505' || error.message.includes('duplicate')) {
+        console.log('[Cron] 既存ログ検知、取得試行')
+        const { data: existingLog, error: selectError } = await supabaseAdmin
+          .from('daily_analytics_batch_log')
+          .select('id')
+          .eq('process_date', params.target_date)
+          .eq('process_type', 'cron_auto_all')
+          .single()
+        
+        if (!selectError && existingLog) {
+          console.log('[Cron] 既存ログID取得成功:', existingLog.id)
+          return existingLog.id
+        }
+      }
+      
       console.error('[Cron] ログ記録エラー:', error.message)
       return null
     } else {

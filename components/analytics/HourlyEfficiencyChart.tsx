@@ -63,15 +63,28 @@ export default function HourlyEfficiencyChart({
       const startDate = new Date()
       startDate.setDate(startDate.getDate() - selectedPeriod)
 
+      console.log('🔍 Loading hourly data for period:', selectedPeriod, 'days')
+      console.log('📅 Date range:', startDate.toISOString().split('T')[0], 'to', endDate.toISOString().split('T')[0])
+
       const { data: records, error: fetchError } = await supabase
         .from('daily_xp_records')
-        .select('hourly_efficiency_data')
+        .select('date, hourly_efficiency_data')
         .eq('user_id', userId)
         .gte('date', startDate.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0])
         .order('date', { ascending: false })
 
+      console.log('📊 Raw records fetched:', records?.length || 0)
+      records?.forEach((record, index) => {
+        console.log(`Record ${index + 1}:`, {
+          date: record.date,
+          hasHourlyData: !!record.hourly_efficiency_data,
+          hourlyDataType: typeof record.hourly_efficiency_data
+        })
+      })
+
       if (fetchError) {
+        console.error('❌ Database fetch error:', fetchError)
         throw new Error(`データ取得エラー: ${fetchError.message}`)
       }
 
@@ -97,8 +110,21 @@ export default function HourlyEfficiencyChart({
 
     // 全レコードのデータを統合
     records.forEach(record => {
-      if (record.hourly_efficiency_data && typeof record.hourly_efficiency_data === 'string') {
-        const data = parseHourlyEfficiencyData(record.hourly_efficiency_data)
+      if (record.hourly_efficiency_data) {
+        // JSONBデータはオブジェクトとして返される場合と文字列として返される場合がある
+        let jsonData: unknown
+        if (typeof record.hourly_efficiency_data === 'string') {
+          try {
+            jsonData = JSON.parse(record.hourly_efficiency_data)
+          } catch (e) {
+            console.warn('JSON parse error for hourly_efficiency_data:', e)
+            return // このレコードをスキップ
+          }
+        } else {
+          jsonData = record.hourly_efficiency_data
+        }
+        
+        const data = parseHourlyEfficiencyData(jsonData)
         
         Object.entries(data.hourly_stats).forEach(([hour, stats]: [string, { quiz_time: number; xp_earned: number; session_count: number }]) => {
           if (!combinedStats[hour]) {
@@ -128,7 +154,7 @@ export default function HourlyEfficiencyChart({
       .slice(0, 3)
       .map(([hour]) => parseInt(hour))
 
-    return {
+    const result = {
       timezone: 'Asia/Tokyo',
       hourly_stats: hourlyStats,
       peak_hours: peakHours,
@@ -136,6 +162,16 @@ export default function HourlyEfficiencyChart({
       daily_session_count: Object.values(combinedStats).reduce((sum, s) => sum + s.session_count, 0),
       last_updated_jst: new Date().toISOString()
     }
+    
+    console.log('🔄 Combined hourly data result:', {
+      hourlyStatsCount: Object.keys(result.hourly_stats).length,
+      peakHours: result.peak_hours,
+      totalThinkingTime: result.total_thinking_time,
+      dailySessionCount: result.daily_session_count,
+      sampleHours: Object.entries(result.hourly_stats).slice(0, 3)
+    })
+    
+    return result
   }
 
   // 時間帯ラベル取得
@@ -263,29 +299,18 @@ export default function HourlyEfficiencyChart({
             <Clock className="h-5 w-5" />
             時間帯別学習効率
           </div>
-          <div className="flex items-center gap-2">
-            {/* 期間選択 */}
-            <div className="flex gap-1">
-              {[7, 14, 30].map(period => (
-                <Button
-                  key={period}
-                  onClick={() => handlePeriodChange(period)}
-                  variant={selectedPeriod === period ? "default" : "outline"}
-                  size="sm"
-                  className="text-xs"
-                >
-                  {period}日
-                </Button>
-              ))}
-            </div>
-            <Button 
-              onClick={loadHourlyData} 
-              disabled={isLoading}
-              variant="ghost" 
-              size="sm"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </Button>
+          <div className="flex gap-1">
+            {[7, 14, 30].map(period => (
+              <Button
+                key={period}
+                onClick={() => handlePeriodChange(period)}
+                variant={selectedPeriod === period ? "default" : "outline"}
+                size="sm"
+                className="text-xs"
+              >
+                {period}日
+              </Button>
+            ))}
           </div>
         </CardTitle>
       </CardHeader>

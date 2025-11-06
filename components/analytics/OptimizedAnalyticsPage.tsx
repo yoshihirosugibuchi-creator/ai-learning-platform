@@ -4,13 +4,12 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, BarChart3, Brain, Lightbulb, TrendingUp } from 'lucide-react'
+import { RefreshCw, BarChart3, Brain, Lightbulb, TrendingUp, Target, Clock, Activity } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { getLearningAnalytics, LearningAnalytics } from '@/lib/supabase-analytics'
 import { aiAnalytics, LearningPattern, OptimalLearningTime, PersonalizedHints } from '@/lib/ai-analytics'
 import IndustryAnalysisPage from '@/components/analytics/IndustryAnalysisPage'
 import XPStatsCard from '@/components/xp/XPStatsCard'
-import { CachedLearningDashboard } from '@/components/analytics/CachedLearningDashboard'
 import LearningQualityScoreCard from '@/components/analytics/LearningQualityScoreCard'
 import HourlyEfficiencyChart from '@/components/analytics/HourlyEfficiencyChart'
 import LearningPatternComparison from '@/components/analytics/LearningPatternComparison'
@@ -37,10 +36,6 @@ interface TabCache {
     loaded: boolean
     lastRefresh: number
   }
-  unified: {
-    loaded: boolean
-    lastRefresh: number
-  }
 }
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5分間キャッシュ
@@ -48,15 +43,14 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5分間キャッシュ
 export default function OptimizedAnalyticsPage() {
   const [activeTab, setActiveTab] = useState('overview')
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const { user, profile, loading } = useAuth()
+  const { user, loading } = useAuth()
   
   // タブごとのキャッシュ状態
   const [tabCache, setTabCache] = useState<TabCache>({
     overview: { analytics: null, loaded: false, lastRefresh: 0 },
     patterns: { aiPatterns: null, optimalTime: null, loaded: false, lastRefresh: 0 },
     insights: { hints: null, loaded: false, lastRefresh: 0 },
-    industry: { loaded: false, lastRefresh: 0 },
-    unified: { loaded: false, lastRefresh: 0 }
+    industry: { loaded: false, lastRefresh: 0 }
   })
   
   // 初期化フラグ
@@ -160,12 +154,6 @@ export default function OptimizedAnalyticsPage() {
           industry: { loaded: true, lastRefresh: Date.now() }
         }))
         break
-      case 'unified':
-        setTabCache(prev => ({
-          ...prev,
-          unified: { loaded: true, lastRefresh: Date.now() }
-        }))
-        break
     }
   }
 
@@ -187,8 +175,10 @@ export default function OptimizedAnalyticsPage() {
           await loadInsightsData(true)
           break
         case 'industry':
-        case 'unified':
-          // 他のタブは個別に更新機能がある
+          setTabCache(prev => ({
+            ...prev,
+            industry: { loaded: true, lastRefresh: Date.now() }
+          }))
           break
       }
     } finally {
@@ -228,14 +218,11 @@ export default function OptimizedAnalyticsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
-        <TabsList className={`grid w-full ${profile?.role === 'system_admin' ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'} h-auto lg:h-10 gap-1 p-1`}>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 h-auto lg:h-10 gap-1 p-1">
           <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">基本統計</TabsTrigger>
           <TabsTrigger value="industry" className="text-xs sm:text-sm py-2">業界分析</TabsTrigger>
           <TabsTrigger value="patterns" className="text-xs sm:text-sm py-2">学習パターン（AI）</TabsTrigger>
           <TabsTrigger value="insights" className="text-xs sm:text-sm py-2">インサイト（AI）</TabsTrigger>
-          {profile?.role === 'system_admin' && (
-            <TabsTrigger value="unified" className="text-xs sm:text-sm py-2">統合AI分析</TabsTrigger>
-          )}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -260,24 +247,56 @@ export default function OptimizedAnalyticsPage() {
                 </div>
               ) : tabCache.overview.analytics?.weeklyProgress && tabCache.overview.analytics.weeklyProgress.length > 0 ? (
                 <div className="space-y-4">
-                  {tabCache.overview.analytics.weeklyProgress.map((week, index) => (
-                    <div key={index} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">{week.week}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {week.sessionsCompleted}セッション完了
-                        </p>
+                  {tabCache.overview.analytics.weeklyProgress.map((week, index) => {
+                    // 注意フラグの判定ロジック（学習データがある場合のみ）
+                    const hasLearningData = week.sessionsCompleted > 0 && week.averageScore > 0
+                    const lowAccuracy = hasLearningData && week.averageScore < 60
+                    const lowFrequency = week.sessionsCompleted < 2 && week.sessionsCompleted > 0 // 学習はしているが頻度が少ない
+                    
+                    // 前週との比較（両週とも学習データがある場合のみ）
+                    const previousWeek = index > 0 ? tabCache.overview.analytics!.weeklyProgress[index - 1] : null
+                    const hasPreviousData = previousWeek && previousWeek.sessionsCompleted > 0 && previousWeek.averageScore > 0
+                    const isImproving = hasLearningData && hasPreviousData && week.averageScore > previousWeek.averageScore
+                    const isDecline = hasLearningData && hasPreviousData && week.averageScore < previousWeek.averageScore && week.averageScore < 70
+                    
+                    const needsAttention = lowAccuracy || lowFrequency || isDecline
+                    
+                    return (
+                      <div key={index} className={`p-4 rounded-lg ${needsAttention ? 'bg-orange-50 border border-orange-200' : 'bg-gray-50'}`}>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium">{week.week}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {week.sessionsCompleted}セッション完了
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">{week.averageScore}%</p>
+                              {isImproving && (
+                                <span className="text-green-600 text-xs">📈</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">平均スコア</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">{week.timeSpent}分</p>
+                            <p className="text-xs text-muted-foreground">学習時間</p>
+                          </div>
+                        </div>
+                        
+                        {needsAttention && (
+                          <div className="mt-3 text-xs text-orange-600 bg-orange-100 p-2 rounded">
+                            ⚠️ 注意が必要: {
+                              lowAccuracy ? '正答率が低めです（60%未満）' :
+                              isDecline ? '前週より正答率が低下しています' :
+                              lowFrequency ? '学習頻度が少なめです' : '改善の余地があります'
+                            }
+                          </div>
+                        )}
                       </div>
-                      <div className="text-center">
-                        <p className="font-medium">{week.averageScore}%</p>
-                        <p className="text-xs text-muted-foreground">平均スコア</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{week.timeSpent}分</p>
-                        <p className="text-xs text-muted-foreground">学習時間</p>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -442,7 +461,7 @@ export default function OptimizedAnalyticsPage() {
                     </p>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid gap-4 md:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-3 mb-6">
                       <div className="p-4 bg-blue-50 rounded-lg">
                         <h4 className="font-medium text-blue-900 mb-2">最適学習時間</h4>
                         <p className="text-sm text-blue-800">
@@ -460,6 +479,67 @@ export default function OptimizedAnalyticsPage() {
                         <p className="text-sm text-purple-800">
                           1日{tabCache.patterns.optimalTime.frequency.questionsPerDay}問
                         </p>
+                      </div>
+                    </div>
+
+                    {/* 詳細な改善提案 */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-3 flex items-center">
+                        <Brain className="w-4 h-4 mr-2 text-orange-600" />
+                        パターン分析からの具体的改善提案
+                      </h4>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        {tabCache.patterns.aiPatterns?.learningFrequency?.consistency && tabCache.patterns.aiPatterns.learningFrequency.consistency < 0.5 && (
+                          <div className="bg-white p-3 rounded border border-orange-200">
+                            <div className="flex items-start gap-2">
+                              <span className="text-orange-600 text-sm">⚠️</span>
+                              <div>
+                                <p className="text-sm font-medium text-orange-800">継続性の改善が必要</p>
+                                <p className="text-xs text-orange-700 mt-1">
+                                  週間継続率が低めです。毎日短時間でも継続することで学習効果が向上します。
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {tabCache.patterns.aiPatterns?.learningFrequency?.averageDailyQuestions && tabCache.patterns.aiPatterns.learningFrequency.averageDailyQuestions < 5 && (
+                          <div className="bg-white p-3 rounded border border-blue-200">
+                            <div className="flex items-start gap-2">
+                              <span className="text-blue-600 text-sm">📈</span>
+                              <div>
+                                <p className="text-sm font-medium text-blue-800">学習量の増加推奨</p>
+                                <p className="text-xs text-blue-700 mt-1">
+                                  1日の問題数を5-10問に増やすとより効果的な学習が期待できます。
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="bg-white p-3 rounded border border-purple-200">
+                          <div className="flex items-start gap-2">
+                            <span className="text-purple-600 text-sm">⏱️</span>
+                            <div>
+                              <p className="text-sm font-medium text-purple-800">集中力最適化</p>
+                              <p className="text-xs text-purple-700 mt-1">
+                                15-25分程度の短時間集中学習が最も効果的とされています。
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-white p-3 rounded border border-green-200">
+                          <div className="flex items-start gap-2">
+                            <span className="text-green-600 text-sm">✨</span>
+                            <div>
+                              <p className="text-sm font-medium text-green-800">モチベーション維持</p>
+                              <p className="text-xs text-green-700 mt-1">
+                                小さな達成感を積み重ねることで長期的な学習継続が可能になります。
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -507,40 +587,112 @@ export default function OptimizedAnalyticsPage() {
                   ))}
                 </div>
               ) : tabCache.insights.hints ? (
-                <div className="space-y-4">
-                  {tabCache.insights.hints.generalTips.length > 0 && (
-                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <h4 className="font-medium text-blue-900 mb-2 flex items-center">
-                        <Lightbulb className="w-4 h-4 mr-2" />
-                        一般的なヒント
-                      </h4>
-                      <ul className="text-sm text-blue-800 space-y-1">
-                        {tabCache.insights.hints.generalTips.map((tip, index) => (
-                          <li key={index} className="flex items-start">
-                            <span className="mr-2">•</span>
-                            {tip}
-                          </li>
-                        ))}
+                <div className="space-y-6">
+                  {/* 強化された分類システム */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {/* 即座に実行可能な改善提案 */}
+                    {tabCache.insights.hints.generalTips.length > 0 && (
+                      <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                        <h4 className="font-medium text-red-900 mb-3 flex items-center">
+                          <Target className="w-5 h-5 mr-2" />
+                          🚨 即座に実行
+                        </h4>
+                        <div className="space-y-2">
+                          {tabCache.insights.hints.generalTips.slice(0, 2).map((tip, index) => (
+                            <div key={index} className="bg-white p-3 rounded border border-red-100">
+                              <p className="text-sm text-red-800 font-medium mb-1">
+                                改善提案 #{index + 1}
+                              </p>
+                              <p className="text-sm text-red-700">{tip}</p>
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
+                                  優先度: 高
+                                </span>
+                                <span className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                                  推定時間: 5-10分
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* スキル強化提案 */}
+                    {tabCache.insights.hints.performanceTips.length > 0 && (
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 className="font-medium text-blue-900 mb-3 flex items-center">
+                          <Brain className="w-5 h-5 mr-2" />
+                          📚 スキル強化
+                        </h4>
+                        <div className="space-y-2">
+                          {tabCache.insights.hints.performanceTips.slice(0, 2).map((tip, index) => (
+                            <div key={index} className="bg-white p-3 rounded border border-blue-100">
+                              <p className="text-sm text-blue-800 font-medium mb-1">
+                                スキル向上 #{index + 1}
+                              </p>
+                              <p className="text-sm text-blue-700">{tip}</p>
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
+                                  優先度: 中
+                                </span>
+                                <span className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                                  推定時間: 15-30分
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 学習パターン最適化 */}
+                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <h4 className="font-medium text-purple-900 mb-3 flex items-center">
+                      <Clock className="w-5 h-5 mr-2" />
+                      ⏰ 学習パターン最適化
+                    </h4>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="bg-white p-3 rounded border border-purple-100">
+                        <p className="text-sm text-purple-800 font-medium mb-1">最適学習時間の活用</p>
+                        <p className="text-sm text-purple-700">
+                          あなたの集中力が最も高い時間帯での学習を心がけましょう
+                        </p>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-purple-100">
+                        <p className="text-sm text-purple-800 font-medium mb-1">セッション時間の調整</p>
+                        <p className="text-sm text-purple-700">
+                          15-25分の短時間集中学習が効果的です
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 継続性改善 */}
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h4 className="font-medium text-green-900 mb-3 flex items-center">
+                      <Activity className="w-5 h-5 mr-2" />
+                      📅 継続性改善
+                    </h4>
+                    <div className="bg-white p-3 rounded border border-green-100">
+                      <p className="text-sm text-green-800 font-medium mb-2">学習習慣の定着化</p>
+                      <ul className="text-sm text-green-700 space-y-1">
+                        <li className="flex items-start">
+                          <span className="mr-2 text-green-600">•</span>
+                          毎日同じ時間帯に学習する習慣をつけましょう
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 text-green-600">•</span>
+                          週末も含めて継続的な学習を心がけましょう
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 text-green-600">•</span>
+                          小さな目標を達成する喜びを積み重ねましょう
+                        </li>
                       </ul>
                     </div>
-                  )}
-                  
-                  {tabCache.insights.hints.performanceTips.length > 0 && (
-                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                      <h4 className="font-medium text-green-900 mb-2 flex items-center">
-                        <TrendingUp className="w-4 h-4 mr-2" />
-                        パフォーマンス向上のコツ
-                      </h4>
-                      <ul className="text-sm text-green-800 space-y-1">
-                        {tabCache.insights.hints.performanceTips.map((tip, index) => (
-                          <li key={index} className="flex items-start">
-                            <span className="mr-2">•</span>
-                            {tip}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -556,16 +708,7 @@ export default function OptimizedAnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="industry" className="space-y-6">
-          <IndustryAnalysisPage />
-        </TabsContent>
-
-        <TabsContent value="unified" className="space-y-6">
-          {user?.id && (
-            <CachedLearningDashboard 
-              userId={user.id}
-              className="w-full"
-            />
-          )}
+          <IndustryAnalysisPage refreshTrigger={tabCache.industry.lastRefresh} />
         </TabsContent>
       </Tabs>
     </div>
