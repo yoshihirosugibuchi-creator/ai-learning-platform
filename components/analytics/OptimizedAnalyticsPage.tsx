@@ -43,6 +43,8 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5分間キャッシュ
 export default function OptimizedAnalyticsPage() {
   const [activeTab, setActiveTab] = useState('overview')
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [showAllGeneralTips, setShowAllGeneralTips] = useState(false)
+  const [showAllPerformanceTips, setShowAllPerformanceTips] = useState(false)
   const { user, loading } = useAuth()
   
   // タブごとのキャッシュ状態
@@ -163,24 +165,40 @@ export default function OptimizedAnalyticsPage() {
     
     setIsRefreshing(true)
     try {
+      // 最低限の表示時間を確保（視覚的フィードバックのため）
+      const startTime = Date.now()
+      const minDisplayTime = 800 // 800ms
+      
       // 現在のタブのデータのみ更新
-      switch (activeTab) {
-        case 'overview':
-          await loadOverviewData(true)
-          break
-        case 'patterns':
-          await loadPatternsData(true)
-          break
-        case 'insights':
-          await loadInsightsData(true)
-          break
-        case 'industry':
-          setTabCache(prev => ({
-            ...prev,
-            industry: { loaded: true, lastRefresh: Date.now() }
-          }))
-          break
+      const updatePromise = async () => {
+        switch (activeTab) {
+          case 'overview':
+            await loadOverviewData(true)
+            break
+          case 'patterns':
+            await loadPatternsData(true)
+            break
+          case 'insights':
+            await loadInsightsData(true)
+            break
+          case 'industry':
+            setTabCache(prev => ({
+              ...prev,
+              industry: { loaded: true, lastRefresh: Date.now() }
+            }))
+            break
+        }
       }
+      
+      // 更新処理と最低表示時間を並列実行
+      await Promise.all([
+        updatePromise(),
+        new Promise(resolve => {
+          const elapsed = Date.now() - startTime
+          const remainingTime = Math.max(0, minDisplayTime - elapsed)
+          setTimeout(resolve, remainingTime)
+        })
+      ])
     } finally {
       setIsRefreshing(false)
     }
@@ -213,7 +231,7 @@ export default function OptimizedAnalyticsPage() {
         </div>
         <Button onClick={handleRefresh} disabled={isRefreshing} variant="outline">
           <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          更新
+          {isRefreshing ? '更新中...' : '更新'}
         </Button>
       </div>
 
@@ -222,7 +240,9 @@ export default function OptimizedAnalyticsPage() {
           <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">基本統計</TabsTrigger>
           <TabsTrigger value="industry" className="text-xs sm:text-sm py-2">業界分析</TabsTrigger>
           <TabsTrigger value="patterns" className="text-xs sm:text-sm py-2">学習パターン（AI）</TabsTrigger>
-          <TabsTrigger value="insights" className="text-xs sm:text-sm py-2">インサイト（AI）</TabsTrigger>
+          <TabsTrigger value="insights" className="text-xs sm:text-sm py-2">
+            インサイト（AI）{isRefreshing && activeTab === 'insights' && <RefreshCw className="inline h-3 w-3 ml-1 animate-spin" />}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -577,11 +597,18 @@ export default function OptimizedAnalyticsPage() {
               </p>
             </CardHeader>
             <CardContent>
-              {isTabLoading ? (
-                <div className="space-y-4">
+              {isTabLoading || isRefreshing ? (
+                <div className="space-y-6">
+                  <div className="text-center py-8 bg-gradient-to-r from-green-50 to-yellow-50 rounded-lg border border-green-200">
+                    <div className="inline-flex items-center gap-3 text-green-700">
+                      <RefreshCw className="h-6 w-6 animate-spin" />
+                      <span className="text-base font-medium">AIが学習パターンを詳細分析中...</span>
+                    </div>
+                    <p className="text-sm text-green-600 mt-2">あなたの学習データから個人最適化されたヒントを生成しています</p>
+                  </div>
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="animate-pulse">
-                      <div className="h-4 w-48 bg-gray-200 rounded mb-2"></div>
+                    <div key={i} className="animate-pulse p-4 border rounded-lg">
+                      <div className="h-4 w-48 bg-gray-200 rounded mb-3"></div>
                       <div className="h-16 w-full bg-gray-100 rounded"></div>
                     </div>
                   ))}
@@ -589,62 +616,93 @@ export default function OptimizedAnalyticsPage() {
               ) : tabCache.insights.hints ? (
                 <div className="space-y-6">
                   {/* 強化された分類システム */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {/* 即座に実行可能な改善提案 */}
-                    {tabCache.insights.hints.generalTips.length > 0 && (
-                      <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                        <h4 className="font-medium text-red-900 mb-3 flex items-center">
-                          <Target className="w-5 h-5 mr-2" />
-                          🚨 即座に実行
-                        </h4>
-                        <div className="space-y-2">
-                          {tabCache.insights.hints.generalTips.slice(0, 2).map((tip, index) => (
-                            <div key={index} className="bg-white p-3 rounded border border-red-100">
-                              <p className="text-sm text-red-800 font-medium mb-1">
-                                改善提案 #{index + 1}
-                              </p>
-                              <p className="text-sm text-red-700">{tip}</p>
-                              <div className="mt-2 flex items-center gap-2">
-                                <span className="inline-flex px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
-                                  優先度: 高
-                                </span>
-                                <span className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
-                                  推定時間: 5-10分
-                                </span>
+                  <div className="space-y-4">
+                    {/* 優先度の高い提案 - 横並び */}
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      {/* 即座に実行可能な改善提案 */}
+                      {tabCache.insights.hints.generalTips.length > 0 && (
+                        <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                          <h4 className="font-medium text-red-900 mb-3 flex items-center">
+                            <Target className="w-5 h-5 mr-2" />
+                            🚨 即座に実行
+                          </h4>
+                          <div className="space-y-2">
+                            {(showAllGeneralTips 
+                              ? tabCache.insights.hints.generalTips 
+                              : tabCache.insights.hints.generalTips.slice(0, 1)
+                            ).map((tip, index) => (
+                              <div key={index} className="bg-white p-3 rounded border border-red-100">
+                                <p className="text-sm text-red-800 font-medium mb-1">
+                                  {showAllGeneralTips ? `改善提案 #${index + 1}` : '最優先提案'}
+                                </p>
+                                <p className="text-sm text-red-700">{tip}</p>
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  <span className="inline-flex px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
+                                    優先度: 高
+                                  </span>
+                                  <span className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                                    推定時間: 5-10分
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                            {tabCache.insights.hints.generalTips.length > 1 && (
+                              <button
+                                onClick={() => setShowAllGeneralTips(!showAllGeneralTips)}
+                                className="w-full text-xs text-red-600 bg-white p-2 rounded border border-red-100 hover:bg-red-50 transition-colors"
+                              >
+                                {showAllGeneralTips 
+                                  ? '▲ 折りたたむ' 
+                                  : `▼ その他 ${tabCache.insights.hints.generalTips.length - 1} 件の提案を表示`
+                                }
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* スキル強化提案 */}
-                    {tabCache.insights.hints.performanceTips.length > 0 && (
-                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <h4 className="font-medium text-blue-900 mb-3 flex items-center">
-                          <Brain className="w-5 h-5 mr-2" />
-                          📚 スキル強化
-                        </h4>
-                        <div className="space-y-2">
-                          {tabCache.insights.hints.performanceTips.slice(0, 2).map((tip, index) => (
-                            <div key={index} className="bg-white p-3 rounded border border-blue-100">
-                              <p className="text-sm text-blue-800 font-medium mb-1">
-                                スキル向上 #{index + 1}
-                              </p>
-                              <p className="text-sm text-blue-700">{tip}</p>
-                              <div className="mt-2 flex items-center gap-2">
-                                <span className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
-                                  優先度: 中
-                                </span>
-                                <span className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
-                                  推定時間: 15-30分
-                                </span>
+                      {/* スキル強化提案 */}
+                      {tabCache.insights.hints.performanceTips.length > 0 && (
+                        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <h4 className="font-medium text-blue-900 mb-3 flex items-center">
+                            <Brain className="w-5 h-5 mr-2" />
+                            📚 スキル強化
+                          </h4>
+                          <div className="space-y-2">
+                            {(showAllPerformanceTips 
+                              ? tabCache.insights.hints.performanceTips 
+                              : tabCache.insights.hints.performanceTips.slice(0, 1)
+                            ).map((tip, index) => (
+                              <div key={index} className="bg-white p-3 rounded border border-blue-100">
+                                <p className="text-sm text-blue-800 font-medium mb-1">
+                                  {showAllPerformanceTips ? `スキル向上 #${index + 1}` : '重点強化領域'}
+                                </p>
+                                <p className="text-sm text-blue-700">{tip}</p>
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  <span className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
+                                    優先度: 中
+                                  </span>
+                                  <span className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                                    推定時間: 15-30分
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                            {tabCache.insights.hints.performanceTips.length > 1 && (
+                              <button
+                                onClick={() => setShowAllPerformanceTips(!showAllPerformanceTips)}
+                                className="w-full text-xs text-blue-600 bg-white p-2 rounded border border-blue-100 hover:bg-blue-50 transition-colors"
+                              >
+                                {showAllPerformanceTips 
+                                  ? '▲ 折りたたむ' 
+                                  : `▼ その他 ${tabCache.insights.hints.performanceTips.length - 1} 件のスキル向上提案を表示`
+                                }
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
 
                   {/* 学習パターン最適化 */}
@@ -653,7 +711,7 @@ export default function OptimizedAnalyticsPage() {
                       <Clock className="w-5 h-5 mr-2" />
                       ⏰ 学習パターン最適化
                     </h4>
-                    <div className="grid gap-3 md:grid-cols-2">
+                    <div className="grid gap-3 sm:grid-cols-1 lg:grid-cols-2">
                       <div className="bg-white p-3 rounded border border-purple-100">
                         <p className="text-sm text-purple-800 font-medium mb-1">最適学習時間の活用</p>
                         <p className="text-sm text-purple-700">
