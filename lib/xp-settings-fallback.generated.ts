@@ -3,7 +3,7 @@
  * 
  * ⚠️ 注意: このファイルは自動生成されます。手動で編集しないでください。
  * 
- * 生成時刻: 2025-11-05T04:08:06.115Z
+ * 生成時刻: 2025-11-05T14:46:55.372Z
  * データベース設定件数: 26件
  * 
  * 生成元: scripts/sync-all-fallback-data.ts
@@ -49,7 +49,7 @@ export const DATABASE_FALLBACK_SETTINGS: XPSettings = {
 }
 
 export const FALLBACK_METADATA = {
-  generatedAt: '2025-11-05T04:08:06.115Z',
+  generatedAt: '2025-11-05T14:46:55.372Z',
   sourceRecordCount: 26,
   databaseSource: 'xp_level_skp_settings',
   generatorScript: 'scripts/sync-all-fallback-data.ts'

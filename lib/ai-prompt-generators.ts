@@ -161,11 +161,24 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
       "difficulty": "${data.difficultyId}",
       "timeLimit": ${getTimeLimit(data.difficultyName)},
       "tags": ["関連タグ1", "関連タグ2"],
-      "source": "参考資料名"
+      "source": "参考資料名",
+      "hint1": "問題理解に必要な用語・概念の説明",
+      "hint2": "正解導出の考え方・着眼点を示すヒント",
+      "hint3": "正解判断の根拠・理由を示すヒント"
     }
   ]
 }
 </output_format>
+
+<hint_guidelines>
+**ヒント作成指針**：
+- hint1（基礎知識）: 問題の専門用語・基本概念を理解するためのヒント
+  例：「BANTとは営業における見込み客の評価指標です」
+- hint2（思考誘導）: 正解選択肢を導くための考え方のヒント
+  例：「競争環境を分析する際の3つの要素を考えてみましょう」
+- hint3（根拠提示）: 正解判断の根拠・理由を示すヒント（答えそのものは避ける）
+  例：「この手法は『顧客・競合・自社』の関係性を整理することが目的です」
+</hint_guidelines>
 
 <time_setting_guide>
 **制限時間設定ガイド（重要）**：
@@ -220,11 +233,24 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
       "difficulty": "${data.difficultyId}",
       "timeLimit": ${getTimeLimit(data.difficultyName)},
       "tags": ["関連タグ1", "関連タグ2"],
-      "source": "参考資料名"
+      "source": "参考資料名",
+      "hint1": "問題理解に必要な用語・概念の簡潔な説明",
+      "hint2": "正解導出の考え方・着眼点を示すヒント",
+      "hint3": "正解判断の根拠・理由を示すヒント"
     }
   ]
 }
 \`\`\`
+
+## ヒント作成ガイドライン
+**hint1（基礎知識）**: 問題の専門用語・基本概念を理解するためのヒント
+- 例：「BANTとは営業における見込み客の評価指標です」
+
+**hint2（思考誘導）**: 正解選択肢を導くための考え方のヒント  
+- 例：「競争環境を分析する際の3つの要素を考えてみましょう」
+
+**hint3（根拠提示）**: 正解判断の根拠・理由を示すヒント（答えは言わない）
+- 例：「この手法は『顧客・競合・自社』の関係性を整理することが目的です」
 
 ## 制限時間設定ガイド（重要）
 - **基本時間**: ${getDifficultyDescription(data.difficultyName).match(/(\d+-\d+秒)/)?.[1] || '10-25秒'}
@@ -278,11 +304,19 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
       "difficulty": "${data.difficultyId}",
       "timeLimit": ${getTimeLimit(data.difficultyName)},
       "tags": ["タグ1", "タグ2"],
-      "source": "参考資料名"
+      "source": "参考資料名",
+      "hint1": "用語・概念の基礎説明",
+      "hint2": "正解導出の考え方", 
+      "hint3": "判断根拠の提示"
     }
   ]
 }
 \`\`\`
+
+**ヒント指針**
+- hint1: 用語・概念の基礎説明
+- hint2: 正解導出の考え方
+- hint3: 判断根拠（答えは言わない）
 
 **制限時間ガイド**
 基本時間: ${getDifficultyDescription(data.difficultyName).match(/(\d+-\d+秒)/)?.[1] || '10-25秒'} + 追加時間（計算+10-15秒、コード読解+15-20秒、実装+20-30秒）

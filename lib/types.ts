@@ -92,7 +92,7 @@ export type QuizMainCategory =
   | 'crisis_risk_management'
 
 export interface Question {
-  id: number
+  id?: number // 新規時はundefined、既存時は必須
   legacy_id?: number // CSV管理・表示用ID
   category: QuizMainCategory | string // string for flexibility with legacy data
   subcategory: QuizSubcategory | string // string for flexibility with legacy data
@@ -106,6 +106,13 @@ export interface Question {
   relatedTopics: string[]
   source: string | null // データベーススキーマに合わせる
   deleted?: boolean // 削除フラグ
+  // ヒント情報を追加
+  level1_hint?: string | null
+  level2_hint?: string | null
+  level3_hint?: string | null
+  // DB日時フィールド
+  createdAt?: string
+  updatedAt?: string
   // 復習関連フィールド（復習モード時のみ）
   reviewReason?: import('./review-reasons').ReviewReason | null
   reviewPriority?: 1 | 2 | 3

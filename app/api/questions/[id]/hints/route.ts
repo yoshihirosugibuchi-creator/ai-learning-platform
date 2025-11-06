@@ -53,14 +53,14 @@ export async function GET(
       )
     }
 
-    // ヒント情報取得
-    const { data: hints, error: hintsError } = await supabaseAdmin
-      .from('quiz_hints')
+    // 統合テーブルからヒント情報取得
+    const { data: questionWithHints, error: hintsError } = await supabaseAdmin
+      .from('quiz_questions')
       .select('level1_hint, level2_hint, level3_hint')
-      .eq('question_id', questionId)
+      .eq('id', questionId)
       .single()
 
-    if (hintsError && hintsError.code !== 'PGRST116') {
+    if (hintsError) {
       console.error('❌ Error fetching hints:', hintsError)
       return NextResponse.json(
         { error: 'ヒント情報の取得に失敗しました' },
@@ -70,9 +70,9 @@ export async function GET(
 
     // ヒントデータ整形
     const hintData: HintData = {
-      level1: hints?.level1_hint || null,
-      level2: hints?.level2_hint || null,
-      level3: hints?.level3_hint || null
+      level1: questionWithHints?.level1_hint || null,
+      level2: questionWithHints?.level2_hint || null,
+      level3: questionWithHints?.level3_hint || null
     }
 
     console.log(`✅ Hints fetched for question ${questionId}:`, {
@@ -150,20 +150,17 @@ export async function POST(
       )
     }
 
-    // ヒント情報のupsert
-    const { data: hints, error: hintsError } = await supabaseAdmin
-      .from('quiz_hints')
-      .upsert({
-        question_id: questionId,
+    // 統合テーブルでヒント情報を更新
+    const { data: updatedQuestion, error: hintsError } = await supabaseAdmin
+      .from('quiz_questions')
+      .update({
         level1_hint: level1 || null,
         level2_hint: level2 || null,
         level3_hint: level3 || null,
-        updated_by: userId,
         updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'question_id'
       })
-      .select()
+      .eq('id', questionId)
+      .select('level1_hint, level2_hint, level3_hint')
       .single()
 
     if (hintsError) {
@@ -180,9 +177,9 @@ export async function POST(
       success: true,
       questionId: questionId,
       hints: {
-        level1: hints.level1_hint,
-        level2: hints.level2_hint,
-        level3: hints.level3_hint
+        level1: updatedQuestion.level1_hint,
+        level2: updatedQuestion.level2_hint,
+        level3: updatedQuestion.level3_hint
       },
       message: 'ヒント情報を保存しました'
     })

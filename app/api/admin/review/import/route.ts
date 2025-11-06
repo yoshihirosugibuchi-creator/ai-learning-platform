@@ -143,6 +143,9 @@ export async function POST(request: NextRequest) {
       time_limit: q.time_limit || 45,
       related_topics: q.tags || [],
       source: q.source || 'AI Generated',
+      level1_hint: q.level1_hint || null,
+      level2_hint: q.level2_hint || null,
+      level3_hint: q.level3_hint || null,
       is_deleted: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()

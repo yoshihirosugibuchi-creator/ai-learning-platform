@@ -1024,9 +1024,6 @@ export type Database = {
           import_batch_id: string | null
           imported_at: string | null
           imported_by: string | null
-          level1_hint: string | null
-          level2_hint: string | null
-          level3_hint: string | null
           option_a: string
           option_b: string
           option_c: string
@@ -1063,9 +1060,6 @@ export type Database = {
           import_batch_id?: string | null
           imported_at?: string | null
           imported_by?: string | null
-          level1_hint?: string | null
-          level2_hint?: string | null
-          level3_hint?: string | null
           option_a: string
           option_b: string
           option_c: string
@@ -1102,9 +1096,6 @@ export type Database = {
           import_batch_id?: string | null
           imported_at?: string | null
           imported_by?: string | null
-          level1_hint?: string | null
-          level2_hint?: string | null
-          level3_hint?: string | null
           option_a?: string
           option_b?: string
           option_c?: string

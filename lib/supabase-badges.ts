@@ -14,20 +14,20 @@ export interface BadgeAwardData {
 export async function testDatabaseConnection(): Promise<void> {
   console.log('🔍 Testing database connection and tables...')
   
-  // Test existing table first
+  // Test course_session_completions table (replaces learning_progress)
   try {
     const { data: _progressData, error: progressError } = await supabase
-      .from('learning_progress')
+      .from('course_session_completions')
       .select('id')
       .limit(1)
     
     if (progressError) {
-      console.error('❌ learning_progress table access failed:', progressError)
+      console.error('❌ course_session_completions table access failed:', progressError)
     } else {
-      console.log('✅ learning_progress table accessible')
+      console.log('✅ course_session_completions table accessible')
     }
   } catch (error) {
-    console.error('❌ Exception accessing learning_progress:', error)
+    console.error('❌ Exception accessing course_session_completions:', error)
   }
   
   // Test user_badges table

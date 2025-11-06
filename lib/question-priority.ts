@@ -119,7 +119,7 @@ function categorizeQuestionsByPriority(
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000)
   
   questions.forEach(question => {
-    const history = historyMap.get(question.id.toString())
+    const history = historyMap.get((question.id || 0).toString())
     
     if (!history) {
       // 1. 未出題問題 (最優先)

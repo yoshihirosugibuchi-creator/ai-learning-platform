@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-interface LearningProgressRecord {
+interface CourseCompletionRecord {
   user_id: string | null
-  duration_seconds: number | null
   session_id: string | null
   course_id: string
-  created_at: string | null
+  theme_id: string | null
+  genre_id: string | null
+  completion_time: string | null
 }
 
 export async function GET(_request: NextRequest) {
   try {
-    console.log('🔍 learning_progress テーブルの duration_seconds 集計開始')
+    console.log('🔍 course_session_completions テーブルの学習進捗分析開始')
 
-    // learning_progress テーブルから全データを取得
+    // course_session_completions テーブルから全データを取得
     const { data: records, error } = await supabaseAdmin
-      .from('learning_progress')
-      .select('user_id, duration_seconds, session_id, course_id, created_at')
+      .from('course_session_completions')
+      .select('user_id, session_id, course_id, theme_id, genre_id, completion_time')
       .order('user_id', { ascending: true })
 
     if (error) {
@@ -26,7 +27,7 @@ export async function GET(_request: NextRequest) {
 
     if (!records || records.length === 0) {
       return NextResponse.json({ 
-        message: 'learning_progress テーブルにデータがありません',
+        message: 'course_session_completions テーブルにデータがありません',
         totalRecords: 0,
         userStats: []
       })
@@ -38,73 +39,95 @@ export async function GET(_request: NextRequest) {
     const userStats = new Map<string, {
       userId: string
       recordCount: number
-      totalDuration: number
-      avgDuration: number
-      validDurationCount: number
-      sessionIds: string[]
+      courseCount: number
+      sessionCount: number
+      themeCount: number
+      genreCount: number
+      courses: Set<string>
+      sessions: Set<string>
+      themes: Set<string>
+      genres: Set<string>
+      firstCompletion: string | null
+      lastCompletion: string | null
     }>()
 
-    records.forEach((record: LearningProgressRecord) => {
+    records.forEach((record: CourseCompletionRecord) => {
       const userId = record.user_id || 'NULL'
-      const duration = record.duration_seconds || 0
-      const sessionId = record.session_id || 'unknown'
 
       if (!userStats.has(userId)) {
         userStats.set(userId, {
           userId,
           recordCount: 0,
-          totalDuration: 0,
-          avgDuration: 0,
-          validDurationCount: 0,
-          sessionIds: []
+          courseCount: 0,
+          sessionCount: 0,
+          themeCount: 0,
+          genreCount: 0,
+          courses: new Set(),
+          sessions: new Set(),
+          themes: new Set(),
+          genres: new Set(),
+          firstCompletion: null,
+          lastCompletion: null
         })
       }
 
       const stats = userStats.get(userId)!
       stats.recordCount++
-      if (record.duration_seconds !== null && record.duration_seconds > 0) {
-        stats.totalDuration += duration
-        stats.validDurationCount++
-        stats.sessionIds.push(sessionId)
+      
+      if (record.course_id) stats.courses.add(record.course_id)
+      if (record.session_id) stats.sessions.add(record.session_id)
+      if (record.theme_id) stats.themes.add(record.theme_id)
+      if (record.genre_id) stats.genres.add(record.genre_id)
+
+      // 初回・最終完了日時の更新
+      const completionTime = record.completion_time
+      if (completionTime) {
+        if (!stats.firstCompletion || completionTime < stats.firstCompletion) {
+          stats.firstCompletion = completionTime
+        }
+        if (!stats.lastCompletion || completionTime > stats.lastCompletion) {
+          stats.lastCompletion = completionTime
+        }
       }
     })
 
-    // 平均計算
+    // カウント数更新
     userStats.forEach((stats) => {
-      stats.avgDuration = stats.validDurationCount > 0 
-        ? Math.round(stats.totalDuration / stats.validDurationCount) 
-        : 0
+      stats.courseCount = stats.courses.size
+      stats.sessionCount = stats.sessions.size
+      stats.themeCount = stats.themes.size
+      stats.genreCount = stats.genres.size
     })
 
-    // 結果をソート（総学習時間順）
+    // 結果をソート（レコード数順）
     const sortedStats = Array.from(userStats.values())
-      .sort((a, b) => b.totalDuration - a.totalDuration)
+      .sort((a, b) => b.recordCount - a.recordCount)
 
     // 全体サマリー計算
     const summary = {
       totalRecords: records.length,
       totalUsers: userStats.size,
-      totalDuration: sortedStats.reduce((sum, stats) => sum + stats.totalDuration, 0),
-      totalValidRecords: sortedStats.reduce((sum, stats) => sum + stats.validDurationCount, 0),
-      avgDurationPerSession: 0
+      totalUniqueCourses: new Set(records.map(r => r.course_id)).size,
+      totalUniqueSessions: new Set(records.map(r => r.session_id).filter(Boolean)).size,
+      totalUniqueThemes: new Set(records.map(r => r.theme_id).filter(Boolean)).size,
+      totalUniqueGenres: new Set(records.map(r => r.genre_id).filter(Boolean)).size,
+      avgCompletionsPerUser: Math.round(records.length / userStats.size)
     }
 
-    summary.avgDurationPerSession = summary.totalValidRecords > 0 
-      ? Math.round(summary.totalDuration / summary.totalValidRecords) 
-      : 0
-
     return NextResponse.json({
-      summary: {
-        ...summary,
-        totalDurationMinutes: Math.round(summary.totalDuration / 60),
-        avgDurationMinutes: Math.round(summary.avgDurationPerSession / 60)
-      },
+      summary,
       userStats: sortedStats.map(stats => ({
-        ...stats,
         userIdDisplay: stats.userId === 'NULL' ? 'NULL' : stats.userId.substring(0, 8) + '...',
-        totalDurationMinutes: Math.round(stats.totalDuration / 60),
-        avgDurationMinutes: Math.round(stats.avgDuration / 60),
-        sessionCount: stats.sessionIds.length
+        recordCount: stats.recordCount,
+        courseCount: stats.courseCount,
+        sessionCount: stats.sessionCount,
+        themeCount: stats.themeCount,
+        genreCount: stats.genreCount,
+        firstCompletion: stats.firstCompletion,
+        lastCompletion: stats.lastCompletion,
+        learningPeriodDays: stats.firstCompletion && stats.lastCompletion 
+          ? Math.ceil((new Date(stats.lastCompletion).getTime() - new Date(stats.firstCompletion).getTime()) / (1000 * 60 * 60 * 24))
+          : 0
       }))
     })
 

@@ -100,6 +100,9 @@ interface QuizQuestion {
   tags?: string[]
   source?: string
   deleted?: boolean
+  hint1?: string | null
+  hint2?: string | null
+  hint3?: string | null
   metadata?: {
     generated_by?: string
     generated_at?: string
@@ -519,6 +522,12 @@ export default function QuizGeneratorPage() {
         updated[index].source = value
       } else if (field === 'tags') {
         updated[index].tags = value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+      } else if (field === 'hint1') {
+        updated[index].hint1 = value
+      } else if (field === 'hint2') {
+        updated[index].hint2 = value
+      } else if (field === 'hint3') {
+        updated[index].hint3 = value
       }
     }
     setParsedQuestions(updated)
@@ -569,7 +578,10 @@ export default function QuizGeneratorPage() {
           difficulty: q.difficulty,
           timeLimit: q.timeLimit,
           tags: q.tags,
-          source: q.source
+          source: q.source,
+          hint1: q.hint1 || null,
+          hint2: q.hint2 || null,
+          hint3: q.hint3 || null
         }
       })
 
@@ -701,6 +713,9 @@ export default function QuizGeneratorPage() {
           timeLimit: q.timeLimit || 45,
           relatedTopics: q.tags || [],
           source: q.source || '',
+          hint1: q.hint1 || null,
+          hint2: q.hint2 || null,
+          hint3: q.hint3 || null,
           deleted: false
         }
       })
@@ -1240,6 +1255,43 @@ export default function QuizGeneratorPage() {
                           />
                         </div>
 
+                        {/* ヒント */}
+                        <div>
+                          <label className="text-sm font-medium block mb-2">ヒント</label>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-xs text-muted-foreground block mb-1">ヒント1（基礎知識）</label>
+                              <textarea
+                                className="w-full p-2 border rounded text-sm"
+                                value={question.hint1 || ''}
+                                onChange={(e) => handleQuestionUpdate(index, 'hint1', e.target.value)}
+                                rows={2}
+                                placeholder="問題理解に必要な用語・概念の説明"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted-foreground block mb-1">ヒント2（思考誘導）</label>
+                              <textarea
+                                className="w-full p-2 border rounded text-sm"
+                                value={question.hint2 || ''}
+                                onChange={(e) => handleQuestionUpdate(index, 'hint2', e.target.value)}
+                                rows={2}
+                                placeholder="正解導出の考え方・着眼点"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted-foreground block mb-1">ヒント3（根拠提示）</label>
+                              <textarea
+                                className="w-full p-2 border rounded text-sm"
+                                value={question.hint3 || ''}
+                                onChange={(e) => handleQuestionUpdate(index, 'hint3', e.target.value)}
+                                rows={2}
+                                placeholder="正解判断の根拠・理由（答えは言わない）"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
                         {/* タグ・ソース */}
                         <div className="grid grid-cols-2 gap-2">
                           <div>
@@ -1349,6 +1401,33 @@ export default function QuizGeneratorPage() {
                           <h6 className="font-medium text-muted-foreground mb-1">解説</h6>
                           <p className="text-sm bg-blue-50 p-3 rounded">{question.explanation}</p>
                         </div>
+
+                        {/* ヒント */}
+                        {(question.hint1 || question.hint2 || question.hint3) && (
+                          <div>
+                            <h6 className="font-medium text-muted-foreground mb-2">ヒント</h6>
+                            <div className="space-y-2">
+                              {question.hint1 && (
+                                <div className="bg-yellow-50 p-3 rounded text-sm">
+                                  <span className="font-medium text-yellow-800">ヒント1（基礎知識）: </span>
+                                  <span className="text-yellow-700">{question.hint1}</span>
+                                </div>
+                              )}
+                              {question.hint2 && (
+                                <div className="bg-orange-50 p-3 rounded text-sm">
+                                  <span className="font-medium text-orange-800">ヒント2（思考誘導）: </span>
+                                  <span className="text-orange-700">{question.hint2}</span>
+                                </div>
+                              )}
+                              {question.hint3 && (
+                                <div className="bg-green-50 p-3 rounded text-sm">
+                                  <span className="font-medium text-green-800">ヒント3（根拠提示）: </span>
+                                  <span className="text-green-700">{question.hint3}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

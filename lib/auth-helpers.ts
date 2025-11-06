@@ -77,7 +77,7 @@ export async function getCurrentUserRole(request: Request): Promise<{
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
     if (userError || !user) {
-      return { userId: null, role: null, error: 'Authentication failed' }
+      return { userId: null, role: null, error: `Authentication failed: ${userError?.message || 'No user'}` }
     }
     
     // 🚨 IMPORTANT: users テーブルから役割取得（auth.users.user_metadata.role は使用禁止）

@@ -2,16 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getCurrentUserRole } from '@/lib/auth-helpers'
 import type { Question } from '@/lib/types'
-import type { Database } from '@/lib/database-types-official'
 import fs from 'fs'
 import path from 'path'
 
-type QuizQuestionRow = Database['public']['Tables']['quiz_questions']['Row']
-
-// DB対応版 - 問題データ取得
+// 問題データ取得
 export async function GET(request: NextRequest) {
   try {
-    // 管理者権限チェック（admin または system_admin）
     const { userId, role } = await getCurrentUserRole(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
@@ -20,7 +16,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Administrator access required' }, { status: 403 })
     }
     
-    console.log('🔍 Admin: Fetching all questions from DB')
+    console.log('🔍 Admin: Fetching questions from unified table')
     
     const { data, error } = await supabaseAdmin
       .from('quiz_questions')
@@ -31,13 +27,13 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('❌ Database query error:', error)
       return NextResponse.json(
-        { error: 'Database query failed', details: (error as Error)?.message || 'Unknown error' },
+        { error: 'Database query failed', details: error.message },
         { status: 500 }
       )
     }
     
-    // DB行をQuestion型に変換
-    const questions: Question[] = data?.map((row: QuizQuestionRow) => ({
+    // 統合テーブルから直接Question型に変換
+    const questions: Question[] = data?.map((row) => ({
       id: row.id,
       legacy_id: row.legacy_id,
       category: row.category_id,
@@ -45,16 +41,22 @@ export async function GET(request: NextRequest) {
       subcategory_id: row.subcategory_id || '',
       question: row.question,
       options: [row.option1, row.option2, row.option3, row.option4],
-      correct: row.correct_answer, // DB is already 0-based
+      correct: row.correct_answer,
       explanation: row.explanation,
       difficulty: row.difficulty,
       timeLimit: row.time_limit,
       relatedTopics: Array.isArray(row.related_topics) ? row.related_topics as string[] : [],
       source: row.source,
-      deleted: row.is_deleted || false
+      deleted: row.is_deleted || false,
+      level1_hint: row.level1_hint || null,
+      level2_hint: row.level2_hint || null,
+      level3_hint: row.level3_hint || null,
+      // DB日時を追加
+      createdAt: row.created_at || undefined,
+      updatedAt: row.updated_at || undefined
     })) || []
     
-    console.log(`✅ Admin: ${questions.length} questions retrieved from DB`)
+    console.log(`✅ Admin: ${questions.length} questions retrieved`)
     
     return NextResponse.json({ 
       questions,
@@ -71,92 +73,77 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// DB対応版 - 問題データ一括更新/挿入
+// CSV問題データ取込（統合テーブル・シンプル版）
 export async function POST(request: NextRequest) {
   try {
-    // システム管理者権限チェック
-    const { userId, role } = await getCurrentUserRole(request)
+    // 認証チェック
+    const { userId, role, error: authError } = await getCurrentUserRole(request)
+    
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      return NextResponse.json({ error: 'Authentication required', details: authError }, { status: 401 })
     }
     if (role !== 'system_admin') {
       return NextResponse.json({ error: 'System administrator access required' }, { status: 403 })
     }
     
+    console.log('✅ Admin: CSV import started by:', userId)
+    
     const { questions }: { questions: Question[] } = await request.json()
     
     if (!Array.isArray(questions)) {
-      return NextResponse.json(
-        { error: 'Invalid questions format' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid questions format' }, { status: 400 })
     }
     
-    // デバッグ: 受信したquestions配列の最初の数問をログ出力
-    console.log('🔍 Received questions sample:', questions.slice(0, 2).map((q, i) => ({
-      index: i + 1,
-      optionsType: Array.isArray(q.options) ? 'array' : typeof q.options,
-      optionsLength: Array.isArray(q.options) ? q.options.length : 'N/A',
-      optionsValue: q.options
-    })))
-    
-    console.log(`🚀 Admin: Starting bulk upsert for ${questions.length} questions`)
-    
-    // 大量データの場合は制限
     if (questions.length > 1000) {
-      return NextResponse.json(
-        { error: 'Too many questions. Maximum 1000 questions per import.' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Too many questions. Maximum 1000 per import.' }, { status: 400 })
     }
     
-    // 高速バリデーション
+    console.log(`📋 Processing ${questions.length} questions from CSV`)
+    
+    // バリデーション
     const validationErrors: string[] = []
     const validatedQuestions: Question[] = []
     
     for (let i = 0; i < questions.length; i++) {
-      const question = questions[i]
+      const q = questions[i]
       
-      // 基本的なバリデーションのみ（高速化）
-      if (!question.id || isNaN(Number(question.id))) {
-        validationErrors.push(`Question ${i + 1}: Invalid ID`)
+      if (q.id && isNaN(Number(q.id))) {
+        validationErrors.push(`Row ${i + 1}: Invalid ID`)
         continue
       }
       
-      if (!question.question?.trim()) {
-        validationErrors.push(`Question ${i + 1}: Missing question text`)
+      if (!q.question?.trim()) {
+        validationErrors.push(`Row ${i + 1}: Missing question text`)
         continue
       }
       
-      if (!Array.isArray(question.options) || question.options.length !== 4) {
-        validationErrors.push(`Question ${i + 1}: Must have exactly 4 options`)
+      if (!Array.isArray(q.options) || q.options.length !== 4) {
+        validationErrors.push(`Row ${i + 1}: Must have exactly 4 options`)
         continue
       }
       
-      const correctNum = Number(question.correct)
+      const correctNum = Number(q.correct)
       if (isNaN(correctNum) || correctNum < 0 || correctNum > 3) {
-        validationErrors.push(`Question ${i + 1}: Correct answer must be 0-3`)
+        validationErrors.push(`Row ${i + 1}: Correct answer must be 0-3`)
         continue
       }
       
-      if (!question.category?.trim()) {
-        validationErrors.push(`Question ${i + 1}: Missing category`)
+      if (!q.category?.trim()) {
+        validationErrors.push(`Row ${i + 1}: Missing category`)
         continue
       }
       
-      validatedQuestions.push(question)
+      validatedQuestions.push(q)
     }
     
     if (validationErrors.length > 0) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationErrors },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Validation failed', details: validationErrors }, { status: 400 })
     }
     
-    // 一括upsert用データ準備
+    // 統合テーブル用データ準備
     const dbRows = validatedQuestions.map(q => ({
-      legacy_id: q.id,
+      ...(q.id ? { id: q.id } : {}), // 既存：ID指定、新規：自動採番
+      legacy_id: q.legacy_id as number,
       category_id: q.category,
       subcategory: q.subcategory || '',
       subcategory_id: q.subcategory_id || '',
@@ -172,87 +159,75 @@ export async function POST(request: NextRequest) {
       related_topics: q.relatedTopics || [],
       source: q.source || '',
       is_deleted: q.deleted || false,
+      level1_hint: q.level1_hint || null,
+      level2_hint: q.level2_hint || null,
+      level3_hint: q.level3_hint || null,
       updated_at: new Date().toISOString()
     }))
     
-    let insertedCount = 0
+    // バッチ処理でupsert
+    let totalProcessed = 0
     const errors: string[] = []
-    
-    // 最適化されたバッチ処理（50件ずつで高速化）
     const BATCH_SIZE = 50
-    const startTime = Date.now()
+    
+    console.log(`🚀 Starting batch upsert (${Math.ceil(dbRows.length/BATCH_SIZE)} batches)`)
     
     for (let i = 0; i < dbRows.length; i += BATCH_SIZE) {
       const batch = dbRows.slice(i, i + BATCH_SIZE)
       const batchNum = Math.floor(i/BATCH_SIZE) + 1
       
       try {
-        console.log(`⏳ Processing batch ${batchNum}/${Math.ceil(dbRows.length/BATCH_SIZE)}: ${batch.length} questions`)
+        console.log(`⏳ Batch ${batchNum}: Processing ${batch.length} questions`)
         
         const { error } = await supabaseAdmin
           .from('quiz_questions')
-          .upsert(batch, { 
-            onConflict: 'legacy_id',
-            count: 'exact'
-          })
+          .upsert(batch, { onConflict: 'id' })
         
         if (error) {
-          errors.push(`Batch ${batchNum}: ${(error as Error)?.message || 'Unknown error'}`)
+          errors.push(`Batch ${batchNum}: ${error.message}`)
           console.error(`❌ Batch ${batchNum} error:`, error)
-          // エラーがあっても処理を継続
         } else {
-          // 処理成功
-          insertedCount += batch.length // 簡略化: 全てupsertとしてカウント
-          console.log(`✅ Batch ${batchNum} completed: ${batch.length} questions`)
+          totalProcessed += batch.length
+          console.log(`✅ Batch ${batchNum}: ${batch.length} questions processed`)
         }
-        
-        // タイムアウト対策: 30秒を超えたら残りはスキップ
-        if (Date.now() - startTime > 30000) {
-          console.warn(`⚠️ Processing timeout reached. Stopping at batch ${batchNum}`)
-          errors.push(`Processing stopped at batch ${batchNum} due to timeout`)
-          break
-        }
-        
       } catch (batchError) {
-        errors.push(`Batch ${batchNum}: ${(batchError as Error)?.message || 'Unknown error'}`)
+        const errorMsg = (batchError as Error)?.message || 'Unknown error'
+        errors.push(`Batch ${batchNum}: ${errorMsg}`)
         console.error(`❌ Batch ${batchNum} exception:`, batchError)
-        // 継続処理
       }
     }
-    
-    const totalProcessed = insertedCount
-    const processingTime = Date.now() - startTime
-    
-    console.log(`✅ Admin: Bulk upsert completed - ${totalProcessed} questions processed in ${processingTime}ms`)
-    
+
+    // ヒント統計
+    const questionsWithHints = validatedQuestions.filter(q => 
+      q.level1_hint || q.level2_hint || q.level3_hint
+    )
+
+    console.log(`✅ Import completed: ${totalProcessed}/${validatedQuestions.length} processed, ${questionsWithHints.length} with hints`)
+
     return NextResponse.json({
       success: errors.length === 0,
       message: `Successfully processed ${totalProcessed} of ${validatedQuestions.length} questions`,
       stats: {
         total: validatedQuestions.length,
         processed: totalProcessed,
-        inserted: totalProcessed, // 簡略化: 全てupsert
-        updated: 0,
         errors: errors.length,
-        processingTimeMs: processingTime
+        hintsProcessed: questionsWithHints.length
       },
-      errors: errors.length > 0 ? errors : undefined,
-      warnings: processingTime > 25000 ? ['Processing took longer than expected. Consider splitting large imports.'] : undefined
+      errors: errors.length > 0 ? errors : undefined
     })
-    
+
   } catch (error) {
-    console.error('❌ Admin bulk upsert error:', error)
+    console.error('❌ CSV import error:', error)
     return NextResponse.json(
-      { error: 'Failed to update questions', details: (error as Error)?.message || 'Unknown error' },
+      { error: 'Failed to import questions', details: (error as Error)?.message },
       { status: 500 }
     )
   }
 }
 
-// DB対応版 - 問題データをJSONファイルに同期
+// JSONファイル同期
 export async function PUT(request: NextRequest) {
   try {
-    // システム管理者権限チェック
     const { userId, role } = await getCurrentUserRole(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
@@ -261,9 +236,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'System administrator access required' }, { status: 403 })
     }
     
-    console.log('🚀 Admin: Starting questions DB→JSON sync')
+    console.log('🚀 Admin: Starting DB→JSON sync')
     
-    // DBから全データを取得
     const response = await GET(request)
     const data = await response.json()
     
@@ -275,17 +249,13 @@ export async function PUT(request: NextRequest) {
     }
     
     const questions = data.questions || []
-    
-    // JSONファイルパス
     const questionsJsonPath = path.join(process.cwd(), 'public', 'questions.json')
     const backupDir = path.join(process.cwd(), 'backups')
     
-    // バックアップディレクトリを作成
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir, { recursive: true })
     }
     
-    // 既存ファイルをバックアップ
     let backupPath = null
     if (fs.existsSync(questionsJsonPath)) {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -294,7 +264,6 @@ export async function PUT(request: NextRequest) {
       console.log(`💾 Backup created: ${path.basename(backupPath)}`)
     }
     
-    // 新しいJSONファイルを作成
     const questionsJson = {
       questions,
       lastUpdated: new Date().toISOString(),
@@ -304,7 +273,7 @@ export async function PUT(request: NextRequest) {
     
     fs.writeFileSync(questionsJsonPath, JSON.stringify(questionsJson, null, 2), 'utf-8')
     
-    console.log(`✅ Admin: Questions synced to JSON - ${questions.length} questions`)
+    console.log(`✅ Admin: ${questions.length} questions synced to JSON`)
     
     return NextResponse.json({
       success: true,
@@ -319,16 +288,15 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('❌ Admin questions sync error:', error)
     return NextResponse.json(
-      { error: 'Failed to sync questions', details: (error as Error)?.message || 'Unknown error' },
+      { error: 'Failed to sync questions', details: (error as Error)?.message },
       { status: 500 }
     )
   }
 }
 
-// DB対応版 - 問題削除
+// 問題削除
 export async function DELETE(request: NextRequest) {
   try {
-    // システム管理者権限チェック
     const { userId, role } = await getCurrentUserRole(request)
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
@@ -341,17 +309,13 @@ export async function DELETE(request: NextRequest) {
     const questionId = url.searchParams.get('id')
     
     if (!questionId || isNaN(Number(questionId))) {
-      return NextResponse.json(
-        { error: 'Invalid question ID' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid question ID' }, { status: 400 })
     }
     
     const legacyId = Number(questionId)
     
     console.log(`🗑️ Admin: Deleting question ${legacyId}`)
     
-    // 論理削除（is_deleted = true）
     const { data, error } = await supabaseAdmin
       .from('quiz_questions')
       .update({ 
@@ -364,16 +328,13 @@ export async function DELETE(request: NextRequest) {
     if (error) {
       console.error('❌ Delete operation error:', error)
       return NextResponse.json(
-        { error: 'Delete operation failed', details: (error as Error)?.message || 'Unknown error' },
+        { error: 'Delete operation failed', details: error.message },
         { status: 500 }
       )
     }
     
     if (!data || data.length === 0) {
-      return NextResponse.json(
-        { error: 'Question not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 })
     }
     
     console.log(`✅ Admin: Question ${legacyId} marked as deleted`)
@@ -386,9 +347,6 @@ export async function DELETE(request: NextRequest) {
     
   } catch (error) {
     console.error('❌ Admin delete error:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete question' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to delete question' }, { status: 500 })
   }
 }

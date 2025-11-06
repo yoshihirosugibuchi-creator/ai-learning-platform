@@ -453,6 +453,36 @@ export type Database = {
           },
         ]
       }
+      knowledge_card_collection: {
+        Row: {
+          card_id: number
+          count: number | null
+          created_at: string | null
+          id: string
+          last_obtained_at: string | null
+          obtained_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          card_id: number
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          last_obtained_at?: string | null
+          obtained_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          card_id?: number
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          last_obtained_at?: string | null
+          obtained_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       learning_analytics_summary: {
         Row: {
           average_session_duration: number
@@ -652,6 +682,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      learning_progress: {
+        Row: {
+          completed_at: string | null
+          completion_percentage: number | null
+          course_id: string
+          created_at: string | null
+          duration_seconds: number | null
+          id: string
+          progress_data: Json | null
+          session_end_time: string | null
+          session_id: string | null
+          session_start_time: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          completion_percentage?: number | null
+          course_id: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          progress_data?: Json | null
+          session_end_time?: string | null
+          session_id?: string | null
+          session_start_time?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          completion_percentage?: number | null
+          course_id?: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          progress_data?: Json | null
+          session_end_time?: string | null
+          session_id?: string | null
+          session_start_time?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       learning_recommendations: {
         Row: {
@@ -932,6 +1007,71 @@ export type Database = {
           },
         ]
       }
+      quiz_hints_backup: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          level1_hint: string | null
+          level2_hint: string | null
+          level3_hint: string | null
+          question_id: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          level1_hint?: string | null
+          level2_hint?: string | null
+          level3_hint?: string | null
+          question_id: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          level1_hint?: string | null
+          level2_hint?: string | null
+          level3_hint?: string | null
+          question_id?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_hints_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_hints_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "quiz_hints"
+            referencedColumns: ["question_id"]
+          },
+          {
+            foreignKeyName: "quiz_hints_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_hints_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_questions: {
         Row: {
           category_id: string
@@ -1024,9 +1164,6 @@ export type Database = {
           import_batch_id: string | null
           imported_at: string | null
           imported_by: string | null
-          level1_hint: string | null
-          level2_hint: string | null
-          level3_hint: string | null
           option_a: string
           option_b: string
           option_c: string
@@ -1063,9 +1200,6 @@ export type Database = {
           import_batch_id?: string | null
           imported_at?: string | null
           imported_by?: string | null
-          level1_hint?: string | null
-          level2_hint?: string | null
-          level3_hint?: string | null
           option_a: string
           option_b: string
           option_c: string
@@ -1102,9 +1236,6 @@ export type Database = {
           import_batch_id?: string | null
           imported_at?: string | null
           imported_by?: string | null
-          level1_hint?: string | null
-          level2_hint?: string | null
-          level3_hint?: string | null
           option_a?: string
           option_b?: string
           option_c?: string

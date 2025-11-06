@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     // すべてのテーブルを強制削除（RLSバイパス）
     const tablesToReset = [
-      'learning_progress',
+      // 削除済みテーブル除外: learning_progress, knowledge_card_collection
       'user_badges', 
       'user_xp_stats_v2', // v2統計システムのみ使用
       'user_category_xp_stats_v2',
@@ -56,7 +56,6 @@ export async function POST(request: NextRequest) {
       'course_session_completions',
       'course_theme_completions', 
       'course_completions',
-      'knowledge_card_collection',
       'wisdom_card_collection',
       'user_knowledge_collection_v2', // 新しい知識カードコレクションV2システム
       'user_settings',

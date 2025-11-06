@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
     console.log('Backup created:', backupPath)
 
     // IDでソート
-    validatedQuestions.sort((a, b) => a.id - b.id)
+    validatedQuestions.sort((a, b) => (a.id || 0) - (b.id || 0))
 
     // 新しいデータを保存
     const newData = {

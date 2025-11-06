@@ -325,13 +325,13 @@ export default function QuizCard({
           ))}
         </div>
         
-        {/* ヒント表示（回答前のみ） */}
-        {hintsEnabled && !showResult && !isTimeUp && (
+        {/* ヒント表示（回答前のみ） - ヒントデータがある場合のみ表示 */}
+        {hintsEnabled && !showResult && !isTimeUp && hintData?.available && (
           <HintDisplay
             hints={shownHints}
             currentLevel={currentHintLevel}
             onRequestHint={handleRequestHint}
-            disabled={isLoadingHint || !hintData?.available}
+            disabled={isLoadingHint}
             maxLevel={3}
           />
         )}

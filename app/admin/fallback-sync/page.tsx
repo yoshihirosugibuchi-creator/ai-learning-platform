@@ -483,7 +483,7 @@ export default function FallbackSyncPage() {
                           {syncLoading === 'xp' ? '同期中...' : '同期'}
                         </button>
                       )}
-                      {file.name.includes('クイズ問題') && (
+                      {(file.name.includes('クイズ問題') || file.name.includes('ヒント統合')) && (
                         <button
                           type="button"
                           onClick={async (e) => {
@@ -499,24 +499,6 @@ export default function FallbackSyncPage() {
                           className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 text-white px-3 py-1 rounded text-sm transition-colors"
                         >
                           {syncLoading === 'quiz' ? '同期中...' : '同期'}
-                        </button>
-                      )}
-                      {file.name.includes('クイズヒント') && (
-                        <button
-                          type="button"
-                          onClick={async (e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            try {
-                              await handleSync('hints')
-                            } catch (error) {
-                              console.error('ヒント同期エラー:', error)
-                            }
-                          }}
-                          disabled={!!syncLoading}
-                          className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 text-white px-3 py-1 rounded text-sm transition-colors"
-                        >
-                          {syncLoading === 'hints' ? '同期中...' : '同期'}
                         </button>
                       )}
                       {file.name.includes('コース') && (

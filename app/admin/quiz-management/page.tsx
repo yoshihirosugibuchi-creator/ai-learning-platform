@@ -14,9 +14,9 @@ import {
   CheckCircle,
   Shield
 } from 'lucide-react'
-import { getAllQuestions } from '@/lib/questions'
 import type { Question } from '@/lib/types'
 import { useUserRole } from '@/hooks/useUserRole'
+import { supabase } from '@/lib/supabase'
 
 interface ImportPreview {
   questions: Question[]
@@ -29,6 +29,8 @@ interface ImportPreview {
     deleted: number
     active: number
     hasDeletedColumn: boolean
+    hasHintColumns: boolean
+    withHints: number
   }
 }
 
@@ -75,14 +77,33 @@ export default function QuizManagementPage() {
     )
   }
 
-  // 初期データ読み込み
+  // 初期データ読み込み（管理者専用API使用）
   const loadQuestions = async () => {
     setLoading(true)
     try {
-      const data = await getAllQuestions()
+      // 認証トークンを取得
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        throw new Error('認証が必要です')
+      }
+
+      const response = await fetch('/api/admin/questions/db', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      const data = result.questions || []
       setQuestions(data)
-      setMessage({ type: 'success', text: `${data.length}問のクイズ問題を読み込みました` })
-    } catch {
+      setMessage({ type: 'success', text: `${data.length}問のクイズ問題を読み込みました（ヒント付き）` })
+    } catch (error) {
+      console.error('❌ Admin questions load error:', error)
       setMessage({ type: 'error', text: 'クイズ問題の読み込みに失敗しました' })
     }
     setLoading(false)
@@ -100,7 +121,9 @@ export default function QuizManagementPage() {
         'id', 'legacy_id', 'category', 'subcategory', 'subcategory_id', 'question', 
         'option1', 'option2', 'option3', 'option4', 
         'correct', 'explanation', 'difficulty', 'timeLimit', 
-        'relatedTopics', 'source', 'deleted', 'createdAt', 'updatedAt'
+        'relatedTopics', 'source', 'deleted', 'createdAt', 'updatedAt',
+        // ヒント情報を追加
+        'level1_hint', 'level2_hint', 'level3_hint'
       ]
 
       const csvRows = questions.map(q => [
@@ -121,8 +144,12 @@ export default function QuizManagementPage() {
         Array.isArray(q.relatedTopics) ? `"${q.relatedTopics.join('|')}"` : '""',
         `"${q.source?.replace(/"/g, '""') || ''}"`,
         q.deleted ? 'true' : 'false', // deleted flag
-        new Date().toISOString().split('T')[0], // createdAt
-        new Date().toISOString().split('T')[0]  // updatedAt
+        q.createdAt ? new Date(q.createdAt).toISOString().split('T')[0] : '', // createdAt
+        q.updatedAt ? new Date(q.updatedAt).toISOString().split('T')[0] : '', // updatedAt
+        // ヒント情報を追加
+        `"${q.level1_hint?.replace(/"/g, '""') || ''}"`,
+        `"${q.level2_hint?.replace(/"/g, '""') || ''}"`,
+        `"${q.level3_hint?.replace(/"/g, '""') || ''}"`
       ])
 
       const csvContent = [csvHeaders.join(','), ...csvRows.map(row => row.join(','))].join('\n')
@@ -174,6 +201,8 @@ export default function QuizManagementPage() {
       console.log('CSV Headers:', headers)
       console.log('Has deleted column:', headers.includes('deleted'))
       const requiredHeaders = ['id', 'category', 'question', 'option1', 'option2', 'option3', 'option4', 'correct']
+      const hintHeaders = ['level1_hint', 'level2_hint', 'level3_hint']
+      const hasHintColumns = hintHeaders.some(hint => headers.includes(hint))
       
       const missingHeaders = requiredHeaders.filter(req => !headers.includes(req))
       if (missingHeaders.length > 0) {
@@ -211,8 +240,8 @@ export default function QuizManagementPage() {
             console.log(`行${i + 1}: deleted="${questionData.deleted}" → isDeleted=${isDeleted}`)
           }
 
-          // バリデーション
-          if (!questionData.id || isNaN(Number(questionData.id))) {
+          // バリデーション（新規問題はIDがブランクでもOK）
+          if (questionData.id && isNaN(Number(questionData.id))) {
             errors.push(`行${i + 1}: IDが無効です`)
             continue
           }
@@ -230,9 +259,11 @@ export default function QuizManagementPage() {
 
           // Question型に変換
           const question: Question = {
-            id: Number(questionData.id),
+            id: questionData.id ? Number(questionData.id) : undefined, // 新規時はundefined
+            legacy_id: questionData.legacy_id ? Number(questionData.legacy_id) : undefined,
             category: questionData.category,
             subcategory: questionData.subcategory,
+            subcategory_id: questionData.subcategory_id,
             question: questionData.question,
             options: [
               questionData.option1,
@@ -252,7 +283,11 @@ export default function QuizManagementPage() {
                     deletedValue === 'TRUE' || 
                     deletedValue === '1' ||
                     (typeof deletedValue === 'string' && 
-                     deletedValue.toLowerCase().trim() === 'true')
+                     deletedValue.toLowerCase().trim() === 'true'),
+            // ヒント情報を追加（統合テーブル対応）
+            level1_hint: questionData.level1_hint || null,
+            level2_hint: questionData.level2_hint || null,
+            level3_hint: questionData.level3_hint || null
           }
 
           parsedQuestions.push(question)
@@ -270,6 +305,11 @@ export default function QuizManagementPage() {
       // deletedフラグの統計
       const deletedQuestions = parsedQuestions.filter(q => q.deleted)
       const activeQuestions = parsedQuestions.filter(q => !q.deleted)
+      
+      // ヒント情報の統計
+      const questionsWithHints = parsedQuestions.filter(q => 
+        q.level1_hint || q.level2_hint || q.level3_hint
+      )
 
       const preview: ImportPreview = {
         questions: parsedQuestions,
@@ -281,7 +321,9 @@ export default function QuizManagementPage() {
           updated: updatedQuestions.length,
           deleted: deletedQuestions.length,
           active: activeQuestions.length,
-          hasDeletedColumn: headers.includes('deleted')
+          hasDeletedColumn: headers.includes('deleted'),
+          hasHintColumns,
+          withHints: questionsWithHints.length
         }
       }
 
@@ -331,16 +373,27 @@ export default function QuizManagementPage() {
     try {
       setLoading(true)
       
+      // 認証トークンを取得
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        throw new Error('認証が必要です')
+      }
+      
       // 実際のインポート処理（DBの更新）
       const response = await fetch('/api/admin/questions/db', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ questions: importPreview.questions })
       })
 
       if (response.ok) {
+        const result = await response.json()
+        console.log('✅ Import response:', result)
+        
+        
         setQuestions(importPreview.questions)
         const deletedCount = importPreview.stats.deleted
         const activeCount = importPreview.stats.active
@@ -353,13 +406,18 @@ export default function QuizManagementPage() {
           fileInputRef.current.value = ''
         }
       } else {
-        throw new Error('インポートAPIエラー')
+        const errorData = await response.json()
+        console.error('❌ Import failed:', errorData)
+        throw new Error(`インポートAPIエラー: ${errorData.error || 'Unknown error'}`)
       }
-    } catch {
-      setMessage({ type: 'error', text: 'インポートに失敗しました' })
+    } catch (error) {
+      console.error('❌ Import error:', error)
+      setMessage({ type: 'error', text: `インポートに失敗しました: ${(error as Error).message}` })
     }
     setLoading(false)
   }
+
+
 
   return (
     <div className="space-y-6">
@@ -415,6 +473,7 @@ export default function QuizManagementPage() {
                 </label>
               </Button>
             </div>
+            
           </div>
         </CardContent>
       </Card>
@@ -426,7 +485,7 @@ export default function QuizManagementPage() {
             <CardTitle>インポートプレビュー</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+            <div className="grid grid-cols-3 md:grid-cols-7 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">{importPreview.stats.total}</div>
                 <div className="text-sm text-muted-foreground">総問題数</div>
@@ -451,6 +510,10 @@ export default function QuizManagementPage() {
                 <div className="text-2xl font-bold text-rose-600">{importPreview.errors.length}</div>
                 <div className="text-sm text-muted-foreground">エラー</div>
               </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">{importPreview.stats.withHints}</div>
+                <div className="text-sm text-muted-foreground">ヒント付き</div>
+              </div>
             </div>
             
             {!importPreview.stats.hasDeletedColumn && (
@@ -458,6 +521,24 @@ export default function QuizManagementPage() {
                 <h4 className="font-semibold text-orange-800 mb-2">⚠️ 警告</h4>
                 <p className="text-sm text-orange-700">
                   CSVファイルに「deleted」カラムが見つかりません。削除フラグは全てfalseとして処理されます。
+                </p>
+              </div>
+            )}
+
+            {!importPreview.stats.hasHintColumns && (
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-blue-800 mb-2">ℹ️ 情報</h4>
+                <p className="text-sm text-blue-700">
+                  CSVファイルにヒントカラム（level1_hint, level2_hint, level3_hint）が見つかりません。ヒント情報は処理されません。
+                </p>
+              </div>
+            )}
+
+            {importPreview.stats.hasHintColumns && importPreview.stats.withHints > 0 && (
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-green-800 mb-2">✅ ヒント情報検出</h4>
+                <p className="text-sm text-green-700">
+                  {importPreview.stats.withHints}問にヒント情報が含まれています。ヒントデータも一緒にインポートされます。
                 </p>
               </div>
             )}

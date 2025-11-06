@@ -190,6 +190,9 @@ export async function POST(request: NextRequest) {
       time_limit: q.timeLimit || q.time_limit || 45,
       tags: q.tags || [],
       source: q.source || '',
+      level1_hint: q.hint1 || null,
+      level2_hint: q.hint2 || null,
+      level3_hint: q.hint3 || null,
       status: 'pending',
       priority: 0,
       ai_prompt: aiPrompt || '',
@@ -337,6 +340,15 @@ export async function PUT(request: NextRequest) {
     }
     if ('status' in updateData && currentData.status !== updateData.status) {
       changes.status = { old: currentData.status, new: updateData.status }
+    }
+    if ('level1_hint' in updateData && currentData.level1_hint !== updateData.level1_hint) {
+      changes.level1_hint = { old: currentData.level1_hint, new: updateData.level1_hint }
+    }
+    if ('level2_hint' in updateData && currentData.level2_hint !== updateData.level2_hint) {
+      changes.level2_hint = { old: currentData.level2_hint, new: updateData.level2_hint }
+    }
+    if ('level3_hint' in updateData && currentData.level3_hint !== updateData.level3_hint) {
+      changes.level3_hint = { old: currentData.level3_hint, new: updateData.level3_hint }
     }
 
     // 更新実行

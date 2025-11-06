@@ -680,7 +680,7 @@ export default function QuizSession({
     setShowResult(true)
     
     // Store detailed question answer data
-    const currentQuestionId = currentQuestion.id.toString()
+    const currentQuestionId = (currentQuestion.id || 0).toString()
     const maxHintLevel = hintUsageMap[currentQuestionId] || 0
     
     const questionAnswer: QuestionAnswer = {
@@ -1469,7 +1469,7 @@ export default function QuizSession({
           console.log(`🔍 Hint used: Level ${level} - ${hint}`)
           
           // 現在の問題IDに対するヒント使用レベルを記録
-          const questionId = currentQuestion.id.toString()
+          const questionId = (currentQuestion.id || 0).toString()
           setHintUsageMap(prev => ({
             ...prev,
             [questionId]: Math.max(prev[questionId] || 0, level)

@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
       'quiz_sessions',
       'skp_transactions',
       'user_badges',
-      'learning_progress'
-      // レガシーテーブル除去: quiz_results, user_progress
+      'course_session_completions'
+      // レガシーテーブル除去: quiz_results, user_progress, learning_progress
     ]
 
     for (const tableName of tables) {

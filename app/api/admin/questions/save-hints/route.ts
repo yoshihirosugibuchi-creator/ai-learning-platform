@@ -42,67 +42,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '問題が見つかりません' }, { status: 404 })
     }
 
-    // 既存のヒントレコードを確認
-    const { data: existingHint, error: hintCheckError } = await supabaseAdmin
-      .from('quiz_hints')
-      .select('id')
-      .eq('question_id', question_id)
+    // 統合テーブルでヒント情報を更新
+    const { data: result, error: updateError } = await supabaseAdmin
+      .from('quiz_questions')
+      .update({
+        level1_hint: level1_hint || null,
+        level2_hint: level2_hint || null,
+        level3_hint: level3_hint || null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', question_id)
+      .select('id, level1_hint, level2_hint, level3_hint')
       .single()
 
-    if (hintCheckError && hintCheckError.code !== 'PGRST116') {
-      console.error('既存ヒント確認エラー:', hintCheckError)
-      return NextResponse.json({ error: 'ヒント確認中にエラーが発生しました' }, { status: 500 })
-    }
-
-    // ヒントデータの準備
-    const hintData = {
-      question_id,
-      level1_hint: level1_hint || null,
-      level2_hint: level2_hint || null,
-      level3_hint: level3_hint || null,
-      updated_by: userId,
-      updated_at: new Date().toISOString()
-    }
-
-    let result
-    if (existingHint) {
-      // 既存レコードを更新
-      const { data, error } = await supabaseAdmin
-        .from('quiz_hints')
-        .update(hintData)
-        .eq('id', existingHint.id)
-        .select()
-        .single()
-
-      if (error) {
-        console.error('ヒント更新エラー:', error)
-        return NextResponse.json({ error: 'ヒントの更新に失敗しました' }, { status: 500 })
-      }
-      result = data
-    } else {
-      // 新規レコードを作成
-      const { data, error } = await supabaseAdmin
-        .from('quiz_hints')
-        .insert({
-          ...hintData,
-          created_by: userId,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single()
-
-      if (error) {
-        console.error('ヒント作成エラー:', error)
-        return NextResponse.json({ error: 'ヒントの作成に失敗しました' }, { status: 500 })
-      }
-      result = data
+    if (updateError) {
+      console.error('ヒント更新エラー:', updateError)
+      return NextResponse.json({ error: 'ヒントの更新に失敗しました' }, { status: 500 })
     }
 
     // 保存したヒントの統計を計算
     const hintsCount = [level1_hint, level2_hint, level3_hint].filter(hint => hint && hint.trim()).length
 
     // 操作ログを記録（将来の監査機能実装時に追加予定）
-    console.log(`ヒント保存完了: 問題ID=${question_id}, アクション=${existingHint ? 'update' : 'create'}, ヒント数=${hintsCount}`)
+    console.log(`ヒント保存完了: 問題ID=${question_id}, アクション=update(統合テーブル), ヒント数=${hintsCount}`)
 
     return NextResponse.json({
       success: true,
@@ -111,7 +73,7 @@ export async function POST(request: NextRequest) {
       stats: {
         question_id,
         hints_saved: hintsCount,
-        action: existingHint ? 'updated' : 'created'
+        action: 'updated'
       }
     })
 

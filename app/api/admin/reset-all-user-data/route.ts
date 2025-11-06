@@ -20,24 +20,8 @@ export async function POST(request: NextRequest) {
     const errors: string[] = []
     const deletedCounts: Record<string, number> = {}
 
-    // 1. learning_progress - 学習進捗を全削除
-    try {
-      const { error: progressError, count } = await supabaseAdmin
-        .from('learning_progress')
-        .delete()
-        .neq('user_id', '') // 全削除（user_idが空文字でないもの = 全て）
-
-      if (progressError) {
-        console.error('❌ Error deleting learning_progress:', progressError)
-        errors.push('learning_progress: ' + progressError.message)
-      } else {
-        console.log('✅ learning_progress deleted')
-        deletedTables.push('learning_progress')
-        deletedCounts['learning_progress'] = count || 0
-      }
-    } catch (err) {
-      errors.push('learning_progress: ' + (err as Error).message)
-    }
+    // 1. 削除済みテーブル: learning_progress (現在はcourse_session_completionsを使用)
+    console.log('ℹ️ learning_progress table has been deleted - now using course_session_completions')
 
     // 2. user_badges - バッジを全削除
     try {
@@ -192,24 +176,8 @@ export async function POST(request: NextRequest) {
       errors.push('course_completions: ' + (err as Error).message)
     }
 
-    // 10. knowledge_card_collection - ナレッジカード収集を削除（レガシーテーブル）
-    try {
-      const { error: knowledgeCardError, count } = await supabaseAdmin
-        .from('knowledge_card_collection')
-        .delete()
-        .neq('user_id', '')
-
-      if (knowledgeCardError) {
-        console.warn('⚠️ Error deleting knowledge_card_collection:', knowledgeCardError)
-        errors.push('knowledge_card_collection: ' + knowledgeCardError.message)
-      } else {
-        console.log('✅ knowledge_card_collection deleted')
-        deletedTables.push('knowledge_card_collection')
-        deletedCounts['knowledge_card_collection'] = count || 0
-      }
-    } catch (err) {
-      errors.push('knowledge_card_collection: ' + (err as Error).message)
-    }
+    // 10. 削除済みテーブル: knowledge_card_collection (テーブルが存在しないため処理スキップ)
+    console.log('ℹ️ knowledge_card_collection table has been deleted - skipping')
 
     // 11. user_knowledge_collection_v2 - ナレッジカード収集V2を削除
     try {

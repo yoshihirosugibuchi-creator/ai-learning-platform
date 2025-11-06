@@ -536,30 +536,30 @@ async function selectSpecialSlotQuestions(
   const usedIds = new Set<number>()
   
   // 苦手分野強化 2問
-  const weakQuestions = analysis.weakCategories.filter(q => !usedIds.has(q.id))
+  const weakQuestions = analysis.weakCategories.filter(q => !usedIds.has(q.id || 0))
   const shuffledWeak = [...weakQuestions].sort(() => Math.random() - 0.5)
   const selectedWeak = shuffledWeak.slice(0, 2)
   selectedWeak.forEach(q => {
     specialQuestions.push(q)
-    usedIds.add(q.id)
+    usedIds.add(q.id || 0)
   })
   
   // 忘却曲線対象 1問
-  const forgettingQuestions = analysis.forgettingQuestions.filter(q => !usedIds.has(q.id))
+  const forgettingQuestions = analysis.forgettingQuestions.filter(q => !usedIds.has(q.id || 0))
   const shuffledForgetting = [...forgettingQuestions].sort(() => Math.random() - 0.5)
   const selectedForgetting = shuffledForgetting.slice(0, 1)
   selectedForgetting.forEach(q => {
     specialQuestions.push(q)
-    usedIds.add(q.id)
+    usedIds.add(q.id || 0)
   })
   
   // 繰り返しミス対策 1問
-  const mistakeQuestions = analysis.repeatMistakes.filter(q => !usedIds.has(q.id))
+  const mistakeQuestions = analysis.repeatMistakes.filter(q => !usedIds.has(q.id || 0))
   const shuffledMistakes = [...mistakeQuestions].sort(() => Math.random() - 0.5)
   const selectedMistakes = shuffledMistakes.slice(0, 1)
   selectedMistakes.forEach(q => {
     specialQuestions.push(q)
-    usedIds.add(q.id)
+    usedIds.add(q.id || 0)
   })
   
   console.log('🎯 AI special slots selected:', {
@@ -836,13 +836,13 @@ async function selectByLearningBasedDistribution(
     
     // シャッフルして選出
     const shuffled = [...availableForCategory]
-      .filter(q => !usedIds.has(q.id))
+      .filter(q => !usedIds.has(q.id || 0))
       .sort(() => Math.random() - 0.5)
     
     const selectedForCategory = shuffled.slice(0, targetForCategory)
     selectedForCategory.forEach(q => {
       balancedQuestions.push(q)
-      usedIds.add(q.id)
+      usedIds.add(q.id || 0)
     })
 
     console.log(`📊 Category ${categoryId}: selected ${selectedForCategory.length}/${targetForCategory} questions (available: ${availableForCategory.length})`)
@@ -851,8 +851,8 @@ async function selectByLearningBasedDistribution(
   // 目標数に達していない場合は残りの問題から補完
   if (balancedQuestions.length < targetCount) {
     const remainingNeeded = targetCount - balancedQuestions.length
-    const unusedSelected = selectedQuestions.filter(q => !usedIds.has(q.id))
-    const unusedAvailable = availableQuestions.filter(q => !usedIds.has(q.id))
+    const unusedSelected = selectedQuestions.filter(q => !usedIds.has(q.id || 0))
+    const unusedAvailable = availableQuestions.filter(q => !usedIds.has(q.id || 0))
     
     const candidates = [...unusedSelected, ...unusedAvailable]
     const shuffledCandidates = candidates.sort(() => Math.random() - 0.5)

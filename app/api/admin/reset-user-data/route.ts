@@ -17,23 +17,8 @@ export async function POST(request: NextRequest) {
     const deletedTables: string[] = []
     const errors: string[] = []
 
-    // 1. learning_progress - 学習進捗を全削除
-    try {
-      const { error: progressError, count: _count } = await supabaseAdmin
-        .from('learning_progress')
-        .delete()
-        .eq('user_id', userId)
-
-      if (progressError) {
-        console.error('❌ Error deleting learning_progress:', progressError)
-        errors.push('learning_progress: ' + progressError.message)
-      } else {
-        console.log('✅ learning_progress deleted')
-        deletedTables.push('learning_progress')
-      }
-    } catch (err) {
-      errors.push('learning_progress: ' + (err as Error).message)
-    }
+    // 1. 削除済みテーブル: learning_progress (現在はcourse_session_completionsを使用)
+    console.log('ℹ️ learning_progress table has been deleted - now using course_session_completions')
 
     // 2. user_badges - バッジを全削除
     try {
@@ -193,23 +178,8 @@ export async function POST(request: NextRequest) {
     // 12. detailed_quiz_data - レガシーテーブル（削除済み）
     // Note: detailed_quiz_dataテーブルは削除済みのため処理をスキップ
 
-    // 13. knowledge_card_collection - ナレッジカード収集を削除（レガシーテーブル）
-    try {
-      const { error: knowledgeCardError } = await supabaseAdmin
-        .from('knowledge_card_collection')
-        .delete()
-        .eq('user_id', userId)
-
-      if (knowledgeCardError) {
-        console.warn('⚠️ Error deleting knowledge_card_collection:', knowledgeCardError)
-        errors.push('knowledge_card_collection: ' + knowledgeCardError.message)
-      } else {
-        console.log('✅ knowledge_card_collection deleted')
-        deletedTables.push('knowledge_card_collection')
-      }
-    } catch (err) {
-      errors.push('knowledge_card_collection: ' + (err as Error).message)
-    }
+    // 13. 削除済みテーブル: knowledge_card_collection (テーブルが存在しないため処理スキップ)
+    console.log('ℹ️ knowledge_card_collection table has been deleted - skipping')
 
     // 13-V2. user_knowledge_collection_v2 - ナレッジカード収集V2を削除
     try {

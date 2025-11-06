@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
 
     // 🆕 DB保存された復習理由を直接取得（高速化）
     console.log(`🔍 [REVIEW REASONS] Getting stored review reasons for ${reviewQuestions.length} questions...`)
-    const questionIds = reviewQuestions.map(q => q.id.toString())
+    const questionIds = reviewQuestions.map(q => (q.id || 0).toString())
     
     const { data: storedReasons, error: reasonsError } = await supabaseAdmin
       .from('quiz_answers')
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
 
     // 復習理由を付与（DB保存済み理由を直接使用）
     const questionsWithReasons = reviewQuestions.map(question => {
-      const storedReason = latestReasons.get(question.id.toString())
+      const storedReason = latestReasons.get((question.id || 0).toString())
       const reviewReason = storedReason ? REVIEW_REASON_MAP[storedReason] : null
       
       return {

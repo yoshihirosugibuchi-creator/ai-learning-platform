@@ -58,6 +58,9 @@ interface ReviewQuestion {
   review_notes?: string
   review_score?: number
   imported_at?: string
+  level1_hint?: string | null
+  level2_hint?: string | null
+  level3_hint?: string | null
   generator?: {
     id: string
     display_name: string
@@ -320,6 +323,9 @@ export default function ReviewManagementPage() {
           difficulty: editingQuestion.difficulty,
           time_limit: editingQuestion.time_limit,
           ai_model: editingQuestion.ai_model,
+          level1_hint: editingQuestion.level1_hint || null,
+          level2_hint: editingQuestion.level2_hint || null,
+          level3_hint: editingQuestion.level3_hint || null,
           review_notes: editingQuestion.review_notes,
           status: 'editing' // 編集時は自動的に「編集中」ステータスに変更
         })
@@ -777,6 +783,33 @@ export default function ReviewManagementPage() {
                       <p className="text-sm mt-1">{question.explanation}</p>
                     </div>
                   )}
+
+                  {/* ヒント表示 */}
+                  {(question.level1_hint || question.level2_hint || question.level3_hint) && (
+                    <div className="mt-3 p-3 bg-yellow-50 rounded">
+                      <strong className="text-sm text-yellow-800">ヒント:</strong>
+                      <div className="space-y-2 mt-1">
+                        {question.level1_hint && (
+                          <div className="text-sm">
+                            <span className="font-medium text-yellow-700">ヒント1:</span>
+                            <span className="text-yellow-600 ml-1">{question.level1_hint}</span>
+                          </div>
+                        )}
+                        {question.level2_hint && (
+                          <div className="text-sm">
+                            <span className="font-medium text-orange-700">ヒント2:</span>
+                            <span className="text-orange-600 ml-1">{question.level2_hint}</span>
+                          </div>
+                        )}
+                        {question.level3_hint && (
+                          <div className="text-sm">
+                            <span className="font-medium text-green-700">ヒント3:</span>
+                            <span className="text-green-600 ml-1">{question.level3_hint}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -865,6 +898,37 @@ export default function ReviewManagementPage() {
                   <option value="chatgpt">ChatGPT (OpenAI)</option>
                   <option value="gemini">Gemini (Google)</option>
                 </select>
+              </div>
+
+              {/* ヒント編集フィールド */}
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium block mb-1">ヒント1（基礎知識）</label>
+                  <Textarea
+                    value={editingQuestion.level1_hint || ''}
+                    onChange={(e) => setEditingQuestion(prev => prev ? { ...prev, level1_hint: e.target.value } : null)}
+                    rows={2}
+                    placeholder="問題理解に必要な用語・概念の説明"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium block mb-1">ヒント2（思考誘導）</label>
+                  <Textarea
+                    value={editingQuestion.level2_hint || ''}
+                    onChange={(e) => setEditingQuestion(prev => prev ? { ...prev, level2_hint: e.target.value } : null)}
+                    rows={2}
+                    placeholder="正解導出の考え方・着眼点"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium block mb-1">ヒント3（根拠提示）</label>
+                  <Textarea
+                    value={editingQuestion.level3_hint || ''}
+                    onChange={(e) => setEditingQuestion(prev => prev ? { ...prev, level3_hint: e.target.value } : null)}
+                    rows={2}
+                    placeholder="正解判断の根拠・理由"
+                  />
+                </div>
               </div>
 
               <div>
