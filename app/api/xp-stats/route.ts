@@ -259,7 +259,7 @@ export async function GET(request: Request) {
     const categoryCount = Object.keys(response.categories).length
     const subcategoryCount = Object.keys(response.subcategories).length
     
-    console.log(`✅ XP Stats API Success: ${totalXP} total XP, ${categoryCount} categories, ${subcategoryCount} subcategories, learning_streak: ${response.user.learning_streak}`)
+    console.log(`✅ XP Stats API Success: ${totalXP} total XP, ${categoryCount} categories, ${subcategoryCount} subcategories, learning_streak: ${response.user.learning_streak}, quiz_accuracy: ${response.user.quiz_average_accuracy}`)
 
     return NextResponse.json(response)
 

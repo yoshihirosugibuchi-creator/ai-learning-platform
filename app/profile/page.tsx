@@ -809,7 +809,7 @@ export default function ProfilePage() {
                   <div className="text-center">
                     <TrendingUp className="h-8 w-8 mx-auto text-green-500 mb-2" />
                     <div className="text-2xl font-bold">
-                      {xpStats && xpStats.user.quiz_average_accuracy > 0 ? `${xpStats.user.quiz_average_accuracy.toFixed(1)}%` : (quizStats.totalQuestions > 0 ? `${quizStats.accuracy}%` : '-%')}
+                      {xpStats && xpStats.user.quiz_average_accuracy > 0 ? `${(xpStats.user.quiz_average_accuracy > 100 ? xpStats.user.quiz_average_accuracy / 100 : xpStats.user.quiz_average_accuracy).toFixed(1)}%` : (quizStats.totalQuestions > 0 ? `${quizStats.accuracy}%` : '-%')}
                     </div>
                     <p className="text-sm text-muted-foreground">全体正答率</p>
                   </div>
