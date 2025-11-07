@@ -165,11 +165,12 @@ export function useXPStats(): UseXPStatsReturn {
         return
       }
       
-      // 一時的に管理者APIを使用（RLS問題回避）
-      const response = await fetch(`/api/xp-stats-admin?userId=${session.user.id}`, {
-        // headers: {
-        //   'Authorization': `Bearer ${session.access_token}`
-        // }
+      // 通常のXP統計API（学習ストリーク計算あり）
+      const response = await fetch('/api/xp-stats', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
       })
       
       if (!response.ok) {

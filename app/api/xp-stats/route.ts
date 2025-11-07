@@ -207,7 +207,7 @@ export async function GET(request: Request) {
         wisdom_cards_total: 0,
         knowledge_cards_total: 0,
         badges_total: 0,
-        learning_streak: 0,
+        learning_streak: learningStreak,
         // learning time statistics
         total_learning_time_seconds: 0,
         quiz_learning_time_seconds: 0,
@@ -259,7 +259,7 @@ export async function GET(request: Request) {
     const categoryCount = Object.keys(response.categories).length
     const subcategoryCount = Object.keys(response.subcategories).length
     
-    console.log(`✅ XP Stats API Success: ${totalXP} total XP, ${categoryCount} categories, ${subcategoryCount} subcategories`)
+    console.log(`✅ XP Stats API Success: ${totalXP} total XP, ${categoryCount} categories, ${subcategoryCount} subcategories, learning_streak: ${response.user.learning_streak}`)
 
     return NextResponse.json(response)
 
@@ -284,53 +284,71 @@ export async function GET(request: Request) {
   }
 }
 
-// 学習ストリーク計算関数
-function calculateLearningStreak(activities: Array<{date: string, quiz_sessions?: number, course_sessions?: number}>): number {
+// 学習ストリーク計算関数 - daily_xp_recordsテーブル対応
+function calculateLearningStreak(activities: Array<{date: string, quiz_sessions?: number, course_sessions?: number, total_xp_earned?: number}>): number {
   if (!activities || activities.length === 0) {
+    console.log('📊 [学習ストリーク] データなし')
     return 0
   }
   
-  // 今日の日付を文字列形式で取得（タイムゾーン問題を回避）
+  console.log('📊 [学習ストリーク] 計算開始:', activities.length, '日分のデータ')
+  
+  // 今日の日付を日本時間で取得
   const today = new Date()
-  const currentDateStr = today.getFullYear() + '-' + 
-    String(today.getMonth() + 1).padStart(2, '0') + '-' + 
-    String(today.getDate()).padStart(2, '0')
+  const jstToday = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }))
+  const currentDateStr = jstToday.getFullYear() + '-' + 
+    String(jstToday.getMonth() + 1).padStart(2, '0') + '-' + 
+    String(jstToday.getDate()).padStart(2, '0')
+  
+  console.log('📊 [学習ストリーク] 今日の日付 (JST):', currentDateStr)
   
   let streak = 0
-  let lastActivityDay = -1 // まだ活動を見つけていない
+  let consecutiveDays = 0
   
-  for (let dayOffset = 0; dayOffset < 30; dayOffset++) { // 最大30日前まで確認
-    // 該当日の活動を探す
-    const checkDate = new Date(currentDateStr)
+  // 今日から過去30日まで順に確認
+  for (let dayOffset = 0; dayOffset < 30; dayOffset++) {
+    const checkDate = new Date(jstToday)
     checkDate.setDate(checkDate.getDate() - dayOffset)
     const checkDateStr = checkDate.getFullYear() + '-' + 
       String(checkDate.getMonth() + 1).padStart(2, '0') + '-' + 
       String(checkDate.getDate()).padStart(2, '0')
     
+    // 該当日の学習記録を探す
     const dayActivity = activities.find(act => act.date === checkDateStr)
-    const hasActivity = dayActivity && ((dayActivity.quiz_sessions || 0) > 0 || (dayActivity.course_sessions || 0) > 0)
     
-    if (hasActivity) {
-      if (lastActivityDay === -1) {
-        // 最初の活動を発見
-        lastActivityDay = dayOffset
-        streak = 1
-      } else if (dayOffset === lastActivityDay + 1) {
-        // 連続した活動
-        lastActivityDay = dayOffset
-        streak++
-      } else {
-        // 活動はあるが連続していない
-        break
+    // 学習活動があった日かチェック（XPが取得されていれば学習したとみなす）
+    const hasLearning = dayActivity && (
+      (dayActivity.quiz_sessions && dayActivity.quiz_sessions > 0) ||
+      (dayActivity.course_sessions && dayActivity.course_sessions > 0) ||
+      (dayActivity.total_xp_earned && dayActivity.total_xp_earned > 0)
+    )
+    
+    console.log(`📊 [学習ストリーク] ${checkDateStr}: 学習あり=${hasLearning}, データ=${JSON.stringify(dayActivity)}`)
+    
+    if (hasLearning) {
+      consecutiveDays++
+      if (dayOffset === 0) {
+        // 今日学習した場合、連続日数を継続
+        streak = consecutiveDays
+      } else if (dayOffset === 1 && consecutiveDays === 1) {
+        // 昨日学習した場合、今日学習していなくても継続とみなす
+        streak = consecutiveDays
+      } else if (consecutiveDays === dayOffset + 1) {
+        // 連続して学習している
+        streak = consecutiveDays
       }
     } else {
-      if (lastActivityDay !== -1) {
-        // 活動が見つかっていたが、この日は活動なし
+      // 学習していない日
+      if (dayOffset === 0) {
+        // 今日学習していない場合、昨日まで遡って確認
+        continue
+      } else {
+        // 連続学習が途切れた
         break
       }
-      // まだ活動が見つかっていないので続行
     }
   }
   
+  console.log('📊 [学習ストリーク] 計算結果:', streak, '日連続')
   return streak
 }
