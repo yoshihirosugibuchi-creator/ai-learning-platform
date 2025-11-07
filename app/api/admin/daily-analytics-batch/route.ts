@@ -102,15 +102,27 @@ export async function POST(request: NextRequest) {
     console.log(`[日次分析バッチ] 開始: ${process_date}, タイプ: ${process_type}`)
 
     // 5. 重複実行チェック
+    console.log(`[日次分析バッチ] 重複チェック開始: process_date=${process_date}, process_type=${process_type}, force_reprocess=${force_reprocess}`)
     if (!force_reprocess) {
       const duplicateCheck = await checkDuplicateExecution(process_date, process_type)
+      console.log(`[日次分析バッチ] 重複チェック結果:`, duplicateCheck)
+      
       if (duplicateCheck.isDuplicate) {
+        console.log('[日次分析バッチ] ⚠️ 重複実行検知 - 既に処理済み - 409エラーレスポンス送信')
         return NextResponse.json({
           success: false,
-          message: '同日・同タイプの処理が既に実行済みです',
-          existing_log: duplicateCheck.existingLog
-        })
+          error: '同日・同タイプの処理が既に実行済みです',
+          message: '既に処理完了しています。強制再処理にチェックを入れて実行してください。',
+          existing_log: duplicateCheck.existingLog,
+          duplicate_execution: true,
+          processed_users: duplicateCheck.existingLog?.processed_users || 0,
+          total_time_seconds: 0
+        }, { status: 409 }) // 409 Conflict - 重複実行
+      } else {
+        console.log('[日次分析バッチ] ✅ 重複なし - 処理続行')
       }
+    } else {
+      console.log('[日次分析バッチ] 🔄 強制再処理モード - 重複チェックスキップ')
     }
 
     // 6. バッチログエントリ作成（force_reprocessの場合は既存ログ削除）

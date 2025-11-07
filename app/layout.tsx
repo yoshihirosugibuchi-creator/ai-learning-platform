@@ -6,6 +6,7 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import ClientOnly from "@/components/ClientOnly";
 import ErrorBoundary from "@/components/auth/ErrorBoundary";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 
 // 開発環境でのみ認証エラー回復ヘルパーとコンソールフィルターを読み込み
 if (process.env.NODE_ENV === 'development') {
@@ -49,7 +50,9 @@ export default function RootLayout({
             <QueryProvider>
               <AuthProvider>
                 <UserProvider>
-                  {children}
+                  <ToastProvider>
+                    {children}
+                  </ToastProvider>
                 </UserProvider>
               </AuthProvider>
             </QueryProvider>

@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/components/auth/AuthProvider'
-import { useToast } from '@/hooks/use-toast'
+import { useToast } from '@/components/providers/ToastProvider'
 import { supabase } from '@/lib/supabase'
 import { 
   BATCH_PROCESS_TYPES,
@@ -181,13 +181,18 @@ export default function BatchAnalyticsPage() {
 
       console.log('🔧 [バッチ実行] バッチリクエスト開始:', {
         process_type: selectedProcessType,
-        target_date: selectedDate,
-        analysis_period: 30,
-        auto_retry: false
+        process_date: selectedDate,
+        force_reprocess: forceReprocess
       })
 
-      // 既存パターンに合わせて直接fetch呼び出し
-      const response = await fetch('/api/admin/batch-execution', {
+      console.log('🔧 [バッチ実行] バッチリクエスト開始:', {
+        process_type: selectedProcessType,
+        process_date: selectedDate,
+        force_reprocess: forceReprocess
+      })
+
+      // バッチAPI呼び出し（force_reprocessパラメータ対応）
+      const response = await fetch('/api/admin/daily-analytics-batch', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -195,23 +200,39 @@ export default function BatchAnalyticsPage() {
         },
         body: JSON.stringify({
           process_type: selectedProcessType,
-          target_date: selectedDate
+          process_date: selectedDate,
+          force_reprocess: forceReprocess
         })
       })
 
       if (!response.ok) {
         const errorResult = await response.json()
+        console.log('🚫 [バッチ実行] エラー詳細:', { status: response.status, errorResult, forceReprocess })
+        
         if (response.status === 409) {
-          // Conflictエラー（重複実行など）は特別処理
+          // 重複実行エラー
+          const message = forceReprocess 
+            ? '強制再処理が実行できませんでした'
+            : errorResult.message || `${selectedDate} は既に処理完了しています。強制再処理にチェックを入れて実行してください。`
+          
           toast({
-            title: 'バッチ実行不可',
-            description: errorResult.error_message || 'バッチが既に実行中または完了済みです',
+            title: '既に処理済み',
+            description: message,
             variant: 'destructive'
           })
           setIsExecuting(false)
           return
         }
-        throw new Error(`Batch execution failed: ${response.statusText}`)
+        
+        // その他のエラー
+        const errorMessage = errorResult.error || errorResult.details || response.statusText
+        toast({
+          title: 'バッチ実行エラー',
+          description: errorMessage,
+          variant: 'destructive'
+        })
+        setIsExecuting(false)
+        return
       }
 
       const result = await response.json()
@@ -219,17 +240,20 @@ export default function BatchAnalyticsPage() {
       console.log('📊 [バッチ実行] 結果:', result)
 
       if (result.success) {
+        const isReprocess = result.duplicate_execution ? '（重複実行のため既存データ返却）' : ''
+        const processedUsers = result.processed_users || 0
+        
         toast({
-          title: 'バッチ実行開始',
-          description: `${selectedDate} の処理を開始しました（ID: ${result.batch_log_id}）`
+          title: 'バッチ実行完了',
+          description: `${selectedDate} の処理が完了しました${isReprocess}（${processedUsers}人処理）`
         })
         
         // データ再読み込み
-        setTimeout(() => loadData(), 2000)
+        setTimeout(() => loadData(), 1000)
       } else {
         toast({
           title: 'バッチ実行失敗',
-          description: result.error_message || '不明なエラー',
+          description: result.error || result.details || '不明なエラー',
           variant: 'destructive'
         })
       }
@@ -507,16 +531,26 @@ export default function BatchAnalyticsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          log.status === BATCH_STATUS.COMPLETED 
-                            ? 'bg-green-100 text-green-800'
-                            : log.status === BATCH_STATUS.RUNNING
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {log.status === BATCH_STATUS.COMPLETED ? '✅ 完了' :
-                           log.status === BATCH_STATUS.RUNNING ? '⏳ 実行中' : '❌ 失敗'}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full mb-1 ${
+                            log.status === BATCH_STATUS.COMPLETED 
+                              ? 'bg-green-100 text-green-800'
+                              : log.status === BATCH_STATUS.RUNNING
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {log.status === BATCH_STATUS.COMPLETED ? '✅ 完了' :
+                             log.status === BATCH_STATUS.RUNNING ? '⏳ 実行中' : '❌ 失敗'}
+                          </span>
+                          {log.status === 'failed' && log.error_message && (
+                            <details className="text-xs text-gray-600 cursor-pointer">
+                              <summary className="hover:text-blue-600">エラー詳細</summary>
+                              <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded text-red-700 max-w-xs overflow-auto">
+                                {log.error_message}
+                              </div>
+                            </details>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {log.processed_users || 0}人
