@@ -933,7 +933,7 @@ export default function ProfilePage() {
                                       <div className="text-sm font-semibold">レベル {subcategoryLevel}</div>
                                       <p className="text-xs text-gray-500">{subcategory.total_xp.toLocaleString()} XP</p>
                                       {subcategory.quiz_average_accuracy > 0 && (
-                                        <p className="text-xs text-green-600">正答率 {subcategory.quiz_average_accuracy.toFixed(1)}%</p>
+                                        <p className="text-xs text-green-600">正答率 {(subcategory.quiz_average_accuracy > 100 ? subcategory.quiz_average_accuracy / 100 : subcategory.quiz_average_accuracy).toFixed(1)}%</p>
                                       )}
                                     </div>
                                   </div>
@@ -1050,7 +1050,7 @@ export default function ProfilePage() {
                                       <div className="text-sm font-semibold">レベル {subcategoryLevel}</div>
                                       <p className="text-xs text-gray-500">{subcategory.total_xp.toLocaleString()} XP</p>
                                       {subcategory.quiz_average_accuracy > 0 && (
-                                        <p className="text-xs text-green-600">正答率 {subcategory.quiz_average_accuracy.toFixed(1)}%</p>
+                                        <p className="text-xs text-green-600">正答率 {(subcategory.quiz_average_accuracy > 100 ? subcategory.quiz_average_accuracy / 100 : subcategory.quiz_average_accuracy).toFixed(1)}%</p>
                                       )}
                                     </div>
                                   </div>
