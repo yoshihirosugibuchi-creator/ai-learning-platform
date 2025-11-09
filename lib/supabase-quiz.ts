@@ -246,7 +246,7 @@ export async function getUserStats(userId: string) {
   }
 
   const totalQuizzes = userStats?.quiz_sessions_completed || 0
-  const averageScore = userStats?.quiz_average_accuracy ? Math.round(userStats.quiz_average_accuracy * 100) : 0
+  const averageScore = userStats?.quiz_average_accuracy ? Math.round(userStats.quiz_average_accuracy > 1 ? userStats.quiz_average_accuracy : userStats.quiz_average_accuracy * 100) : 0
   const totalTimeSpent = Math.round((userStats?.quiz_learning_time_seconds || 0) / 60) // 秒から分に変換
 
   return {
