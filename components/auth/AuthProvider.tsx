@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       console.log('👤 Loading user profile for:', user.email)
       
-      // Create fallback profile immediately to prevent blocking
+      // Create comprehensive fallback profile immediately to prevent blocking
       const fallbackProfile = {
         id: user.id,
         email: user.email!,
@@ -56,7 +56,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         total_xp: 0,
         current_level: 1,
         streak: 0,
-        last_active: new Date().toISOString()
+        last_active: new Date().toISOString(),
+        // 🚨 CRITICAL: プロフィールページで必要なフィールドを追加
+        display_name: user.email?.split('@')[0] || 'User',
+        job_title: undefined,
+        position_level: undefined,
+        learning_level: undefined,
+        industry: undefined,
+        experience_years: undefined,
+        interested_industries: undefined,
+        learning_goals: undefined,
+        selected_categories: undefined,
+        weekly_goal: undefined,
+        profile_completed_at: undefined,
+        last_profile_update: undefined
       }
       
       // Set fallback profile immediately for responsive UX
@@ -67,9 +80,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log('🔄 Attempting to load actual profile in background...')
         
-        // Timeout for background operation
+        // Timeout for background operation - extended for better UX
         const profileTimeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Background profile loading timeout')), 3000)
+          setTimeout(() => reject(new Error('Background profile loading timeout')), 8000)
         )
         
         const userProfilePromise = getOrCreateUserProfile(user)
@@ -276,7 +289,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    // 定期的なセッション健全性チェック（10分毎、本番負荷軽減）
+    // 定期的なセッション健全性チェック（20分毎、負荷軽減・プロフィール保持）
     const sessionHealthCheck = setInterval(async () => {
       try {
         // タイムアウト付きでセッション確認
@@ -300,16 +313,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const expiresAt = session.expires_at
           const timeUntilExpiry = expiresAt - now
           
-          // 5分以内に期限切れになる場合は事前リフレッシュ
-          if (timeUntilExpiry < 300 && timeUntilExpiry > 0) {
+          // 2分以内に期限切れになる場合は事前リフレッシュ（プロフィール保持のため閾値短縮）
+          if (timeUntilExpiry < 120 && timeUntilExpiry > 0) {
             console.log('🔄 Pre-emptive session refresh (expires in', timeUntilExpiry, 'seconds)')
             try {
-              await Promise.race([
+              const _refreshResult = await Promise.race([
                 supabase.auth.refreshSession(),
                 new Promise((_, reject) => 
                   setTimeout(() => reject(new Error('Refresh timeout')), 5000)
                 )
               ])
+              // ✅ リフレッシュ成功時もプロフィールを保持（クリアしない）
+              console.log('✅ Session refreshed successfully, profile preserved')
             } catch (refreshError) {
               console.error('❌ Pre-emptive refresh failed:', refreshError)
             }
@@ -318,7 +333,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('❌ Session health check error:', error)
       }
-    }, 10 * 60 * 1000) // 10分毎（本番負荷軽減）
+    }, 20 * 60 * 1000) // 20分毎（負荷軽減・頻度削減）
 
     return () => {
       console.log('🧹 AuthProvider: Cleanup')

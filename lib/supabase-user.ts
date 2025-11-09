@@ -307,7 +307,7 @@ export async function updateUserProfile(userId: string, updates: Record<string, 
 export async function getOrCreateUserProfile(user: SupabaseUser): Promise<UserProfile | null> {
   console.log('🔄 Getting or creating user profile for:', user.id, user.email)
   
-  // まずは即座にフォールバックプロファイルを準備
+  // まずは即座にフォールバックプロファイルを準備（全フィールド含む）
   const fallbackProfile: UserProfile = {
     id: user.id,
     email: user.email!,
@@ -320,12 +320,12 @@ export async function getOrCreateUserProfile(user: SupabaseUser): Promise<UserPr
     current_level: 1,
     streak: 0,
     last_active: new Date().toISOString()
-  }
+  } as UserProfile & Record<string, unknown>
   
   try {
-    // 短いタイムアウトで既存プロファイルを取得試行
+    // 延長されたタイムアウトで既存プロファイルを取得試行（AuthProviderと整合）
     const fetchTimeout = new Promise<UserProfile | null>((_, reject) => 
-      setTimeout(() => reject(new Error('Profile fetch timeout')), 2000)
+      setTimeout(() => reject(new Error('Profile fetch timeout')), 6000)
     )
     
     let profile: UserProfile | null = null
