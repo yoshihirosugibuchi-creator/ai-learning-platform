@@ -120,6 +120,7 @@ export async function GET(request: Request) {
     const { data: userStats, error: userStatsError } = await supabase
       .from('user_xp_stats_v2')
       .select('*')
+      .eq('user_id', userId)
       .single()
 
     if (userStatsError && userStatsError.code !== 'PGRST116') { // PGRST116 = no rows found
@@ -130,6 +131,7 @@ export async function GET(request: Request) {
     const { data: categoryStats, error: categoryStatsError } = await supabase
       .from('user_category_xp_stats_v2')
       .select('*')
+      .eq('user_id', userId)
       .order('total_xp', { ascending: false })
 
     if (categoryStatsError) {
@@ -140,6 +142,7 @@ export async function GET(request: Request) {
     const { data: subcategoryStats, error: subcategoryStatsError } = await supabase
       .from('user_subcategory_xp_stats_v2')
       .select('*')
+      .eq('user_id', userId)
       .order('total_xp', { ascending: false })
 
     if (subcategoryStatsError) {
@@ -151,6 +154,7 @@ export async function GET(request: Request) {
     const { data: recentActivity, error: activityError } = await supabase
       .from('daily_xp_records')
       .select('*')
+      .eq('user_id', userId)
       .gte('date', thirtyDaysAgo)
       .order('date', { ascending: false })
       .limit(30)

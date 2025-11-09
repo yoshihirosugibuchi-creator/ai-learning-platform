@@ -270,8 +270,8 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
                   最新活動（過去7日間）
                 </h4>
                 <div className="space-y-2">
-                  {stats.recent_activity.slice(0, 7).map((activity) => (
-                    <div key={activity.date} className="flex items-center justify-between text-sm">
+                  {stats.recent_activity.slice(0, 7).map((activity, index) => (
+                    <div key={`${activity.date}-${index}`} className="flex items-center justify-between text-sm">
                       <div className="text-gray-600">
                         {new Date(activity.date).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
                       </div>
