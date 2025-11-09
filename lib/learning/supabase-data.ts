@@ -220,8 +220,11 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
       .single()
     
     if (courseError) {
+      console.error('❌ Course fetch error:', courseError)
       throw courseError
     }
+    
+    console.log('✅ Course data found:', courseData?.title)
     
     // 2. ジャンル情報
     const { data: genresData, error: genresError } = await supabase
@@ -231,11 +234,17 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
       .order('display_order', { ascending: true })
     
     if (genresError) {
+      console.error('❌ Genres fetch error:', genresError)
       throw genresError
     }
     
+    console.log('✅ Genres found:', genresData?.length || 0, 'genres')
+    if (genresData && genresData.length > 0) {
+      console.log('Genre IDs:', genresData.map(g => g.id))
+    }
+    
     if (!genresData || genresData.length === 0) {
-      console.warn(`No genres found for course: ${courseId}`)
+      console.warn(`❌ No genres found for course: ${courseId}`)
       return null
     }
     
@@ -288,14 +297,32 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
                     duration: content.duration,
                     displayOrder: content.display_order
                   })),
-                  quiz: (quizzesData || []).map((quiz) => ({
-                    id: quiz.id,
-                    question: quiz.question,
-                    options: JSON.parse(quiz.options as string),
-                    correct: quiz.correct_answer,
-                    explanation: quiz.explanation,
-                    type: quiz.quiz_type
-                  }))
+                  quiz: (quizzesData || []).map((quiz) => {
+                    try {
+                      // optionsが文字列の場合はJSONパース、既にオブジェクトの場合はそのまま使用
+                      const options = typeof quiz.options === 'string' 
+                        ? JSON.parse(quiz.options) 
+                        : quiz.options
+                      return {
+                        id: quiz.id,
+                        question: quiz.question,
+                        options: options,
+                        correct: quiz.correct_answer,
+                        explanation: quiz.explanation,
+                        type: quiz.quiz_type
+                      }
+                    } catch (parseError) {
+                      console.error('❌ Failed to parse quiz options:', quiz.id, quiz.options, parseError)
+                      return {
+                        id: quiz.id,
+                        question: quiz.question,
+                        options: ['選択肢1', '選択肢2', '選択肢3', '選択肢4'], // フォールバック
+                        correct: quiz.correct_answer,
+                        explanation: quiz.explanation,
+                        type: quiz.quiz_type
+                      }
+                    }
+                  })
                 }
               })
             )
@@ -347,6 +374,7 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
     
   } catch (error) {
     console.error(`❌ Error loading course details from DB for ${courseId}:`, error)
+    console.error('Full error details:', JSON.stringify(error, null, 2))
     return null
   }
 }
@@ -399,14 +427,31 @@ export async function getSessionDetailsFromDB(sessionId: string) {
         duration: content.duration,
         displayOrder: content.display_order
       })),
-      quiz: (quizzesData || []).map((quiz) => ({
-        id: quiz.id,
-        question: quiz.question,
-        options: JSON.parse(quiz.options as string),
-        correct: quiz.correct_answer,
-        explanation: quiz.explanation,
-        type: quiz.quiz_type
-      }))
+      quiz: (quizzesData || []).map((quiz) => {
+        try {
+          const options = typeof quiz.options === 'string' 
+            ? JSON.parse(quiz.options) 
+            : quiz.options
+          return {
+            id: quiz.id,
+            question: quiz.question,
+            options: options,
+            correct: quiz.correct_answer,
+            explanation: quiz.explanation,
+            type: quiz.quiz_type
+          }
+        } catch (parseError) {
+          console.error('❌ Failed to parse quiz options in session:', quiz.id, quiz.options, parseError)
+          return {
+            id: quiz.id,
+            question: quiz.question,
+            options: ['選択肢1', '選択肢2', '選択肢3', '選択肢4'],
+            correct: quiz.correct_answer,
+            explanation: quiz.explanation,
+            type: quiz.quiz_type
+          }
+        }
+      })
     }
     
     // キャッシュに保存（15分間）
