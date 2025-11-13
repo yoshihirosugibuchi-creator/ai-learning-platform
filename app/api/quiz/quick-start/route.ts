@@ -148,7 +148,7 @@ async function handleCategoryQuiz(
     .from('quiz_questions')
     .select(`
       id, category_id, subcategory_id, difficulty, question, option1, option2, option3, option4,
-      correct_answer, explanation, time_limit,
+      correct_answer, explanation, time_limit, source,
       user_question_usage!left(
         last_used_at, usage_count, recent_usage_count
       )
@@ -292,7 +292,7 @@ async function getPrecomputedSet(userId: string, quizType: 'business-ai' | 'self
       explanation: q.explanation || '',
       timeLimit: q.time_limit || 60,
       relatedTopics: [],
-      source: null
+      source: q.source
     })),
     method: 'precomputed_set',
     analysis_data: selectedSet.analysis_data
@@ -366,7 +366,7 @@ async function generateNewUserBusinessAI(userId: string, count: number): Promise
     explanation: q.explanation || '',
     timeLimit: q.time_limit || 60,
     relatedTopics: [],
-    source: null
+    source: q.source
   }))
 }
 
@@ -420,7 +420,7 @@ async function generateNewUserSelfPersonalized(userId: string, count: number): P
     explanation: q.explanation || '',
     timeLimit: q.time_limit || 60,
     relatedTopics: [],
-    source: null
+    source: q.source
   }))
 }
 
@@ -490,6 +490,7 @@ interface DatabaseQuestionWithUsage {
   correct_answer: number
   explanation: string | null
   time_limit: number | null
+  source: string | null
   weight?: number
   user_question_usage?: Array<{
     last_used_at: string | null
@@ -514,6 +515,7 @@ interface CleanQuestion {
   correct_answer: number
   explanation: string | null
   time_limit: number | null
+  source: string | null
   weight?: number
 }
 
@@ -540,7 +542,7 @@ function convertToQuestion(cleanQuestion: CleanQuestion): Question {
     explanation: cleanQuestion.explanation || '',
     timeLimit: cleanQuestion.time_limit || 60,
     relatedTopics: [],
-    source: null
+    source: cleanQuestion.source
   }
 }
 

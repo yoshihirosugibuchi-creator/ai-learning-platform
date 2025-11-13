@@ -24,7 +24,6 @@ interface APIQuestion {
 function dbRowToQuestion(row: unknown): APIQuestion {
   const dbRow = row as Record<string, unknown>
   
-  
   return {
     id: dbRow.id as number,
     legacy_id: dbRow.legacy_id as number | undefined,

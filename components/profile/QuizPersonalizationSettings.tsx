@@ -117,9 +117,34 @@ export default function QuizPersonalizationSettings() {
     try {
       const result = await saveUserQuizSettings(user.id, settings)
       if (result.success) {
+        // セルフパーソナライズクイズの事前セット再生成をトリガー
+        try {
+          const { supabase } = await import('@/lib/supabase')
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session?.access_token) {
+            console.log('🔄 Triggering self-personalized quiz precomputation...')
+            await fetch('/api/precompute-quiz', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+              },
+              body: JSON.stringify({
+                quiz_types: ['self-personalized'],
+                context: { settingsUpdated: true },
+                force_regenerate: true
+              })
+            })
+            console.log('✅ Precomputation triggered successfully')
+          }
+        } catch (precomputeError) {
+          console.warn('⚠️ Failed to trigger precomputation:', precomputeError)
+          // エラーが発生してもユーザーには影響させない
+        }
+
         toast({
           title: '設定を保存しました',
-          description: 'クイズパーソナライズ設定が正常に更新されました。'
+          description: 'クイズパーソナライズ設定が正常に更新されました。次回のクイズから新しい設定が適用されます。'
         })
       } else {
         toast({

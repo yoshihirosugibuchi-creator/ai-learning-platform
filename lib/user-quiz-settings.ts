@@ -141,12 +141,14 @@ export async function initializeUserQuizSettings(userId: string): Promise<void> 
 
 /**
  * 設定が初期設定かどうかを判定
+ * カテゴリーが選択されているかどうかで判断
  */
 export function isDefaultSettings(settings: QuizPersonalizationSettings): boolean {
-  const defaultSettings = getDefaultQuizSettings()
+  // カテゴリーが1つでも選択されていれば非デフォルト設定
+  const hasSelectedCategories = settings.basicCategories.length > 0 ||
+                                settings.industryCategories.length > 0 ||
+                                settings.industrySubcategories.length > 0
   
-  return settings.learningLevel === defaultSettings.learningLevel &&
-         settings.basicCategories.length === defaultSettings.basicCategories.length &&
-         settings.industryCategories.length === 0 &&
-         settings.industrySubcategories.length === 0
+  // カテゴリーが選択されていない、かつ学習レベルがbasicの場合のみデフォルト設定
+  return !hasSelectedCategories && settings.learningLevel === 'basic'
 }

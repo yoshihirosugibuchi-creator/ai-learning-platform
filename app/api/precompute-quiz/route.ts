@@ -263,28 +263,40 @@ async function generateSelfPersonalizedSet(
 ) {
   console.log('🎨 [Self-Personalized] Starting generation...')
 
-  // Get user's quiz settings from learning_goals and selected categories
-  const { data: userSettings } = await supabaseAdmin
-    .from('users')
-    .select('learning_goals, selected_categories, selected_industry_categories')
-    .eq('id', userId)
+  // Get user's quiz personalization settings from user_settings table
+  const { data: userQuizSettings } = await supabaseAdmin
+    .from('user_settings')
+    .select('setting_value')
+    .eq('user_id', userId)
+    .eq('setting_key', 'quiz_personalization')
     .single()
 
-  const hasCategories = userSettings?.selected_categories || userSettings?.selected_industry_categories
-  if (!hasCategories) {
-    console.log('ℹ️ [Self-Personalized] Categories not configured, skipping')
-    return { skipped: true, reason: 'Categories not configured' }
+  if (!userQuizSettings?.setting_value) {
+    console.log('ℹ️ [Self-Personalized] Quiz personalization settings not configured, skipping')
+    return { skipped: true, reason: 'Quiz personalization settings not configured' }
   }
 
-  // Create a simulated settings object for compatibility
+  // Parse the quiz personalization settings
+  const quizSettings = userQuizSettings.setting_value as {
+    learningLevel: string
+    basicCategories: string[]
+    industryCategories: string[]
+    industrySubcategories: string[]
+  }
+
+  const hasCategories = (quizSettings.basicCategories?.length || 0) > 0 || (quizSettings.industryCategories?.length || 0) > 0
+  if (!hasCategories) {
+    console.log('ℹ️ [Self-Personalized] No categories selected, skipping')
+    return { skipped: true, reason: 'No categories selected' }
+  }
+
+  // Create settings object for hash calculation
   const settings = {
     configured: true,
-    basic_categories: Array.isArray(userSettings?.selected_categories) ? userSettings.selected_categories : [],
-    industry_categories: Array.isArray(userSettings?.selected_industry_categories) ? userSettings.selected_industry_categories : [],
-    industry_subcategories: [],
-    learning_goals: userSettings?.learning_goals,
-    difficulty_preference: 'mixed',
-    learning_pace: 'normal'
+    learningLevel: quizSettings.learningLevel,
+    basicCategories: quizSettings.basicCategories || [],
+    industryCategories: quizSettings.industryCategories || [],
+    industrySubcategories: quizSettings.industrySubcategories || []
   }
 
   // Calculate settings hash for change detection
@@ -320,16 +332,16 @@ async function generateSelfPersonalizedSet(
   const selectedCategories: string[] = []
   
   // Extract categories with proper type checking
-  if (Array.isArray(settings.basic_categories)) {
-    selectedCategories.push(...settings.basic_categories.filter((cat): cat is string => typeof cat === 'string' && Boolean(cat)))
+  if (Array.isArray(settings.basicCategories)) {
+    selectedCategories.push(...settings.basicCategories.filter((cat): cat is string => typeof cat === 'string' && Boolean(cat)))
   }
   
-  if (Array.isArray(settings.industry_categories)) {
-    selectedCategories.push(...settings.industry_categories.filter((cat): cat is string => typeof cat === 'string' && Boolean(cat)))
+  if (Array.isArray(settings.industryCategories)) {
+    selectedCategories.push(...settings.industryCategories.filter((cat): cat is string => typeof cat === 'string' && Boolean(cat)))
   }
   
-  if (Array.isArray(settings.industry_subcategories)) {
-    const subcats = settings.industry_subcategories.filter(item => typeof item === 'string' && Boolean(item)) as string[]
+  if (Array.isArray(settings.industrySubcategories)) {
+    const subcats = settings.industrySubcategories.filter(item => typeof item === 'string' && Boolean(item)) as string[]
     selectedCategories.push(...subcats)
   }
 
@@ -360,8 +372,9 @@ async function generateSelfPersonalizedSet(
       analysis_data: {
         settings_hash: settingsHash,
         selected_categories: selectedCategories,
-        learning_goals: settings.learning_goals,
-        difficulty_preference: settings.difficulty_preference,
+        learning_level: settings.learningLevel,
+        basic_categories_count: settings.basicCategories.length,
+        industry_categories_count: settings.industryCategories.length,
         generation_method: 'self-personalized',
         set_index: setIndex
       }

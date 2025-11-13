@@ -80,9 +80,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     try {
       const cardSelectStartTime = performance.now()
       
-      // DB版またはレガシー版の選択
+      // DB版またはレガシー版の選択（ユーザーIDをパーソナライズに使用）
       const randomCard = USE_DB_CARDS 
-        ? await getRandomWisdomCardFromDB(accuracy_rate)
+        ? await getRandomWisdomCardFromDB(accuracy_rate, user_id)
         : getRandomWisdomCard(accuracy_rate)
       
       const cardSelectTime = performance.now() - cardSelectStartTime

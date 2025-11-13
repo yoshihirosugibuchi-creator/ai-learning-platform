@@ -16,6 +16,7 @@ import {
   getDefaultQuizSettings,
   type QuizPersonalizationSettings 
 } from '@/lib/user-quiz-settings'
+import { supabase } from '@/lib/supabase'
 import { getSubcategories } from '@/lib/categories'
 
 interface QuizSettingsModalProps {
@@ -247,6 +248,19 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
   const handleSave = async () => {
     if (!user || !tempSettings) return
 
+    // 基本カテゴリーまたは業界カテゴリーの少なくとも1つが選択されているかチェック
+    const basicCategoriesCount = tempSettings.basicCategories?.length || 0
+    const industryCategoriesCount = tempSettings.industryCategories?.length || 0
+    
+    if (basicCategoriesCount === 0 && industryCategoriesCount === 0) {
+      toast({
+        title: 'カテゴリーの選択が必要です',
+        description: '基本カテゴリーまたは業界カテゴリーのいずれか1つ以上を選択してください。',
+        variant: 'destructive'
+      })
+      return
+    }
+
     setSaving(true)
     try {
       const settingsToSave = {
@@ -259,12 +273,37 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
       const result = await saveUserQuizSettings(user.id, settingsToSave)
       if (result.success) {
         setSettings({ ...settingsToSave, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+        
+        // セルフパーソナライズクイズの事前セット再生成をトリガー
+        try {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session?.access_token) {
+            console.log('🔄 Triggering self-personalized quiz precomputation...')
+            await fetch('/api/precompute-quiz', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+              },
+              body: JSON.stringify({
+                quiz_types: ['self-personalized'],
+                context: { settingsUpdated: true },
+                force_regenerate: true
+              })
+            })
+            console.log('✅ Precomputation triggered successfully')
+          }
+        } catch (precomputeError) {
+          console.warn('⚠️ Failed to trigger precomputation:', precomputeError)
+          // エラーが発生してもユーザーには影響させない
+        }
+        
         // 保存完了後にセッションストレージをクリア
         sessionStorage.removeItem('quiz-settings-modal-open')
         onClose()
         toast({
           title: '設定を保存しました',
-          description: 'クイズパーソナライズ設定が正常に更新されました。'
+          description: 'クイズパーソナライズ設定が正常に更新されました。次回のクイズから新しい設定が適用されます。'
         })
       } else {
         toast({
@@ -386,7 +425,7 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
       <div className="space-y-6">
         <div className="text-center">
           <h3 className="text-lg font-semibold mb-2">基本カテゴリー選択</h3>
-          <p className="text-sm text-muted-foreground">学習したい基本ビジネススキルを選択してください</p>
+          <p className="text-sm text-muted-foreground">学習したい基本ビジネススキルを選択してください（オプション）</p>
           {basicCategoriesData.length === 0 && (
             <p className="text-sm text-red-600 mt-1">
               ⚠️ カテゴリーが読み込まれていません
@@ -723,8 +762,23 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
           </CardContent>
         </Card>
 
+        {/* バリデーション警告 */}
+        {((tempSettings.basicCategories?.length || 0) === 0 && (tempSettings.industryCategories?.length || 0) === 0) && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="p-4">
+              <p className="text-sm text-orange-800">
+                ⚠️ 基本カテゴリーまたは業界カテゴリーの少なくとも1つを選択してください
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="flex gap-3">
-          <Button onClick={handleSave} disabled={saving} className="flex-1">
+          <Button 
+            onClick={handleSave} 
+            disabled={saving || ((tempSettings.basicCategories?.length || 0) === 0 && (tempSettings.industryCategories?.length || 0) === 0)}
+            className="flex-1"
+          >
             {saving ? '保存中...' : '設定を保存'}
           </Button>
           <Button variant="outline" onClick={handleReset}>
@@ -810,8 +864,7 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
             <Button 
               onClick={handleNext}
               disabled={
-                (currentStep === 1 && !tempSettings.learningLevel) ||
-                (currentStep === 2 && (!tempSettings.basicCategories || tempSettings.basicCategories.length === 0))
+                (currentStep === 1 && !tempSettings.learningLevel)
               }
             >
               次へ

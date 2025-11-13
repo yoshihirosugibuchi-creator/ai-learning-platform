@@ -50,21 +50,30 @@ export function filterQuestionsForPersonalizedQuiz(
 
   // Step 3: 問題が少なすぎる場合の対処
   if (filteredQuestions.length < 10) {
-    console.warn('⚠️ Too few questions after filtering, falling back to basic categories only')
+    console.warn('⚠️ Too few questions after filtering, expanding to more categories')
     
-    // 基本カテゴリーのみでフィルタリングし直し
-    filteredQuestions = questions.filter(question => {
-      const matchesLevel = !question.difficulty || 
-                          question.difficulty === 'mixed' ||
-                          levelOrder.indexOf(question.difficulty as string) >= minLevelIndex
-      
-      const matchesBasicCategory = settings.basicCategories.length === 0 || 
-                                  settings.basicCategories.includes(question.category as string)
-      
-      return matchesLevel && matchesBasicCategory
-    })
+    // 選択されたカテゴリーは維持したまま、レベル制限を緩和
+    const selectedCategories = [...settings.basicCategories, ...settings.industryCategories]
     
-    console.log('✅ Fallback filtering result:', filteredQuestions.length)
+    if (selectedCategories.length > 0) {
+      // カテゴリーは保持し、学習レベル制限のみ緩和
+      filteredQuestions = questions.filter(question => {
+        return selectedCategories.includes(question.category as string)
+      })
+      
+      console.log('✅ Fallback with relaxed level filtering:', filteredQuestions.length)
+    } else {
+      // カテゴリーが選択されていない場合のみ基本カテゴリーにフォールバック
+      filteredQuestions = questions.filter(question => {
+        const matchesLevel = !question.difficulty || 
+                            question.difficulty === 'mixed' ||
+                            levelOrder.indexOf(question.difficulty as string) >= minLevelIndex
+        
+        return matchesLevel
+      })
+      
+      console.log('✅ No categories selected, using all questions with level filter:', filteredQuestions.length)
+    }
   }
 
   // Step 4: 最低限の問題数を保証

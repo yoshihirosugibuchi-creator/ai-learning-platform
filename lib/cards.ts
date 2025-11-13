@@ -345,59 +345,141 @@ export function getSubcategoryDisplayName(subcategoryId: string): string {
 // DB版 WISDOM CARD FUNCTIONS (Unified Interface)
 // =============================================================================
 
-import { getWisdomCardsWithFallback } from './supabase-cards'
+import { getWisdomCardsWithFallback, getUserWisdomCards, WisdomCardCollection } from './supabase-cards'
 
 /**
- * DB版: ランダム格言カード取得（既存インターフェース互換）
- * パフォーマンス基準でレアリティフィルタリング + ランダム選択
+ * レアリティ重み付け設定取得
+ * @param rarity - カードレアリティ
+ * @param performance - ユーザーパフォーマンス (0-100)
+ * @returns 重み値 (高いほど選ばれやすい)
+ */
+function getRarityWeight(rarity: string, performance: number): number {
+  const weights: Record<string, Record<string, number>> = {
+    high: { 'レジェンダリー': 40, 'エピック': 35, 'レア': 20, 'コモン': 5 },    // 90%+
+    good: { 'レジェンダリー': 10, 'エピック': 40, 'レア': 40, 'コモン': 10 },   // 70-89%
+    normal: { 'レジェンダリー': 5, 'エピック': 15, 'レア': 50, 'コモン': 30 }, // 50-69%
+    low: { 'レジェンダリー': 1, 'エピック': 4, 'レア': 25, 'コモン': 70 }     // 50%未満
+  }
+  
+  const tier = performance >= 90 ? 'high' : 
+              performance >= 70 ? 'good' : 
+              performance >= 50 ? 'normal' : 'low'
+  
+  return weights[tier][rarity] || 1
+}
+
+/**
+ * ユーザーの獲得履歴を考慮した重み調整
+ * @param card - カード情報
+ * @param userCollection - ユーザーのカードコレクション
+ * @returns 調整後の重み倍率 (1.0=標準, >1.0=優遇, <1.0=抑制)
+ */
+function getPersonalizationWeight(card: WisdomCard, userCollection: WisdomCardCollection[]): number {
+  const ownedCard = userCollection.find(item => item.card_id === card.id)
+  
+  if (!ownedCard) {
+    // 未獲得カードは2倍重み
+    return 2.0
+  }
+  
+  // 獲得回数に応じて重みを減らす（最低0.1倍）
+  const count = ownedCard.count || 0
+  if (count <= 1) return 1.0      // 1回: 標準重み
+  if (count <= 3) return 0.7      // 2-3回: やや抑制
+  if (count <= 5) return 0.4      // 4-5回: 抑制
+  return 0.1                      // 6回以上: 大幅抑制
+}
+
+/**
+ * 重み付きランダム選択
+ * @param weightedCards - 重み付きカード配列
+ * @returns 選択されたカード
+ */
+function selectWeightedRandom(weightedCards: Array<{card: WisdomCard, weight: number}>): WisdomCard {
+  const totalWeight = weightedCards.reduce((sum, item) => sum + item.weight, 0)
+  
+  if (totalWeight <= 0) {
+    // フォールバック: 単純ランダム
+    return weightedCards[Math.floor(Math.random() * weightedCards.length)].card
+  }
+  
+  let random = Math.random() * totalWeight
+  
+  for (const item of weightedCards) {
+    random -= item.weight
+    if (random <= 0) {
+      return item.card
+    }
+  }
+  
+  // フォールバック: 最後のカード
+  return weightedCards[weightedCards.length - 1].card
+}
+
+/**
+ * DB版: ランダム格言カード取得（重み付き + パーソナライズ対応）
  * @param percentage - クイズ正答率 (0-100)
+ * @param userId - ユーザーID（オプショナル）
  * @returns Promise<WisdomCard> - 既存インターフェース形式
  */
-export const getRandomWisdomCardFromDB = async (percentage: number): Promise<WisdomCard> => {
+export const getRandomWisdomCardFromDB = async (percentage: number, userId?: string): Promise<WisdomCard> => {
   try {
-    console.log(`🎯 Getting random wisdom card from DB (performance: ${percentage}%)`)
+    console.log(`🎯 Getting random wisdom card from DB (performance: ${percentage}%, userId: ${userId ? userId.substring(0, 8) + '...' : 'none'})`)
     
     // DB版: 全カード取得（フォールバック対応）
     const allDbCards = await getWisdomCardsWithFallback()
+    const activeCards = allDbCards.filter(card => card.is_active !== false) // is_active考慮
     
-    // レアリティフィルタリング（既存ロジック維持）
-    let availableCards: WisdomCard[]
-    
-    if (percentage >= 90) {
-      availableCards = allDbCards
-        .filter(card => card.rarity === 'レジェンダリー' || card.rarity === 'エピック')
-        .map(convertWisdomCardMasterToLegacy)
-    } else if (percentage >= 70) {
-      availableCards = allDbCards
-        .filter(card => card.rarity === 'エピック' || card.rarity === 'レア')
-        .map(convertWisdomCardMasterToLegacy)
-    } else if (percentage >= 50) {
-      availableCards = allDbCards
-        .filter(card => card.rarity === 'レア' || card.rarity === 'コモン')
-        .map(convertWisdomCardMasterToLegacy)
-    } else {
-      availableCards = allDbCards
-        .filter(card => card.rarity === 'コモン')
-        .map(convertWisdomCardMasterToLegacy)
-    }
-    
-    // ランダム選択
-    if (availableCards.length === 0) {
-      console.warn('⚠️ No cards available for the given criteria, falling back to static cards')
-      // 最終フォールバック: 既存静的データから選択
+    if (activeCards.length === 0) {
+      console.warn('⚠️ No active cards available, falling back to static cards')
       return getRandomWisdomCard(percentage)
     }
     
-    const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)]
-    console.log(`✅ Selected card: ${randomCard.author} (${randomCard.rarity})`)
+    // ユーザーのカードコレクション取得（パーソナライズ用）
+    let userCollection: WisdomCardCollection[] = []
+    if (userId) {
+      try {
+        userCollection = await getUserWisdomCards(userId)
+        console.log(`📊 User collection: ${userCollection.length} unique cards`)
+      } catch (collectionError) {
+        console.warn('⚠️ Failed to get user collection, proceeding without personalization:', collectionError)
+      }
+    }
     
-    return randomCard
+    // 重み付きカードプール作成
+    const weightedCards = activeCards.map(dbCard => {
+      const card = convertWisdomCardMasterToLegacy(dbCard)
+      const rarityWeight = getRarityWeight(card.rarity, percentage)
+      const personalizationWeight = userId ? getPersonalizationWeight(card, userCollection) : 1.0
+      const finalWeight = rarityWeight * personalizationWeight
+      
+      return {
+        card,
+        weight: finalWeight
+      }
+    }).filter(item => item.weight > 0) // 重み0以下のカードを除外
+    
+    if (weightedCards.length === 0) {
+      console.warn('⚠️ No weighted cards available, falling back to static cards')
+      return getRandomWisdomCard(percentage)
+    }
+    
+    // 重み付きランダム選択
+    const selectedCard = selectWeightedRandom(weightedCards)
+    
+    // デバッグ情報
+    const selectedWeight = weightedCards.find(item => item.card.id === selectedCard.id)?.weight || 0
+    const totalWeight = weightedCards.reduce((sum, item) => sum + item.weight, 0)
+    console.log(`✅ Selected card: ${selectedCard.author} (${selectedCard.rarity}) - Weight: ${selectedWeight.toFixed(2)}/${totalWeight.toFixed(2)}`)
+    
+    return selectedCard
   } catch (error) {
     console.error('❌ Error getting random card from DB, falling back to static data:', error)
     // 完全フォールバック: 既存関数
     return getRandomWisdomCard(percentage)
   }
 }
+
 
 /**
  * DB版: 全格言カード取得（既存インターフェース互換）
