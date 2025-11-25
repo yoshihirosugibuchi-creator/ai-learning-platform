@@ -147,18 +147,30 @@ async function generateBusinessAISet(
   if (!forceRegenerate) {
     const { data: existingSets } = await supabaseAdmin
       .from('precomputed_quiz_sets')
-      .select('id, created_at')
+      .select('id, created_at, used_at, expires_at')
       .eq('user_id', userId)
       .eq('quiz_type', 'business-ai')
       .is('used_at', null)
       .gt('expires_at', new Date().toISOString())
-      .limit(1)
+      .limit(5)
+
+    console.log(`🔍 [Business-AI] Checking existing sets (force_regenerate: ${forceRegenerate}):`, {
+      found: existingSets?.length || 0,
+      sets: existingSets?.map(s => ({
+        id: s.id,
+        created: s.created_at,
+        used: s.used_at,
+        expires: s.expires_at
+      })) || []
+    })
 
     if (existingSets && existingSets.length > 0) {
-      console.log('ℹ️ [Business-AI] Valid sets exist, skipping generation')
-      return { skipped: true, reason: 'Valid sets already exist' }
+      console.log(`ℹ️ [Business-AI] ${existingSets.length} valid sets exist, skipping generation`)
+      return { skipped: true, reason: `${existingSets.length} valid sets already exist` }
     }
   }
+  
+  console.log('🎯 [Business-AI] Proceeding with generation (no valid sets found or force regenerate)')
 
   // Get user preferences and selected categories
   const { data: userProfile } = await supabaseAdmin
@@ -185,19 +197,42 @@ async function generateBusinessAISet(
     .eq('is_deleted', false)
     .limit(500)
 
+  console.log(`📊 [Business-AI] Available questions by category:`)
+  const categoryStats = questions?.reduce((acc, q) => {
+    acc[q.category_id] = (acc[q.category_id] || 0) + 1
+    return acc
+  }, {} as Record<string, number>) || {}
+  
+  Object.entries(categoryStats).forEach(([catId, count]) => {
+    console.log(`  ${catId}: ${count} questions`)
+  })
+
   if (!questions || questions.length < 10) {
     throw new Error('Insufficient business questions available')
   }
 
-  // Apply focus category weights
-  const selectedCategories = [
-    ...(userProfile?.selected_categories ? (Array.isArray(userProfile.selected_categories) ? userProfile.selected_categories : []) : []),
-    ...(userProfile?.selected_industry_categories ? (Array.isArray(userProfile.selected_industry_categories) ? userProfile.selected_industry_categories : []) : [])
-  ]
+  // Apply focus category weights (Business-AI uses main categories only)
+  const selectedCategories = userProfile?.selected_categories 
+    ? (Array.isArray(userProfile.selected_categories) ? userProfile.selected_categories : [])
+    : []
+  
+  console.log(`🎯 [Business-AI] User selected categories:`, selectedCategories)
+  
   const weightedQuestions = questions.map(q => ({
     ...q,
     weight: selectedCategories.includes(q.category_id) ? 1.5 : 1.0
   }))
+  
+  console.log(`⚖️ [Business-AI] Weighted questions by category:`)
+  const weightedStats = weightedQuestions.reduce((acc, q) => {
+    const key = `${q.category_id} (weight: ${q.weight})`
+    acc[key] = (acc[key] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+  
+  Object.entries(weightedStats).forEach(([catInfo, count]) => {
+    console.log(`  ${catInfo}: ${count} questions`)
+  })
 
   // Generate difficulty distribution based on recent accuracy
   const avgAccuracy = recentAccuracy && recentAccuracy.length > 0 
@@ -213,32 +248,87 @@ async function generateBusinessAISet(
     distribution = { basic: 5, intermediate: 3, advanced: 2, expert: 0 }
   }
 
-  // Select optimized questions (3 sets of 10 questions each)
+  // Select optimized questions (3 sets of 10 questions each with no overlaps)
   const questionSets = []
+  const usedQuestionIds = new Set<number>() // 重複防止
+  
   for (let setIndex = 0; setIndex < 3; setIndex++) {
-    const selectedQuestions = selectQuestionsByDistribution(weightedQuestions, distribution)
-    questionSets.push({
-      question_ids: selectedQuestions.map(q => q.id),
-      analysis_data: {
-        avg_accuracy: avgAccuracy,
-        distribution,
-        focus_categories: selectedCategories,
-        generation_method: 'business-ai-optimized',
-        set_index: setIndex
-      }
-    })
+    // 未使用問題のみを対象に選択
+    const availableQuestions = weightedQuestions.filter(q => !usedQuestionIds.has(q.id))
+    
+    console.log(`🎯 [Business-AI Set ${setIndex}] Available questions: ${availableQuestions.length}, Used: ${usedQuestionIds.size}`)
+    
+    if (availableQuestions.length < 10) {
+      console.warn(`⚠️ [Business-AI Set ${setIndex}] Insufficient unused questions (${availableQuestions.length}), allowing some reuse`)
+      // 十分な問題がない場合は、最近使った問題を除外してリセット
+      const recentlyUsed = Array.from(usedQuestionIds).slice(-10) // 直近10問のみ除外
+      const questionPool = weightedQuestions.filter(q => !recentlyUsed.includes(q.id))
+      const selectedQuestions = selectQuestionsByDistribution(questionPool, distribution)
+      
+      questionSets.push({
+        question_ids: selectedQuestions.map(q => q.id),
+        analysis_data: {
+          avg_accuracy: avgAccuracy,
+          distribution,
+          focus_categories: selectedCategories,
+          generation_method: 'business-ai-optimized-with-limited-reuse',
+          set_index: setIndex,
+          available_pool: questionPool.length,
+          reuse_strategy: 'recent_exclusion'
+        }
+      })
+      
+      // 新しく選択された問題をマーク
+      selectedQuestions.forEach(q => usedQuestionIds.add(q.id))
+    } else {
+      const selectedQuestions = selectQuestionsByDistribution(availableQuestions, distribution)
+      
+      // 選択された問題のカテゴリー統計
+      const selectedCategoryCounts = selectedQuestions.reduce((acc, q) => {
+        acc[q.category_id] = (acc[q.category_id] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+      
+      console.log(`📋 [Business-AI Set ${setIndex}] Selected questions by category:`, selectedCategoryCounts)
+      
+      questionSets.push({
+        question_ids: selectedQuestions.map(q => q.id),
+        analysis_data: {
+          avg_accuracy: avgAccuracy,
+          distribution,
+          focus_categories: selectedCategories,
+          generation_method: 'business-ai-optimized',
+          set_index: setIndex,
+          available_pool: availableQuestions.length,
+          selected_category_counts: selectedCategoryCounts
+        }
+      })
+      
+      // 選択された問題を使用済みとしてマーク
+      selectedQuestions.forEach(q => usedQuestionIds.add(q.id))
+    }
+    
+    console.log(`✅ [Business-AI Set ${setIndex}] Generated 10 questions, total used: ${usedQuestionIds.size}`)
   }
 
   // Save to database
+  const insertData = questionSets.map(set => ({
+    user_id: userId,
+    quiz_type: 'business-ai' as const,
+    question_ids: set.question_ids,
+    analysis_data: set.analysis_data,
+    expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString() // 72 hours
+  }))
+  
+  console.log(`💾 [Business-AI] Saving ${insertData.length} sets to database`)
+  insertData.forEach((set, index) => {
+    const questionIds = Array.isArray(set.question_ids) ? set.question_ids.slice(0, 3) : []
+    console.log(`  Set ${index}: questions=[${questionIds.join(', ')}...], expires=${set.expires_at}`)
+  })
+  
   const { error: saveError } = await supabaseAdmin
     .from('precomputed_quiz_sets')
-    .insert(questionSets.map(set => ({
-      user_id: userId,
-      quiz_type: 'business-ai' as const,
-      question_ids: set.question_ids,
-      analysis_data: set.analysis_data,
-      expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString() // 72 hours
-    })))
+    .insert(insertData)
 
   if (saveError) {
     throw new Error(`Failed to save business-AI sets: ${saveError.message}`)
@@ -303,8 +393,9 @@ async function generateSelfPersonalizedSet(
   const settingsHash = calculateSettingsHash(settings)
 
   // Check if existing sets match current settings
+  let existingSets: Array<{ id: string; user_settings_hash: string | null }> = []
   if (!forceRegenerate) {
-    const { data: existingSets } = await supabaseAdmin
+    const { data: existingSetsData } = await supabaseAdmin
       .from('precomputed_quiz_sets')
       .select('id, user_settings_hash')
       .eq('user_id', userId)
@@ -313,19 +404,14 @@ async function generateSelfPersonalizedSet(
       .gt('expires_at', new Date().toISOString())
       .limit(1)
 
+    existingSets = existingSetsData || []
+
     if (existingSets?.[0]?.user_settings_hash === settingsHash) {
       console.log('ℹ️ [Self-Personalized] Settings unchanged, skipping generation')
       return { skipped: true, reason: 'Settings unchanged' }
     }
 
-    // Settings changed - delete old sets
-    if (existingSets && existingSets.length > 0) {
-      await supabaseAdmin
-        .from('precomputed_quiz_sets')
-        .delete()
-        .eq('user_id', userId)
-        .eq('quiz_type', 'self-personalized')
-    }
+    // Note: Settings changed - will delete old sets AFTER successful generation
   }
 
   // Get questions matching user's selected categories
@@ -363,22 +449,59 @@ async function generateSelfPersonalizedSet(
   // Apply learning goals and difficulty preferences
   const optimizedQuestions = applyPersonalizationSettings(questions, settings)
 
-  // Generate 2 sets of 10 questions each
+  // Generate 2 sets of 10 questions each with no overlaps
   const questionSets = []
+  const usedQuestionIds = new Set<number>() // 重複防止
+  
   for (let setIndex = 0; setIndex < 2; setIndex++) {
-    const selectedQuestions = selectRandomizedSet(optimizedQuestions, 10)
-    questionSets.push({
-      question_ids: selectedQuestions.map(q => q.id),
-      analysis_data: {
-        settings_hash: settingsHash,
-        selected_categories: selectedCategories,
-        learning_level: settings.learningLevel,
-        basic_categories_count: settings.basicCategories.length,
-        industry_categories_count: settings.industryCategories.length,
-        generation_method: 'self-personalized',
-        set_index: setIndex
-      }
-    })
+    // 未使用問題のみを対象に選択
+    const availableQuestions = optimizedQuestions.filter(q => !usedQuestionIds.has(q.id))
+    
+    console.log(`🎯 [Self-Personalized Set ${setIndex}] Available questions: ${availableQuestions.length}, Used: ${usedQuestionIds.size}`)
+    
+    if (availableQuestions.length < 10) {
+      console.warn(`⚠️ [Self-Personalized Set ${setIndex}] Insufficient unused questions (${availableQuestions.length}), using all available`)
+      // 十分な問題がない場合は、利用可能な全問題から選択
+      const selectedQuestions = selectCategoryBalancedSet(optimizedQuestions, 10)
+      
+      questionSets.push({
+        question_ids: selectedQuestions.map(q => q.id),
+        analysis_data: {
+          settings_hash: settingsHash,
+          selected_categories: selectedCategories,
+          learning_level: settings.learningLevel,
+          basic_categories_count: settings.basicCategories.length,
+          industry_categories_count: settings.industryCategories.length,
+          generation_method: 'self-personalized-with-reuse',
+          set_index: setIndex,
+          available_pool: optimizedQuestions.length,
+          reuse_strategy: 'insufficient_questions'
+        }
+      })
+      
+      // 選択された問題をマーク
+      selectedQuestions.forEach(q => usedQuestionIds.add(q.id))
+    } else {
+      const selectedQuestions = selectCategoryBalancedSet(availableQuestions, 10)
+      questionSets.push({
+        question_ids: selectedQuestions.map(q => q.id),
+        analysis_data: {
+          settings_hash: settingsHash,
+          selected_categories: selectedCategories,
+          learning_level: settings.learningLevel,
+          basic_categories_count: settings.basicCategories.length,
+          industry_categories_count: settings.industryCategories.length,
+          generation_method: 'self-personalized',
+          set_index: setIndex,
+          available_pool: availableQuestions.length
+        }
+      })
+      
+      // 選択された問題を使用済みとしてマーク
+      selectedQuestions.forEach(q => usedQuestionIds.add(q.id))
+    }
+    
+    console.log(`✅ [Self-Personalized Set ${setIndex}] Generated 10 questions, total used: ${usedQuestionIds.size}`)
   }
 
   // Save to database
@@ -395,6 +518,23 @@ async function generateSelfPersonalizedSet(
 
   if (saveError) {
     throw new Error(`Failed to save self-personalized sets: ${saveError.message}`)
+  }
+
+  // Clean up old sets AFTER successful generation (if settings changed)
+  if (existingSets && existingSets.length > 0 && existingSets[0]?.user_settings_hash !== settingsHash) {
+    try {
+      // Delete old sets with different settings hash
+      await supabaseAdmin
+        .from('precomputed_quiz_sets')
+        .delete()
+        .eq('user_id', userId)
+        .eq('quiz_type', 'self-personalized')
+        .neq('user_settings_hash', settingsHash)
+      
+      console.log('🧹 [Self-Personalized] Cleaned up old sets after regeneration')
+    } catch (cleanupError) {
+      console.warn('⚠️ [Self-Personalized] Cleanup failed (non-critical):', cleanupError)
+    }
   }
 
   console.log(`✅ [Self-Personalized] Generated ${questionSets.length} sets successfully`)
@@ -592,44 +732,258 @@ interface QuestionForSelection {
 }
 
 function selectQuestionsByDistribution(
-  questions: QuestionForSelection[], 
+  questions: (QuestionForSelection & { weight: number })[], 
   distribution: Record<string, number>
-): QuestionForSelection[] {
-  const selected: QuestionForSelection[] = []
+): (QuestionForSelection & { weight: number })[] {
+  const selected: (QuestionForSelection & { weight: number })[] = []
   const availableByDifficulty = questions.reduce((acc, q) => {
     const difficulty = q.difficulty || 'basic'
     if (!acc[difficulty]) acc[difficulty] = []
     acc[difficulty].push(q)
     return acc
-  }, {} as Record<string, QuestionForSelection[]>)
+  }, {} as Record<string, (QuestionForSelection & { weight: number })[]>)
+
+  console.log(`🎯 [Question Selection] Difficulty distribution:`, distribution)
+  console.log(`📊 [Question Selection] Available by difficulty:`, 
+    Object.fromEntries(Object.entries(availableByDifficulty).map(([diff, qs]) => [diff, qs.length]))
+  )
 
   Object.entries(distribution).forEach(([difficulty, count]) => {
     const available = availableByDifficulty[difficulty] || []
-    const shuffled = available.sort(() => Math.random() - 0.5)
-    selected.push(...shuffled.slice(0, count))
+    
+    if (available.length > 0) {
+      // カテゴリーバランスを考慮した重み付き選択
+      const categoryBalancedSelected = selectQuestionsWithCategoryBalance(available, count)
+      selected.push(...categoryBalancedSelected)
+      
+      console.log(`✅ [${difficulty}] Selected ${categoryBalancedSelected.length} questions (requested: ${count}) with category balance`)
+      categoryBalancedSelected.forEach(q => {
+        console.log(`  - Question ${q.id} (${q.category_id}) weight: ${q.weight}`)
+      })
+    } else {
+      console.log(`⚠️ [${difficulty}] No questions available (requested: ${count})`)
+    }
   })
 
-  // If we don't have enough questions, fill with random
-  while (selected.length < 10 && selected.length < questions.length) {
+  // If we don't have enough questions, fill with category-balanced selection
+  const remainingNeeded = 10 - selected.length
+  if (remainingNeeded > 0) {
     const remaining = questions.filter(q => !selected.some(s => s.id === q.id))
-    if (remaining.length === 0) break
-    
-    const randomQuestion = remaining[Math.floor(Math.random() * remaining.length)]
-    selected.push(randomQuestion)
+    if (remaining.length > 0) {
+      const additionalSelected = selectQuestionsWithCategoryBalance(remaining, remainingNeeded)
+      selected.push(...additionalSelected)
+      console.log(`🔄 [Fill] Added ${additionalSelected.length} questions with category balance`)
+    }
   }
+
+  // ログカテゴリー分布
+  const categoryDistribution = selected.reduce((acc, q) => {
+    acc[q.category_id] = (acc[q.category_id] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+  console.log(`📊 [Final Selection] Category distribution:`, categoryDistribution)
 
   return selected.slice(0, 10)
 }
 
-function applyPersonalizationSettings(questions: QuestionForSelection[], _settings: Record<string, unknown>): QuestionForSelection[] {
-  // Apply learning goals and difficulty preferences
-  return questions.map(q => ({
+// 重み付きランダム選択ヘルパー関数
+function selectWeightedQuestions(
+  questions: (QuestionForSelection & { weight: number })[],
+  count: number
+): (QuestionForSelection & { weight: number })[] {
+  const selected: (QuestionForSelection & { weight: number })[] = []
+  const available = [...questions]
+  
+  for (let i = 0; i < count && available.length > 0; i++) {
+    const totalWeight = available.reduce((sum, q) => sum + q.weight, 0)
+    
+    if (totalWeight <= 0) {
+      // フォールバック: 単純ランダム
+      const randomIndex = Math.floor(Math.random() * available.length)
+      selected.push(available[randomIndex])
+      available.splice(randomIndex, 1)
+      continue
+    }
+    
+    let random = Math.random() * totalWeight
+    let selectedIndex = 0
+    
+    for (let j = 0; j < available.length; j++) {
+      random -= available[j].weight
+      if (random <= 0) {
+        selectedIndex = j
+        break
+      }
+    }
+    
+    selected.push(available[selectedIndex])
+    available.splice(selectedIndex, 1)
+  }
+  
+  return selected
+}
+
+// カテゴリーバランスを考慮した重み付き選択
+function selectQuestionsWithCategoryBalance(
+  questions: (QuestionForSelection & { weight: number })[],
+  count: number
+): (QuestionForSelection & { weight: number })[] {
+  if (questions.length === 0) return []
+  if (count <= 0) return []
+  
+  // カテゴリーごとにグループ化
+  const byCategory = questions.reduce((acc, q) => {
+    if (!acc[q.category_id]) acc[q.category_id] = []
+    acc[q.category_id].push(q)
+    return acc
+  }, {} as Record<string, (QuestionForSelection & { weight: number })[]>)
+  
+  const categories = Object.keys(byCategory)
+  const selected: (QuestionForSelection & { weight: number })[] = []
+  
+  console.log(`📋 [Category Balance] Distributing ${count} questions across ${categories.length} categories`)
+  
+  // カテゴリー間で均等分散（ラウンドロビン方式）
+  let currentCategoryIndex = 0
+  let consecutiveEmptyAttempts = 0
+  const maxEmptyAttempts = categories.length // 全カテゴリーチェック後にストップ
+  
+  for (let i = 0; i < count && selected.length < count; i++) {
+    const category = categories[currentCategoryIndex]
+    const availableInCategory = byCategory[category]?.filter(q => 
+      !selected.some(s => s.id === q.id)
+    ) || []
+    
+    if (availableInCategory.length > 0) {
+      // 重み付きランダム選択
+      const selectedQuestion = selectWeightedQuestions(availableInCategory, 1)[0]
+      if (selectedQuestion) {
+        selected.push(selectedQuestion)
+        console.log(`  📌 Selected from ${category}: question ${selectedQuestion.id} (weight: ${selectedQuestion.weight})`)
+        consecutiveEmptyAttempts = 0 // リセット
+      }
+    } else {
+      console.log(`  ⚠️ No more questions available in ${category}`)
+      consecutiveEmptyAttempts++
+      
+      // 全カテゴリーで問題が枯渇した場合はループを終了
+      if (consecutiveEmptyAttempts >= maxEmptyAttempts) {
+        console.log(`⚠️ [Business-AI Category Balance] All categories exhausted, selected ${selected.length}/${count} questions`)
+        break
+      }
+    }
+    
+    // 次のカテゴリーに移動（ラウンドロビン）
+    currentCategoryIndex = (currentCategoryIndex + 1) % categories.length
+  }
+  
+  return selected
+}
+
+function applyPersonalizationSettings(questions: QuestionForSelection[], settings: Record<string, unknown>): QuestionForSelection[] {
+  const learningLevel = settings.learningLevel as string || 'basic'
+  
+  // Define difficulty hierarchy (user gets questions at their level and above)
+  const difficultyLevels = ['basic', 'intermediate', 'advanced', 'expert']
+  const userLevelIndex = difficultyLevels.indexOf(learningLevel)
+  const allowedDifficulties = difficultyLevels.slice(userLevelIndex >= 0 ? userLevelIndex : 0)
+  
+  console.log('🎯 [Self-Personalized] Applying difficulty filter:', {
+    userLevel: learningLevel,
+    allowedDifficulties,
+    totalQuestions: questions.length
+  })
+  
+  // Filter questions by user's learning level preference
+  const filteredQuestions = questions.filter(q => {
+    const questionDifficulty = q.difficulty || 'basic'
+    const isAllowed = allowedDifficulties.includes(questionDifficulty)
+    return isAllowed
+  })
+  
+  console.log('✅ [Self-Personalized] Filtered questions:', {
+    original: questions.length,
+    filtered: filteredQuestions.length,
+    levelCounts: allowedDifficulties.reduce((acc, level) => {
+      acc[level] = filteredQuestions.filter(q => (q.difficulty || 'basic') === level).length
+      return acc
+    }, {} as Record<string, number>)
+  })
+  
+  if (filteredQuestions.length < 10) {
+    console.warn(`⚠️ [Self-Personalized] Insufficient questions at level ${learningLevel}+, falling back to include lower levels`)
+    // Fallback: include all difficulties if not enough questions at selected level
+    return questions.map(q => ({ ...q, weight: 1.0 })) as QuestionForSelection[]
+  }
+  
+  return filteredQuestions.map(q => ({
     ...q,
-    weight: 1.0 // Simple implementation - can be enhanced
+    weight: 1.0
   })) as QuestionForSelection[]
 }
 
-function selectRandomizedSet(questions: QuestionForSelection[], count: number): QuestionForSelection[] {
+function selectCategoryBalancedSet(questions: QuestionForSelection[], count: number): QuestionForSelection[] {
+  if (questions.length === 0) return []
+  if (count <= 0) return []
+  
+  // カテゴリーごとにグループ化
+  const byCategory = questions.reduce((acc, q) => {
+    if (!acc[q.category_id]) acc[q.category_id] = []
+    acc[q.category_id].push(q)
+    return acc
+  }, {} as Record<string, QuestionForSelection[]>)
+  
+  const categories = Object.keys(byCategory)
+  const selected: QuestionForSelection[] = []
+  
+  console.log(`📋 [Self-Personalized Category Balance] Distributing ${count} questions across ${categories.length} categories`)
+  
+  // カテゴリー間で均等分散（ラウンドロビン方式）
+  let currentCategoryIndex = 0
+  let consecutiveEmptyAttempts = 0
+  const maxEmptyAttempts = categories.length // 全カテゴリーチェック後にストップ
+  
+  for (let i = 0; i < count && selected.length < count; i++) {
+    const category = categories[currentCategoryIndex]
+    const availableInCategory = byCategory[category]?.filter(q => 
+      !selected.some(s => s.id === q.id)
+    ) || []
+    
+    if (availableInCategory.length > 0) {
+      // ランダム選択（セルフパーソナライズは重みがない）
+      const randomIndex = Math.floor(Math.random() * availableInCategory.length)
+      const selectedQuestion = availableInCategory[randomIndex]
+      selected.push(selectedQuestion)
+      
+      console.log(`  📌 Selected from ${category}: question ${selectedQuestion.id}`)
+      consecutiveEmptyAttempts = 0 // リセット
+    } else {
+      console.log(`  ⚠️ No more questions available in ${category}`)
+      consecutiveEmptyAttempts++
+      
+      // 全カテゴリーで問題が枯渇した場合はループを終了
+      if (consecutiveEmptyAttempts >= maxEmptyAttempts) {
+        console.log(`⚠️ [Self-Personalized Category Balance] All categories exhausted, selected ${selected.length}/${count} questions`)
+        break
+      }
+    }
+    
+    // 次のカテゴリーに移動（ラウンドロビン）
+    currentCategoryIndex = (currentCategoryIndex + 1) % categories.length
+  }
+  
+  // カテゴリー分布ログ
+  const categoryDistribution = selected.reduce((acc, q) => {
+    acc[q.category_id] = (acc[q.category_id] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+  console.log(`📊 [Self-Personalized Final] Category distribution:`, categoryDistribution)
+  
+  return selected
+}
+
+// Legacy function - kept for potential future use
+function _selectRandomizedSet(questions: QuestionForSelection[], count: number): QuestionForSelection[] {
   const shuffled = [...questions].sort(() => Math.random() - 0.5)
   return shuffled.slice(0, count)
 }

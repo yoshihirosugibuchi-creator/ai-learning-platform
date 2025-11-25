@@ -143,12 +143,13 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
         availableLevels: skillLevels.map((l: LearningLevelItem) => ({ id: l.id, name: l.name }))
       })
       
-      // 設定の初期化：未設定または空の場合はデフォルト値を設定
+      // 設定の初期化：初回ユーザーのみデフォルト値を設定、既存ユーザーは保存済み設定を保持
+      const { isFirstTime, ...settingsWithoutFlag } = userSettings
       const finalSettings = {
-        ...userSettings,
+        ...settingsWithoutFlag,
         learningLevel: userSettings.learningLevel && userSettings.learningLevel.trim() ? 
                       userSettings.learningLevel : defaultLearningLevel,
-        basicCategories: userSettings.basicCategories.length === 0 
+        basicCategories: isFirstTime && userSettings.basicCategories.length === 0
           ? basicCategories.map(cat => cat.id) 
           : userSettings.basicCategories
       }
@@ -158,13 +159,20 @@ export default function QuizSettingsModal({ isOpen, onClose }: QuizSettingsModal
       setTempSettings({ ...finalSettings })
       
       // 追加の初期化保証：learningLevelsが設定された後に再度チェック
+      // 初回ユーザーのみ基本カテゴリーを全選択に設定
       setTimeout(() => {
         setTempSettings(prev => {
           const needsLearningLevel = !prev.learningLevel
-          const needsBasicCategories = !prev.basicCategories || prev.basicCategories.length === 0
+          // 既存ユーザーの空配列設定は尊重し、初回ユーザーのみ全選択を適用
+          const needsBasicCategories = isFirstTime && (!prev.basicCategories || prev.basicCategories.length === 0)
           
           if (needsLearningLevel || needsBasicCategories) {
-            console.log('🔧 Secondary initialization needed:', { needsLearningLevel, needsBasicCategories })
+            console.log('🔧 Secondary initialization needed:', { 
+              needsLearningLevel, 
+              needsBasicCategories,
+              isFirstTime,
+              currentBasicCategories: prev.basicCategories
+            })
             return {
               ...prev,
               learningLevel: needsLearningLevel ? defaultLearningLevel : prev.learningLevel,

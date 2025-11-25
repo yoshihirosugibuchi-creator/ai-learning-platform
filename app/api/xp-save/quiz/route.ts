@@ -446,9 +446,9 @@ export async function POST(request: Request) {
         } else {
           console.log(`🎴 Processing wisdom card (accuracy >= 70%, using ${USE_DB_CARDS ? 'DB' : 'Static'})...`)
           
-          // フォールバック: サーバー側でカード選択（従来の方法）
+          // フォールバック: サーバー側でカード選択（新パフォーマンス別ロジック対応）
           const randomCard = USE_DB_CARDS 
-            ? await getRandomWisdomCardFromDB(cardAccuracyRate)
+            ? await getRandomWisdomCardFromDB(cardAccuracyRate, userId)
             : getRandomWisdomCard(cardAccuracyRate)
             
           const cardResult = await addWisdomCardToCollection(userId, randomCard.id, supabase)
@@ -1053,16 +1053,21 @@ export async function POST(request: Request) {
 
     // 🚀 Trigger precomputation AFTER response is sent (in background)
     // 🔧 重要: レスポンス送信後に実行して、quiz_answers更新完了後に事前セット生成
-    setImmediate(async () => {
-      console.log('🚨 [DEBUG] Starting precomputation generation after response sent...')
-      await triggerPrecomputationGeneration(userId, body, {
-        selected_categories: null,
-        selected_industry_categories: null,
-        learning_goals: null,
-        learning_level: null
-      })
-      console.log('🚨 [DEBUG] Precomputation generation completed')
-    })
+    console.log('🚨 [DEBUG] Quiz XP Save API Request - checking precomputation trigger')
+    setTimeout(async () => {
+      try {
+        console.log('🚨 [DEBUG] Starting precomputation generation after response sent...')
+        await triggerPrecomputationGeneration(userId, body, {
+          selected_categories: null,
+          selected_industry_categories: null,
+          learning_goals: null,
+          learning_level: null
+        })
+        console.log('🚨 [DEBUG] Precomputation generation completed successfully')
+      } catch (error) {
+        console.error('❌ [DEBUG] Precomputation generation failed:', error)
+      }
+    }, 1000) // 1秒後に実行（レスポンス送信完了を保証）
 
     return response
 
@@ -1124,7 +1129,7 @@ async function triggerPrecomputationGeneration(
         }))
       },
       userProfile,
-      forceRegenerate: true  // Always regenerate after quiz completion to reflect latest learning results
+      forceRegenerate: true  // Normal quiz completion: add new sets and cleanup old ones safely
     }
     
     const results = await generateAllPrecomputedSets(context)

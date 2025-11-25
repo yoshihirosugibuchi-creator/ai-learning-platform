@@ -1394,17 +1394,36 @@ export default function QuizSession({
                     throw new Error('Authentication required for category quiz restart')
                   }
                 } else {
-                  // その他のクイズタイプ: 既存ロジック使用
-                  const filteredQuestions = questions.filter(q => {
-                    if (category && q.category !== category) return false
-                    if (difficulties && difficulties.length > 0 && q.difficulty && !difficulties.includes(q.difficulty)) return false
-                    return true
-                  })
-                  
-                  if (filteredQuestions.length >= 10) {
-                    newQuestions = getRandomQuestions(filteredQuestions, 10)
+                  // その他のクイズタイプ（セルフパーソナライズ、ビジネスAI、レビュー）: 新しいAPI使用
+                  const session = await supabase.auth.getSession()
+                  if (session.data.session?.access_token) {
+                    console.log(`🔄 [Quiz Restart] Using Quick Start API for mode: ${mode}`)
+                    
+                    const response = await fetch('/api/quiz/quick-start', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.data.session.access_token}`
+                      },
+                      body: JSON.stringify({
+                        quiz_type: mode,
+                        count: 10
+                      })
+                    })
+
+                    if (!response.ok) {
+                      throw new Error(`API error: ${response.status}`)
+                    }
+
+                    const data = await response.json()
+                    if (data.success && data.questions?.length >= 10) {
+                      newQuestions = data.questions.slice(0, 10)
+                      console.log(`✅ [Quiz Restart] Got ${newQuestions.length} questions from Quick Start API`)
+                    } else {
+                      throw new Error('Insufficient questions from API')
+                    }
                   } else {
-                    throw new Error('Insufficient questions for restart')
+                    throw new Error('Authentication required for quiz restart')
                   }
                 }
                 

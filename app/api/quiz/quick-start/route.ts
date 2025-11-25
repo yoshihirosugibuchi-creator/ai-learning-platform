@@ -241,13 +241,19 @@ async function getPrecomputedSet(userId: string, quizType: 'business-ai' | 'self
   // Find valid precomputed set
   const { data: precomputedSets } = await supabaseAdmin
     .from('precomputed_quiz_sets')
-    .select('id, question_ids, analysis_data')
+    .select('id, question_ids, analysis_data, created_at, expires_at, used_at')
     .eq('user_id', userId)
     .eq('quiz_type', quizType)
     .is('used_at', null)
     .gt('expires_at', new Date().toISOString())
     .order('created_at', { ascending: false })
-    .limit(1)
+    .limit(3)
+
+  console.log(`📦 [Precomputed] Found ${precomputedSets?.length || 0} valid ${quizType} sets:`)
+  precomputedSets?.forEach((set, index) => {
+    const questionIds = Array.isArray(set.question_ids) ? set.question_ids.slice(0, 3) : []
+    console.log(`  Set ${index + 1}: ID=${set.id}, created=${set.created_at}, questions=[${questionIds.join(', ')}...]`)
+  })
 
   if (!precomputedSets || precomputedSets.length === 0) {
     console.log(`📦 [Precomputed] No valid sets found for ${quizType}, falling back to new user generation`)
@@ -259,12 +265,20 @@ async function getPrecomputedSet(userId: string, quizType: 'business-ai' | 'self
   }
 
   const selectedSet = precomputedSets[0]
+  console.log(`📦 [Precomputed] Selected set ID=${selectedSet.id} from ${selectedSet.created_at}`)
   
   // Mark set as used
-  await supabaseAdmin
+  const usedAt = new Date().toISOString()
+  const { error: updateError } = await supabaseAdmin
     .from('precomputed_quiz_sets')
-    .update({ used_at: new Date().toISOString() })
+    .update({ used_at: usedAt })
     .eq('id', selectedSet.id)
+
+  if (updateError) {
+    console.error(`❌ [Precomputed] Failed to mark set ${selectedSet.id} as used:`, updateError)
+  } else {
+    console.log(`✅ [Precomputed] Successfully marked set ${selectedSet.id} as used at ${usedAt}`)
+  }
 
   // Get full question data
   const { data: questions } = await supabaseAdmin
@@ -324,38 +338,121 @@ async function handleLongAbsence(userId: string, quizType: string, count: number
 // =================================================================
 
 async function generateNewUserBusinessAI(userId: string, count: number): Promise<Question[]> {
-  // Get basic business questions (main categories) - fallback to all categories if needed
+  console.log(`🆕 [Business AI] Generating for new user with duplicate prevention`)
+  
+  // 1. Get user's question history with time-based weighting
+  const { recentQuestions, totalQuestions } = await getUserAskedQuestions(userId)
+  console.log(`📚 [Business AI] Question history loaded:`)
+  console.log(`  - Recent (7 days): ${recentQuestions.size} questions`)
+  console.log(`  - Total (30 days): ${totalQuestions.size} questions`)
+  
+  // Get basic business questions (main categories only) - get more candidates for better selection
+  // Use proper server-side data access instead of client-side patterns
+  const { getMainCategoryIds } = await import('@/lib/category-server-service')
+  const mainCategoryIds = await getMainCategoryIds()
+  
+  console.log(`🔍 [Business AI] Using ${mainCategoryIds.length} main category IDs:`, mainCategoryIds)
+  
   let { data: questions } = await supabaseAdmin
     .from('quiz_questions')
     .select('*')
     .eq('is_deleted', false)
+    .in('category_id', mainCategoryIds) // Use static main category IDs
     .in('difficulty', ['basic', 'intermediate']) // Easier for new users
-    .limit(count * 2)
+    .limit(count * 3) // Get 3x more candidates for better duplicate avoidance
 
-  // Fallback: If not enough main category questions, get from all categories
+  // Fallback: If not enough main category questions, expand to all difficulties but keep main categories only
   if (!questions || questions.length < count) {
-    console.log(`🔄 [Business AI] Insufficient main category questions (${questions?.length || 0}), trying all categories`)
+    console.log(`🔄 [Business AI] Insufficient main category questions (${questions?.length || 0}), expanding to all difficulties`)
     const { data: allQuestions } = await supabaseAdmin
       .from('quiz_questions')
       .select('*')
       .eq('is_deleted', false)
-      .in('difficulty', ['basic', 'intermediate'])
-      .limit(count * 3)
+      .in('category_id', mainCategoryIds) // Keep main categories only
+      .limit(count * 4) // Get even more candidates
     
     questions = allQuestions || []
   }
 
+  // Final fallback: If still insufficient, get any available questions
   if (!questions || questions.length < count) {
-    console.error(`❌ [Business AI] Still insufficient questions: ${questions?.length || 0} < ${count}`)
-    throw new Error(`Insufficient business questions: found ${questions?.length || 0}, need ${count}`)
+    console.log(`⚠️ [Business AI] Still insufficient main category questions (${questions?.length || 0}), trying all questions as emergency fallback`)
+    
+    const { data: emergencyQuestions } = await supabaseAdmin
+      .from('quiz_questions')
+      .select('*')
+      .eq('is_deleted', false)
+      .in('difficulty', ['basic', 'intermediate', 'advanced'])
+      .limit(count * 2)
+    
+    console.log(`🚨 [Business AI] Emergency fallback found ${emergencyQuestions?.length || 0} questions`)
+    
+    if (!emergencyQuestions || emergencyQuestions.length < count) {
+      console.error(`❌ [Business AI] Complete failure: ${emergencyQuestions?.length || 0} < ${count}`)
+      throw new Error(`Insufficient questions found: ${emergencyQuestions?.length || 0}, need ${count}`)
+    }
+    
+    questions = emergencyQuestions
   }
 
-  // Simple random selection for new users
-  const shuffled = questions.sort(() => Math.random() - 0.5)
-  const selectedQuestions = shuffled.slice(0, count)
+  // 2. Separate questions by recency with forgetting curve logic
+  const neverAskedQuestions = questions.filter(q => !totalQuestions.has(q.id))
+  const recentlyAskedQuestions = questions.filter(q => recentQuestions.has(q.id))
+  const oldAskedQuestions = questions.filter(q => totalQuestions.has(q.id) && !recentQuestions.has(q.id))
+  
+  console.log(`📊 [Business AI] Question categorization:`)
+  console.log(`  - Total available: ${questions.length}`)
+  console.log(`  - Never asked: ${neverAskedQuestions.length}`)
+  console.log(`  - Recently asked (7 days): ${recentlyAskedQuestions.length}`)
+  console.log(`  - Previously asked (8-30 days): ${oldAskedQuestions.length}`)
+  
+  // 3. Smart selection with forgetting curve priority
+  const selectedQuestions: typeof questions = []
+  
+  // Priority 1: Never asked questions (highest priority)
+  const targetNeverAsked = Math.min(Math.ceil(count * 0.7), neverAskedQuestions.length) // 70% if available
+  if (targetNeverAsked > 0) {
+    const selected = neverAskedQuestions
+      .sort(() => Math.random() - 0.5)
+      .slice(0, targetNeverAsked)
+    selectedQuestions.push(...selected)
+    console.log(`✅ [Business AI] Selected ${selected.length} never-asked questions`)
+  }
+  
+  // Priority 2: Old questions (forgetting curve - ready for review)
+  const remainingSlots = count - selectedQuestions.length
+  if (remainingSlots > 0 && oldAskedQuestions.length > 0) {
+    const targetOld = Math.min(remainingSlots, oldAskedQuestions.length)
+    const selected = oldAskedQuestions
+      .sort(() => Math.random() - 0.5)
+      .slice(0, targetOld)
+    selectedQuestions.push(...selected)
+    console.log(`✅ [Business AI] Selected ${selected.length} old questions (forgetting curve)`)
+  }
+  
+  // Priority 3: Recent questions only as last resort (avoid repetition)
+  const stillRemaining = count - selectedQuestions.length
+  if (stillRemaining > 0 && recentlyAskedQuestions.length > 0) {
+    console.log(`⚠️ [Business AI] Insufficient questions, adding ${stillRemaining} recent questions as last resort`)
+    const selected = recentlyAskedQuestions
+      .sort(() => Math.random() - 0.5)
+      .slice(0, stillRemaining)
+    selectedQuestions.push(...selected)
+  }
+  
+  // Final shuffle to randomize order
+  const finalSelection = selectedQuestions
+    .sort(() => Math.random() - 0.5)
+    .slice(0, count) // Ensure exact count
+  
+  console.log(`🎯 [Business AI] Final selection summary:`)
+  console.log(`  - Total selected: ${finalSelection.length}/${count}`)
+  console.log(`  - Never asked: ${finalSelection.filter(q => !totalQuestions.has(q.id)).length}`)
+  console.log(`  - Old questions: ${finalSelection.filter(q => totalQuestions.has(q.id) && !recentQuestions.has(q.id)).length}`)
+  console.log(`  - Recent questions: ${finalSelection.filter(q => recentQuestions.has(q.id)).length}`)
   
   // Convert database rows to Question type
-  return selectedQuestions.map(q => ({
+  return finalSelection.map(q => ({
     id: q.id,
     category: q.category_id,
     subcategory: q.subcategory_id || '',
@@ -371,42 +468,122 @@ async function generateNewUserBusinessAI(userId: string, count: number): Promise
 }
 
 async function generateNewUserSelfPersonalized(userId: string, count: number): Promise<Question[]> {
-  // Check if user has configured categories
-  const { data: user } = await supabaseAdmin
-    .from('users')
-    .select('selected_categories, selected_industry_categories')
-    .eq('id', userId)
+  console.log(`🎯 [Self-Personalized] Generating for new user with duplicate prevention`)
+  
+  // 1. Get user's question history to prevent duplicates
+  const { totalQuestions } = await getUserAskedQuestions(userId)
+  console.log(`📚 [Self-Personalized] Found ${totalQuestions.size} previously asked questions`)
+  
+  // Get user's quiz personalization settings from user_settings table
+  const { data: userQuizSettings } = await supabaseAdmin
+    .from('user_settings')
+    .select('setting_value')
+    .eq('user_id', userId)
+    .eq('setting_key', 'quiz_personalization')
     .single()
 
-  const hasCategories = user?.selected_categories || user?.selected_industry_categories
-  if (!hasCategories) {
-    // Use default categories for unconfigured users
+  if (!userQuizSettings?.setting_value) {
+    console.log('ℹ️ [Self-Personalized Fallback] No quiz settings found, using business AI default')
     return await generateNewUserBusinessAI(userId, count)
   }
 
-  // Use configured categories with proper type casting
-  const selectedCategories: string[] = [
-    ...(Array.isArray(user.selected_categories) ? user.selected_categories.filter((cat): cat is string => typeof cat === 'string') : []),
-    ...(Array.isArray(user.selected_industry_categories) ? user.selected_industry_categories.filter((cat): cat is string => typeof cat === 'string') : [])
-  ]
+  // Parse the quiz personalization settings
+  const quizSettings = userQuizSettings.setting_value as {
+    learningLevel: string
+    basicCategories: string[]
+    industryCategories: string[]
+    industrySubcategories: string[]
+  }
+
+  // Collect all selected categories
+  const selectedCategories: string[] = []
+  
+  if (Array.isArray(quizSettings.basicCategories)) {
+    selectedCategories.push(...quizSettings.basicCategories.filter((cat): cat is string => typeof cat === 'string' && Boolean(cat)))
+  }
+  
+  if (Array.isArray(quizSettings.industryCategories)) {
+    selectedCategories.push(...quizSettings.industryCategories.filter((cat): cat is string => typeof cat === 'string' && Boolean(cat)))
+  }
+
+  console.log('🎯 [Self-Personalized] Using settings:', {
+    selectedCategories,
+    learningLevel: quizSettings.learningLevel,
+    basicCount: quizSettings.basicCategories?.length || 0,
+    industryCount: quizSettings.industryCategories?.length || 0
+  })
 
   if (selectedCategories.length === 0) {
+    console.log('ℹ️ [Self-Personalized Fallback] No categories selected, using business AI default')
     return await generateNewUserBusinessAI(userId, count)
   }
 
-  const { data: questions } = await supabaseAdmin
+  // Define difficulty hierarchy based on user's learning level
+  const learningLevel = quizSettings.learningLevel || 'basic'
+  const difficultyLevels = ['basic', 'intermediate', 'advanced', 'expert']
+  const userLevelIndex = difficultyLevels.indexOf(learningLevel)
+  const allowedDifficulties = difficultyLevels.slice(userLevelIndex >= 0 ? userLevelIndex : 0)
+
+  let { data: questions } = await supabaseAdmin
     .from('quiz_questions')
     .select('*')
     .in('category_id', selectedCategories)
+    .in('difficulty', allowedDifficulties) // Apply difficulty filter
     .eq('is_deleted', false)
-    .limit(count * 2)
+    .limit(count * 4) // Get 4x more candidates for better duplicate avoidance
+
+  console.log('🎯 [Self-Personalized] Questions filtered by difficulty:', {
+    learningLevel,
+    allowedDifficulties,
+    questionsFound: questions?.length || 0
+  })
 
   if (!questions || questions.length < count) {
-    throw new Error('Insufficient questions for user categories')
+    console.warn(`⚠️ [Self-Personalized] Insufficient questions for selected categories + difficulty (${questions?.length || 0}/${count}), trying without difficulty filter`)
+    
+    // Fallback: try without difficulty filter
+    const { data: allQuestions } = await supabaseAdmin
+      .from('quiz_questions')
+      .select('*')
+      .in('category_id', selectedCategories)
+      .eq('is_deleted', false)
+      .limit(count * 3) // Get more candidates for fallback
+    
+    if (!allQuestions || allQuestions.length < count) {
+      console.warn('⚠️ [Self-Personalized] Still insufficient questions, using business AI fallback')
+      return await generateNewUserBusinessAI(userId, count)
+    }
+    
+    questions = allQuestions
   }
 
-  const shuffled = questions.sort(() => Math.random() - 0.5)
-  const selectedQuestions = shuffled.slice(0, count)
+  // 2. Separate unasked and asked questions
+  const unaskedQuestions = questions.filter(q => !totalQuestions.has(q.id))
+  const askedQuestions = questions.filter(q => totalQuestions.has(q.id))
+  
+  console.log(`📊 [Self-Personalized] Question analysis: Total=${questions.length}, Unasked=${unaskedQuestions.length}, Asked=${askedQuestions.length}`)
+  
+  // 3. Prioritize unasked questions
+  const targetUnaskedCount = Math.min(count, unaskedQuestions.length)
+  const remainingCount = count - targetUnaskedCount
+  
+  console.log(`🎯 [Self-Personalized] Selection target: ${targetUnaskedCount} unasked + ${remainingCount} asked`)
+  
+  // 4. Select unasked questions first
+  const selectedUnasked = unaskedQuestions
+    .sort(() => Math.random() - 0.5)
+    .slice(0, targetUnaskedCount)
+  
+  // 5. Fill remaining slots with asked questions if needed
+  const selectedAsked = remainingCount > 0 
+    ? askedQuestions.sort(() => Math.random() - 0.5).slice(0, remainingCount)
+    : []
+  
+  // 6. Combine and shuffle final selection
+  const selectedQuestions = [...selectedUnasked, ...selectedAsked]
+    .sort(() => Math.random() - 0.5) // Final shuffle
+  
+  console.log(`✅ [Self-Personalized] Final selection: ${selectedQuestions.length} questions (${selectedUnasked.length} unasked + ${selectedAsked.length} asked)`)
   
   // Convert database rows to Question type
   return selectedQuestions.map(q => ({
@@ -543,6 +720,74 @@ function convertToQuestion(cleanQuestion: CleanQuestion): Question {
     timeLimit: cleanQuestion.time_limit || 60,
     relatedTopics: [],
     source: cleanQuestion.source
+  }
+}
+
+// =================================================================
+// User Question History Helper (imported from precomputed-quiz-engine)
+// =================================================================
+
+/**
+ * Get user's previously asked questions from quiz_answers table with weighted recency
+ * @param userId User ID
+ * @returns Object with recent (7 days) and total (30 days) question sets
+ */
+async function getUserAskedQuestions(userId: string): Promise<{
+  recentQuestions: Set<number>
+  totalQuestions: Set<number>
+}> {
+  try {
+    // Get answer history from last 30 days with session info
+    const { data: answerHistory, error } = await supabaseAdmin
+      .from('quiz_answers')
+      .select('question_id, created_at, quiz_session_id')
+      .eq('user_id', userId)
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.warn('⚠️ [getUserAskedQuestions] Error fetching answer history:', error)
+      return { recentQuestions: new Set(), totalQuestions: new Set() }
+    }
+    
+    const now = Date.now()
+    const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000
+    const threeDaysAgo = now - 3 * 24 * 60 * 60 * 1000
+    
+    const recentQuestions = new Set<number>()
+    const totalQuestions = new Set<number>()
+    const veryRecentQuestions = new Set<number>() // Last 3 days for extra weighting
+    
+    // Extract numeric question IDs with time-based categorization
+    for (const answer of answerHistory || []) {
+      if (!/^\d+$/.test(answer.question_id)) continue // Skip non-numeric IDs
+      
+      const questionId = parseInt(answer.question_id, 10)
+      const answerTime = new Date(answer.created_at || '').getTime()
+      
+      totalQuestions.add(questionId)
+      
+      // Recent questions (last 7 days) get stronger weight
+      if (answerTime >= sevenDaysAgo) {
+        recentQuestions.add(questionId)
+      }
+      
+      // Very recent questions (last 3 days) get extra logging
+      if (answerTime >= threeDaysAgo) {
+        veryRecentQuestions.add(questionId)
+      }
+    }
+    
+    console.log(`📚 [getUserAskedQuestions] Question history analysis:`)
+    console.log(`  - Last 3 days: ${veryRecentQuestions.size} questions`)
+    console.log(`  - Last 7 days: ${recentQuestions.size} questions`)
+    console.log(`  - Last 30 days: ${totalQuestions.size} questions`)
+    
+    return { recentQuestions, totalQuestions }
+    
+  } catch (error) {
+    console.error('❌ [getUserAskedQuestions] Error:', error)
+    return { recentQuestions: new Set(), totalQuestions: new Set() }
   }
 }
 

@@ -14,13 +14,13 @@ export interface QuizPersonalizationSettings {
 const QUIZ_PERSONALIZATION_KEY = 'quiz_personalization'
 
 /**
- * デフォルト設定を取得（空の状態で返す - 実際のカテゴリーIDは動的に設定される）
- * 基本カテゴリー全選択、レベル初級〜
+ * デフォルト設定を取得（基本カテゴリーIDリストはオプション）
+ * 基本カテゴリー全選択、レベル初級
  */
-export function getDefaultQuizSettings(): QuizPersonalizationSettings {
+export function getDefaultQuizSettings(basicCategoryIds?: string[]): QuizPersonalizationSettings {
   return {
     learningLevel: 'basic',
-    basicCategories: [], // 動的に設定される（全選択）
+    basicCategories: basicCategoryIds || [], // 提供されない場合は空配列
     industryCategories: [],
     industrySubcategories: [],
     createdAt: new Date().toISOString(),
@@ -31,8 +31,10 @@ export function getDefaultQuizSettings(): QuizPersonalizationSettings {
 /**
  * ユーザーのクイズ設定を取得
  */
-export async function getUserQuizSettings(userId: string): Promise<QuizPersonalizationSettings> {
+export async function getUserQuizSettings(userId: string): Promise<QuizPersonalizationSettings & { isFirstTime?: boolean }> {
   try {
+    console.log('🔍 [getUserQuizSettings] Starting fetch for userId:', userId)
+    
     const { data, error } = await supabase
       .from('user_settings')
       .select('setting_value')
@@ -40,25 +42,34 @@ export async function getUserQuizSettings(userId: string): Promise<QuizPersonali
       .eq('setting_key', QUIZ_PERSONALIZATION_KEY)
       .single()
 
+    console.log('🔍 [getUserQuizSettings] Raw query result:', { data, error })
+
     if (error && error.code !== 'PGRST116') { // PGRST116 = No rows returned
-      console.error('❌ Error fetching quiz settings:', error)
-      return getDefaultQuizSettings()
+      console.error('❌ [getUserQuizSettings] Error fetching quiz settings:', error)
+      return { ...getDefaultQuizSettings(), isFirstTime: true }
     }
 
-    // データが存在しない場合はデフォルト設定を返す
+    // データが存在しない場合はデフォルト設定を返す（初回フラグ付き）
     if (!data || !data.setting_value) {
-      console.log('📝 No quiz settings found, returning default')
-      return getDefaultQuizSettings()
+      console.log('📝 [getUserQuizSettings] No quiz settings found, returning default')
+      return { ...getDefaultQuizSettings(), isFirstTime: true }
     }
 
-    // JSON データをパース
+    // JSON データをパース（既存の設定）
     const settings = data.setting_value as unknown as QuizPersonalizationSettings
-    console.log('✅ Quiz settings loaded:', settings)
-    return settings
+    console.log('✅ [getUserQuizSettings] Quiz settings loaded - Raw data:', JSON.stringify(data.setting_value, null, 2))
+    console.log('✅ [getUserQuizSettings] Parsed settings:', JSON.stringify(settings, null, 2))
+    console.log('✅ [getUserQuizSettings] basicCategories array:', settings.basicCategories)
+    console.log('✅ [getUserQuizSettings] industryCategories array:', settings.industryCategories)
+    
+    const result = { ...settings, isFirstTime: false }
+    console.log('✅ [getUserQuizSettings] Final result with isFirstTime=false:', JSON.stringify(result, null, 2))
+    
+    return result
 
   } catch (error) {
-    console.error('❌ Exception in getUserQuizSettings:', error)
-    return getDefaultQuizSettings()
+    console.error('❌ [getUserQuizSettings] Exception:', error)
+    return { ...getDefaultQuizSettings(), isFirstTime: true }
   }
 }
 
@@ -73,7 +84,8 @@ export async function saveUserQuizSettings(
     const now = new Date().toISOString()
     
     // 既存設定を取得して作成日時を保持
-    const currentSettings = await getUserQuizSettings(userId)
+    const currentSettingsWithFlag = await getUserQuizSettings(userId)
+    const { isFirstTime: _isFirstTime, ...currentSettings } = currentSettingsWithFlag
     
     const settingsToSave: QuizPersonalizationSettings = {
       ...settings,
@@ -141,9 +153,15 @@ export async function initializeUserQuizSettings(userId: string): Promise<void> 
 
 /**
  * 設定が初期設定かどうかを判定
- * カテゴリーが選択されているかどうかで判断
+ * isFirstTimeフラグがある場合はそれを使用、ない場合は従来のロジック
  */
-export function isDefaultSettings(settings: QuizPersonalizationSettings): boolean {
+export function isDefaultSettings(settings: QuizPersonalizationSettings & { isFirstTime?: boolean }): boolean {
+  // isFirstTimeフラグがある場合はそれを優先
+  if (settings.isFirstTime !== undefined) {
+    return settings.isFirstTime
+  }
+  
+  // 従来のロジック（後方互換性のため）
   // カテゴリーが1つでも選択されていれば非デフォルト設定
   const hasSelectedCategories = settings.basicCategories.length > 0 ||
                                 settings.industryCategories.length > 0 ||

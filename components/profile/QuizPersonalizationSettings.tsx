@@ -48,8 +48,6 @@ export default function QuizPersonalizationSettings() {
           getCategories()
         ])
 
-        setSettings(userSettings)
-        
         // カテゴリーデータを基本/業界に分類
         // MainCategoryは基本、IndustryCategoryは業界として扱う
         const basicCategories = categoriesData
@@ -61,6 +59,31 @@ export default function QuizPersonalizationSettings() {
           .map(cat => ({ id: cat.id, name: cat.name, type: 'industry' as const }))
 
         setCategories([...basicCategories, ...industryCategories])
+
+        // 設定ロード完了時の処理
+        console.log('🔍 Settings loading debug:', {
+          isFirstTime: userSettings.isFirstTime,
+          basicCategoriesLength: userSettings.basicCategories.length,
+          industryCategoriesLength: userSettings.industryCategories.length,
+          basicCategories: userSettings.basicCategories,
+          industryCategories: userSettings.industryCategories
+        })
+
+        // isFirstTimeフラグを削除して設定をセット
+        const { isFirstTime: _isFirstTime, ...settingsWithoutFlag } = userSettings
+
+        // 初回ユーザーのみ基本カテゴリーを全選択に設定
+        if (userSettings.isFirstTime) {
+          console.log('🆕 First time user - setting default basic categories')
+          setSettings({
+            ...settingsWithoutFlag,
+            basicCategories: basicCategories.map(cat => cat.id)
+          })
+        } else {
+          console.log('👤 Existing user - preserving saved settings as-is')
+          // 保存済み設定をそのまま表示（空配列も含めて完全に保持）
+          setSettings(settingsWithoutFlag)
+        }
 
         // サブカテゴリーデータを準備（将来の実装用）
         // TODO: サブカテゴリーAPIが実装されたら更新
@@ -170,7 +193,8 @@ export default function QuizPersonalizationSettings() {
   }
 
   const confirmReset = () => {
-    setSettings(getDefaultQuizSettings())
+    const basicCategoryIds = categories.filter(cat => cat.type === 'basic').map(cat => cat.id)
+    setSettings(getDefaultQuizSettings(basicCategoryIds))
     setShowResetDialog(false)
     toast({
       title: '設定をリセットしました',

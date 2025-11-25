@@ -272,8 +272,23 @@ export const getRandomWisdomCard = (percentage: number): WisdomCard => {
 
 /**
  * Convert category ID to display name
+ * @param categoryId - The category ID
+ * @param categories - Optional categories array from database (recommended for dynamic lookup)
+ * @returns The display name or categoryId if not found
  */
-export function getCategoryDisplayName(categoryId: string): string {
+export function getCategoryDisplayName(categoryId: string, categories?: Array<{category_id: string, name: string}>): string {
+  console.log(`🏷️ [getCategoryDisplayName] Input categoryId: "${categoryId}", dynamic lookup: ${!!categories}`)
+  
+  // Dynamic lookup from database (preferred method)
+  if (categories && Array.isArray(categories)) {
+    const category = categories.find(cat => cat.category_id === categoryId)
+    if (category) {
+      console.log(`🏷️ [getCategoryDisplayName] Dynamic lookup success: "${category.name}"`)
+      return category.name
+    }
+  }
+  
+  // Fallback to static mapping for backward compatibility (to be deprecated)
   const categoryDisplayNames: Record<string, string> = {
     'communication_presentation': 'コミュニケーション・プレゼンテーション',
     'logical_thinking_problem_solving': '論理的思考・問題解決',
@@ -286,13 +301,32 @@ export function getCategoryDisplayName(categoryId: string): string {
     'business_process_analysis': 'ビジネスプロセス・業務分析',
     'risk_crisis_management': 'リスク・危機管理'
   }
-  return categoryDisplayNames[categoryId] || categoryId
+  
+  const result = categoryDisplayNames[categoryId] || categoryId
+  console.log(`🏷️ [getCategoryDisplayName] Fallback result: "${result}" (found in dictionary: ${!!categoryDisplayNames[categoryId]})`)
+  
+  return result
 }
 
 /**
  * Convert subcategory ID to display name
+ * @param subcategoryId - The subcategory ID
+ * @param subcategories - Optional subcategories array from database (recommended for dynamic lookup)
+ * @returns The display name or subcategoryId if not found
  */
-export function getSubcategoryDisplayName(subcategoryId: string): string {
+export function getSubcategoryDisplayName(subcategoryId: string, subcategories?: Array<{subcategory_id: string, name: string}>): string {
+  console.log(`🏷️ [getSubcategoryDisplayName] Input subcategoryId: "${subcategoryId}", dynamic lookup: ${!!subcategories}`)
+  
+  // Dynamic lookup from database (preferred method)
+  if (subcategories && Array.isArray(subcategories)) {
+    const subcategory = subcategories.find(sub => sub.subcategory_id === subcategoryId)
+    if (subcategory) {
+      console.log(`🏷️ [getSubcategoryDisplayName] Dynamic lookup success: "${subcategory.name}"`)
+      return subcategory.name
+    }
+  }
+  
+  // Fallback to static mapping for backward compatibility (to be deprecated)
   const subcategoryDisplayNames: Record<string, string> = {
     '結論ファースト・構造化思考': '結論ファースト・構造化思考',
     '資料作成・可視化技術': '資料作成・可視化技術',
@@ -338,7 +372,11 @@ export function getSubcategoryDisplayName(subcategoryId: string): string {
     '情報セキュリティ': '情報セキュリティ',
     'サステナビリティリスク': 'サステナビリティリスク'
   }
-  return subcategoryDisplayNames[subcategoryId] || subcategoryId
+  
+  const result = subcategoryDisplayNames[subcategoryId] || subcategoryId
+  console.log(`🏷️ [getSubcategoryDisplayName] Fallback result: "${result}" (found in dictionary: ${!!subcategoryDisplayNames[subcategoryId]})`)
+  
+  return result
 }
 
 // =============================================================================
@@ -348,46 +386,148 @@ export function getSubcategoryDisplayName(subcategoryId: string): string {
 import { getWisdomCardsWithFallback, getUserWisdomCards, WisdomCardCollection } from './supabase-cards'
 
 /**
- * レアリティ重み付け設定取得
+ * パフォーマンス・未獲得状況別レアリティ重み付け取得
  * @param rarity - カードレアリティ
  * @param performance - ユーザーパフォーマンス (0-100)
+ * @param userCollection - ユーザーのカードコレクション
+ * @param allCards - 全カード情報（未獲得判定用）
  * @returns 重み値 (高いほど選ばれやすい)
  */
-function getRarityWeight(rarity: string, performance: number): number {
-  const weights: Record<string, Record<string, number>> = {
-    high: { 'レジェンダリー': 40, 'エピック': 35, 'レア': 20, 'コモン': 5 },    // 90%+
-    good: { 'レジェンダリー': 10, 'エピック': 40, 'レア': 40, 'コモン': 10 },   // 70-89%
-    normal: { 'レジェンダリー': 5, 'エピック': 15, 'レア': 50, 'コモン': 30 }, // 50-69%
-    low: { 'レジェンダリー': 1, 'エピック': 4, 'レア': 25, 'コモン': 70 }     // 50%未満
+function getRarityWeight(rarity: string, performance: number, userCollection: WisdomCardCollection[], allCards: WisdomCard[]): number {
+  console.log(`🎯 Calculating rarity weight for ${rarity} with ${performance}% performance`)
+  
+  // 各レアリティの未獲得カード数を計算
+  const unacquiredCounts = {
+    'レジェンダリー': 0,
+    'エピック': 0,
+    'レア': 0,
+    'コモン': 0
   }
   
-  const tier = performance >= 90 ? 'high' : 
-              performance >= 70 ? 'good' : 
-              performance >= 50 ? 'normal' : 'low'
+  allCards.forEach(card => {
+    const isUnacquired = !userCollection.find(item => item.card_id === card.id)
+    if (isUnacquired && unacquiredCounts.hasOwnProperty(card.rarity)) {
+      unacquiredCounts[card.rarity as keyof typeof unacquiredCounts]++
+    }
+  })
   
-  return weights[tier][rarity] || 1
+  console.log(`📊 Unacquired counts:`, unacquiredCounts)
+  
+  // パフォーマンス別カード配布ロジック（未獲得優先）
+  if (performance === 100) {
+    // 100%: レジェンダリー→エピック→レア→コモンの順で未獲得を優先
+    if (unacquiredCounts.レジェンダリー > 0) {
+      const weights: Record<string, number> = { 'レジェンダリー': 80, 'エピック': 15, 'レア': 4, 'コモン': 1 }
+      return weights[rarity] || 1
+    } else if (unacquiredCounts.エピック > 0) {
+      const weights: Record<string, number> = { 'レジェンダリー': 20, 'エピック': 60, 'レア': 15, 'コモン': 5 }
+      return weights[rarity] || 1
+    } else if (unacquiredCounts.レア > 0) {
+      const weights: Record<string, number> = { 'レジェンダリー': 10, 'エピック': 30, 'レア': 50, 'コモン': 10 }
+      return weights[rarity] || 1
+    } else if (unacquiredCounts.コモン > 0) {
+      const weights: Record<string, number> = { 'レジェンダリー': 5, 'エピック': 15, 'レア': 30, 'コモン': 50 }
+      return weights[rarity] || 1
+    } else {
+      // 全カード獲得済み: 通常配布
+      const weights: Record<string, number> = { 'レジェンダリー': 60, 'エピック': 25, 'レア': 10, 'コモン': 5 }
+      return weights[rarity] || 1
+    }
+  } else if (performance >= 80) {
+    // 80-99%: レア、エピック中心だが、コモンで未獲得があればそれも対象
+    if (unacquiredCounts.レア > 0 || unacquiredCounts.エピック > 0) {
+      const weights: Record<string, number> = { 'レジェンダリー': 3, 'エピック': 45, 'レア': 45, 'コモン': 7 }
+      return weights[rarity] || 1
+    } else if (unacquiredCounts.コモン > 0) {
+      // エピック・レアがない場合、コモンを対象に
+      const weights: Record<string, number> = { 'レジェンダリー': 5, 'エピック': 20, 'レア': 30, 'コモン': 45 }
+      return weights[rarity] || 1
+    } else {
+      // 全カード獲得済み: 通常配布
+      const weights: Record<string, number> = { 'レジェンダリー': 5, 'エピック': 45, 'レア': 45, 'コモン': 5 }
+      return weights[rarity] || 1
+    }
+  } else if (performance >= 70) {
+    // 70-79%: コモン、レア中心
+    if (unacquiredCounts.コモン > 0 || unacquiredCounts.レア > 0) {
+      const weights: Record<string, number> = { 'レジェンダリー': 1, 'エピック': 7, 'レア': 46, 'コモン': 46 }
+      return weights[rarity] || 1
+    } else {
+      // コモン・レアがない場合、エピック以上も対象に
+      const weights: Record<string, number> = { 'レジェンダリー': 3, 'エピック': 30, 'レア': 35, 'コモン': 32 }
+      return weights[rarity] || 1
+    }
+  } else {
+    // 70%未満: カード付与なし（この関数は呼ばれないはず）
+    return 0
+  }
 }
 
 /**
- * ユーザーの獲得履歴を考慮した重み調整
+ * パフォーマンス別未獲得優先重み計算
  * @param card - カード情報
  * @param userCollection - ユーザーのカードコレクション
+ * @param performance - ユーザーパフォーマンス (0-100)
  * @returns 調整後の重み倍率 (1.0=標準, >1.0=優遇, <1.0=抑制)
  */
-function getPersonalizationWeight(card: WisdomCard, userCollection: WisdomCardCollection[]): number {
+function getPersonalizationWeight(card: WisdomCard, userCollection: WisdomCardCollection[], performance: number): number {
   const ownedCard = userCollection.find(item => item.card_id === card.id)
+  const isUnacquired = !ownedCard
   
-  if (!ownedCard) {
-    // 未獲得カードは2倍重み
-    return 2.0
+  console.log(`📊 Analyzing card ${card.id} (${card.rarity}): ${isUnacquired ? 'UNACQUIRED' : `owned ${ownedCard.count}x`}`)
+  
+  if (performance === 100) {
+    // 100%: レジェンダリー→エピック→レア→コモンの順で未獲得を優先
+    if (isUnacquired) {
+      switch (card.rarity) {
+        case 'レジェンダリー': return 10.0  // 最高優先度
+        case 'エピック': return 8.0
+        case 'レア': return 6.0
+        case 'コモン': return 4.0
+      }
+    } else {
+      // 獲得済みは大幅に抑制（レアリティ関係なし）
+      const count = ownedCard.count || 0
+      if (count <= 1) return 0.3
+      if (count <= 3) return 0.1
+      return 0.05
+    }
+  } else if (performance >= 80) {
+    // 80-99%: レア、エピック中心だが、コモンで未獲得があればそれも対象
+    if (isUnacquired) {
+      switch (card.rarity) {
+        case 'エピック': return 8.0      // 最高優先度
+        case 'レア': return 8.0          // 同等優先度
+        case 'コモン': return 4.0        // 未獲得なら対象
+        case 'レジェンダリー': return 2.0 // 低めだが対象
+      }
+    } else {
+      // 獲得済みは抑制
+      const count = ownedCard.count || 0
+      if (count <= 1) return 0.5
+      if (count <= 3) return 0.2
+      return 0.1
+    }
+  } else if (performance >= 70) {
+    // 70-79%: コモン、レア中心
+    if (isUnacquired) {
+      switch (card.rarity) {
+        case 'コモン': return 8.0        // 最高優先度
+        case 'レア': return 8.0          // 同等優先度
+        case 'エピック': return 3.0      // 低めだが対象
+        case 'レジェンダリー': return 1.0 // 最低優先度
+      }
+    } else {
+      // 獲得済みは抑制
+      const count = ownedCard.count || 0
+      if (count <= 1) return 0.7
+      if (count <= 3) return 0.3
+      return 0.1
+    }
   }
   
-  // 獲得回数に応じて重みを減らす（最低0.1倍）
-  const count = ownedCard.count || 0
-  if (count <= 1) return 1.0      // 1回: 標準重み
-  if (count <= 3) return 0.7      // 2-3回: やや抑制
-  if (count <= 5) return 0.4      // 4-5回: 抑制
-  return 0.1                      // 6回以上: 大幅抑制
+  // 70%未満やその他のケース
+  return isUnacquired ? 2.0 : 0.1
 }
 
 /**
@@ -398,22 +538,34 @@ function getPersonalizationWeight(card: WisdomCard, userCollection: WisdomCardCo
 function selectWeightedRandom(weightedCards: Array<{card: WisdomCard, weight: number}>): WisdomCard {
   const totalWeight = weightedCards.reduce((sum, item) => sum + item.weight, 0)
   
+  console.log(`🎲 Weighted selection pool (total weight: ${totalWeight.toFixed(2)}):`)
+  weightedCards.forEach((item, index) => {
+    const percentage = (item.weight / totalWeight * 100).toFixed(1)
+    console.log(`  ${index + 1}. Card ${item.card.id} (${item.card.rarity}): weight=${item.weight.toFixed(2)} (${percentage}%)`)
+  })
+  
   if (totalWeight <= 0) {
     // フォールバック: 単純ランダム
+    console.log('⚠️ Total weight is 0, using random fallback')
     return weightedCards[Math.floor(Math.random() * weightedCards.length)].card
   }
   
   let random = Math.random() * totalWeight
+  console.log(`🎯 Random selection value: ${random.toFixed(2)} / ${totalWeight.toFixed(2)}`)
   
   for (const item of weightedCards) {
     random -= item.weight
+    console.log(`🔄 Checking card ${item.card.id}: remaining=${random.toFixed(2)}`)
     if (random <= 0) {
+      console.log(`✅ Selected card ${item.card.id} (${item.card.rarity}) via weighted selection`)
       return item.card
     }
   }
   
   // フォールバック: 最後のカード
-  return weightedCards[weightedCards.length - 1].card
+  const fallbackCard = weightedCards[weightedCards.length - 1].card
+  console.log(`🔄 Fallback to last card: ${fallbackCard.id} (${fallbackCard.rarity})`)
+  return fallbackCard
 }
 
 /**
@@ -446,18 +598,30 @@ export const getRandomWisdomCardFromDB = async (percentage: number, userId?: str
       }
     }
     
-    // 重み付きカードプール作成
+    // カード配列を変換（未獲得分析用）
+    const allCards = activeCards.map(convertWisdomCardMasterToLegacy)
+    
+    // 重み付きカードプール作成（新パフォーマンス・未獲得状況別ロジック）
     const weightedCards = activeCards.map(dbCard => {
       const card = convertWisdomCardMasterToLegacy(dbCard)
-      const rarityWeight = getRarityWeight(card.rarity, percentage)
-      const personalizationWeight = userId ? getPersonalizationWeight(card, userCollection) : 1.0
+      const rarityWeight = getRarityWeight(card.rarity, percentage, userCollection, allCards)
+      const personalizationWeight = userId ? getPersonalizationWeight(card, userCollection, percentage) : 1.0
       const finalWeight = rarityWeight * personalizationWeight
+      
+      const isUnacquired = !userCollection.find(item => item.card_id === card.id)
+      console.log(`🎯 Card ${card.id} (${card.rarity}): ${isUnacquired ? 'UNACQUIRED' : 'owned'}, rarity=${rarityWeight}, personal=${personalizationWeight.toFixed(2)}, final=${finalWeight.toFixed(2)}`)
       
       return {
         card,
         weight: finalWeight
       }
-    }).filter(item => item.weight > 0) // 重み0以下のカードを除外
+    }).filter(item => {
+      const kept = item.weight > 0
+      if (!kept) {
+        console.log(`❌ Filtered out card ${item.card.id} (${item.card.rarity}) with weight ${item.weight.toFixed(2)}`)
+      }
+      return kept
+    }) // 重み0以下のカードを除外
     
     if (weightedCards.length === 0) {
       console.warn('⚠️ No weighted cards available, falling back to static cards')

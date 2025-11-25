@@ -90,6 +90,27 @@ export async function PUT(request: NextRequest) {
     }
 
     console.log('✅ Profile updated successfully')
+    
+    // Regenerate Business-AI quiz sets after profile changes
+    // Profile changes (selected_categories) directly impact Business-AI quiz generation
+    try {
+      const { generateBusinessAISet } = await import('@/lib/precomputed-quiz-engine')
+      
+      console.log('🔄 [Profile Update] Regenerating Business-AI sets after profile change...')
+      
+      const context = {
+        userId,
+        forceRegenerate: true  // Force regeneration due to profile changes affecting selected_categories
+      }
+      
+      await generateBusinessAISet(context)
+      console.log('✅ [Profile Update] Business-AI sets regenerated successfully')
+      
+    } catch (regenerationError) {
+      // Non-critical error - don't fail the profile update
+      console.warn('⚠️ [Profile Update] Failed to regenerate Business-AI quiz sets (non-critical):', regenerationError)
+    }
+    
     return NextResponse.json({ profile: updatedProfile })
 
   } catch (error) {

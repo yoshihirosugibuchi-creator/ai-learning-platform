@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, Edit, Trash2, Save, X, Palette, Database } from 'lucide-react'
 import { WisdomCardMaster } from '@/lib/database-types-official'
-import { getCategoryDisplayName, getRarityConfig } from '@/lib/cards'
+import { getCategoryDisplayName, getRarityConfig, getSubcategoryDisplayName } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
 import { WisdomCard as WisdomCardType } from '@/lib/cards'
 import { useToast } from '@/hooks/use-toast'
@@ -161,7 +161,7 @@ export default function WisdomCardAdminPage() {
     const matchesSearch = 
       card.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
       card.quote.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      getCategoryDisplayName(card.category_id).toLowerCase().includes(searchTerm.toLowerCase())
+      getCategoryDisplayName(card.category_id, categories).toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesRarity = selectedRarity === 'all' || card.rarity === selectedRarity
     
@@ -710,9 +710,9 @@ export default function WisdomCardAdminPage() {
                       <div className="text-sm text-gray-600">
                         <div><strong>著者:</strong> {previewCard.author}</div>
                         <div><strong>レアリティ:</strong> {previewCard.rarity}</div>
-                        <div><strong>カテゴリー:</strong> {getCategoryDisplayName(previewCard.categoryId)}</div>
+                        <div><strong>カテゴリー:</strong> {getCategoryDisplayName(previewCard.categoryId, categories)}</div>
                         {previewCard.subcategoryId && (
-                          <div><strong>サブカテゴリー:</strong> {previewCard.subcategoryId}</div>
+                          <div><strong>サブカテゴリー:</strong> {getSubcategoryDisplayName(previewCard.subcategoryId, subcategories)}</div>
                         )}
                       </div>
                     </div>
@@ -756,7 +756,7 @@ export default function WisdomCardAdminPage() {
                         {card.author}
                       </span>
                       <span className="text-sm text-gray-500">
-                        {getCategoryDisplayName(card.category_id)}
+                        {getCategoryDisplayName(card.category_id, categories)}
                       </span>
                     </div>
                     <div className={`text-sm line-clamp-2 ${isDiscontinued ? 'text-gray-500' : 'text-gray-700'}`}>
