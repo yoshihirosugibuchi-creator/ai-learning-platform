@@ -472,15 +472,20 @@ export async function generateReviewSet(
     const questionSets = await generateReviewSets(optimizedQuestions, setsCount, actualQuestionsPerSet)
     console.log(`📊 [Review] Generated question sets:`, questionSets.map(set => ({ length: set.length, questions: set })))
     
-    // 5. Save to database
+    // 5. Save to database and get creation timestamp for cleanup
+    let newSetCreatedAt: string
     console.log('💾 [Review] Saving sets to database...')
     try {
+      // Save new sets first
       await savePrecomputedSets(userId, 'review', questionSets, {
         total_review_targets: reviewQuestions.length,
         review_criteria: ['incorrect', 'hint_used', 'low_confidence', 'slow_response'],
         generation_method: 'review-optimized'
       })
-      console.log(`✅ [Review] Successfully saved ${questionSets.length} precomputed sets`)
+      
+      // Record successful save timestamp for cleanup reference
+      newSetCreatedAt = new Date().toISOString()
+      console.log(`✅ [Review] Successfully saved ${questionSets.length} precomputed sets at ${newSetCreatedAt}`)
     } catch (saveError) {
       console.error(`❌ [Review] Failed to save precomputed sets:`, saveError)
       throw saveError
@@ -489,24 +494,21 @@ export async function generateReviewSet(
     // 6. Clean up old sets AFTER successful generation (if force regenerating)
     if (forceRegenerate) {
       try {
-        console.log(`🧹 [Review] Cleaning up old used and expired sets...`)
+        console.log(`🧹 [Review] Force regeneration: cleaning up old sets created before ${newSetCreatedAt}...`)
         
-        // Safe deletion: only remove sets that are either:
-        // 1. Already used (used_at IS NOT NULL) 
-        // 2. Expired (expires_at < now())
-        // This preserves unused valid sets for immediate retry scenarios
-        const now = new Date().toISOString()
-        const { error: deleteError } = await supabaseAdmin
+        // Force regeneration: Remove ALL existing sets created BEFORE the new sets
+        // This follows requirement: "作成完了後にそれ以前に作成された事前セットを削除"
+        const { error: deleteError, count: deletedCount } = await supabaseAdmin
           .from('precomputed_quiz_sets')
           .delete()
           .eq('user_id', userId)
           .eq('quiz_type', 'review')
-          .or(`used_at.not.is.null,expires_at.lt.${now}`)
+          .lt('created_at', newSetCreatedAt) // Delete sets created before new sets
         
         if (deleteError) {
-          console.warn('⚠️ [Review] Failed to clean up old sets:', deleteError)
+          console.warn('⚠️ [Review] Failed to force cleanup old sets:', deleteError)
         } else {
-          console.log('🧹 [Review] Successfully cleaned up old sets after regeneration')
+          console.log(`🧹 [Review] Force regeneration cleanup: deleted ${deletedCount || 0} old sets`)
         }
       } catch (cleanupError) {
         console.warn('⚠️ [Review] Cleanup failed (non-critical):', cleanupError)
