@@ -208,15 +208,20 @@ export async function generateBusinessAISet(
       userId
     )
     
-    // 5. Save to database
+    // 5. Save to database and get creation timestamp for cleanup
+    let newSetCreatedAt: string
     try {
+      // Save new sets first
       await savePrecomputedSets(userId, 'business-ai', questionSets, {
         avg_accuracy: avgAccuracy,
         distribution: difficultyDistribution,
         focus_categories: focusCategories,
         generation_method: 'business-ai-optimized'
       })
-      console.log(`✅ [Business-AI] Successfully saved ${questionSets.length} precomputed sets`)
+      
+      // Record successful save timestamp for cleanup reference
+      newSetCreatedAt = new Date().toISOString()
+      console.log(`✅ [Business-AI] Successfully saved ${questionSets.length} precomputed sets at ${newSetCreatedAt}`)
     } catch (saveError) {
       console.error(`❌ [Business-AI] Failed to save precomputed sets:`, saveError)
       throw saveError
@@ -225,24 +230,21 @@ export async function generateBusinessAISet(
     // 6. Clean up old sets AFTER successful generation (if force regenerating)
     if (forceRegenerate) {
       try {
-        console.log(`🧹 [Business-AI] Cleaning up old used and expired sets...`)
+        console.log(`🧹 [Business-AI] Force regeneration: cleaning up old sets created before ${newSetCreatedAt}...`)
         
-        // Safe deletion: only remove sets that are either:
-        // 1. Already used (used_at IS NOT NULL) 
-        // 2. Expired (expires_at < now())
-        // This preserves unused valid sets for immediate retry scenarios
-        const now = new Date().toISOString()
-        const { error: deleteError } = await supabaseAdmin
+        // Force regeneration: Remove ALL existing sets created BEFORE the new sets
+        // This follows requirement: "作成完了後にそれ以前に作成された事前セットを削除"
+        const { error: deleteError, count: deletedCount } = await supabaseAdmin
           .from('precomputed_quiz_sets')
           .delete()
           .eq('user_id', userId)
           .eq('quiz_type', 'business-ai')
-          .or(`used_at.not.is.null,expires_at.lt.${now}`)
+          .lt('created_at', newSetCreatedAt) // Delete sets created before new sets
         
         if (deleteError) {
-          console.warn('⚠️ [Business-AI] Failed to clean up old sets:', deleteError)
+          console.warn('⚠️ [Business-AI] Failed to force cleanup old sets:', deleteError)
         } else {
-          console.log('🧹 [Business-AI] Successfully cleaned up old sets after regeneration')
+          console.log(`🧹 [Business-AI] Force regeneration cleanup: deleted ${deletedCount || 0} old sets`)
         }
       } catch (cleanupError) {
         console.warn('⚠️ [Business-AI] Cleanup failed (non-critical):', cleanupError)
@@ -355,8 +357,10 @@ export async function generateSelfPersonalizedSet(
     // 6. Generate sets with unasked priority + category balance (2 sets of 10 questions each)
     const questionSets = await generateCategoryBalancedSets(personalizedQuestions, 2, 10, userId)
     
-    // 7. Save to database
+    // 7. Save to database and get creation timestamp for cleanup
+    let newSetCreatedAt: string
     try {
+      // Save new sets first
       await savePrecomputedSets(userId, 'self-personalized', questionSets, {
         settings_hash: settingsHash,
         selected_categories: selectedCategories,
@@ -364,7 +368,10 @@ export async function generateSelfPersonalizedSet(
         learning_level: userSettings.learning_level || undefined,
         generation_method: 'self-personalized'
       })
-      console.log(`✅ [Self-Personalized] Successfully saved ${questionSets.length} precomputed sets`)
+      
+      // Record successful save timestamp for cleanup reference
+      newSetCreatedAt = new Date().toISOString()
+      console.log(`✅ [Self-Personalized] Successfully saved ${questionSets.length} precomputed sets at ${newSetCreatedAt}`)
     } catch (saveError) {
       console.error(`❌ [Self-Personalized] Failed to save precomputed sets:`, saveError)
       throw saveError
@@ -373,24 +380,21 @@ export async function generateSelfPersonalizedSet(
     // 8. Clean up old sets AFTER successful generation (if force regenerating)
     if (forceRegenerate) {
       try {
-        console.log(`🧹 [Self-Personalized] Cleaning up old used and expired sets...`)
+        console.log(`🧹 [Self-Personalized] Force regeneration: cleaning up old sets created before ${newSetCreatedAt}...`)
         
-        // Safe deletion: only remove sets that are either:
-        // 1. Already used (used_at IS NOT NULL) 
-        // 2. Expired (expires_at < now())
-        // This preserves unused valid sets for immediate retry scenarios
-        const now = new Date().toISOString()
-        const { error: deleteError } = await supabaseAdmin
+        // Force regeneration: Remove ALL existing sets created BEFORE the new sets
+        // This follows requirement: "作成完了後にそれ以前に作成された事前セットを削除"
+        const { error: deleteError, count: deletedCount } = await supabaseAdmin
           .from('precomputed_quiz_sets')
           .delete()
           .eq('user_id', userId)
           .eq('quiz_type', 'self-personalized')
-          .or(`used_at.not.is.null,expires_at.lt.${now}`)
+          .lt('created_at', newSetCreatedAt) // Delete sets created before new sets
         
         if (deleteError) {
-          console.warn('⚠️ [Self-Personalized] Failed to clean up old sets:', deleteError)
+          console.warn('⚠️ [Self-Personalized] Failed to force cleanup old sets:', deleteError)
         } else {
-          console.log('🧹 [Self-Personalized] Successfully cleaned up old sets after regeneration')
+          console.log(`🧹 [Self-Personalized] Force regeneration cleanup: deleted ${deletedCount || 0} old sets`)
         }
       } catch (cleanupError) {
         console.warn('⚠️ [Self-Personalized] Cleanup failed (non-critical):', cleanupError)
@@ -885,44 +889,60 @@ async function selectWithUnaskedPriority(
 ): Promise<QuestionWithWeight[]> {
   console.log(`🎯 [Unasked Priority] Starting selection: ${count} questions, min unasked ratio: ${minUnaskedRatio}`)
   
-  // 1. ユーザーの過去出題履歴を取得
-  const askedQuestionIds = await getUserAskedQuestions(userId)
+  // 1. ユーザーの過去出題履歴を取得（時間別分析）
+  const { recentQuestions, totalQuestions } = await getUserAskedQuestions(userId)
   
-  // 2. 未出題と出題済みに分類
-  const unaskedQuestions = questions.filter(q => !askedQuestionIds.has(q.id))
-  const askedQuestions = questions.filter(q => askedQuestionIds.has(q.id))
+  // 2. 問題を出題履歴で分類（忘却曲線対応）
+  const neverAskedQuestions = questions.filter(q => !totalQuestions.has(q.id))
+  const oldAskedQuestions = questions.filter(q => totalQuestions.has(q.id) && !recentQuestions.has(q.id))
+  const recentAskedQuestions = questions.filter(q => recentQuestions.has(q.id))
   
   console.log(`📊 [Unasked Priority] Question classification:`, {
     total: questions.length,
-    unasked: unaskedQuestions.length,
-    asked: askedQuestions.length
+    never: neverAskedQuestions.length,
+    old: oldAskedQuestions.length,
+    recent: recentAskedQuestions.length
   })
   
-  // 3. 未出題問題の最小数を計算
+  // Calculate minimum unasked count based on requirement (default 50% guarantee)
   const minUnaskedCount = Math.ceil(count * minUnaskedRatio)
-  const actualUnaskedCount = Math.min(minUnaskedCount, unaskedQuestions.length)
+  const actualUnaskedCount = Math.min(minUnaskedCount, neverAskedQuestions.length)
   const remainingCount = count - actualUnaskedCount
   
   console.log(`🎯 [Unasked Priority] Target distribution:`, {
     minUnaskedCount,
     actualUnaskedCount,
-    remainingCount
+    remainingCount,
+    minUnaskedRatio: (minUnaskedRatio * 100).toFixed(0) + '%'
   })
   
   const selected: QuestionWithWeight[] = []
   
-  // 4. 未出題問題からカテゴリーバランスを考慮して選択
+  // Priority 1: Never asked questions (guarantee minimum ratio as per requirement)
   if (actualUnaskedCount > 0) {
-    const unaskedSelected = selectWithCategoryBalance(unaskedQuestions, actualUnaskedCount)
-    selected.push(...unaskedSelected)
-    console.log(`✅ [Unasked Priority] Selected ${unaskedSelected.length} unasked questions`)
+    const neverSelected = selectWithCategoryBalance(neverAskedQuestions, actualUnaskedCount)
+    selected.push(...neverSelected)
+    console.log(`✅ [Never Asked] Selected ${neverSelected.length} never-asked questions (${(minUnaskedRatio*100).toFixed(0)}% guarantee)`)
   }
   
-  // 5. 残りを出題済み問題からカテゴリーバランスを考慮して選択
-  if (remainingCount > 0 && askedQuestions.length > 0) {
-    const askedSelected = selectWithCategoryBalance(askedQuestions, remainingCount)
-    selected.push(...askedSelected)
-    console.log(`✅ [Unasked Priority] Selected ${askedSelected.length} previously asked questions`)
+  // Priority 2: Fill remaining slots with forgetting curve logic
+  if (remainingCount > 0) {
+    // Prefer old questions (forgetting curve - ready for review)
+    const oldSelected = oldAskedQuestions.length > 0
+      ? selectWithCategoryBalance(oldAskedQuestions, Math.min(remainingCount, oldAskedQuestions.length))
+      : []
+    selected.push(...oldSelected)
+    if (oldSelected.length > 0) {
+      console.log(`✅ [Old Questions] Added ${oldSelected.length} old questions (forgetting curve)`)
+    }
+    
+    // Fill any remaining slots with recent questions if necessary
+    const stillNeeded = remainingCount - oldSelected.length
+    if (stillNeeded > 0 && recentAskedQuestions.length > 0) {
+      const recentSelected = selectWithCategoryBalance(recentAskedQuestions, stillNeeded)
+      selected.push(...recentSelected)
+      console.warn(`⚠️ [Recent Questions] Added ${recentSelected.length} recent questions (last resort)`)
+    }
   }
   
   // 6. まだ不足している場合は全体から追加選択
@@ -934,55 +954,73 @@ async function selectWithUnaskedPriority(
     console.log(`🔄 [Unasked Priority] Added ${additionalSelected.length} additional questions`)
   }
   
-  // 7. 結果分析
-  const finalUnasked = selected.filter(q => !askedQuestionIds.has(q.id)).length
-  const unaskedRatio = selected.length > 0 ? finalUnasked / selected.length : 0
+  // 7. 結果分析（忘却曲線ベース）
+  const final = selected.slice(0, count)
+  const neverCount = final.filter(q => !totalQuestions.has(q.id)).length
+  const oldCount = final.filter(q => totalQuestions.has(q.id) && !recentQuestions.has(q.id)).length
+  const recentCount = final.filter(q => recentQuestions.has(q.id)).length
   
-  console.log(`📊 [Unasked Priority] Final result:`, {
-    totalSelected: selected.length,
-    unaskedCount: finalUnasked,
-    askedCount: selected.length - finalUnasked,
-    unaskedRatio: (unaskedRatio * 100).toFixed(1) + '%',
-    targetRatio: (minUnaskedRatio * 100).toFixed(1) + '%',
-    metTarget: unaskedRatio >= minUnaskedRatio
+  console.log(`📊 [Unasked Priority] Final result with forgetting curve:`, {
+    totalSelected: final.length,
+    neverAsked: neverCount,
+    oldQuestions: oldCount,
+    recentQuestions: recentCount,
+    neverRatio: (neverCount/final.length*100).toFixed(1) + '%',
+    oldRatio: (oldCount/final.length*100).toFixed(1) + '%',
+    recentRatio: (recentCount/final.length*100).toFixed(1) + '%'
   })
   
-  return selected
+  // Quality warning if recent questions dominate
+  if (recentCount / final.length > 0.3) {
+    console.warn(`⚠️ [Quality Alert] ${(recentCount/final.length*100).toFixed(1)}% recent questions may feel repetitive`)
+  }
+  
+  return final
 }
 
 /**
  * ユーザーの過去出題問題IDセットを取得
  */
-async function getUserAskedQuestions(userId: string): Promise<Set<number>> {
+async function getUserAskedQuestions(userId: string): Promise<{
+  recentQuestions: Set<number>
+  totalQuestions: Set<number>
+}> {
   try {
-    // 過去30日間の出題履歴を取得（期間は調整可能）
+    // 過去30日間の出題履歴を取得（時間別分析用）
     const { data: answerHistory, error } = await supabaseAdmin
       .from('quiz_answers')
-      .select('question_id')
+      .select('question_id, created_at, quiz_session_id')
       .eq('user_id', userId)
       .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
     
     if (error) {
       console.warn('⚠️ [getUserAskedQuestions] Error fetching answer history:', error)
-      return new Set()
+      return { recentQuestions: new Set(), totalQuestions: new Set() }
     }
     
     // 数値IDのみ抽出（クイズ問題のみ、コース問題除外）
     const numericQuestionIds = (answerHistory || [])
-      .map(a => a.question_id)
-      .filter(id => /^\d+$/.test(id)) // 数値IDのみ
-      .map(id => parseInt(id, 10))
+      .map(a => ({ id: a.question_id, createdAt: a.created_at }))
+      .filter(item => /^\d+$/.test(item.id))
+      .map(item => ({ id: parseInt(item.id, 10), createdAt: item.createdAt || new Date().toISOString() }))
     
-    const uniqueIds = new Set(numericQuestionIds)
+    // 時間で分類：直近7日 vs 全期間（忘却曲線対応）
+    const recentCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const recentQuestions = new Set(
+      numericQuestionIds
+        .filter(item => item.createdAt >= recentCutoff)
+        .map(item => item.id)
+    )
+    const totalQuestions = new Set(numericQuestionIds.map(item => item.id))
     
-    console.log(`📚 [getUserAskedQuestions] Found ${uniqueIds.size} unique asked questions (last 30 days)`)
+    console.log(`📚 [getUserAskedQuestions] Found ${recentQuestions.size} recent (7 days) / ${totalQuestions.size} total (30 days) asked questions`)
     
-    return uniqueIds
+    return { recentQuestions, totalQuestions }
     
   } catch (error) {
     console.error('❌ [getUserAskedQuestions] Error:', error)
-    return new Set()
+    return { recentQuestions: new Set(), totalQuestions: new Set() }
   }
 }
 
@@ -1456,42 +1494,63 @@ async function selectCategoryBalancedSet(
 ): Promise<QuestionWithWeight[]> {
   console.log(`🎯 [Category+Unasked] Starting balanced selection for ${count} questions`)
   
-  // 1. ユーザーの過去出題履歴を取得
-  const askedQuestionIds = await getUserAskedQuestions(userId)
+  // 1. ユーザーの過去出題履歴を取得（時間別分析）
+  const { recentQuestions, totalQuestions } = await getUserAskedQuestions(userId)
   
-  // 2. 未出題と出題済みに分類
-  const unaskedQuestions = questions.filter(q => !askedQuestionIds.has(q.id))
-  const askedQuestions = questions.filter(q => askedQuestionIds.has(q.id))
+  // 2. 問題を出題履歴で分類（忘却曲線対応）
+  const neverAskedQuestions = questions.filter(q => !totalQuestions.has(q.id))
+  const oldAskedQuestions = questions.filter(q => totalQuestions.has(q.id) && !recentQuestions.has(q.id))
+  const recentAskedQuestions = questions.filter(q => recentQuestions.has(q.id))
   
-  console.log(`📊 [Category+Unasked] Available: ${questions.length}, Unasked: ${unaskedQuestions.length}, Asked: ${askedQuestions.length}`)
+  console.log(`📊 [Category+Unasked] Available: ${questions.length}, Never: ${neverAskedQuestions.length}, Old: ${oldAskedQuestions.length}, Recent: ${recentAskedQuestions.length}`)
   
-  // 3. 目標未出題比率（50%以上）
-  const targetUnaskedRatio = 0.5
-  const targetUnaskedCount = Math.ceil(count * targetUnaskedRatio)
-  const actualUnaskedCount = Math.min(targetUnaskedCount, unaskedQuestions.length)
+  // Calculate minimum unasked count based on requirement (default 50% guarantee)
+  const minUnaskedCount = Math.ceil(count * 0.5) // 50% minimum as per requirement
+  const actualUnaskedCount = Math.min(minUnaskedCount, neverAskedQuestions.length)
   const remainingCount = count - actualUnaskedCount
   
-  console.log(`🎯 [Category+Unasked] Target ${targetUnaskedCount} unasked, actual ${actualUnaskedCount}, remaining ${remainingCount}`)
+  console.log(`🎯 [Category+Unasked] Target distribution:`, {
+    minUnaskedCount,
+    actualUnaskedCount,
+    remainingCount
+  })
   
-  // 4. 未出題問題をカテゴリー分散で選択
-  const selectedUnasked = selectWithCategoryBalance(unaskedQuestions, actualUnaskedCount)
+  const selected: QuestionWithWeight[] = []
   
-  // 5. 残り枠を出題済み問題からカテゴリー分散で選択
-  const selectedAsked = remainingCount > 0 
-    ? selectWithCategoryBalance(askedQuestions, remainingCount) 
-    : []
+  // Priority 1: Never asked questions (guarantee minimum 50% as per requirement)
+  if (actualUnaskedCount > 0) {
+    const neverSelected = selectWithCategoryBalance(neverAskedQuestions, actualUnaskedCount)
+    selected.push(...neverSelected)
+    console.log(`✅ [Never Asked] Selected ${neverSelected.length} never-asked questions (50% guarantee)`)
+  }
   
-  // 6. 結合・シャッフル
-  const combined = [...selectedUnasked, ...selectedAsked]
-  const shuffled = combined.sort(() => Math.random() - 0.5)
+  // Priority 2: Fill remaining slots with forgetting curve logic
+  if (remainingCount > 0) {
+    // Prefer old questions (forgetting curve - ready for review)
+    const oldSelected = oldAskedQuestions.length > 0
+      ? selectWithCategoryBalance(oldAskedQuestions, Math.min(remainingCount, oldAskedQuestions.length))
+      : []
+    selected.push(...oldSelected)
+    if (oldSelected.length > 0) {
+      console.log(`✅ [Old Questions] Added ${oldSelected.length} old questions (forgetting curve)`)
+    }
+    
+    // Fill any remaining slots with recent questions if necessary
+    const stillNeeded = remainingCount - oldSelected.length
+    if (stillNeeded > 0 && recentAskedQuestions.length > 0) {
+      const recentSelected = selectWithCategoryBalance(recentAskedQuestions, stillNeeded)
+      selected.push(...recentSelected)
+      console.warn(`⚠️ [Recent Questions] Added ${recentSelected.length} recent questions (last resort)`)
+    }
+  }
   
-  // 7. カテゴリー分布を分析・ログ出力
-  const categoryDistribution = getCategoryDistribution(shuffled)
-  console.log(`✅ [Category+Unasked] Final selection (${shuffled.length} total):`)
-  console.log(`   📊 Unasked: ${selectedUnasked.length}, Asked: ${selectedAsked.length}`)
-  console.log(`   📋 Category distribution:`, categoryDistribution)
+  // Final result
+  const final = selected.slice(0, count).sort(() => Math.random() - 0.5)
   
-  return shuffled
+  console.log(`✅ [Category+Unasked] Final selection (${final.length} total):`)
+  console.log(`   📊 Category distribution:`, getCategoryDistribution(final))
+  
+  return final
 }
 
 // Legacy function - kept for potential future use
