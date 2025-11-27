@@ -14,6 +14,8 @@
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import type { Json, PrecomputedQuizSetInsert, Database } from '@/lib/database-types-official'
 import { getUserReviewSettings } from '@/lib/user-review-settings'
+// 🔧 修正: category-server-serviceを静的インポートに変更（動的インポート失敗対策）
+import { getMainCategoryIds } from '@/lib/category-server-service'
 
 // =================================================================
 // Core Types and Interfaces
@@ -47,6 +49,7 @@ export interface QuizAnswer {
 export interface UserProfileData {
   selected_categories?: Json | null
   selected_industry_categories?: Json | null
+  selected_industry_subcategories?: Json | null
   selected_subcategories?: Json | null
   learning_goals?: Json | null
   learning_level?: string | null
@@ -102,8 +105,17 @@ export async function generateAllPrecomputedSets(
   context: QuizSetGenerationContext
 ): Promise<GenerationResult[]> {
   console.log('🧠 [Precompute Engine] Starting generation for all quiz types...')
+  console.log('🔧 [Precompute Engine] Context:', { 
+    userId: context.userId?.substring(0, 8) + '...', 
+    forceRegenerate: context.forceRegenerate 
+  })
   
-  const { userId, forceRegenerate: _forceRegenerate = false } = context
+  const { userId } = context
+  
+  // 仕様準拠：クイズ完了時に当該ユーザーの事前セットが存在する場合はすべて削除する
+  console.log('🗑️ [Precompute Engine] Deleting all existing precomputed sets as per specification...')
+  await deleteAllUserPrecomputedSets(userId)
+  console.log('✅ [Precompute Engine] All existing sets deleted successfully')
   
   // Generate sets for all supported quiz types in parallel
   const generationTasks = [
@@ -120,11 +132,11 @@ export async function generateAllPrecomputedSets(
     const quizType = quizTypes[index]
     
     if (result.status === 'fulfilled') {
-      console.log(`✅ [${quizType}] Generation successful:`, result.value)
+      console.log(`✅ [${quizType}] Generation successful, result:`, result.value)
       return {
         quiz_type: quizType,
         success: true,
-        data: result.value
+        data: result.value as SetGenerationResult
       }
     } else {
       console.error(`❌ [${quizType}] Generation failed:`, {
@@ -160,28 +172,38 @@ export async function generateAllPrecomputedSets(
 export async function generateBusinessAISet(
   context: QuizSetGenerationContext
 ): Promise<SetGenerationResult> {
-  console.log('🎯 [Business-AI] Starting generation...')
+  console.log('🎯 [Business-AI] Starting generation with context:', { 
+    userId: context.userId?.substring(0, 8) + '...', 
+    forceRegenerate: context.forceRegenerate 
+  })
   
   const { userId, forceRegenerate = false } = context
   
   // Check existing sets (don't delete until after successful generation)
   if (!forceRegenerate) {
     const existingCount = await countValidSets(userId, 'business-ai')
+    console.log(`🔍 [Business-AI] Existing sets check: ${existingCount} sets found, forceRegenerate: ${forceRegenerate}`)
     if (existingCount >= 2) {
-      console.log('ℹ️ [Business-AI] Sufficient valid sets exist, skipping')
+      console.log('ℹ️ [Business-AI] Sufficient valid sets exist, skipping generation')
       return { skipped: true, reason: 'Valid sets already exist' }
     }
+  } else {
+    console.log('🔄 [Business-AI] Force regenerate enabled, proceeding with generation')
   }
   
   try {
     // 1. Get user preferences and analytics
+    console.log('🔄 [Business-AI] Starting Promise.all for data fetching...')
     const [userProfile, recentAccuracy, availableQuestions] = await Promise.all([
       getUserProfileForBusinessAI(userId),
       getRecentAccuracyAnalysis(userId),
       getBusinessQuestions()
     ])
+    console.log('✅ [Business-AI] Promise.all completed successfully')
     
+    console.log(`📊 [Business-AI] Available questions: ${availableQuestions.length} questions`)
     if (availableQuestions.length < 30) {
+      console.error(`❌ [Business-AI] Insufficient questions: only ${availableQuestions.length} available, need 30`)
       throw new Error('Insufficient business questions available')
     }
     
@@ -200,6 +222,7 @@ export async function generateBusinessAISet(
     })
     
     // 4. Generate multiple question sets (3 sets of 10 questions each)
+    console.log('🔧 [Business-AI] About to call generateMultipleSets...')
     const questionSets = await generateMultipleSets(
       weightedQuestions,
       difficultyDistribution,
@@ -207,11 +230,13 @@ export async function generateBusinessAISet(
       10, // questions per set
       userId
     )
+    console.log(`🔧 [Business-AI] generateMultipleSets completed, generated ${questionSets.length} sets`)
     
-    // 5. Save to database and get creation timestamp for cleanup
+    // 6. Save to database
     let newSetCreatedAt: string
     try {
       // Save new sets first
+      
       await savePrecomputedSets(userId, 'business-ai', questionSets, {
         avg_accuracy: avgAccuracy,
         distribution: difficultyDistribution,
@@ -227,29 +252,7 @@ export async function generateBusinessAISet(
       throw saveError
     }
     
-    // 6. Clean up old sets AFTER successful generation (if force regenerating)
-    if (forceRegenerate) {
-      try {
-        console.log(`🧹 [Business-AI] Force regeneration: cleaning up old sets created before ${newSetCreatedAt}...`)
-        
-        // Force regeneration: Remove ALL existing sets created BEFORE the new sets
-        // This follows requirement: "作成完了後にそれ以前に作成された事前セットを削除"
-        const { error: deleteError, count: deletedCount } = await supabaseAdmin
-          .from('precomputed_quiz_sets')
-          .delete()
-          .eq('user_id', userId)
-          .eq('quiz_type', 'business-ai')
-          .lt('created_at', newSetCreatedAt) // Delete sets created before new sets
-        
-        if (deleteError) {
-          console.warn('⚠️ [Business-AI] Failed to force cleanup old sets:', deleteError)
-        } else {
-          console.log(`🧹 [Business-AI] Force regeneration cleanup: deleted ${deletedCount || 0} old sets`)
-        }
-      } catch (cleanupError) {
-        console.warn('⚠️ [Business-AI] Cleanup failed (non-critical):', cleanupError)
-      }
-    }
+    // No scheduled cleanup needed with new pre-creation deletion logic
     
     console.log(`✅ [Business-AI] Generated ${questionSets.length} sets successfully`)
     
@@ -276,26 +279,40 @@ export async function generateBusinessAISet(
 export async function generateSelfPersonalizedSet(
   context: QuizSetGenerationContext
 ): Promise<SetGenerationResult> {
-  console.log('🎨 [Self-Personalized] Starting generation...')
+  console.log('🎨 [Self-Personalized] Starting generation with context:', { userId: context.userId?.substring(0, 8) + '...', forceRegenerate: context.forceRegenerate })
   
   const { userId, forceRegenerate = false } = context
   
-  // Note: For self-personalized, we'll delete old sets AFTER successful generation
-  // This ensures no gap period where no sets exist
+  // Note: All existing sets have been deleted by generateAllPrecomputedSets() 
+  // before calling this function as per specification
   
   try {
     // 1. Get user's quiz personalization settings from user_settings table
-    const { data: userQuizSettings, error: settingsError } = await supabaseAdmin
-      .from('user_settings')
-      .select('setting_value')
-      .eq('user_id', userId)
-      .eq('setting_key', 'quiz_personalization')
-      .single()
+    console.log('🔍 [Self-Personalized] Fetching quiz personalization settings...')
+    
+    let userQuizSettings, settingsError
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('user_settings')
+        .select('setting_value')
+        .eq('user_id', userId)
+        .eq('setting_key', 'quiz_personalization')
+        .single()
+      
+      userQuizSettings = data
+      settingsError = error
+      console.log('✅ [Self-Personalized] Quiz settings query completed')
+    } catch (error) {
+      console.error('❌ [Self-Personalized] Quiz settings query failed:', error)
+      settingsError = error
+    }
 
     if (settingsError || !userQuizSettings?.setting_value) {
-      console.log('ℹ️ [Self-Personalized] Quiz personalization settings not configured, skipping')
+      const errorMessage = settingsError instanceof Error ? settingsError.message : String(settingsError)
+      console.log('ℹ️ [Self-Personalized] Quiz personalization settings not configured, skipping:', { error: errorMessage, hasValue: !!userQuizSettings?.setting_value })
       return { skipped: true, reason: 'Quiz personalization settings not configured' }
     }
+    console.log('✅ [Self-Personalized] Quiz personalization settings found')
 
     // Parse the quiz personalization settings
     const quizSettings = userQuizSettings.setting_value as {
@@ -321,6 +338,7 @@ export async function generateSelfPersonalizedSet(
     const userSettings = {
       selected_categories: quizSettings.basicCategories || [],
       selected_industry_categories: quizSettings.industryCategories || [],
+      selected_industry_subcategories: quizSettings.industrySubcategories || [],
       learning_goals: null,
       learning_level: quizSettings.learningLevel || 'basic'
     }
@@ -361,11 +379,13 @@ export async function generateSelfPersonalizedSet(
     let newSetCreatedAt: string
     try {
       // Save new sets first
+      
       await savePrecomputedSets(userId, 'self-personalized', questionSets, {
         settings_hash: settingsHash,
         selected_categories: selectedCategories,
-        learning_goals: userSettings.learning_goals,
-        learning_level: userSettings.learning_level || undefined,
+        learning_level: quizSettings.learningLevel || 'basic',
+        basic_categories_count: quizSettings.basicCategories?.length || 0,
+        industry_categories_count: quizSettings.industryCategories?.length || 0,
         generation_method: 'self-personalized'
       })
       
@@ -377,29 +397,9 @@ export async function generateSelfPersonalizedSet(
       throw saveError
     }
     
-    // 8. Clean up old sets AFTER successful generation (if force regenerating)
-    if (forceRegenerate) {
-      try {
-        console.log(`🧹 [Self-Personalized] Force regeneration: cleaning up old sets created before ${newSetCreatedAt}...`)
-        
-        // Force regeneration: Remove ALL existing sets created BEFORE the new sets
-        // This follows requirement: "作成完了後にそれ以前に作成された事前セットを削除"
-        const { error: deleteError, count: deletedCount } = await supabaseAdmin
-          .from('precomputed_quiz_sets')
-          .delete()
-          .eq('user_id', userId)
-          .eq('quiz_type', 'self-personalized')
-          .lt('created_at', newSetCreatedAt) // Delete sets created before new sets
-        
-        if (deleteError) {
-          console.warn('⚠️ [Self-Personalized] Failed to force cleanup old sets:', deleteError)
-        } else {
-          console.log(`🧹 [Self-Personalized] Force regeneration cleanup: deleted ${deletedCount || 0} old sets`)
-        }
-      } catch (cleanupError) {
-        console.warn('⚠️ [Self-Personalized] Cleanup failed (non-critical):', cleanupError)
-      }
-    }
+    // 🚨 MODIFICATION: Individual cleanup disabled when called from generateAllPrecomputedSets
+    // Cleanup is now handled centrally in generateAllPrecomputedSets to prevent race conditions
+    console.log('ℹ️ [Self-Personalized] Cleanup skipped - handled by main generation engine')
     
     console.log(`✅ [Self-Personalized] Generated ${questionSets.length} sets successfully`)
     
@@ -423,11 +423,12 @@ export async function generateSelfPersonalizedSet(
 export async function generateReviewSet(
   context: QuizSetGenerationContext
 ): Promise<SetGenerationResult> {
-  console.log('🔄 [Review] Starting generation...')
+  console.log('🔄 [Review] Starting generation with context:', { userId: context.userId?.substring(0, 8) + '...', forceRegenerate: context.forceRegenerate })
   
-  const { userId, forceRegenerate = false } = context
+  const { userId } = context
   
-  // Note: Old sets will be deleted AFTER successful generation if forceRegenerate is true
+  // Note: All existing sets have been deleted by generateAllPrecomputedSets() 
+  // before calling this function as per specification
   
   try {
     // 1. Get user's review settings
@@ -436,11 +437,10 @@ export async function generateReviewSet(
     const questionsPerSet = reviewSettings.reviewQuestionsCount
     console.log(`⚙️ [Review] User review setting: ${questionsPerSet} questions per set`)
     
-    // 2. Get review target questions based on criteria
+    // 3. Get review target questions based on criteria
     console.log('🔍 [Review] Calling getReviewTargetQuestions...')
     const reviewQuestions = await getReviewTargetQuestions(userId)
-    
-    console.log(`🔍 [Review] Found ${reviewQuestions.length} review target questions`)
+    console.log(`📊 [Review] Found ${reviewQuestions.length} review target questions`)
     console.log('📋 [Review] Question IDs:', reviewQuestions.map(q => q.id))
     
     if (reviewQuestions.length === 0) {
@@ -491,29 +491,9 @@ export async function generateReviewSet(
       throw saveError
     }
     
-    // 6. Clean up old sets AFTER successful generation (if force regenerating)
-    if (forceRegenerate) {
-      try {
-        console.log(`🧹 [Review] Force regeneration: cleaning up old sets created before ${newSetCreatedAt}...`)
-        
-        // Force regeneration: Remove ALL existing sets created BEFORE the new sets
-        // This follows requirement: "作成完了後にそれ以前に作成された事前セットを削除"
-        const { error: deleteError, count: deletedCount } = await supabaseAdmin
-          .from('precomputed_quiz_sets')
-          .delete()
-          .eq('user_id', userId)
-          .eq('quiz_type', 'review')
-          .lt('created_at', newSetCreatedAt) // Delete sets created before new sets
-        
-        if (deleteError) {
-          console.warn('⚠️ [Review] Failed to force cleanup old sets:', deleteError)
-        } else {
-          console.log(`🧹 [Review] Force regeneration cleanup: deleted ${deletedCount || 0} old sets`)
-        }
-      } catch (cleanupError) {
-        console.warn('⚠️ [Review] Cleanup failed (non-critical):', cleanupError)
-      }
-    }
+    // 🚨 MODIFICATION: Individual cleanup disabled when called from generateAllPrecomputedSets
+    // Cleanup is now handled centrally in generateAllPrecomputedSets to prevent race conditions
+    console.log('ℹ️ [Review] Cleanup skipped - handled by main generation engine')
     
     console.log(`✅ [Review] Successfully generated and saved ${questionSets.length} sets`)
     
@@ -538,6 +518,7 @@ export async function generateReviewSet(
 
 
 async function getUserProfileForBusinessAI(userId: string): Promise<UserProfileData | null> {
+  console.log('🔄 [getUserProfileForBusinessAI] Starting...')
   // Business-AI用: usersテーブルから取得
   const { data, error } = await supabaseAdmin
     .from('users')
@@ -561,6 +542,7 @@ async function getUserProfileForBusinessAI(userId: string): Promise<UserProfileD
 }
 
 async function getRecentAccuracyAnalysis(userId: string): Promise<CategoryAccuracy[]> {
+  console.log('🔄 [getRecentAccuracyAnalysis] Starting...')
   const { data, error } = await supabaseAdmin
     .from('user_category_xp_stats_v2')
     .select('category_id, quiz_average_accuracy, quiz_sessions_completed')
@@ -576,8 +558,8 @@ async function getRecentAccuracyAnalysis(userId: string): Promise<CategoryAccura
 }
 
 async function getBusinessQuestions(): Promise<QuestionWithWeight[]> {
-  // Import main category IDs from server-side service
-  const { getMainCategoryIds } = await import('@/lib/category-server-service')
+  console.log('🔄 [getBusinessQuestions] Starting...')
+  // 🔧 修正: 動的インポート削除、静的インポート使用
   const mainCategoryIds = await getMainCategoryIds()
   
   console.log(`🔍 [Business Questions] Using main category IDs: ${mainCategoryIds.length} categories`, mainCategoryIds)
@@ -633,10 +615,14 @@ async function getBusinessQuestions(): Promise<QuestionWithWeight[]> {
 
 async function getQuestionsByCategories(categories: string[]): Promise<QuestionWithWeight[]> {
   // カテゴリーIDとサブカテゴリーIDの両方で検索
+  if (categories.length === 0) {
+    throw new Error('No categories provided for question search')
+  }
+  
   const { data, error } = await supabaseAdmin
     .from('quiz_questions')
     .select('id, category_id, subcategory_id, difficulty')
-    .or(`category_id.in.(${categories.join(',')}),subcategory_id.in.(${categories.join(',')})`)
+    .or(`category_id.in.("${categories.join('","')}"),subcategory_id.in.("${categories.join('","')}")`)
     .eq('is_deleted', false)
     .limit(500)
   
@@ -662,6 +648,9 @@ async function getReviewTargetQuestions(userId: string): Promise<QuestionWithWei
   console.log(`🔍 [Review Debug] Getting review targets using REVIEW_NEEDED flag for consistency with stats`)
   
 
+  // Calculate 3 days ago timestamp
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+  
   // Get REVIEW_NEEDED=true questions that are unreviewed and 3+ days old
   const { data: reviewNeededAnswers, error } = await supabaseAdmin
     .from('quiz_answers')
@@ -678,32 +667,22 @@ async function getReviewTargetQuestions(userId: string): Promise<QuestionWithWei
     .eq('user_id', userId)
     .eq('review_needed', true)        // REVIEW_NEEDED flag = true
     .is('reviewed_at', null)          // Not yet reviewed
-    .order('created_at', { ascending: false })
-    .limit(100) // Get more for filtering
+    .lt('created_at', threeDaysAgo)   // 3+ days old
+    .order('created_at', { ascending: true }) // Oldest first
 
   if (error || !reviewNeededAnswers) {
     console.warn('❌ [Review Debug] Error fetching REVIEW_NEEDED questions:', error)
     return []
   }
 
-  // Filter by 3+ days old
-  const now = Date.now()
-  const eligibleAnswers = reviewNeededAnswers.filter(answer => {
-    if (!answer.created_at) return false
-    const daysSinceCreated = Math.floor(
-      (now - new Date(answer.created_at).getTime()) / (1000 * 60 * 60 * 24)
-    )
-    return daysSinceCreated >= 3 // 3+ days since creation
-  })
+  console.log(`🔍 [Review Debug] Found ${reviewNeededAnswers.length} review_needed=true questions (3+ days old)`)
 
-  console.log(`🔍 [Review Debug] Found ${eligibleAnswers.length} REVIEW_NEEDED questions (3+ days old)`)
-
-  if (eligibleAnswers.length === 0) {
+  if (reviewNeededAnswers.length === 0) {
     return []
   }
 
   // Get question details for the eligible questions
-  const questionIds = eligibleAnswers
+  const questionIds = reviewNeededAnswers
     .map(a => a.question_id)
     .filter(id => /^\d+$/.test(id)) // Only numeric question IDs (quiz questions)
     .map(id => parseInt(id, 10))
@@ -750,12 +729,15 @@ function applyFocusCategoryWeights(
 
 async function calculateOptimalDistribution(avgAccuracy: number): Promise<Record<string, number>> {
   try {
+    // Convert accuracy from 0-1 range to 0-100 percentage range for DB comparison
+    const accuracyPercent = Math.round(avgAccuracy * 100)
+    
     // Get distribution settings from database based on accuracy range
     const { data: distributionSettings, error } = await supabaseAdmin
       .from('difficulty_distribution_settings')
       .select('*')
-      .lte('accuracy_range_min', avgAccuracy)
-      .gte('accuracy_range_max', avgAccuracy)
+      .lte('accuracy_range_min', accuracyPercent)
+      .gte('accuracy_range_max', accuracyPercent)
       .eq('is_active', true)
       .order('updated_at', { ascending: false })
       .limit(1)
@@ -767,9 +749,9 @@ async function calculateOptimalDistribution(avgAccuracy: number): Promise<Record
       return calculateFallbackDistribution(avgAccuracy)
     }
     
-    console.log(`📊 [Distribution] Using DB settings for accuracy ${(avgAccuracy * 100).toFixed(1)}%:`, {
+    console.log(`📊 [Distribution] Using DB settings for accuracy ${accuracyPercent}%:`, {
       settingId: distributionSettings.id,
-      accuracyRange: `${distributionSettings.accuracy_range_min}-${distributionSettings.accuracy_range_max}`,
+      accuracyRange: `${distributionSettings.accuracy_range_min}-${distributionSettings.accuracy_range_max}%`,
       distribution: {
         basic: distributionSettings.basic_percent,
         intermediate: distributionSettings.intermediate_percent,
@@ -779,10 +761,10 @@ async function calculateOptimalDistribution(avgAccuracy: number): Promise<Record
     })
     
     return {
-      basic: distributionSettings.basic_percent || 0,
-      intermediate: distributionSettings.intermediate_percent || 0,
-      advanced: distributionSettings.advanced_percent || 0,
-      expert: distributionSettings.expert_percent || 0
+      basic: Number(distributionSettings.basic_percent) || 0,
+      intermediate: Number(distributionSettings.intermediate_percent) || 0,
+      advanced: Number(distributionSettings.advanced_percent) || 0,
+      expert: Number(distributionSettings.expert_percent) || 0
     }
   } catch (error) {
     console.error('❌ Error accessing difficulty distribution settings:', error)
@@ -991,10 +973,11 @@ async function getUserAskedQuestions(userId: string): Promise<{
     // 過去30日間の出題履歴を取得（時間別分析用）
     const { data: answerHistory, error } = await supabaseAdmin
       .from('quiz_answers')
-      .select('question_id, created_at, quiz_session_id')
+      .select('question_id, created_at')
       .eq('user_id', userId)
       .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
+      .limit(1000) // Limit to prevent timeout
     
     if (error) {
       console.warn('⚠️ [getUserAskedQuestions] Error fetching answer history:', error)
@@ -1142,9 +1125,11 @@ async function savePrecomputedSets(
     }
   })
   
+  console.log(`🚀 [savePrecomputedSets] Starting database INSERT operation for ${quizType}...`)
   const { error } = await supabaseAdmin
     .from('precomputed_quiz_sets')
     .insert(insertData)
+  console.log(`🔚 [savePrecomputedSets] Database INSERT completed for ${quizType}, error:`, error ? error.message : 'none')
   
   if (error) {
     console.error(`❌ [savePrecomputedSets] Database insert failed:`, {
@@ -1160,6 +1145,7 @@ async function savePrecomputedSets(
   
   console.log(`✅ [savePrecomputedSets] Successfully saved ${insertData.length} ${quizType} sets for user ${userId}`)
 }
+
 
 async function countValidSets(userId: string, quizType: 'business-ai' | 'self-personalized' | 'category' | 'review'): Promise<number> {
   const { count, error } = await supabaseAdmin
@@ -1283,6 +1269,11 @@ function extractSelectedCategories(settings: UserProfileData): string[] {
   // Extract from selected_industry_categories (industryCategories)
   if (Array.isArray(settings.selected_industry_categories)) {
     categories.push(...settings.selected_industry_categories.filter((cat): cat is string => typeof cat === 'string'))
+  }
+  
+  // Extract from selected_industry_subcategories (industrySubcategories)
+  if (Array.isArray(settings.selected_industry_subcategories)) {
+    categories.push(...settings.selected_industry_subcategories.filter((cat): cat is string => typeof cat === 'string'))
   }
   
   // Extract from selected_subcategories (industrySubcategories) - 重要な追加！
@@ -1647,6 +1638,35 @@ interface SetGenerationResult {
   settings_hash?: string
   categories_count?: number
   total_review_targets?: number
+}
+
+// =================================================================
+// Cleanup Functions
+// =================================================================
+
+/**
+ * Delete all precomputed sets for a user (specification compliance)
+ * Called at the start of quiz completion to clear all existing sets before generating new ones
+ */
+async function deleteAllUserPrecomputedSets(userId: string): Promise<void> {
+  try {
+    console.log(`🗑️ [Cleanup] Deleting all precomputed sets for user: ${userId.substring(0, 8)}...`)
+    
+    const { error } = await supabaseAdmin
+      .from('precomputed_quiz_sets')
+      .delete()
+      .eq('user_id', userId)
+    
+    if (error) {
+      console.error('❌ [Cleanup] Error deleting precomputed sets:', error)
+      throw error
+    }
+    
+    console.log('✅ [Cleanup] Successfully deleted all precomputed sets')
+  } catch (error) {
+    console.error('❌ [Cleanup] Failed to delete precomputed sets:', error)
+    throw error
+  }
 }
 
 export type {

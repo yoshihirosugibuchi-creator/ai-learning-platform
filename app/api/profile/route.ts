@@ -95,12 +95,28 @@ export async function PUT(request: NextRequest) {
     // Profile changes (selected_categories) directly impact Business-AI quiz generation
     try {
       const { generateBusinessAISet } = await import('@/lib/precomputed-quiz-engine')
+      const { supabaseAdmin } = await import('@/lib/supabase-admin')
       
       console.log('🔄 [Profile Update] Regenerating Business-AI sets after profile change...')
       
+      // 1. ビジネスAIタイプのみ削除
+      console.log('🗑️ Deleting existing business-ai precomputed sets...')
+      const { error: deleteError } = await supabaseAdmin
+        .from('precomputed_quiz_sets')
+        .delete()
+        .eq('user_id', userId)
+        .eq('quiz_type', 'business-ai')
+      
+      if (deleteError) {
+        console.error('❌ Error deleting business-ai sets:', deleteError)
+        throw deleteError
+      }
+      console.log('✅ Business-AI sets deleted successfully')
+      
+      // 2. 新規セット生成
       const context = {
         userId,
-        forceRegenerate: true  // Force regeneration due to profile changes affecting selected_categories
+        forceRegenerate: true
       }
       
       await generateBusinessAISet(context)

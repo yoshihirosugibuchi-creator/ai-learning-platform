@@ -435,8 +435,15 @@ class AILearningAnalytics {
       weeklyActivity.set(dayOfWeek, (weeklyActivity.get(dayOfWeek) || 0) + 1)
     })
 
-    const avgDailyQuestions = Array.from(dailyActivity.values())
-      .reduce((sum, count) => sum + count, 0) / Math.max(dailyActivity.size, 1)
+    // 🚨 FIX: Filter out extreme outliers and calculate more realistic average
+    const dailyCounts = Array.from(dailyActivity.values())
+    
+    // Remove outliers (days with >100 questions as they're likely data anomalies)
+    const filteredCounts = dailyCounts.filter(count => count <= 100)
+    
+    const avgDailyQuestions = filteredCounts.length > 0 
+      ? filteredCounts.reduce((sum, count) => sum + count, 0) / filteredCounts.length
+      : 0
 
     return {
       averageDailyQuestions: Math.round(avgDailyQuestions * 100) / 100,
@@ -756,7 +763,11 @@ class AILearningAnalytics {
     const current = learningFrequency.averageDailyQuestions
     const consistency = learningFrequency.consistency
 
+    // 🚨 FIX: Add reasonable upper limit to prevent extreme values
     let recommended = Math.max(5, Math.ceil(current * 1.2)) // 20% increase
+    
+    // Add upper limit for reasonable learning goals (max 30 questions per day)
+    recommended = Math.min(recommended, 30)
     
     if (consistency < 0.3) {
       recommended = Math.min(recommended, 10) // Don't overwhelm inconsistent learners

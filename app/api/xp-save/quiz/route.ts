@@ -19,6 +19,8 @@ import { getRandomWisdomCard, getRandomWisdomCardFromDB } from '@/lib/cards'
 import { addWisdomCardToCollection } from '@/lib/supabase-cards'
 // ヒント・復習システム
 import { determineReviewReasonForDB } from '@/lib/review-reason-logic'
+// 事前セット生成エンジン
+import { generateAllPrecomputedSets } from '@/lib/precomputed-quiz-engine'
 
 // Feature flag for DB version (段階的移行用)
 const USE_DB_CARDS = process.env.NEXT_PUBLIC_USE_DB_WISDOM_CARDS === 'true' || true // デフォルトでDB版使用
@@ -1051,23 +1053,21 @@ export async function POST(request: Request) {
       message: 'Quiz session saved and XP calculated successfully'
     })
 
-    // 🚀 Trigger precomputation AFTER response is sent (in background)
-    // 🔧 重要: レスポンス送信後に実行して、quiz_answers更新完了後に事前セット生成
-    console.log('🚨 [DEBUG] Quiz XP Save API Request - checking precomputation trigger')
-    setTimeout(async () => {
-      try {
-        console.log('🚨 [DEBUG] Starting precomputation generation after response sent...')
-        await triggerPrecomputationGeneration(userId, body, {
-          selected_categories: null,
-          selected_industry_categories: null,
-          learning_goals: null,
-          learning_level: null
-        })
-        console.log('🚨 [DEBUG] Precomputation generation completed successfully')
-      } catch (error) {
-        console.error('❌ [DEBUG] Precomputation generation failed:', error)
-      }
-    }, 1000) // 1秒後に実行（レスポンス送信完了を保証）
+    // 🚀 Trigger precomputation generation synchronously before response
+    // 🔧 修正: setTimeout削除、同期的に事前セット生成を実行
+    console.log('🚨 [DEBUG] Quiz XP Save API Request - starting precomputation trigger')
+    try {
+      console.log('🚨 [DEBUG] Starting precomputation generation synchronously...')
+      await triggerPrecomputationGeneration(userId, body, {
+        selected_categories: null,
+        selected_industry_categories: null,
+        learning_goals: null,
+        learning_level: null
+      })
+      console.log('🚨 [DEBUG] Precomputation generation completed successfully')
+    } catch (error) {
+      console.error('❌ [DEBUG] Precomputation generation failed:', error)
+    }
 
     return response
 
@@ -1103,11 +1103,10 @@ async function triggerPrecomputationGeneration(
   }
 ): Promise<void> {
   console.log('🚨 [DEBUG] triggerPrecomputationGeneration called with userId:', userId)
-  console.log('🚀 [Precomputation] Starting generation after quiz_answers update...')
   
   try {
-    // Import and use the precompute engine directly to avoid authentication issues
-    const { generateAllPrecomputedSets } = await import('@/lib/precomputed-quiz-engine')
+    console.log('🚀 [Precomputation] Starting generation after quiz_answers update...')
+    // Use static import - dynamic import was causing silent failures
     
     console.log('🚨 [DEBUG] Calling generateAllPrecomputedSets with latest quiz data...')
     
@@ -1132,7 +1131,13 @@ async function triggerPrecomputationGeneration(
       forceRegenerate: true  // Normal quiz completion: add new sets and cleanup old ones safely
     }
     
+    console.log('🚨 [DEBUG] About to call generateAllPrecomputedSets...')
+    console.log('🚨 [DEBUG] Context userId:', userId?.substring(0, 8) + '...')
+    console.log('🚨 [DEBUG] Context forceRegenerate:', true)
+    
     const results = await generateAllPrecomputedSets(context)
+    
+    console.log('🚨 [DEBUG] generateAllPrecomputedSets returned:', results?.length || 0, 'results')
     
     const successCount = results.filter(r => r.success).length
     const failedCount = results.filter(r => !r.success).length
@@ -1140,7 +1145,15 @@ async function triggerPrecomputationGeneration(
     console.log('✅ [Precomputation] Generation completed with latest quiz_answers:', {
       successful: successCount,
       failed: failedCount,
-      results: results.map(r => ({ quiz_type: r.quiz_type, success: r.success, error: r.error }))
+      results: results.map(r => ({ 
+        quiz_type: r.quiz_type, 
+        success: r.success, 
+        error: r.error,
+        generated: r.data?.generated,
+        sets_count: r.data?.sets_count,
+        skipped: r.data?.skipped,
+        reason: r.data?.reason 
+      }))
     })
     
   } catch (error) {

@@ -202,9 +202,24 @@ export async function PUT(request: NextRequest) {
       console.log('🔄 Review questions count changed, regenerating review precomputed sets...')
       
       try {
+        // 1. レビュータイプのみ削除
+        console.log('🗑️ Deleting existing review precomputed sets...')
+        const { error: deleteError } = await supabaseAdmin
+          .from('precomputed_quiz_sets')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('quiz_type', 'review')
+        
+        if (deleteError) {
+          console.error('❌ Error deleting review sets:', deleteError)
+          throw deleteError
+        }
+        console.log('✅ Review sets deleted successfully')
+        
+        // 2. 新規セット生成
         const context = {
           userId: user.id,
-          forceRegenerate: true // 既存の復習セットを削除して再生成
+          forceRegenerate: true
         }
         
         const result = await generateReviewSet(context)
