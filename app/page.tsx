@@ -6,28 +6,20 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Play, BookOpen, Brain, Settings, RefreshCw, Target } from 'lucide-react'
+import { Play, BookOpen, Brain, Settings, RefreshCw, Target, Loader2 } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { getAppStats } from '@/lib/stats'
+import { useReviewQuickCheck } from '@/hooks/useReviewQuickCheck'
 
 export default function Home() {
   const router = useRouter()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user, loading } = useAuth()
   const [stats, setStats] = useState({ totalQuestions: 115, totalCategories: 12, totalSubcategories: 50, questionsFromData: 0 })
-  const [reviewStats, setReviewStats] = useState<{
-    totalReviewNeeded: number
-    todayCompleted: number
-    shouldShowNotification: boolean
-    reviewEffectiveness: {
-      improvement: number
-      sampleSize: number
-    }
-  } | null>(null)
-  // const [loadingReviewStats, setLoadingReviewStats] = useState(false)
+  const { reviewStatus, isLoading: reviewLoading } = useReviewQuickCheck()
 
   useEffect(() => {
     // ローディング中は何もしない
@@ -54,43 +46,7 @@ export default function Home() {
     loadStats()
   }, [])
   
-  // 復習統計データを取得
-  useEffect(() => {
-    if (!user || loading) return
-    
-    async function loadReviewStats() {
-      // setLoadingReviewStats(true)
-      try {
-        // 既存のSupabaseクライアントを使用（新しいクライアント作成を避ける）
-        const { supabase } = await import('@/lib/supabase')
-        
-        const { data: sessionData } = await supabase.auth.getSession()
-        const token = sessionData.session?.access_token
-        
-        if (!token) {
-          console.warn('No auth token available for review stats')
-          return
-        }
-
-        const response = await fetch('/api/review/stats', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
-        if (response.ok) {
-          const data = await response.json()
-          setReviewStats(data)
-        }
-      } catch (error) {
-        console.error('Error loading review stats:', error)
-      } finally {
-        // setLoadingReviewStats(false)
-      }
-    }
-    
-    loadReviewStats()
-  }, [user, loading])
+  // 復習統計データは useReviewQuickCheck フックで自動取得
 
   return (
     <>
@@ -184,46 +140,68 @@ export default function Home() {
 
                   {/* 統合復習AIクイズ */}
                   <Card className={`border-2 transition-all relative ${
-                    (reviewStats?.totalReviewNeeded ?? 0) > 0 
+                    (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) 
                       ? 'border-orange-200 bg-orange-50 hover:border-orange-400' 
                       : 'border-purple-200 hover:border-purple-400'
                   }`}>
                     {/* 復習必要な場合のみバッジ表示 - 右上に配置 */}
-                    {(reviewStats?.totalReviewNeeded ?? 0) > 0 && (
-                      <Badge variant="destructive" className="absolute top-3 right-3 bg-orange-500 text-xs z-10">
-                        {reviewStats?.totalReviewNeeded}問
+                    {(reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) && (
+                      <Badge variant="destructive" className="absolute top-3 right-3 bg-orange-500 text-xs z-10 flex items-center space-x-1">
+                        <span>{reviewStatus.totalQuestions > 99 ? '99+' : reviewStatus.totalQuestions}</span>
+                      </Badge>
+                    )}
+                    
+                    {/* 生成中インジケーター */}
+                    {reviewStatus?.isGenerating && (
+                      <Badge variant="secondary" className="absolute top-3 right-3 bg-blue-500 text-white text-xs z-10 flex items-center space-x-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span>生成中</span>
                       </Badge>
                     )}
                     
                     <CardHeader className="text-center">
                       <div className={`mx-auto mb-2 p-3 rounded-full w-fit ${
-                        (reviewStats?.totalReviewNeeded ?? 0) > 0 ? 'bg-orange-100' : 'bg-purple-100'
+                        (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) ? 'bg-orange-100' : 'bg-purple-100'
                       }`}>
                         <RefreshCw className={`h-6 w-6 ${
-                          (reviewStats?.totalReviewNeeded ?? 0) > 0 ? 'text-orange-600' : 'text-purple-600'
-                        }`} />
+                          (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) ? 'text-orange-600' : 'text-purple-600'
+                        } ${reviewLoading ? 'animate-spin' : ''}`} />
                       </div>
                       <CardTitle>復習推奨AIクイズ</CardTitle>
                       <CardDescription>
-                        {(reviewStats?.totalReviewNeeded ?? 0) > 0 
-                          ? '間違えた問題や回答に困った問題の復習'
-                          : '復習が必要な問題が見つかったら通知します'
+                        {reviewStatus?.isGenerating 
+                          ? '復習問題を準備中です...'
+                          : (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0)
+                            ? `${reviewStatus.displayText}の復習が推奨されています`
+                            : '復習が必要な問題が見つかったら通知します'
                         }
                       </CardDescription>
                     </CardHeader>
                     
                     <CardContent className="space-y-3">
-                      {/* 復習必要な場合のみ詳細統計表示 */}
-                      {(reviewStats?.totalReviewNeeded ?? 0) > 0 ? (
+                      {/* 生成中またはローディング中の表示 */}
+                      {(reviewLoading || reviewStatus?.isGenerating) ? (
+                        <div className="text-xs text-blue-600 bg-blue-50 p-3 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>{reviewStatus?.isGenerating ? '復習問題を生成中' : '復習状態を確認中'}</span>
+                          </div>
+                          <div className="mt-1 text-blue-500">
+                            少々お待ちください...
+                          </div>
+                        </div>
+                      ) : (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) ? (
                         <>
-                          {(reviewStats?.reviewEffectiveness?.improvement ?? 0) > 0 && (
-                            <div className="text-xs">
-                              <span className="text-green-600 flex items-center">
+                          {/* 復習統計情報 */}
+                          <div className="text-xs text-orange-700 bg-orange-50 p-3 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <span className="flex items-center">
                                 <Target className="h-3 w-3 mr-1" />
-                                効果: +{reviewStats?.reviewEffectiveness?.improvement}%
+                                復習問題準備完了
                               </span>
+                              <span className="font-medium">{reviewStatus.displayText}</span>
                             </div>
-                          )}
+                          </div>
                         </>
                       ) : (
                         <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-lg">
@@ -237,7 +215,7 @@ export default function Home() {
                         </div>
                       )}
                       
-                      {(reviewStats?.totalReviewNeeded ?? 0) > 0 ? (
+                      {(reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) && !reviewStatus.isGenerating ? (
                         <Link href="/quiz?mode=review" prefetch={true}>
                           <Button className="w-full bg-orange-600 hover:bg-orange-700">
                             <RefreshCw className="h-4 w-4 mr-2" />
@@ -250,7 +228,10 @@ export default function Home() {
                           className="w-full bg-gray-400 cursor-not-allowed"
                         >
                           <RefreshCw className="h-4 w-4 mr-2" />
-                          復習が必要になるまでお待ちください
+                          {reviewStatus?.isGenerating || reviewLoading 
+                            ? '準備中...' 
+                            : '復習が必要になるまでお待ちください'
+                          }
                         </Button>
                       )}
                     </CardContent>

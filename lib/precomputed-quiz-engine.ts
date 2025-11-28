@@ -13,7 +13,6 @@
 
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import type { Json, PrecomputedQuizSetInsert, Database } from '@/lib/database-types-official'
-import { getUserReviewSettings } from '@/lib/user-review-settings'
 // 🔧 修正: category-server-serviceを静的インポートに変更（動的インポート失敗対策）
 import { getMainCategoryIds } from '@/lib/category-server-service'
 
@@ -431,11 +430,11 @@ export async function generateReviewSet(
   // before calling this function as per specification
   
   try {
-    // 1. Get user's review settings
+    // 1. Get user's review settings (server-side with admin access)
     console.log(`⚙️ [Review] Getting review settings for user: ${userId}`)
-    const reviewSettings = await getUserReviewSettings(userId)
+    const reviewSettings = await getUserReviewSettingsAdmin(userId)
     const questionsPerSet = reviewSettings.reviewQuestionsCount
-    console.log(`⚙️ [Review] User review setting: ${questionsPerSet} questions per set`)
+    console.log(`⚙️ [Review] User review setting: ${questionsPerSet} questions per set (from admin query)`)
     
     // 3. Get review target questions based on criteria
     console.log('🔍 [Review] Calling getReviewTargetQuestions...')
@@ -466,7 +465,7 @@ export async function generateReviewSet(
       // Many questions: generate 2 sets using user's preference
       setsCount = 2
       actualQuestionsPerSet = questionsPerSet
-      console.log(`📊 [Review] Generating ${setsCount} sets with ${actualQuestionsPerSet} questions each`)
+      console.log(`📊 [Review] Generating ${setsCount} sets with ${actualQuestionsPerSet} questions each (user setting: ${questionsPerSet})`)
     }
     
     const questionSets = await generateReviewSets(optimizedQuestions, setsCount, actualQuestionsPerSet)
@@ -1666,6 +1665,42 @@ async function deleteAllUserPrecomputedSets(userId: string): Promise<void> {
   } catch (error) {
     console.error('❌ [Cleanup] Failed to delete precomputed sets:', error)
     throw error
+  }
+}
+
+/**
+ * サーバーサイド用復習設定取得（管理者権限）
+ */
+async function getUserReviewSettingsAdmin(userId: string): Promise<{ reviewQuestionsCount: number }> {
+  try {
+    console.log(`🔍 [getUserReviewSettingsAdmin] Fetching settings for user: ${userId}`)
+    
+    const { data, error } = await supabaseAdmin
+      .from('review_settings')
+      .select('review_questions_count')
+      .eq('user_id', userId)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        console.log(`📝 [getUserReviewSettingsAdmin] No review settings found for user ${userId}, using default 10`)
+        return { reviewQuestionsCount: 10 } // デフォルト値
+      } else {
+        console.error('❌ [getUserReviewSettingsAdmin] Error fetching review settings:', error)
+        return { reviewQuestionsCount: 10 } // デフォルト値
+      }
+    }
+
+    const questionsCount = data?.review_questions_count || 10
+    console.log(`✅ [getUserReviewSettingsAdmin] Retrieved settings: ${questionsCount} questions per set`)
+
+    return {
+      reviewQuestionsCount: questionsCount
+    }
+
+  } catch (error) {
+    console.error('❌ [getUserReviewSettingsAdmin] Error:', error)
+    return { reviewQuestionsCount: 10 } // デフォルト値
   }
 }
 

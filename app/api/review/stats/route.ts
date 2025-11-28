@@ -20,14 +20,14 @@ export async function GET(request: NextRequest) {
 
     console.log(`📊 Fetching review stats for user: ${userId}`)
 
-    // 並列で各統計を取得（事前セットベース）
+    // 並列で各統計を取得
     const [
       totalReviewNeeded,
       reviewSettings,
       todayReviewCount,
       reviewEffectiveness
     ] = await Promise.all([
-      getReviewQuestionsCountFromPrecomputedSets(userId),
+      getReviewQuestionsCount(userId),
       getUserReviewSettings(userId),
       getTodayReviewCompletedCount(userId),
       calculateReviewEffectiveness(userId)
@@ -211,12 +211,12 @@ async function calculateReviewEffectiveness(userId: string): Promise<{
 }
 
 /**
- * 事前セットから復習問題数を取得
+ * 復習問題数を取得
  */
-async function getReviewQuestionsCountFromPrecomputedSets(userId: string): Promise<number> {
+async function getReviewQuestionsCount(userId: string): Promise<number> {
   try {
     const currentTime = new Date().toISOString()
-    console.log(`🔍 DEBUG: Checking precomputed sets for user ${userId} at ${currentTime}`)
+    console.log(`🔍 DEBUG: Checking review sets for user ${userId} at ${currentTime}`)
     
     // まず全ての復習セットを確認（デバッグ用）
     const { data: allSets } = await supabaseAdmin
@@ -248,7 +248,7 @@ async function getReviewQuestionsCountFromPrecomputedSets(userId: string): Promi
     console.log(`🔍 DEBUG: Found ${precomputedSets?.length || 0} valid (non-expired) review sets - used_at ignored for stats`)
 
     if (!precomputedSets || precomputedSets.length === 0) {
-      console.log(`📊 No valid review precomputed sets found for user: ${userId}`)
+      console.log(`📊 No valid review sets found for user: ${userId}`)
       
       // 期限切れだが未使用のセットがあるかチェック
       const { data: expiredSets } = await supabaseAdmin
@@ -266,16 +266,16 @@ async function getReviewQuestionsCountFromPrecomputedSets(userId: string): Promi
       return 0
     }
 
-    // 全ての事前セットの問題数を合計
+    // 全ての復習セットの問題数を合計
     const totalQuestions = precomputedSets.reduce((total, set) => {
       return total + (set.question_ids?.length || 0)
     }, 0)
 
-    console.log(`📊 Found ${totalQuestions} review questions in ${precomputedSets.length} precomputed sets`)
+    console.log(`📊 Found ${totalQuestions} review questions in ${precomputedSets.length} review sets`)
     return totalQuestions
 
   } catch (error) {
-    console.error('❌ Error getting review questions count from precomputed sets:', error)
+    console.error('❌ Error getting review questions count from review sets:', error)
     return 0
   }
 }

@@ -17,6 +17,7 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import { getUserSKPBalance } from '@/lib/supabase-learning'
 import { useXPStats } from '@/hooks/useXPStats'
 import { useUserRole } from '@/hooks/useUserRole'
+import { useReviewQuickCheck } from '@/hooks/useReviewQuickCheck'
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void
@@ -35,13 +36,7 @@ export default function Header({
   const loadingRef = useRef(false)
   const { stats: xpStats } = useXPStats()
   const { isAdmin } = useUserRole()
-  const [reviewStats, setReviewStats] = useState<{
-    totalReviewNeeded: number
-    shouldShowNotification: boolean
-    reviewedToday: number
-    nextReviewDate: string | null
-  } | null>(null)
-  const [loadingReviewStats, setLoadingReviewStats] = useState(false)
+  const { reviewStatus } = useReviewQuickCheck()
   const [showReviewTooltip, setShowReviewTooltip] = useState(false)
 
   // ユーザーデータ取得（SKPのみ）
@@ -59,89 +54,21 @@ export default function Header({
     }
   }, [user?.id])
   
-  // 復習統計データを取得
-  const loadReviewStats = useCallback(async () => {
-    if (!user?.id || loadingReviewStats) return
-    
-    setLoadingReviewStats(true)
-    try {
-      // 既存のSupabaseクライアントを使用（新しいクライアント作成を避ける）
-      const { supabase } = await import('@/lib/supabase')
-      
-      const { data: sessionData } = await supabase.auth.getSession()
-      const token = sessionData.session?.access_token
-      
-      if (!token) {
-        console.warn('No auth token available for review stats')
-        return
-      }
-
-      const response = await fetch('/api/review/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setReviewStats({
-          totalReviewNeeded: data.totalReviewNeeded,
-          shouldShowNotification: data.shouldShowNotification,
-          reviewedToday: data.todayCompleted || 0,
-          nextReviewDate: data.lastReviewDate || null
-        })
-        
-        // 新しい復習問題がある場合は一時的にツールチップを表示
-        if (data.shouldShowNotification && data.totalReviewNeeded > 0) {
-          setShowReviewTooltip(true)
-          setTimeout(() => setShowReviewTooltip(false), 5000) // 5秒後に非表示
-        }
-      }
-    } catch (error) {
-      console.error('Error loading review stats:', error)
-    } finally {
-      setLoadingReviewStats(false)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]) // 依存関係からloadingReviewStatsを削除して循環参照を防ぐ
-
+  // 復習統計データは useReviewQuickCheck フックで自動管理
+  
   // 初回読み込み
   useEffect(() => {
     loadUserData()
-    loadReviewStats()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]) // loadReviewStatsの依存関係を削除して循環参照を防ぐ
+  }, [user?.id])
   
-  // スマートな復習統計更新（復習対象がない場合のみ定期更新）
+  // 復習問題が見つかった時のツールチップ表示
   useEffect(() => {
-    if (!user?.id) return
-    
-    const interval = setInterval(() => {
-      // 復習対象がない場合のみ定期チェック
-      if (!reviewStats || reviewStats.totalReviewNeeded === 0) {
-        console.log('📊 No review targets - checking for new ones...')
-        loadReviewStats()
-      }
-    }, 3 * 60 * 1000) // 3分おき
-    
-    return () => clearInterval(interval)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, reviewStats?.totalReviewNeeded]) // 復習対象数も依存関係に追加
-
-  // 復習完了後のリアルタイム更新（イベントリスナー）
-  useEffect(() => {
-    const handleReviewCompleted = () => {
-      console.log('📚 Review completed event detected, updating stats')
-      loadReviewStats()
+    if (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) {
+      setShowReviewTooltip(true)
+      setTimeout(() => setShowReviewTooltip(false), 5000) // 5秒後に非表示
     }
-
-    // カスタムイベントリスナーを追加
-    window.addEventListener('reviewCompleted', handleReviewCompleted)
-    
-    return () => {
-      window.removeEventListener('reviewCompleted', handleReviewCompleted)
-    }
-  }, [loadReviewStats])
+  }, [reviewStatus?.hasReviewQuestions, reviewStatus?.totalQuestions])
 
   const handleLogout = async () => {
     await signOut()
@@ -265,44 +192,67 @@ export default function Header({
                       variant="ghost" 
                       size="sm" 
                       className={`relative transition-colors ${
-                        reviewStats && reviewStats.shouldShowNotification && reviewStats.totalReviewNeeded > 0 
+                        reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0 
                           ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50' 
-                          : ''
+                          : reviewStatus?.isGenerating
+                            ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                            : ''
                       }`}
                       onMouseEnter={() => {
-                        if (reviewStats && reviewStats.totalReviewNeeded > 0) {
+                        if (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) {
                           setShowReviewTooltip(true)
                         }
                       }}
                       onMouseLeave={() => setShowReviewTooltip(false)}
                     >
                       <Bell className={`h-4 w-4 ${
-                        reviewStats && reviewStats.shouldShowNotification && reviewStats.totalReviewNeeded > 0 
+                        reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0 
                           ? 'animate-pulse' 
-                          : ''
+                          : reviewStatus?.isGenerating
+                            ? 'animate-bounce'
+                            : ''
                       }`} />
-                      {reviewStats && reviewStats.totalReviewNeeded > 0 && (
+                      {(reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) && (
                         <Badge 
-                          variant={reviewStats.shouldShowNotification ? "destructive" : "secondary"}
-                          className={`absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center ${
-                            reviewStats.shouldShowNotification ? 'animate-bounce' : ''
-                          }`}
+                          variant="destructive"
+                          className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center animate-bounce"
                         >
-                          {reviewStats.totalReviewNeeded > 99 ? '99+' : reviewStats.totalReviewNeeded}
+                          {reviewStatus.totalQuestions > 99 ? '99+' : reviewStatus.totalQuestions}
+                        </Badge>
+                      )}
+                      
+                      {reviewStatus?.isGenerating && (
+                        <Badge 
+                          variant="secondary"
+                          className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center bg-blue-500 text-white"
+                        >
+                          <RefreshCw className="h-3 w-3 animate-spin" />
                         </Badge>
                       )}
                       
                       {/* ツールチップ */}
-                      {showReviewTooltip && reviewStats && reviewStats.totalReviewNeeded > 0 && (
+                      {showReviewTooltip && reviewStatus && (
                         <div className="absolute top-8 right-0 bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-50">
-                          復習推奨: {reviewStats.totalReviewNeeded}問
+                          {reviewStatus.isGenerating ? '復習問題生成中...' : 
+                           reviewStatus.hasReviewQuestions ? `復習推奨: ${reviewStatus.displayText} (${reviewStatus.availableSets}セット)` :
+                           '復習問題なし'}
                           <div className="absolute -top-1 right-3 w-2 h-2 bg-gray-900 transform rotate-45"></div>
                         </div>
                       )}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-80">
-                    {reviewStats && reviewStats.totalReviewNeeded > 0 ? (
+                    {reviewStatus?.isGenerating ? (
+                      <div className="p-4 border-b bg-blue-50">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />
+                          <span className="font-medium text-sm text-blue-900">復習問題準備中</span>
+                        </div>
+                        <p className="text-sm text-blue-800">
+                          新しい復習問題を準備しています。少々お待ちください...
+                        </p>
+                      </div>
+                    ) : reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0 ? (
                       <>
                         <div className="p-4 border-b bg-orange-50">
                           <div className="flex items-center justify-between mb-2">
@@ -310,14 +260,12 @@ export default function Header({
                               <RefreshCw className="h-4 w-4 text-orange-500" />
                               <span className="font-medium text-sm text-orange-900">復習推奨</span>
                             </div>
-                            {reviewStats.shouldShowNotification && (
-                              <Badge variant="outline" className="text-xs bg-orange-100 text-orange-700">
-                                新着
-                              </Badge>
-                            )}
+                            <Badge variant="outline" className="text-xs bg-orange-100 text-orange-700">
+                              新着
+                            </Badge>
                           </div>
                           <p className="text-sm text-orange-800">
-                            {reviewStats.totalReviewNeeded}問の復習が推奨されています
+                            {reviewStatus.displayText}の復習が推奨されています
                           </p>
                         </div>
                         
