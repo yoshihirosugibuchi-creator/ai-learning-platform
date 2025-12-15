@@ -877,7 +877,7 @@ export default function CollectionPage() {
                   <TabsContent value="all">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                       {filteredBadges.map(badge => (
-                        <Card key={badge.id} className={`relative overflow-hidden ${badge.isExpired ? 'opacity-85' : ''}`}>
+                        <Card key={badge.id} className={`relative overflow-hidden ${badge.isExpired ? 'opacity-60' : ''}`}>
                           <CardHeader className="text-center pb-3">
                             <div className="text-4xl mb-2">
                               {badge.badge.badgeImageUrl ? (
@@ -929,10 +929,10 @@ export default function CollectionPage() {
                               )}
                             </div>
                             {badge.isExpired && (
-                              <div className="absolute inset-0 bg-gray-900 bg-opacity-10 flex items-center justify-center">
-                                <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold transform rotate-12">
+                              <div className="absolute top-2 right-2">
+                                <Badge variant="outline" className="text-red-600 border-red-600 bg-white">
                                   期限切れ
-                                </div>
+                                </Badge>
                               </div>
                             )}
                           </CardContent>
@@ -1010,7 +1010,7 @@ export default function CollectionPage() {
                   <TabsContent value="expired">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                       {expiredBadges.map(badge => (
-                        <Card key={badge.id} className="relative overflow-hidden opacity-85">
+                        <Card key={badge.id} className="relative overflow-hidden opacity-60">
                           <CardHeader className="text-center pb-3">
                             <div className="text-4xl mb-2">
                               {badge.badge.badgeImageUrl ? (
@@ -1056,10 +1056,10 @@ export default function CollectionPage() {
                                 有効期限: {badge.expiresAt?.toLocaleDateString('ja-JP')}
                               </div>
                             </div>
-                            <div className="absolute inset-0 bg-gray-900 bg-opacity-10 flex items-center justify-center">
-                              <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold transform rotate-12">
+                            <div className="absolute top-2 right-2">
+                              <Badge variant="outline" className="text-red-600 border-red-600 bg-white">
                                 期限切れ
-                              </div>
+                              </Badge>
                             </div>
                           </CardContent>
                         </Card>

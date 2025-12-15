@@ -9,6 +9,7 @@
  */
 
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 
 // 🔐 正しい権限取得方法: users テーブルから取得
@@ -59,25 +60,75 @@ export async function getCurrentUserRole(request: Request): Promise<{
   error?: string
 }> {
   try {
-    // Authorizationヘッダーからトークン取得
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return { userId: null, role: null, error: 'No authorization header' }
+    // 🧪 開発環境限定：テスト用認証バイパス
+    if (process.env.NODE_ENV === 'development') {
+      const testUserId = request.headers.get('x-test-user-id')
+      const testRole = request.headers.get('x-test-role')
+      
+      if (testUserId && testRole) {
+        console.log(`🧪 [TEST AUTH] Bypassing auth: ${testUserId} (${testRole})`)
+        return {
+          userId: testUserId,
+          role: testRole
+        }
+      }
     }
 
-    const token = authHeader.replace('Bearer ', '')
-    
-    // Supabaseクライアント作成（他の成功APIと同じパターン）
+    // Supabaseクライアント作成
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
-    
-    // トークンを直接渡してユーザー取得
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
-    
-    if (userError || !user) {
-      return { userId: null, role: null, error: `Authentication failed: ${userError?.message || 'No user'}` }
+
+    let user = null
+    let authError = null
+
+    // 1. Authorizationヘッダーから取得を試行
+    const authHeader = request.headers.get('authorization')
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '')
+      const { data: { user: authUser }, error: headerError } = await supabase.auth.getUser(token)
+      if (authUser && !headerError) {
+        user = authUser
+      } else {
+        authError = headerError
+      }
+    }
+
+    // 2. Cookieから取得を試行（Authorizationヘッダーが無い/失敗した場合）
+    if (!user) {
+      try {
+        // Next.js cookies からアクセストークン取得
+        const cookieStore = await cookies()
+        const accessToken = cookieStore.get('sb-bddqkmnbbvllpvsynklr-auth-token')?.value
+        
+        if (accessToken) {
+          try {
+            const parsedToken = JSON.parse(accessToken)
+            if (parsedToken?.access_token) {
+              const { data: { user: cookieUser }, error: cookieError } = await supabase.auth.getUser(parsedToken.access_token)
+              if (cookieUser && !cookieError) {
+                user = cookieUser
+              } else {
+                authError = cookieError
+              }
+            }
+          } catch (parseError) {
+            authError = parseError
+          }
+        }
+      } catch (cookieAuthError) {
+        authError = cookieAuthError
+      }
+    }
+
+    // 3. どちらの方法でも認証に失敗した場合
+    if (!user) {
+      return { 
+        userId: null, 
+        role: null, 
+        error: `Authentication failed: ${authError && typeof authError === 'object' && 'message' in authError ? String(authError.message) : 'No auth header or cookie'}` 
+      }
     }
     
     // 🚨 IMPORTANT: users テーブルから役割取得（auth.users.user_metadata.role は使用禁止）

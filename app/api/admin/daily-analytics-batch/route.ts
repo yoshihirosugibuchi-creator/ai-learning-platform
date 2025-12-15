@@ -18,15 +18,7 @@ import type {
   DailyAnalyticsBatchLogInsert 
 } from '@/lib/database-types-official'
 
-// バッチ処理タイプ定数
-export const BATCH_PROCESS_TYPES = {
-  QUALITY_SCORE: 'quality_score',
-  PEAK_HOUR: 'peak_hour',
-  STUDY_TIME: 'study_time_minutes',
-  ALL: 'all'
-} as const
-
-type BatchProcessType = typeof BATCH_PROCESS_TYPES[keyof typeof BATCH_PROCESS_TYPES]
+import { BATCH_PROCESS_TYPES, type BatchProcessType } from '@/lib/batch-process-types'
 
 // バッチ処理設定
 const BATCH_CONFIG = {

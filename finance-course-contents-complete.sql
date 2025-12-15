@@ -1,0 +1,488 @@
+-- 金融基礎コース - 全15セッションのコンテンツとクイズ完全版
+
+-- ===============================
+-- SESSION CONTENTS（全15セッション）
+-- ===============================
+
+-- テーマ1: 計数管理の基礎理解 (3セッション)
+
+-- セッション1: number_basics_session (すでに作成済み - 上書き)
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('number_basics_content_1', 'number_basics_session', 'text', '計数管理とは', '計数管理とは、ビジネスにおける重要な数字を継続的に測定・分析・管理することで、経営の意思決定を支援する活動です。「計数」とは「数えて把握する」という意味で、売上、利益、コスト、品質、時間など、事業運営に関わるあらゆる数値が対象となります。計数管理により、現状の正確な把握、問題の早期発見、改善の効果測定が可能になります。', 3, 1),
+
+('number_basics_content_2', 'number_basics_session', 'key_points', '計数管理の重要性', '• 客観的事実に基づく意思決定の実現
+• 目標と実績の差異分析による改善活動
+• ステークホルダーへの説明責任の履行
+• 予測精度の向上と計画策定の高度化', 2, 2),
+
+('number_basics_content_3', 'number_basics_session', 'example', '実例：売上管理における計数管理', '【状況】月間売上目標1000万円の営業チーム
+【計数管理の実践】
+✓ 日次売上実績の把握（累計進捗率）
+✓ 顧客別・商品別売上分析
+✓ 受注確度別パイプライン管理
+✓ 前年同月比での成長率分析
+【結果】月後半での挽回策立案と目標達成率向上', 4, 3);
+
+-- セッション2: kpi_basics_session
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('kpi_basics_content_1', 'kpi_basics_session', 'text', 'KPIの基本概念', 'KPI（Key Performance Indicator：重要業績評価指標）は、組織の戦略目標達成度を測定するための重要な数値指標です。KPIは目標を具体的な数値で表現し、進捗状況を客観的に把握することを可能にします。効果的なKPIは、Specific（具体的）、Measurable（測定可能）、Achievable（達成可能）、Relevant（関連性）、Time-bound（期限設定）のSMART原則に基づいて設計されます。', 4, 1),
+
+('kpi_basics_content_2', 'kpi_basics_session', 'key_points', '良いKPIの条件', '• 戦略目標と直接的な関連性がある
+• 数値で測定・比較が可能
+• 改善のためのアクションにつながる
+• データ取得が現実的で継続可能
+• 関係者全員が理解しやすい', 3, 2),
+
+('kpi_basics_content_3', 'kpi_basics_session', 'example', '部門別KPI設計例', '【営業部門】
+• 新規顧客獲得数（月間）
+• 売上達成率（対目標比）
+• 商談成約率（%）
+
+【マーケティング部門】
+• リード獲得数（月間）
+• コンバージョン率（%）
+• 顧客獲得コスト（CAC）
+
+【開発部門】
+• 納期遵守率（%）
+• 品質指標（バグ発生率）
+• 開発効率（機能点数/人月）', 5, 3);
+
+-- セッション3: number_practice_session
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('number_practice_content_1', 'number_practice_session', 'text', '計数管理の実践ステップ', '計数管理を実践する際は、以下のステップを踏むことが重要です。1）目的の明確化：何のために数字を管理するのかを明確にする。2）指標の選定：目的に合った測定可能な指標を選ぶ。3）データ収集体制の構築：正確で継続的なデータ収集の仕組みを作る。4）分析・報告の仕組み化：定期的な分析と意思決定者への報告体制を整える。5）改善アクションの実行：数字に基づいた具体的な改善策を実行する。', 4, 1),
+
+('number_practice_content_2', 'number_practice_session', 'exercise', '練習問題：KPI設計', '【ケース】新規事業立ち上げチーム
+• 事業目標：6ヶ月で月商500万円達成
+• チーム構成：営業2名、マーケ1名、開発2名
+
+【課題】以下の観点から適切なKPIを3つ設計してください：
+1. 売上関連指標
+2. 顧客関連指標  
+3. 効率性指標
+
+【検討ポイント】
+• 測定方法は現実的か？
+• 改善アクションにつながるか？
+• チーム全体のモチベーション向上に寄与するか？', 6, 2);
+
+-- テーマ2: 損益計算書(PL)の理解 (3セッション)
+
+-- セッション4: pl_structure_session
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('pl_structure_content_1', 'pl_structure_session', 'text', '損益計算書の基本構造', '損益計算書（P&L：Profit & Loss Statement）は、一定期間における企業の収益性を示す財務諸表です。基本構造は「収益 - 費用 = 利益」で表され、上から売上高、売上原価、売上総利益、販管費、営業利益、営業外収益・費用、経常利益、特別損益、税引前利益、法人税等、当期純利益の順に表示されます。この階層構造により、企業の収益力を多角的に分析できます。', 5, 1),
+
+('pl_structure_content_2', 'pl_structure_session', 'key_points', '5つの利益の意味', '• 売上総利益：本業の粗利益（売上-原価）
+• 営業利益：本業の最終利益（売上総利益-販管費）
+• 経常利益：金融収支込みの通常利益
+• 税引前利益：特別損益込みの税引前利益  
+• 当期純利益：全ての収支を含む最終利益', 4, 2),
+
+('pl_structure_content_3', 'pl_structure_session', 'example', 'PL構造の実例', '【A社の損益計算書（簡略版）】
+売上高：10,000万円
+売上原価：6,000万円
+───────────────
+売上総利益：4,000万円（売上総利益率40%）
+販売管理費：2,500万円
+───────────────
+営業利益：1,500万円（営業利益率15%）
+営業外収益：100万円
+営業外費用：200万円
+───────────────
+経常利益：1,400万円（経常利益率14%）', 6, 3);
+
+-- セッション5: pl_analysis_session  
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('pl_analysis_content_1', 'pl_analysis_session', 'text', '収益性分析の基本', '損益計算書を使った収益性分析では、各利益率を計算し、同業他社や過去データと比較することが重要です。売上総利益率は商品・サービスの競争力を、営業利益率は事業運営の効率性を、当期純利益率は総合的な収益性を表します。また、売上の成長率と利益の成長率を比較することで、事業の健全性を判断できます。利益率の改善には、売上拡大と費用削減の両方向からアプローチが必要です。', 5, 1),
+
+('pl_analysis_content_2', 'pl_analysis_session', 'key_points', '重要な分析指標', '• 売上総利益率 = 売上総利益 ÷ 売上高
+• 営業利益率 = 営業利益 ÷ 売上高
+• 当期純利益率 = 当期純利益 ÷ 売上高
+• 売上成長率 = (当期売上 - 前期売上) ÷ 前期売上
+• 損益分岐点売上高 = 固定費 ÷ 限界利益率', 4, 2),
+
+('pl_analysis_content_3', 'pl_analysis_session', 'example', '収益性改善の着眼点', '【売上拡大施策】
+• 新商品・新サービスの開発
+• 新規市場・顧客セグメントの開拓
+• 価格戦略の見直し
+• 販売チャネルの拡充
+
+【費用削減施策】
+• 原価率の改善（調達コスト削減）
+• 販管費の効率化（デジタル化推進）
+• 間接費の削減（業務プロセス改善）
+• 固定費の見直し（賃料・人件費最適化）', 6, 3);
+
+-- セッション6: pl_practice_session
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('pl_practice_content_1', 'pl_practice_session', 'case_study', 'ケーススタディ：B社PL分析', '【B社の損益計算書データ（3年間）】
+
+2023年：売上高15,000万円、営業利益1,200万円
+2022年：売上高12,000万円、営業利益1,080万円  
+2021年：売上高10,000万円、営業利益1,000万円
+
+【追加情報】
+• 同業界平均営業利益率：9%
+• B社の主力商品：業務用ソフトウェア
+• 主要費用：人件費60%、マーケティング費20%
+
+【分析課題】
+1. 3年間の売上成長率と利益成長率を計算
+2. 営業利益率の推移と業界平均との比較
+3. 成長要因と課題の考察', 8, 1);
+
+-- テーマ3: 貸借対照表(BS)の理解 (3セッション)
+
+-- セッション7: bs_structure_session
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('bs_structure_content_1', 'bs_structure_session', 'text', '貸借対照表の基本構造', '貸借対照表（Balance Sheet：BS）は、特定時点における企業の財政状態を示す財務諸表です。左側（借方）に資産、右側（貸方）に負債と純資産（資本）が記載され、「資産 = 負債 + 純資産」の等式が成立します。資産は企業が所有する経済的価値のあるもの、負債は他者への債務、純資産は株主の持分を表します。この構造により、企業の資金調達源泉と資金運用状況を把握できます。', 5, 1),
+
+('bs_structure_content_2', 'bs_structure_session', 'key_points', 'BS3要素の詳細', '【資産】
+• 流動資産：1年以内に現金化される資産
+• 固定資産：長期間事業で使用する資産
+
+【負債】  
+• 流動負債：1年以内に支払う債務
+• 固定負債：長期間の債務
+
+【純資産】
+• 株主資本：株主の投資額と利益の蓄積
+• その他包括利益累計額等', 4, 2),
+
+('bs_structure_content_3', 'bs_structure_session', 'example', 'BS構造の実例', '【C社の貸借対照表（簡略版）】
+【資産の部】
+流動資産：3,000万円
+　現金預金：1,000万円
+　売掛金：1,500万円  
+　棚卸資産：500万円
+固定資産：7,000万円
+　建物・設備：5,000万円
+　無形資産：2,000万円
+資産合計：10,000万円
+
+【負債・純資産の部】
+流動負債：2,000万円
+固定負債：3,000万円  
+純資産：5,000万円
+負債・純資産合計：10,000万円', 6, 3);
+
+-- セッション8: bs_ratios_session
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('bs_ratios_content_1', 'bs_ratios_session', 'text', '財務安全性の分析指標', '貸借対照表から企業の財務安全性を分析する主要指標には、流動比率、当座比率、自己資本比率があります。流動比率は短期的な支払能力を、当座比率はより厳格な短期支払能力を、自己資本比率は長期的な財務安全性を表します。これらの指標により、企業の倒産リスクや資金繰りの健全性を評価できます。業界や事業モデルによって適正水準は異なるため、同業他社との比較が重要です。', 5, 1),
+
+('bs_ratios_content_2', 'bs_ratios_session', 'key_points', '重要な財務比率', '• 流動比率 = 流動資産 ÷ 流動負債（目安：120%以上）
+• 当座比率 = 当座資産 ÷ 流動負債（目安：100%以上）
+• 自己資本比率 = 純資産 ÷ 総資産（目安：30%以上）
+• 固定比率 = 固定資産 ÷ 純資産（目安：100%以下）
+• 負債比率 = 負債 ÷ 純資産', 4, 2),
+
+('bs_ratios_content_3', 'bs_ratios_session', 'example', '財務比率による評価', '【優良企業の例】
+流動比率：150%（短期支払能力◎）
+自己資本比率：60%（財務安全性◎）
+→ 安定経営、成長投資余力あり
+
+【要注意企業の例】  
+流動比率：80%（短期支払能力△）
+自己資本比率：15%（財務安全性△）
+→ 資金繰り改善、財務体質強化が急務
+
+【判断のポイント】
+業界特性、事業ステージ、市場環境を考慮した総合判断が重要', 6, 3);
+
+-- セッション9: bs_practice_session
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('bs_practice_content_1', 'bs_practice_session', 'case_study', 'ケーススタディ：D社財務体質評価', '【D社の貸借対照表データ】
+総資産：5,000万円
+流動資産：1,800万円（現金400万円、売掛金1,000万円、在庫400万円）
+固定資産：3,200万円
+流動負債：2,200万円
+固定負債：1,300万円
+純資産：1,500万円
+
+【業界データ】
+同業界平均：流動比率130%、自己資本比率40%
+
+【分析課題】
+1. 各財務比率の計算
+2. 業界平均との比較評価
+3. 財務改善策の提案', 8, 1);
+
+-- テーマ4: キャッシュフロー (3セッション)
+
+-- セッション10: cf_structure_session
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('cf_structure_content_1', 'cf_structure_session', 'text', 'キャッシュフロー計算書の構造', 'キャッシュフロー計算書（Cash Flow Statement）は、一定期間における企業の現金の流入・流出を示す財務諸表です。営業活動、投資活動、財務活動の3つの区分に分けて表示され、企業の資金の流れを把握できます。損益計算書が会計上の利益を示すのに対し、キャッシュフロー計算書は実際の現金の動きを表すため、企業の資金繰りや実質的な収益力をより正確に評価できます。', 5, 1),
+
+('cf_structure_content_2', 'cf_structure_session', 'key_points', '3つのキャッシュフローの意味', '• 営業CF：本業による現金創出力
+　（売上回収 - 仕入・経費支払）
+• 投資CF：将来への投資活動
+　（設備投資、株式投資等）  
+• 財務CF：資金調達・返済活動
+　（借入、株式発行、配当支払等）
+
+【重要】営業CFのプラスが持続可能な成長の前提条件', 4, 2),
+
+('cf_structure_content_3', 'cf_structure_session', 'example', 'CF計算書の実例', '【E社のキャッシュフロー計算書】
+営業活動によるCF：+800万円
+　税引前利益：600万円
+　減価償却費：300万円  
+　売掛金の増減：-100万円
+　棚卸資産の増減：-50万円
+　買掛金の増減：+80万円
+　法人税の支払：-30万円
+
+投資活動によるCF：-500万円
+　設備投資：-500万円
+
+財務活動によるCF：-100万円  
+　借入金返済：-150万円
+　配当金支払：-50万円
+　
+現金増減：+200万円', 6, 3);
+
+-- セッション11: cf_categories_session
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('cf_categories_content_1', 'cf_categories_session', 'text', '営業・投資・財務CFの特徴', '営業CFは企業の本業による現金創出能力を表し、継続的にプラスであることが健全経営の条件です。投資CFは通常マイナスで、将来の成長のための投資を表します。財務CFは資金調達と返済のバランスを示し、成長期はプラス、成熟期はマイナスになる傾向があります。3つのCFの組み合わせパターンにより、企業の成長ステージや財務戦略を分析できます。', 5, 1),
+
+('cf_categories_content_2', 'cf_categories_session', 'key_points', 'CFパターン分析', '【健全成長型】営業CF：+、投資CF：-、財務CF：±
+　本業で稼いだ資金で投資を実行
+
+【積極成長型】営業CF：+、投資CF：-、財務CF：+  
+　外部資金も活用して大型投資
+
+【成熟安定型】営業CF：+、投資CF：-、財務CF：-
+　株主還元重視、内部留保で投資
+
+【要注意型】営業CF：-、投資CF：-、財務CF：+
+　本業不振、資金調達に依存', 4, 2),
+
+('cf_categories_content_3', 'cf_categories_session', 'example', 'ステージ別CF戦略', '【スタートアップ期】
+営業CF：- / 投資CF：- / 財務CF：+
+→ 資金調達して事業基盤整備
+
+【成長期】
+営業CF：+ / 投資CF：- / 財務CF：+
+→ 本業黒字化、積極投資継続
+
+【成熟期】  
+営業CF：+ / 投資CF：- / 財務CF：-
+→ 安定収益、株主還元重視
+
+【再生期】
+営業CF：- / 投資CF：+ / 財務CF：+
+→ 事業再構築、資産売却・資金調達', 6, 3);
+
+-- セッション12: cf_practice_session
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('cf_practice_content_1', 'cf_practice_session', 'case_study', 'ケーススタディ：F社CF分析', '【F社の3年間CFデータ（単位：百万円）】
+
+2023年：営業CF +150、投資CF -200、財務CF +100
+2022年：営業CF +100、投資CF -150、財務CF +80
+2021年：営業CF +80、投資CF -100、財務CF +50
+
+【追加情報】
+• F社：IT系ベンチャー企業（設立5年目）
+• 主な投資：新規事業開発、システム開発
+• 主な資金調達：VC投資、銀行借入
+
+【分析課題】
+1. 各年のCFパターンの特徴分析
+2. 企業ステージとCF戦略の整合性評価
+3. 今後のCF戦略への提言', 8, 1);
+
+-- テーマ5: 現場の数字 (3セッション)
+
+-- セッション13: field_indicators_session  
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('field_indicators_content_1', 'field_indicators_session', 'text', '現場で使う重要指標', '現場の数字管理では、日々の業務に直結する実用的な指標を活用することが重要です。売上高は事業規模を表す最も基本的な指標で、粗利率は商品・サービスの収益性を、回転率は資産や在庫の効率性を示します。これらの指標は、現場担当者が日常的にモニタリングし、迅速な改善アクションにつなげることができる特徴があります。数値の背景にある業務プロセスを理解することで、より効果的な改善策を立案できます。', 5, 1),
+
+('field_indicators_content_2', 'field_indicators_session', 'key_points', '現場の主要指標', '• 売上高：事業規模の基本指標
+• 粗利率：収益性の核心指標（売上総利益÷売上高）
+• 回転率：効率性の重要指標
+　- 在庫回転率（年間売上原価÷平均在庫）
+　- 売掛金回転率（年間売上高÷平均売掛金）
+• 生産性指標：1人当たり売上、時間当たり生産量
+• 品質指標：不良率、顧客満足度、リピート率', 4, 2),
+
+('field_indicators_content_3', 'field_indicators_session', 'example', '業種別重要指標例', '【製造業】
+• 歩留まり率：良品/投入材料
+• 設備稼働率：実稼働時間/計画時間
+• 納期遵守率：予定通り納品/全納品
+
+【小売業】
+• 坪効率：売上/売場面積
+• 客単価：売上/来店客数
+• 在庫消化日数：在庫金額/日販
+
+【サービス業】  
+• 稼働率：実働時間/総時間
+• 単価向上率：前年同期比較
+• 顧客継続率：継続顧客/全顧客', 6, 3);
+
+-- セッション14: department_management_session
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('department_management_content_1', 'department_management_session', 'text', '部門別管理の基本', '部門別管理は、企業全体を機能や責任範囲に応じて部門に分割し、それぞれの業績を個別に管理する手法です。各部門に明確な目標設定と責任の所在を明確化することで、経営効率の向上と意思決定の迅速化を実現します。部門別管理では、収益部門（売上を生む）とコスト部門（支援機能）を区別し、それぞれに適した評価指標を設定することが重要です。また、部門間の連携と全体最適の視点も忘れてはなりません。', 5, 1),
+
+('department_management_content_2', 'department_management_session', 'key_points', '予実管理のポイント', '• 予算策定：現実的で挑戦的な目標設定
+• 月次管理：タイムリーな実績把握と差異分析
+• 原因分析：差異の要因を具体的に特定
+• 対策立案：実行可能な改善アクションの設計
+• PDCAサイクル：継続的な改善プロセスの実践
+
+【重要】数字の管理だけでなく、行動変容につながる仕組み作り', 4, 2),
+
+('department_management_content_3', 'department_management_session', 'example', '部門別管理システム例', '【営業部門】
+目標：月次売上、新規客獲得数、成約率
+管理：週次売上進捗、商談パイプライン
+会議：週次営業会議、月次業績レビュー
+
+【製造部門】
+目標：生産量、品質、コスト削減
+管理：日次生産実績、品質指標
+会議：日次生産会議、月次改善会議
+
+【管理部門】
+目標：間接費率、業務効率化、コンプライアンス
+管理：月次予算実績、業務改善提案数
+会議：月次予算会議、四半期管理会議', 6, 3);
+
+-- セッション15: field_practice_session
+INSERT INTO session_contents (id, session_id, content_type, title, content, duration, display_order) VALUES
+('field_practice_content_1', 'field_practice_session', 'case_study', 'ケーススタディ：G社数字活用改善', '【G社の現状】
+業種：飲食チェーン（10店舗展開）
+課題：店舗間の業績格差が大きい
+
+【店舗別月次データ】
+A店：売上500万円、客数1,000人、客単価5,000円
+B店：売上300万円、客数800人、客単価3,750円  
+C店：売上400万円、客数1,200人、客単価3,333円
+
+【追加情報】
+• 立地条件：A店＝駅前、B店＝住宅地、C店＝オフィス街
+• スタッフ数：各店舗5名（店長1名、アルバイト4名）
+
+【分析・改善課題】
+1. 各店舗の特徴と強み・弱みの分析
+2. 業績改善のための具体的施策提案
+3. 数字に基づく意思決定プロセスの設計', 8, 1);
+
+-- ===============================
+-- SESSION QUIZZES（全15セッション）
+-- ===============================
+
+INSERT INTO session_quizzes (id, session_id, question, options, correct_answer, explanation, quiz_type, display_order) VALUES
+
+-- テーマ1: 計数管理の基礎理解のクイズ
+
+-- セッション1: number_basics_session
+('number_basics_quiz_1', 'number_basics_session', '計数管理の主な目的として最も適切でないものは？', 
+ '["経営の意思決定支援", "問題の早期発見", "社員の査定評価", "改善効果の測定"]', 
+ 2, 
+ '計数管理の目的は客観的事実に基づく経営改善であり、社員の査定評価は副次的な活用であって主目的ではありません。', 
+ 'single_choice', 0),
+
+-- セッション2: kpi_basics_session  
+('kpi_basics_quiz_1', 'kpi_basics_session', 'SMART原則に含まれない要素は？',
+ '["Specific（具体的）", "Measurable（測定可能）", "Simple（単純）", "Time-bound（期限設定）"]',
+ 2,
+ 'SMART原則はSpecific、Measurable、Achievable、Relevant、Time-boundの5要素です。Simpleは含まれません。',
+ 'single_choice', 0),
+
+-- セッション3: number_practice_session
+('number_practice_quiz_1', 'number_practice_session', '計数管理の実践ステップで最初に行うべきことは？',
+ '["データ収集体制の構築", "目的の明確化", "指標の選定", "分析・報告の仕組み化"]',
+ 1,
+ '計数管理では、まず「何のために数字を管理するのか」という目的を明確にすることが最初のステップです。',
+ 'single_choice', 0),
+
+-- テーマ2: 損益計算書(PL)の理解のクイズ
+
+-- セッション4: pl_structure_session
+('pl_structure_quiz_1', 'pl_structure_session', '損益計算書の基本等式として正しいものは？',
+ '["資産 = 負債 + 純資産", "収益 - 費用 = 利益", "現金流入 - 現金流出 = 現金増減", "売上 = 原価 + 利益"]',
+ 1,
+ '損益計算書の基本等式は「収益 - 費用 = 利益」です。「資産 = 負債 + 純資産」は貸借対照表の等式です。',
+ 'single_choice', 0),
+
+-- セッション5: pl_analysis_session
+('pl_analysis_quiz_1', 'pl_analysis_session', '営業利益率が前年5%から当年8%に上昇した場合、最も適切な評価は？',
+ '["収益性が大幅改善", "一概に良いとは言えない", "業界平均との比較が必要", "B・Cの両方が正しい"]',
+ 3,
+ '利益率の改善は良い傾向ですが、業界平均や競合他社との比較、改善の持続可能性なども含めた総合的な評価が必要です。',
+ 'single_choice', 0),
+
+-- セッション6: pl_practice_session  
+('pl_practice_quiz_1', 'pl_practice_session', 'B社の2023年営業利益率は？（売上15,000万円、営業利益1,200万円）',
+ '["6%", "8%", "10%", "12%"]',
+ 1,
+ '営業利益率 = 営業利益 ÷ 売上高 = 1,200万円 ÷ 15,000万円 = 8%',
+ 'single_choice', 0),
+
+-- テーマ3: 貸借対照表(BS)の理解のクイズ
+
+-- セッション7: bs_structure_session
+('bs_structure_quiz_1', 'bs_structure_session', '貸借対照表の基本等式として正しいものは？',
+ '["資産 = 負債 + 純資産", "流動資産 = 流動負債 + 固定資産", "資産 = 現金 + その他資産", "負債 = 流動負債 + 固定負債"]',
+ 0,
+ '貸借対照表の基本等式は「資産 = 負債 + 純資産」です。この等式は常に成立します。',
+ 'single_choice', 0),
+
+-- セッション8: bs_ratios_session
+('bs_ratios_quiz_1', 'bs_ratios_session', '流動比率150%の意味として最も適切なものは？',
+ '["流動資産が流動負債の1.5倍", "短期支払能力に余裕がある", "一般的に健全な水準", "上記すべて"]',
+ 3,
+ '流動比率150%は、流動資産が流動負債の1.5倍あることを示し、短期支払能力に余裕がある健全な水準です。',
+ 'single_choice', 0),
+
+-- セッション9: bs_practice_session
+('bs_practice_quiz_1', 'bs_practice_session', 'D社の流動比率は？（流動資産1,800万円、流動負債2,200万円）',
+ '["81.8%", "90.0%", "122.2%", "計算不可"]',
+ 0,
+ '流動比率 = 流動資産 ÷ 流動負債 = 1,800万円 ÷ 2,200万円 = 81.8%（短期支払能力に不安あり）',
+ 'single_choice', 0),
+
+-- テーマ4: キャッシュフローのクイズ
+
+-- セッション10: cf_structure_session
+('cf_structure_quiz_1', 'cf_structure_session', 'キャッシュフロー計算書の3区分に含まれないものは？',
+ '["営業活動CF", "投資活動CF", "財務活動CF", "特別活動CF"]',
+ 3,
+ 'キャッシュフロー計算書は営業活動、投資活動、財務活動の3区分で構成されます。特別活動CFという区分はありません。',
+ 'single_choice', 0),
+
+-- セッション11: cf_categories_session
+('cf_categories_quiz_1', 'cf_categories_session', '健全な成長企業のCFパターンとして最も適切なものは？',
+ '["営業CF：+、投資CF：+、財務CF：+", "営業CF：+、投資CF：-、財務CF：±", "営業CF：-、投資CF：-、財務CF：+", "営業CF：+、投資CF：+、財務CF：-"]',
+ 1,
+ '健全な成長企業は、本業で現金を創出し（営業CF：+）、将来への投資を実行（投資CF：-）するパターンが理想的です。',
+ 'single_choice', 0),
+
+-- セッション12: cf_practice_session  
+('cf_practice_quiz_1', 'cf_practice_session', 'F社2023年のフリーキャッシュフローは？（営業CF +150、投資CF -200）',
+ '["-50百万円", "+50百万円", "+150百万円", "+350百万円"]',
+ 0,
+ 'フリーキャッシュフロー = 営業CF + 投資CF = +150 + (-200) = -50百万円（投資が現金創出を上回る）',
+ 'single_choice', 0),
+
+-- テーマ5: 現場の数字のクイズ
+
+-- セッション13: field_indicators_session
+('field_indicators_quiz_1', 'field_indicators_session', '在庫回転率の計算式として正しいものは？',
+ '["年間売上高 ÷ 平均在庫", "年間売上原価 ÷ 平均在庫", "平均在庫 ÷ 年間売上高", "平均在庫 ÷ 年間売上原価"]',
+ 1,
+ '在庫回転率 = 年間売上原価 ÷ 平均在庫　で計算します。在庫の効率的な活用度を表す重要指標です。',
+ 'single_choice', 0),
+
+-- セッション14: department_management_session
+('department_management_quiz_1', 'department_management_session', '部門別管理で最も重要なポイントは？',
+ '["部門間の競争促進", "明確な目標設定と責任の所在", "部門の独立性確保", "統一的な評価基準適用"]',
+ 1,
+ '部門別管理では、各部門に明確な目標設定と責任の所在を確立することが最も重要です。',
+ 'single_choice', 0),
+
+-- セッション15: field_practice_session
+('field_practice_quiz_1', 'field_practice_session', 'G社A店の客単価は？（売上500万円、客数1,000人）',
+ '["3,000円", "4,000円", "5,000円", "6,000円"]',
+ 2,
+ '客単価 = 売上 ÷ 客数 = 500万円 ÷ 1,000人 = 5,000円',
+ 'single_choice', 0);

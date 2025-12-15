@@ -1,0 +1,45 @@
+{
+  "id": "test_content_generation_beta",
+  "title": "コンテンツ生成テストコース",
+  "description": "ContentGenerationStep機能のテスト用コース",
+  "estimatedDays": 7,
+  "difficulty": "basic",
+  "icon": "📚",
+  "color": "slate",
+  "displayOrder": 120,
+  "status": "draft",
+  "genres": [
+    {
+      "id": "genre_test_category_beta",
+      "title": "テストジャンル",
+      "description": "テスト用のジャンル",
+      "displayOrder": 0,
+      "themes": [
+        {
+          "id": "theme_test_topic_beta",
+          "title": "テストテーマ",
+          "description": "テスト用のテーマ",
+          "displayOrder": 0,
+          "sessions": [
+            {
+              "id": "session_test_lesson_1_beta",
+              "title": "テストセッション1",
+              "displayOrder": 0,
+              "contents": [],
+              "quiz": null
+            },
+            {
+              "id": "session_test_lesson_2_beta",
+              "title": "テストセッション2",
+              "displayOrder": 1,
+              "contents": [],
+              "quiz": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lastUpdated": "2025-12-08T05:10:25.155Z",
+  "source": "database_sync"
+}

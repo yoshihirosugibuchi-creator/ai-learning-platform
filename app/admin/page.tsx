@@ -14,7 +14,8 @@ import {
   Sparkles,
   Upload,
   ClipboardCheck,
-  BarChart3
+  BarChart3,
+  BookOpen
 } from 'lucide-react'
 import Link from 'next/link'
 import { useUserRole } from '@/hooks/useUserRole'
@@ -52,7 +53,7 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           </Link>
-          
+
 
           <Link href="/admin/xp-settings">
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
@@ -168,6 +169,40 @@ export default function AdminPage() {
                 <p className="text-sm text-muted-foreground">
                   既存問題の編集と<br/>
                   AIヒント生成・管理
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/ai-course-generation">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Sparkles className="h-5 w-5 text-amber-500" />
+                  <span>AIコース学習生成</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  AIを活用して学習コースの<br/>
+                  階層構造と内容を自動生成
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/courses">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <BookOpen className="h-5 w-5 text-blue-600" />
+                  <span>コース学習メンテナンス</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  学習コースの管理・公開状態の<br/>
+                  変更・編集を行います
                 </p>
               </CardContent>
             </Card>

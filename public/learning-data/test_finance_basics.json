@@ -1,0 +1,52 @@
+{
+  "id": "test_finance_basics",
+  "title": "金融基礎コース",
+  "description": "金融の基礎を学ぶコース",
+  "estimatedDays": 7,
+  "difficulty": "basic",
+  "icon": "💰",
+  "color": "emerald",
+  "displayOrder": 100,
+  "status": "draft",
+  "genres": [
+    {
+      "id": "genre_test_finance_basics",
+      "title": "金融基礎",
+      "description": "金融の基礎知識",
+      "displayOrder": 0,
+      "themes": [
+        {
+          "id": "theme_test_finance_fundamentals",
+          "title": "金融とは",
+          "description": "金融の基本概念",
+          "displayOrder": 0,
+          "sessions": [
+            {
+              "id": "session_test_finance_definition",
+              "title": "金融の定義",
+              "displayOrder": 0,
+              "contents": [],
+              "quiz": null
+            },
+            {
+              "id": "session_test_finance_role",
+              "title": "金融の役割",
+              "displayOrder": 1,
+              "contents": [],
+              "quiz": null
+            },
+            {
+              "id": "session_test_comprehension_check",
+              "title": "理解度チェック",
+              "displayOrder": 2,
+              "contents": [],
+              "quiz": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lastUpdated": "2025-12-08T05:10:25.154Z",
+  "source": "database_sync"
+}

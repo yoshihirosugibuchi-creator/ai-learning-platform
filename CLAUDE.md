@@ -1,7 +1,49 @@
 # AI Learning Platform - Claude開発ガイド
 
 **対象**: Claude Code AI Assistant  
-**最終更新**: 2025年11月1日
+**最終更新**: 2025年12月8日
+
+---
+
+## 🚨 **品質管理必須プロセス（2025年12月8日追加）**
+
+### **❌ 現在の問題点**
+1. **型チェック不完全**: `npm run typecheck` が全ファイルをチェックしていない
+2. **ビルド設定問題**: Next.js設定でTypeScript/ESLintエラーが隠蔽されている
+3. **品質ゲート不在**: コミット前・デプロイ前の強制チェックなし
+
+### **✅ 必須実施プロセス**
+
+#### **1. 標準型チェック実行**
+```bash
+# 🚨 毎回必須実行（:strictは使用しない）
+npm run typecheck
+npm run lint  
+npm run build
+```
+
+#### **2. コミット前必須チェック**
+```bash
+# Git pre-commit hook設定
+# エラー1個でも = コミット禁止
+scripts/pre-commit-quality-gate.sh
+```
+
+#### **3. デプロイ前品質ゲート**
+```bash
+# 全チェック通過確認必須
+npm run quality:full-check
+# ✅ TypeScript: 0個エラー
+# ✅ ESLint: 0個エラー  
+# ✅ Build: 成功
+```
+
+#### **4. next.config.ts 厳格設定**
+```typescript
+// 🚨 エラー隠蔽禁止設定
+eslint: { ignoreDuringBuilds: false },
+typescript: { ignoreBuildErrors: false }
+```
 
 ---
 
@@ -196,6 +238,26 @@ npm run dev
 - ESLint警告: 0個
 - ビルド: 成功
 - デプロイ前チェック: 100%完了
+
+---
+
+## 🔧 **API認証テスト**
+
+### **開発環境での認証バイパス**
+```javascript
+// テスト時の認証バイパス（開発環境限定）
+fetch(apiUrl, {
+  headers: {
+    'x-test-user-id': '82413077-a06d-4d9c-82bb-6fdb6a6b8e13',
+    'x-test-role': 'admin'
+  }
+})
+```
+
+### **必須**: API認証テスト問題の恒久解決
+- **開発時**: 認証バイパスヘッダー使用
+- **参考**: `API_AUTHENTICATION_TEST_GUIDE.md` 参照
+- **重要**: 本番環境では認証バイパス自動無効化
 
 ---
 

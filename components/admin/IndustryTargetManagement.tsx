@@ -340,7 +340,7 @@ export default function IndustryTargetManagement() {
               <label className="text-sm font-medium">レベル選択</label>
               <SimpleSelect 
                 value={selectedLevel} 
-                onValueChange={(value) => setSelectedLevel(value as typeof selectedLevel)} 
+                onValueChange={(value: string) => setSelectedLevel(value as typeof selectedLevel)} 
                 className="w-full"
               >
                 <SimpleSelectItem value="basic">🌱 Basic (基礎)</SimpleSelectItem>

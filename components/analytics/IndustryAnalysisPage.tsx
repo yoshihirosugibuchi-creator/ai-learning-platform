@@ -173,7 +173,7 @@ export default function IndustryAnalysisPage({ refreshTrigger = 0 }: IndustryAna
               <label className="text-sm font-medium">目標レベル</label>
               <SimpleSelect
                 value={selectedLevel}
-                onValueChange={(value) => setSelectedLevel(value as typeof selectedLevel)}
+                onValueChange={(value: string) => setSelectedLevel(value as typeof selectedLevel)}
                 className="w-full"
               >
                 <SimpleSelectItem value="basic">🌱 Basic (基礎)</SimpleSelectItem>

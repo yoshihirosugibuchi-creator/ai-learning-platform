@@ -1,0 +1,564 @@
+{
+  "id": "finance_basics_course",
+  "title": "ビジネス金融基礎",
+  "description": "現場で使える金融・会計の基礎知識を5つのテーマで学習",
+  "estimatedDays": 14,
+  "difficulty": "basic",
+  "icon": "💰",
+  "color": "#F59E0B",
+  "displayOrder": 1,
+  "status": "available",
+  "genres": [
+    {
+      "id": "finance_basics_genre",
+      "title": "ビジネス金融基礎",
+      "description": "計数管理からキャッシュフローまで、現場で使える金融知識",
+      "displayOrder": 1,
+      "themes": [
+        {
+          "id": "number_management_basics",
+          "title": "計数管理の基礎理解",
+          "description": "ビジネスにおける数字の意味とKPIの基本概念",
+          "displayOrder": 1,
+          "sessions": [
+            {
+              "id": "number_basics_session",
+              "title": "計数管理とは何か：ビジネスにおける数字の意味",
+              "displayOrder": 1,
+              "contents": [
+                {
+                  "id": "number_basics_content_1",
+                  "type": "text",
+                  "title": "計数管理とは",
+                  "order": 1
+                },
+                {
+                  "id": "number_basics_content_2",
+                  "type": "key_points",
+                  "title": "計数管理の重要性",
+                  "order": 2
+                },
+                {
+                  "id": "number_basics_content_3",
+                  "type": "example",
+                  "title": "実例：売上管理における計数管理",
+                  "order": 3
+                }
+              ],
+              "quiz": {
+                "id": "number_basics_quiz_1",
+                "question": "計数管理の主な目的として最も適切でないものは？",
+                "options": [
+                  "経営の意思決定支援",
+                  "問題の早期発見",
+                  "社員の査定評価",
+                  "改善効果の測定"
+                ],
+                "correct": 2,
+                "explanation": "計数管理の目的は客観的事実に基づく経営改善であり、社員の査定評価は副次的な活用であって主目的ではありません。"
+              }
+            },
+            {
+              "id": "kpi_basics_session",
+              "title": "KPI（重要業績評価指標）の基本理解",
+              "displayOrder": 2,
+              "contents": [
+                {
+                  "id": "kpi_basics_content_1",
+                  "type": "text",
+                  "title": "KPIの基本概念",
+                  "order": 1
+                },
+                {
+                  "id": "kpi_basics_content_2",
+                  "type": "key_points",
+                  "title": "良いKPIの条件",
+                  "order": 2
+                },
+                {
+                  "id": "kpi_basics_content_3",
+                  "type": "example",
+                  "title": "部門別KPI設計例",
+                  "order": 3
+                }
+              ],
+              "quiz": {
+                "id": "kpi_basics_quiz_1",
+                "question": "SMART原則に含まれない要素は？",
+                "options": [
+                  "Specific（具体的）",
+                  "Measurable（測定可能）",
+                  "Simple（単純）",
+                  "Time-bound（期限設定）"
+                ],
+                "correct": 2,
+                "explanation": "SMART原則はSpecific、Measurable、Achievable、Relevant、Time-boundの5要素です。Simpleは含まれません。"
+              }
+            },
+            {
+              "id": "number_practice_session",
+              "title": "実践演習：計数管理の基本概念確認",
+              "displayOrder": 3,
+              "contents": [
+                {
+                  "id": "number_practice_content_1",
+                  "type": "text",
+                  "title": "計数管理の実践ステップ",
+                  "order": 1
+                },
+                {
+                  "id": "number_practice_content_2",
+                  "type": "example",
+                  "title": "練習問題：KPI設計",
+                  "order": 2
+                }
+              ],
+              "quiz": {
+                "id": "number_practice_quiz_1",
+                "question": "計数管理の実践ステップで最初に行うべきことは？",
+                "options": [
+                  "データ収集体制の構築",
+                  "目的の明確化",
+                  "指標の選定",
+                  "分析・報告の仕組み化"
+                ],
+                "correct": 1,
+                "explanation": "計数管理では、まず「何のために数字を管理するのか」という目的を明確にすることが最初のステップです。"
+              }
+            }
+          ]
+        },
+        {
+          "id": "profit_loss_statement",
+          "title": "損益計算書(PL)の理解",
+          "description": "損益計算書の構造と読み方、利益分析の基本",
+          "displayOrder": 2,
+          "sessions": [
+            {
+              "id": "pl_structure_session",
+              "title": "損益計算書の構造と読み方の基本",
+              "displayOrder": 1,
+              "contents": [
+                {
+                  "id": "pl_structure_content_1",
+                  "type": "text",
+                  "title": "損益計算書の基本構造",
+                  "order": 1
+                },
+                {
+                  "id": "pl_structure_content_2",
+                  "type": "key_points",
+                  "title": "5つの利益の意味",
+                  "order": 2
+                },
+                {
+                  "id": "pl_structure_content_3",
+                  "type": "example",
+                  "title": "PL構造の実例",
+                  "order": 3
+                }
+              ],
+              "quiz": {
+                "id": "pl_structure_quiz_1",
+                "question": "損益計算書の基本等式として正しいものは？",
+                "options": [
+                  "資産 = 負債 + 純資産",
+                  "収益 - 費用 = 利益",
+                  "現金流入 - 現金流出 = 現金増減",
+                  "売上 = 原価 + 利益"
+                ],
+                "correct": 1,
+                "explanation": "損益計算書の基本等式は「収益 - 費用 = 利益」です。「資産 = 負債 + 純資産」は貸借対照表の等式です。"
+              }
+            },
+            {
+              "id": "pl_analysis_session",
+              "title": "売上・費用・利益の関係性と分析方法",
+              "displayOrder": 2,
+              "contents": [
+                {
+                  "id": "pl_analysis_content_1",
+                  "type": "text",
+                  "title": "収益性分析の基本",
+                  "order": 1
+                },
+                {
+                  "id": "pl_analysis_content_2",
+                  "type": "key_points",
+                  "title": "重要な分析指標",
+                  "order": 2
+                },
+                {
+                  "id": "pl_analysis_content_3",
+                  "type": "example",
+                  "title": "収益性改善の着眼点",
+                  "order": 3
+                }
+              ],
+              "quiz": {
+                "id": "pl_analysis_quiz_1",
+                "question": "営業利益率が前年5%から当年8%に上昇した場合、最も適切な評価は？",
+                "options": [
+                  "収益性が大幅改善",
+                  "一概に良いとは言えない",
+                  "業界平均との比較が必要",
+                  "B・Cの両方が正しい"
+                ],
+                "correct": 3,
+                "explanation": "利益率の改善は良い傾向ですが、業界平均や競合他社との比較、改善の持続可能性なども含めた総合的な評価が必要です。"
+              }
+            },
+            {
+              "id": "pl_practice_session",
+              "title": "PL分析演習：実際の財務諸表を読み解く",
+              "displayOrder": 3,
+              "contents": [
+                {
+                  "id": "pl_practice_content_1",
+                  "type": "example",
+                  "title": "ケーススタディ：B社PL分析",
+                  "order": 1
+                }
+              ],
+              "quiz": {
+                "id": "pl_practice_quiz_1",
+                "question": "B社の2023年営業利益率は？（売上15,000万円、営業利益1,200万円）",
+                "options": [
+                  "6%",
+                  "8%",
+                  "10%",
+                  "12%"
+                ],
+                "correct": 1,
+                "explanation": "営業利益率 = 営業利益 ÷ 売上高 = 1,200万円 ÷ 15,000万円 = 8%"
+              }
+            }
+          ]
+        },
+        {
+          "id": "balance_sheet_understanding",
+          "title": "貸借対照表(BS)の理解",
+          "description": "貸借対照表の構造と財務安全性の分析手法",
+          "displayOrder": 3,
+          "sessions": [
+            {
+              "id": "bs_structure_session",
+              "title": "貸借対照表の構造：資産・負債・純資産",
+              "displayOrder": 1,
+              "contents": [
+                {
+                  "id": "bs_structure_content_1",
+                  "type": "text",
+                  "title": "貸借対照表の基本構造",
+                  "order": 1
+                },
+                {
+                  "id": "bs_structure_content_2",
+                  "type": "key_points",
+                  "title": "BS3要素の詳細",
+                  "order": 2
+                },
+                {
+                  "id": "bs_structure_content_3",
+                  "type": "example",
+                  "title": "BS構造の実例",
+                  "order": 3
+                }
+              ],
+              "quiz": {
+                "id": "bs_structure_quiz_1",
+                "question": "貸借対照表の基本等式として正しいものは？",
+                "options": [
+                  "資産 = 負債 + 純資産",
+                  "流動資産 = 流動負債 + 固定資産",
+                  "資産 = 現金 + その他資産",
+                  "負債 = 流動負債 + 固定負債"
+                ],
+                "correct": 0,
+                "explanation": "貸借対照表の基本等式は「資産 = 負債 + 純資産」です。この等式は常に成立します。"
+              }
+            },
+            {
+              "id": "bs_ratios_session",
+              "title": "財務安全性の分析：流動比率と自己資本比率",
+              "displayOrder": 2,
+              "contents": [
+                {
+                  "id": "bs_ratios_content_1",
+                  "type": "text",
+                  "title": "財務安全性の分析指標",
+                  "order": 1
+                },
+                {
+                  "id": "bs_ratios_content_2",
+                  "type": "key_points",
+                  "title": "重要な財務比率",
+                  "order": 2
+                },
+                {
+                  "id": "bs_ratios_content_3",
+                  "type": "example",
+                  "title": "財務比率による評価",
+                  "order": 3
+                }
+              ],
+              "quiz": {
+                "id": "bs_ratios_quiz_1",
+                "question": "流動比率150%の意味として最も適切なものは？",
+                "options": [
+                  "流動資産が流動負債の1.5倍",
+                  "短期支払能力に余裕がある",
+                  "一般的に健全な水準",
+                  "上記すべて"
+                ],
+                "correct": 3,
+                "explanation": "流動比率150%は、流動資産が流動負債の1.5倍あることを示し、短期支払能力に余裕がある健全な水準です。"
+              }
+            },
+            {
+              "id": "bs_practice_session",
+              "title": "BS分析演習：企業の財務体質を評価する",
+              "displayOrder": 3,
+              "contents": [
+                {
+                  "id": "bs_practice_content_1",
+                  "type": "example",
+                  "title": "ケーススタディ：D社財務体質評価",
+                  "order": 1
+                }
+              ],
+              "quiz": {
+                "id": "bs_practice_quiz_1",
+                "question": "D社の流動比率は？（流動資産1,800万円、流動負債2,200万円）",
+                "options": [
+                  "81.8%",
+                  "90.0%",
+                  "122.2%",
+                  "計算不可"
+                ],
+                "correct": 0,
+                "explanation": "流動比率 = 流動資産 ÷ 流動負債 = 1,800万円 ÷ 2,200万円 = 81.8%（短期支払能力に不安あり）"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cash_flow_management",
+          "title": "キャッシュフロー",
+          "description": "キャッシュフロー計算書の理解と資金繰り分析",
+          "displayOrder": 4,
+          "sessions": [
+            {
+              "id": "cf_structure_session",
+              "title": "キャッシュフロー計算書の基本構造",
+              "displayOrder": 1,
+              "contents": [
+                {
+                  "id": "cf_structure_content_1",
+                  "type": "text",
+                  "title": "キャッシュフロー計算書の構造",
+                  "order": 1
+                },
+                {
+                  "id": "cf_structure_content_2",
+                  "type": "key_points",
+                  "title": "3つのキャッシュフローの意味",
+                  "order": 2
+                },
+                {
+                  "id": "cf_structure_content_3",
+                  "type": "example",
+                  "title": "CF計算書の実例",
+                  "order": 3
+                }
+              ],
+              "quiz": {
+                "id": "cf_structure_quiz_1",
+                "question": "キャッシュフロー計算書の3区分に含まれないものは？",
+                "options": [
+                  "営業活動CF",
+                  "投資活動CF",
+                  "財務活動CF",
+                  "特別活動CF"
+                ],
+                "correct": 3,
+                "explanation": "キャッシュフロー計算書は営業活動、投資活動、財務活動の3区分で構成されます。特別活動CFという区分はありません。"
+              }
+            },
+            {
+              "id": "cf_categories_session",
+              "title": "営業・投資・財務CF：3つの区分の理解",
+              "displayOrder": 2,
+              "contents": [
+                {
+                  "id": "cf_categories_content_1",
+                  "type": "text",
+                  "title": "営業・投資・財務CFの特徴",
+                  "order": 1
+                },
+                {
+                  "id": "cf_categories_content_2",
+                  "type": "key_points",
+                  "title": "CFパターン分析",
+                  "order": 2
+                },
+                {
+                  "id": "cf_categories_content_3",
+                  "type": "example",
+                  "title": "ステージ別CF戦略",
+                  "order": 3
+                }
+              ],
+              "quiz": {
+                "id": "cf_categories_quiz_1",
+                "question": "健全な成長企業のCFパターンとして最も適切なものは？",
+                "options": [
+                  "営業CF：+、投資CF：+、財務CF：+",
+                  "営業CF：+、投資CF：-、財務CF：±",
+                  "営業CF：-、投資CF：-、財務CF：+",
+                  "営業CF：+、投資CF：+、財務CF：-"
+                ],
+                "correct": 1,
+                "explanation": "健全な成長企業は、本業で現金を創出し（営業CF：+）、将来への投資を実行（投資CF：-）するパターンが理想的です。"
+              }
+            },
+            {
+              "id": "cf_practice_session",
+              "title": "CF分析演習：企業の資金繰りを評価",
+              "displayOrder": 3,
+              "contents": [
+                {
+                  "id": "cf_practice_content_1",
+                  "type": "example",
+                  "title": "ケーススタディ：F社CF分析",
+                  "order": 1
+                }
+              ],
+              "quiz": {
+                "id": "cf_practice_quiz_1",
+                "question": "F社2023年のフリーキャッシュフローは？（営業CF +150、投資CF -200）",
+                "options": [
+                  "-50百万円",
+                  "+50百万円",
+                  "+150百万円",
+                  "+350百万円"
+                ],
+                "correct": 0,
+                "explanation": "フリーキャッシュフロー = 営業CF + 投資CF = +150 + (-200) = -50百万円（投資が現金創出を上回る）"
+              }
+            }
+          ]
+        },
+        {
+          "id": "field_numbers_practical",
+          "title": "現場の数字",
+          "description": "現場で使う重要指標と実践的な数字活用法",
+          "displayOrder": 5,
+          "sessions": [
+            {
+              "id": "field_indicators_session",
+              "title": "現場で使う重要指標：売上高・粗利率・回転率",
+              "displayOrder": 1,
+              "contents": [
+                {
+                  "id": "field_indicators_content_1",
+                  "type": "text",
+                  "title": "現場で使う重要指標",
+                  "order": 1
+                },
+                {
+                  "id": "field_indicators_content_2",
+                  "type": "key_points",
+                  "title": "現場の主要指標",
+                  "order": 2
+                },
+                {
+                  "id": "field_indicators_content_3",
+                  "type": "example",
+                  "title": "業種別重要指標例",
+                  "order": 3
+                }
+              ],
+              "quiz": {
+                "id": "field_indicators_quiz_1",
+                "question": "在庫回転率の計算式として正しいものは？",
+                "options": [
+                  "年間売上高 ÷ 平均在庫",
+                  "年間売上原価 ÷ 平均在庫",
+                  "平均在庫 ÷ 年間売上高",
+                  "平均在庫 ÷ 年間売上原価"
+                ],
+                "correct": 1,
+                "explanation": "在庫回転率 = 年間売上原価 ÷ 平均在庫　で計算します。在庫の効率的な活用度を表す重要指標です。"
+              }
+            },
+            {
+              "id": "department_management_session",
+              "title": "部門別管理と予実管理の基本手法",
+              "displayOrder": 2,
+              "contents": [
+                {
+                  "id": "department_management_content_1",
+                  "type": "text",
+                  "title": "部門別管理の基本",
+                  "order": 1
+                },
+                {
+                  "id": "department_management_content_2",
+                  "type": "key_points",
+                  "title": "予実管理のポイント",
+                  "order": 2
+                },
+                {
+                  "id": "department_management_content_3",
+                  "type": "example",
+                  "title": "部門別管理システム例",
+                  "order": 3
+                }
+              ],
+              "quiz": {
+                "id": "department_management_quiz_1",
+                "question": "部門別管理で最も重要なポイントは？",
+                "options": [
+                  "部門間の競争促進",
+                  "明確な目標設定と責任の所在",
+                  "部門の独立性確保",
+                  "統一的な評価基準適用"
+                ],
+                "correct": 1,
+                "explanation": "部門別管理では、各部門に明確な目標設定と責任の所在を確立することが最も重要です。"
+              }
+            },
+            {
+              "id": "field_practice_session",
+              "title": "総合演習：現場数字を活用した意思決定",
+              "displayOrder": 3,
+              "contents": [
+                {
+                  "id": "field_practice_content_1",
+                  "type": "example",
+                  "title": "ケーススタディ：G社数字活用改善",
+                  "order": 1
+                }
+              ],
+              "quiz": {
+                "id": "field_practice_quiz_1",
+                "question": "G社A店の客単価は？（売上500万円、客数1,000人）",
+                "options": [
+                  "3,000円",
+                  "4,000円",
+                  "5,000円",
+                  "6,000円"
+                ],
+                "correct": 2,
+                "explanation": "客単価 = 売上 ÷ 客数 = 500万円 ÷ 1,000人 = 5,000円"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lastUpdated": "2025-12-08T05:10:25.153Z",
+  "source": "database_sync"
+}

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { ArrowLeft, Play, Clock, CheckCircle, Circle, Award, Star, Tag } from 'lucide-react'
+import { ArrowLeft, Play, Clock, CheckCircle, Circle, Award, Star, Tag, Eye, Edit } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
@@ -43,8 +43,15 @@ export default function CourseDetailPage() {
     }>
     uniqueMainCategories: MainCategory[]
   } | null>(null)
+  const [isPreviewMode, setIsPreviewMode] = useState(false)
 
   const courseId = params.courseId as string
+
+  // プレビューモードの検出
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    setIsPreviewMode(urlParams.get('preview') === 'admin')
+  }, [])
 
   // 新設計: course_session_completions テーブルから完了状態を取得
   const loadSessionCompletions = useCallback(async (userId: string) => {
@@ -170,15 +177,32 @@ export default function CourseDetailPage() {
 
       <main className="container mx-auto px-4 py-6">
         <div className="space-y-6">
-          {/* Back Button */}
-          <Button 
-            variant="ghost" 
-            onClick={() => router.push('/learning')}
-            className="flex items-center space-x-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>学習コンテンツ一覧</span>
-          </Button>
+          {/* Back Button - プレビューモード対応 */}
+          {isPreviewMode ? (
+            <div className="flex items-center space-x-4">
+              <div className="bg-orange-100 text-orange-800 px-3 py-2 rounded-lg flex items-center space-x-2 text-sm font-medium">
+                <Eye className="h-4 w-4" />
+                <span>プレビューモード</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                onClick={() => router.push('/admin/courses')}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>コース学習メンテナンスに戻る</span>
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              variant="ghost" 
+              onClick={() => router.push('/learning')}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>学習コンテンツ一覧</span>
+            </Button>
+          )}
 
           {/* Course Header */}
           <Card style={{ borderTop: `4px solid ${course.color}` }}>
@@ -204,6 +228,16 @@ export default function CourseDetailPage() {
                     </div>
                   </div>
                 </div>
+                {/* プレビューモード時の編集ボタン */}
+                {isPreviewMode && (
+                  <Button 
+                    onClick={() => router.push(`/admin/courses/${courseId}/edit`)}
+                    className="flex items-center space-x-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    <span>コース編集</span>
+                  </Button>
+                )}
               </div>
               <p className="text-muted-foreground leading-relaxed">
                 {course.description}

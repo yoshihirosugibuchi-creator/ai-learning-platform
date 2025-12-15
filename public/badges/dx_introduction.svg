@@ -7,7 +7,7 @@
     </linearGradient>
     <linearGradient id="ribbonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981CC;stop-opacity:1" />
     </linearGradient>
     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
       <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
@@ -32,34 +32,16 @@
     <path d="M 105 75 L 107 80 L 112 80 L 108 83 L 110 88 L 105 85 L 100 88 L 102 83 L 98 80 L 103 80 Z"/>
   </g>
   
-  <!-- Rocket/DX Icon -->
-  <g transform="translate(60, 60)" fill="#8B5CF6">
-    <!-- Rocket body -->
-    <ellipse cx="0" cy="0" rx="4" ry="10" fill="#8B5CF6"/>
-    <!-- Rocket tip -->
-    <path d="M -4 -10 L 0 -15 L 4 -10 Z" fill="#8B5CF6"/>
-    <!-- Rocket fins -->
-    <path d="M -4 6 L -8 10 L -4 10 Z" fill="#A855F7"/>
-    <path d="M 4 6 L 8 10 L 4 10 Z" fill="#A855F7"/>
-    <!-- Window -->
-    <circle cx="0" cy="-3" r="2" fill="#FFFFFF" stroke="#7C3AED" stroke-width="0.5"/>
-    <!-- Flame -->
-    <g opacity="0.9">
-      <ellipse cx="0" cy="13" rx="2" ry="3" fill="#F97316"/>
-      <ellipse cx="0" cy="14" rx="1" ry="2" fill="#FBBF24"/>
-    </g>
-  </g>
-  
-  <!-- Title -->
-  <text x="60" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#B45309">
-    DX
-  </text>
-  <text x="60" y="110" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#B45309">
-    INTRODUCTION
-  </text>
+  <!-- Course Title in Center -->
+  <text x="60" y="57" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#10B981">
+      dx
+    </text>
+    <text x="60" y="75" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#10B981">
+      introduction
+    </text>
   
   <!-- Achievement Text -->
-  <text x="60" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="6" fill="#059669">
+  <text x="60" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="6" fill="#10B981">
     修了証
   </text>
 </svg>

@@ -1,0 +1,301 @@
+{
+  "course": {
+    "id": "finance_basics_course",
+    "title": "ビジネス金融基礎",
+    "description": "現場で使える金融・会計の基礎知識を5つのテーマで学習",
+    "difficulty": "basic",
+    "estimated_days": 14,
+    "icon": "💰",
+    "color": "#F59E0B",
+    "status": "active",
+    "badge_data": {
+      "id": "finance_basics_badge",
+      "icon": "💰",
+      "color": "#F59E0B",
+      "title": "金融基礎マスター",
+      "description": "ビジネスに必要な金融・会計の基礎知識を習得"
+    }
+  },
+  "genre": {
+    "id": "finance_basics_genre",
+    "course_id": "finance_basics_course",
+    "title": "ビジネス金融基礎",
+    "description": "計数管理からキャッシュフローまで、現場で使える金融知識",
+    "category_id": "finance",
+    "subcategory_id": "management_accounting_kpi",
+    "estimated_days": 14,
+    "display_order": 1,
+    "badge_data": {
+      "id": "finance_basics_genre_badge",
+      "icon": "📊",
+      "color": "#F59E0B",
+      "title": "金融基礎実践者",
+      "description": "ビジネス現場で使える金融・会計知識を実践的に活用するスキル"
+    }
+  },
+  "themes": [
+    {
+      "id": "number_management_basics",
+      "genre_id": "finance_basics_genre",
+      "title": "計数管理の基礎理解",
+      "description": "ビジネスにおける数字の意味とKPIの基本概念",
+      "estimated_minutes": 60,
+      "display_order": 1,
+      "reward_card_data": {
+        "id": "number_management_card",
+        "icon": "📊",
+        "color": "#F59E0B",
+        "title": "計数管理基礎",
+        "summary": "ビジネスにおける数字の読み方と重要業績評価指標の理解",
+        "keyPoints": [
+          "計数管理の基本概念とビジネスでの意味",
+          "KPI設定と測定の基本原則",
+          "数字を通じた経営状況の把握"
+        ]
+      }
+    },
+    {
+      "id": "profit_loss_statement",
+      "genre_id": "finance_basics_genre",
+      "title": "損益計算書(PL)の理解",
+      "description": "損益計算書の構造と読み方、利益分析の基本",
+      "estimated_minutes": 75,
+      "display_order": 2,
+      "reward_card_data": {
+        "id": "pl_analysis_card",
+        "icon": "📈",
+        "color": "#10B981",
+        "title": "PL分析マスター",
+        "summary": "損益計算書を読み解き、収益性を分析する技術",
+        "keyPoints": [
+          "売上・費用・利益の関係性理解",
+          "損益分岐点と収益構造分析",
+          "実際のPLデータから経営判断につなげる手法"
+        ]
+      }
+    },
+    {
+      "id": "balance_sheet_understanding",
+      "genre_id": "finance_basics_genre",
+      "title": "貸借対照表(BS)の理解",
+      "description": "貸借対照表の構造と財務安全性の分析手法",
+      "estimated_minutes": 75,
+      "display_order": 3,
+      "reward_card_data": {
+        "id": "bs_analysis_card",
+        "icon": "⚖️",
+        "color": "#3B82F6",
+        "title": "BS分析エキスパート",
+        "summary": "貸借対照表から企業の財務体質を評価する分析技術",
+        "keyPoints": [
+          "資産・負債・純資産の関係性",
+          "流動比率・自己資本比率等の指標理解",
+          "財務安全性と成長性のバランス評価"
+        ]
+      }
+    },
+    {
+      "id": "cash_flow_management",
+      "genre_id": "finance_basics_genre",
+      "title": "キャッシュフロー",
+      "description": "キャッシュフロー計算書の理解と資金繰り分析",
+      "estimated_minutes": 75,
+      "display_order": 4,
+      "reward_card_data": {
+        "id": "cashflow_card",
+        "icon": "💸",
+        "color": "#8B5CF6",
+        "title": "キャッシュフロー分析",
+        "summary": "企業の資金の流れを把握し、財務健全性を評価する技術",
+        "keyPoints": [
+          "営業・投資・財務CFの3区分理解",
+          "キャッシュフローパターン分析",
+          "資金繰り予測と投資判断への活用"
+        ]
+      }
+    },
+    {
+      "id": "field_numbers_practical",
+      "genre_id": "finance_basics_genre",
+      "title": "現場の数字",
+      "description": "現場で使う重要指標と実践的な数字活用法",
+      "estimated_minutes": 80,
+      "display_order": 5,
+      "reward_card_data": {
+        "id": "field_numbers_card",
+        "icon": "🎯",
+        "color": "#DC2626",
+        "title": "現場数字活用",
+        "summary": "現場で使う重要指標を理解し、実践的な数字管理を行う技術",
+        "keyPoints": [
+          "売上高・粗利率・回転率等の現場指標",
+          "部門別管理と予実管理の実践",
+          "数字を活用した意思決定プロセス"
+        ]
+      }
+    }
+  ],
+  "sessions": [
+    {
+      "id": "number_basics_session",
+      "theme_id": "number_management_basics",
+      "title": "計数管理とは何か：ビジネスにおける数字の意味",
+      "session_type": "course_learning",
+      "display_order": 1,
+      "estimated_minutes": 20
+    },
+    {
+      "id": "kpi_basics_session",
+      "theme_id": "number_management_basics",
+      "title": "KPI（重要業績評価指標）の基本理解",
+      "session_type": "course_learning", 
+      "display_order": 2,
+      "estimated_minutes": 25
+    },
+    {
+      "id": "number_practice_session",
+      "theme_id": "number_management_basics",
+      "title": "実践演習：計数管理の基本概念確認",
+      "session_type": "course_learning",
+      "display_order": 3,
+      "estimated_minutes": 15
+    },
+    {
+      "id": "pl_structure_session",
+      "theme_id": "profit_loss_statement",
+      "title": "損益計算書の構造と読み方の基本",
+      "session_type": "course_learning",
+      "display_order": 1,
+      "estimated_minutes": 30
+    },
+    {
+      "id": "pl_analysis_session",
+      "theme_id": "profit_loss_statement",
+      "title": "売上・費用・利益の関係性と分析方法",
+      "session_type": "course_learning",
+      "display_order": 2,
+      "estimated_minutes": 25
+    },
+    {
+      "id": "pl_practice_session",
+      "theme_id": "profit_loss_statement",
+      "title": "PL分析演習：実際の財務諸表を読み解く",
+      "session_type": "course_learning",
+      "display_order": 3,
+      "estimated_minutes": 20
+    },
+    {
+      "id": "bs_structure_session",
+      "theme_id": "balance_sheet_understanding",
+      "title": "貸借対照表の構造：資産・負債・純資産",
+      "session_type": "course_learning",
+      "display_order": 1,
+      "estimated_minutes": 25
+    },
+    {
+      "id": "bs_ratios_session",
+      "theme_id": "balance_sheet_understanding", 
+      "title": "財務安全性の分析：流動比率と自己資本比率",
+      "session_type": "course_learning",
+      "display_order": 2,
+      "estimated_minutes": 30
+    },
+    {
+      "id": "bs_practice_session",
+      "theme_id": "balance_sheet_understanding",
+      "title": "BS分析演習：企業の財務体質を評価する",
+      "session_type": "course_learning",
+      "display_order": 3,
+      "estimated_minutes": 20
+    },
+    {
+      "id": "cf_structure_session",
+      "theme_id": "cash_flow_management",
+      "title": "キャッシュフロー計算書の基本構造",
+      "session_type": "course_learning",
+      "display_order": 1,
+      "estimated_minutes": 25
+    },
+    {
+      "id": "cf_categories_session",
+      "theme_id": "cash_flow_management",
+      "title": "営業・投資・財務CF：3つの区分の理解",
+      "session_type": "course_learning",
+      "display_order": 2,
+      "estimated_minutes": 30
+    },
+    {
+      "id": "cf_practice_session",
+      "theme_id": "cash_flow_management",
+      "title": "CF分析演習：企業の資金繰りを評価",
+      "session_type": "course_learning",
+      "display_order": 3,
+      "estimated_minutes": 20
+    },
+    {
+      "id": "field_indicators_session",
+      "theme_id": "field_numbers_practical",
+      "title": "現場で使う重要指標：売上高・粗利率・回転率",
+      "session_type": "course_learning",
+      "display_order": 1,
+      "estimated_minutes": 25
+    },
+    {
+      "id": "department_management_session",
+      "theme_id": "field_numbers_practical",
+      "title": "部門別管理と予実管理の基本手法",
+      "session_type": "course_learning",
+      "display_order": 2,
+      "estimated_minutes": 30
+    },
+    {
+      "id": "field_practice_session",
+      "theme_id": "field_numbers_practical",
+      "title": "総合演習：現場数字を活用した意思決定",
+      "session_type": "course_learning",
+      "display_order": 3,
+      "estimated_minutes": 25
+    }
+  ],
+  "sessionContents": [
+    {
+      "id": "number_basics_content_1",
+      "session_id": "number_basics_session",
+      "content_type": "text",
+      "title": "計数管理とは",
+      "content": "計数管理とは、ビジネスにおける重要な数字を継続的に測定・分析・管理することで、経営の意思決定を支援する活動です。「計数」とは「数えて把握する」という意味で、売上、利益、コスト、品質、時間など、事業運営に関わるあらゆる数値が対象となります。計数管理により、現状の正確な把握、問題の早期発見、改善の効果測定が可能になります。",
+      "duration": 3,
+      "display_order": 1
+    },
+    {
+      "id": "number_basics_content_2",
+      "session_id": "number_basics_session",
+      "content_type": "key_points",
+      "title": "計数管理の重要性",
+      "content": "• 客観的事実に基づく意思決定の実現\n• 目標と実績の差異分析による改善活動\n• ステークホルダーへの説明責任の履行\n• 予測精度の向上と計画策定の高度化",
+      "duration": 2,
+      "display_order": 2
+    },
+    {
+      "id": "number_basics_content_3",
+      "session_id": "number_basics_session",
+      "content_type": "example",
+      "title": "実例：売上管理における計数管理",
+      "content": "【状況】月間売上目標1000万円の営業チーム\n【計数管理の実践】\n✓ 日次売上実績の把握（累計進捗率）\n✓ 顧客別・商品別売上分析\n✓ 受注確度別パイプライン管理\n✓ 前年同月比での成長率分析\n【結果】月後半での挽回策立案と目標達成率向上",
+      "duration": 4,
+      "display_order": 3
+    }
+  ],
+  "sessionQuizzes": [
+    {
+      "id": "number_basics_quiz_1",
+      "session_id": "number_basics_session",
+      "question": "計数管理の主な目的として最も適切でないものは？",
+      "options": "[\"経営の意思決定支援\",\"問題の早期発見\",\"社員の査定評価\",\"改善効果の測定\"]",
+      "correct_answer": 2,
+      "explanation": "計数管理の目的は客観的事実に基づく経営改善であり、社員の査定評価は副次的な活用であって主目的ではありません。",
+      "quiz_type": "single_choice",
+      "display_order": 0
+    }
+  ]
+}

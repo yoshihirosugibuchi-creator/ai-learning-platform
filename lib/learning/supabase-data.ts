@@ -220,6 +220,11 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
       .single()
     
     if (courseError) {
+      // PGRST116エラー（データなし）の場合は適切に処理
+      if (courseError.code === 'PGRST116') {
+        console.log(`⚠️ Course not found: ${courseId}`)
+        return null
+      }
       console.error('❌ Course fetch error:', courseError)
       throw courseError
     }

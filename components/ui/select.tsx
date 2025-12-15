@@ -1,53 +1,21 @@
 "use client"
 
 import * as React from "react"
-import { ChevronDown } from "lucide-react"
+import * as SelectPrimitive from "@radix-ui/react-select"
+import { Check, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-// Simple native select implementation
-interface SelectProps {
-  value?: string
-  onValueChange?: (value: string) => void
-  children: React.ReactNode
-}
+const Select = SelectPrimitive.Root
 
-interface SelectTriggerProps {
-  className?: string
-  children: React.ReactNode
-}
+const SelectGroup = SelectPrimitive.Group
 
-interface SelectContentProps {
-  children: React.ReactNode
-}
-
-interface SelectItemProps {
-  value: string
-  children: React.ReactNode
-  onClick?: () => void
-}
-
-interface SelectValueProps {
-  placeholder?: string
-}
-
-const Select = ({ value, onValueChange, children }: SelectProps) => {
-  return (
-    <div className="relative">
-      {React.Children.map(children, child => {
-        if (React.isValidElement(child)) {
-          return React.cloneElement(child, { value, onValueChange } as Record<string, unknown>)
-        }
-        return child
-      })}
-    </div>
-  )
-}
+const SelectValue = SelectPrimitive.Value
 
 const SelectTrigger = React.forwardRef<
-  HTMLDivElement,
-  SelectTriggerProps & { value?: string; onValueChange?: (value: string) => void }
->(({ className, children, value: _value, onValueChange: _onValueChange, ...props }, ref) => (
-  <div
+  React.ElementRef<typeof SelectPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
+>(({ className, children, ...props }, ref) => (
+  <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
       "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
@@ -56,33 +24,89 @@ const SelectTrigger = React.forwardRef<
     {...props}
   >
     {children}
-    <ChevronDown className="h-4 w-4 opacity-50" />
-  </div>
+    <SelectPrimitive.Icon asChild>
+      <ChevronDown className="h-4 w-4 opacity-50" />
+    </SelectPrimitive.Icon>
+  </SelectPrimitive.Trigger>
 ))
-SelectTrigger.displayName = "SelectTrigger"
+SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
 
-const SelectContent = ({ children }: SelectContentProps) => {
-  return (
-    <div className="absolute z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
-      <div className="p-1">
+const SelectContent = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
+>(({ className, children, position = "popper", ...props }, ref) => (
+  <SelectPrimitive.Portal>
+    <SelectPrimitive.Content
+      ref={ref}
+      className={cn(
+        "relative z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        position === "popper" &&
+          "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
+        className
+      )}
+      position={position}
+      {...props}
+    >
+      <SelectPrimitive.Viewport
+        className={cn(
+          "p-1",
+          position === "popper" &&
+            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
+        )}
+      >
         {children}
-      </div>
-    </div>
-  )
-}
+      </SelectPrimitive.Viewport>
+    </SelectPrimitive.Content>
+  </SelectPrimitive.Portal>
+))
+SelectContent.displayName = SelectPrimitive.Content.displayName
 
-const SelectItem = ({ value: _value, children, onClick }: SelectItemProps) => (
-  <div
-    className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
-    onClick={onClick}
+const SelectLabel = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Label>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.Label
+    ref={ref}
+    className={cn("py-1.5 pl-8 pr-2 text-sm font-semibold", className)}
+    {...props}
+  />
+))
+SelectLabel.displayName = SelectPrimitive.Label.displayName
+
+const SelectItem = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
+>(({ className, children, ...props }, ref) => (
+  <SelectPrimitive.Item
+    ref={ref}
+    className={cn(
+      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      className
+    )}
+    {...props}
   >
-    {children}
-  </div>
-)
+    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+      <SelectPrimitive.ItemIndicator>
+        <Check className="h-4 w-4" />
+      </SelectPrimitive.ItemIndicator>
+    </span>
 
-const SelectValue = ({ placeholder }: SelectValueProps) => (
-  <span className="pointer-events-none">{placeholder}</span>
-)
+    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+  </SelectPrimitive.Item>
+))
+SelectItem.displayName = SelectPrimitive.Item.displayName
+
+const SelectSeparator = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Separator>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.Separator
+    ref={ref}
+    className={cn("-mx-1 my-1 h-px bg-muted", className)}
+    {...props}
+  />
+))
+SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
 // For the analytics page, let's create a simple implementation using native select
 const SimpleSelect = ({ 
@@ -122,13 +146,15 @@ const SimpleSelectItem = ({ value: _value, children }: { value: string; children
   <>{children}</>
 )
 
-// Export both implementations
 export {
   Select,
+  SelectGroup,
+  SelectValue,
   SelectTrigger,
   SelectContent,
+  SelectLabel,
   SelectItem,
-  SelectValue,
+  SelectSeparator,
   SimpleSelect,
-  SimpleSelectItem
+  SimpleSelectItem,
 }
