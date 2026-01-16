@@ -887,27 +887,27 @@ export default function LearningSession({
               {currentQuiz.options.map((option, index) => {
                 let buttonVariant: "default" | "outline" | "destructive" | "secondary" = "outline"
                 let icon = null
-                
+
                 if (showQuizResult && isAnswered) {
                   if (index === currentQuiz.correct) {
                     buttonVariant = "default"
-                    icon = <Check className="h-4 w-4" />
+                    icon = <Check className="h-4 w-4 flex-shrink-0" />
                   } else if (quizAnswers[currentQuizIndex] === option && index !== currentQuiz.correct) {
                     buttonVariant = "destructive"
-                    icon = <X className="h-4 w-4" />
+                    icon = <X className="h-4 w-4 flex-shrink-0" />
                   }
                 }
-                
+
                 return (
                   <Button
                     key={index}
                     variant={buttonVariant}
-                    className="justify-start h-auto p-4 text-left"
+                    className="justify-start h-auto p-4 text-left whitespace-normal min-h-[auto]"
                     onClick={() => !showQuizResult && handleQuizAnswer(index)}
                     disabled={showQuizResult}
                   >
-                    <div className="flex items-center justify-between w-full">
-                      <span>{option}</span>
+                    <div className="flex items-start justify-between w-full gap-2">
+                      <span className="break-words overflow-wrap-anywhere flex-1">{option}</span>
                       {icon}
                     </div>
                   </Button>
