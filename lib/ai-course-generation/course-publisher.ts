@@ -2,6 +2,7 @@ import { CourseGenerationWorkflow } from './types'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { Database } from '@/lib/database-types-official'
 import { enhanceAIGeneratedCourse, type CourseEnhancementResult } from './knowledge-card-enhancer'
+import { generateUniqueId } from '@/lib/id-generation-helper'
 
 type LearningCourse = Database['public']['Tables']['learning_courses']['Insert']
 
@@ -19,6 +20,12 @@ export interface PublishResult {
   sessionIds?: string[]
   contentIds?: string[]
   quizIds?: string[]
+  // アウトラインID → DB IDのマッピング
+  idMappings?: {
+    genres: Record<string, string>    // outline genre id → db genre id
+    themes: Record<string, string>    // outline theme id → db theme id
+    sessions: Record<string, string>  // outline session id → db session id
+  }
   error?: string
   details?: string
 }
@@ -130,9 +137,47 @@ export class CoursePublisher {
   ): Promise<PublishResult> {
     try {
       // トランザクション実行をシミュレート（実際のデータベース関数呼び出しの代替）
-      const courseId = this.generateCourseId(workflow.course_basic_info.title)
-      
-      // ナレッジカード・バッジ強化処理
+      const courseId = await generateUniqueId('course', workflow.course_basic_info.title)
+
+      // IDマッピング（アウトラインID → DB ID）- 先に全ID生成
+      const idMappings = {
+        genres: {} as Record<string, string>,
+        themes: {} as Record<string, string>,
+        sessions: {} as Record<string, string>
+      }
+
+      // 先にすべてのIDを生成（強化処理とDB挿入で同じIDを使用するため）
+      const preGeneratedIds: {
+        genres: Array<{ outlineId: string; dbId: string; title: string; description: string }>
+        themes: Array<{ outlineId: string; dbId: string; title: string; description: string; genreOutlineId: string }>
+      } = { genres: [], themes: [] }
+
+      if (workflow.outline_data) {
+        for (const genre of workflow.outline_data.genres) {
+          const genreDbId = await generateUniqueId('genre', genre.title)
+          idMappings.genres[genre.id] = genreDbId
+          preGeneratedIds.genres.push({
+            outlineId: genre.id,
+            dbId: genreDbId,
+            title: genre.title,
+            description: genre.description
+          })
+
+          for (const theme of genre.themes) {
+            const themeDbId = await generateUniqueId('theme', theme.title)
+            idMappings.themes[theme.id] = themeDbId
+            preGeneratedIds.themes.push({
+              outlineId: theme.id,
+              dbId: themeDbId,
+              title: theme.title,
+              description: theme.description,
+              genreOutlineId: genre.id
+            })
+          }
+        }
+      }
+
+      // ナレッジカード・バッジ強化処理（事前生成したIDを使用）
       let enhancements: CourseEnhancementResult | null = null
       if (workflow.outline_data) {
         try {
@@ -144,30 +189,31 @@ export class CoursePublisher {
               description: workflow.course_basic_info.description,
               estimated_days: parseInt(workflow.course_basic_info.estimated_duration || '7')
             },
-            genres: workflow.outline_data.genres.map(genre => ({
-              id: this.generateId('genre', genre.title),
-              title: genre.title,
-              description: genre.description,
+            genres: preGeneratedIds.genres.map(g => ({
+              id: g.dbId,  // 事前生成したIDを使用
+              title: g.title,
+              description: g.description,
               category_id: workflow.category_mappings?.[0]?.selected_category_id || 'general'
             })),
-            themes: workflow.outline_data.genres.flatMap(genre =>
-              genre.themes.map(theme => ({
-                id: this.generateId('theme', theme.title),
-                title: theme.title,
-                description: theme.description,
-                category_id: workflow.category_mappings?.[0]?.selected_category_id || 'general'
-              }))
-            )
+            themes: preGeneratedIds.themes.map(t => ({
+              id: t.dbId,  // 事前生成したIDを使用
+              title: t.title,
+              description: t.description,
+              category_id: workflow.category_mappings?.[0]?.selected_category_id || 'general'
+            }))
           }
-          
+
           enhancements = enhanceAIGeneratedCourse(courseData)
-          console.log('✅ [CoursePublisher] ナレッジカード・バッジ強化完了')
+          console.log('✅ [CoursePublisher] ナレッジカード・バッジ強化完了', {
+            enhancedGenres: enhancements.enhancedGenres.length,
+            enhancedThemes: enhancements.enhancedThemes.length
+          })
         } catch (enhanceError) {
           console.error('⚠️ [CoursePublisher] ナレッジカード強化エラー:', enhanceError)
           // 強化エラーは致命的でないため、処理を続行
         }
       }
-      
+
       // 1. コース作成
       const courseData = await this.createCourseData(workflow, options, enhancements?.enhancedCourse.badge_data)
       courseData.id = courseId
@@ -189,27 +235,58 @@ export class CoursePublisher {
       // 2. アウトライン承認済みの場合、ジャンル・テーマ作成
       if (workflow.outline_data && workflow.category_mappings) {
         const outlineData = workflow.outline_data
-        const categoryMapping = workflow.category_mappings[0]
 
         // ジャンル作成
         for (let i = 0; i < outlineData.genres.length; i++) {
           const genre = outlineData.genres[i]
-          const genreId = this.generateId('genre', genre.title)
+          const genreId = idMappings.genres[genre.id]  // 事前生成したIDを使用
           genreIds.push(genreId)
 
-          // 強化されたジャンルバッジデータを使用
+          // 対応するカテゴリマッピングを取得（複数の方法で試行）
+          // 方法1: genre_id でマッチング（アウトラインIDベース）
+          let categoryMapping = workflow.category_mappings.find(
+            m => m.genre_id === genre.id
+          )
+          // 方法2: genre_title でマッチング（タイトルベース - 最も堅牢）
+          if (!categoryMapping) {
+            categoryMapping = workflow.category_mappings.find(
+              m => m.genre_title === genre.title
+            )
+          }
+          // 方法3: インデックスでマッチング（display_order順）
+          if (!categoryMapping && i < workflow.category_mappings.length) {
+            categoryMapping = workflow.category_mappings[i]
+          }
+          // 方法4: フォールバック（最初のマッピング）
+          if (!categoryMapping) {
+            categoryMapping = workflow.category_mappings[0]
+          }
+
+          console.log(`📋 [CoursePublisher] Genre "${genre.title}" category mapping:`, {
+            genre_id: genre.id,
+            category_id: categoryMapping?.selected_category_id,
+            subcategory_id: categoryMapping?.selected_subcategory_id,
+            match_method: categoryMapping?.genre_id === genre.id ? 'id' :
+                          categoryMapping?.genre_title === genre.title ? 'title' : 'index/fallback'
+          })
+
+          // 強化されたジャンルバッジデータを使用（IDが一致するはず）
           const enhancedGenre = enhancements?.enhancedGenres.find(eg => eg.id === genreId)
           const genreData = {
             id: genreId,
             course_id: courseId,
             title: genre.title,
             description: genre.description,
-            category_id: categoryMapping.selected_category_id || 'general',
-            subcategory_id: categoryMapping.selected_subcategory_id,
+            category_id: categoryMapping?.selected_category_id || 'general',
+            subcategory_id: categoryMapping?.selected_subcategory_id || null,
             estimated_days: 1,
             display_order: i,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             badge_data: (enhancedGenre?.badge_data || { genre_type: 'ai_generated' }) as any
+          }
+
+          if (enhancedGenre) {
+            console.log(`✅ [CoursePublisher] ジャンル「${genre.title}」にバッジデータ適用`)
           }
 
           const { error: genreError } = await supabaseAdmin
@@ -223,10 +300,10 @@ export class CoursePublisher {
           // テーマ作成
           for (let j = 0; j < genre.themes.length; j++) {
             const theme = genre.themes[j]
-            const themeId = this.generateId('theme', theme.title)
+            const themeId = idMappings.themes[theme.id]  // 事前生成したIDを使用
             themeIds.push(themeId)
 
-            // 強化されたテーマナレッジカードデータを使用
+            // 強化されたテーマナレッジカードデータを使用（IDが一致するはず）
             const enhancedTheme = enhancements?.enhancedThemes.find(et => et.id === themeId)
             const themeData = {
               id: themeId,
@@ -243,6 +320,10 @@ export class CoursePublisher {
               }) as any
             }
 
+            if (enhancedTheme) {
+              console.log(`✅ [CoursePublisher] テーマ「${theme.title}」にナレッジカードデータ適用`)
+            }
+
             const { error: themeError } = await supabaseAdmin
               .from('learning_themes')
               .insert(themeData)
@@ -254,8 +335,9 @@ export class CoursePublisher {
             // 3. セッション作成（アウトライン承認時に実行）
             for (let k = 0; k < theme.sessions.length; k++) {
               const session = theme.sessions[k]
-              const sessionId = this.generateId('session', session.title)
+              const sessionId = await generateUniqueId('session', session.title)
               sessionIds.push(sessionId)
+              idMappings.sessions[session.id] = sessionId  // マッピング記録
 
               const sessionData = {
                 id: sessionId,
@@ -281,8 +363,10 @@ export class CoursePublisher {
                 const sessionContents = workflow.content_data.session_contents.filter(
                   content => content.session_id === session.id
                 )
-                for (const content of sessionContents) {
-                  const contentId = this.generateId('content', sessionId)
+                for (let contentIndex = 0; contentIndex < sessionContents.length; contentIndex++) {
+                  const content = sessionContents[contentIndex]
+                  // 本番環境パターン: sessionId_content_XX
+                  const contentId = `${sessionId}_content_${(contentIndex + 1).toString().padStart(2, '0')}`
                   contentIds.push(contentId)
 
                   const contentData = {
@@ -308,8 +392,10 @@ export class CoursePublisher {
                 const sessionQuizzes = workflow.content_data.session_quizzes.filter(
                   quiz => quiz.session_id === session.id
                 )
-                for (const quiz of sessionQuizzes) {
-                  const quizId = this.generateId('quiz', sessionId)
+                for (let quizIndex = 0; quizIndex < sessionQuizzes.length; quizIndex++) {
+                  const quiz = sessionQuizzes[quizIndex]
+                  // 本番環境パターン: sessionId_quiz_XX
+                  const quizId = `${sessionId}_quiz_${(quizIndex + 1).toString().padStart(2, '0')}`
                   quizIds.push(quizId)
 
                   const quizData = {
@@ -319,6 +405,7 @@ export class CoursePublisher {
                     options: quiz.options,
                     correct_answer: quiz.correct_answer,
                     explanation: quiz.explanation,
+                    quiz_type: quiz.quiz_type || 'single_choice',
                     display_order: quiz.display_order
                   }
 
@@ -343,7 +430,8 @@ export class CoursePublisher {
         themeIds,
         sessionIds,
         contentIds,
-        quizIds
+        quizIds,
+        idMappings
       }
 
     } catch (error) {
@@ -356,31 +444,6 @@ export class CoursePublisher {
     }
   }
 
-  private generateCourseId(title: string): string {
-    // English-only course ID generation
-    const sanitized = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '_')
-      .replace(/_{2,}/g, '_')
-      .replace(/^_|_$/g, '')
-      .substring(0, 50)
-    
-    const timestamp = Date.now().toString(36)
-    return `${sanitized}_${timestamp}`
-  }
-
-  private generateId(prefix: string, title: string): string {
-    // English-only ID generation
-    const sanitized = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '_')
-      .replace(/_{2,}/g, '_')
-      .replace(/^_|_$/g, '')
-      .substring(0, 30)
-    
-    const timestamp = Date.now().toString(36)
-    return `${prefix}_${sanitized}_${timestamp}`
-  }
 
   private async createCourseData(
     workflow: CourseGenerationWorkflow,
@@ -389,14 +452,14 @@ export class CoursePublisher {
     enhancedBadgeData?: any
   ): Promise<LearningCourse> {
     const courseId = options.generateIds !== false 
-      ? this.generateCourseId(workflow.course_basic_info.title)
+      ? await generateUniqueId('course', workflow.course_basic_info.title)
       : workflow.course_basic_info.title.toLowerCase().replace(/\s+/g, '_')
 
     return {
       id: courseId,
       title: workflow.course_basic_info.title,
       description: workflow.course_basic_info.description,
-      estimated_days: parseInt(workflow.course_basic_info.estimated_duration || '7'),
+      estimated_days: this.parseEstimatedDays(workflow.course_basic_info.estimated_duration),
       difficulty: workflow.course_basic_info.difficulty || 'basic',
       icon: enhancedBadgeData?.icon || this.generateIcon(workflow.course_basic_info.course_category),
       color: enhancedBadgeData?.color || this.generateColor(workflow.course_basic_info.course_category),
@@ -467,6 +530,28 @@ export class CoursePublisher {
     return (data[0].display_order || 0) + 10
   }
 
+  private parseEstimatedDays(estimatedDuration?: string): number {
+    if (!estimatedDuration) return 7
+    
+    // 「2-4時間」「30分-1時間」などの文字列から日数を推定
+    const duration = estimatedDuration.toLowerCase()
+    if (duration.includes('30分未満')) return 1
+    if (duration.includes('30分-1時間') || duration.includes('1-2時間')) return 1
+    if (duration.includes('2-4時間')) return 2
+    if (duration.includes('4時間以上')) return 3
+    
+    // 数字が含まれている場合はそれを抽出
+    const numbers = duration.match(/\d+/)
+    if (numbers) {
+      const num = parseInt(numbers[0])
+      if (duration.includes('日')) return num
+      if (duration.includes('時間')) return Math.max(1, Math.ceil(num / 4)) // 4時間＝1日と仮定
+      if (duration.includes('分')) return 1
+    }
+    
+    return 7 // デフォルト
+  }
+
   private createBadgeData(courseInfo: CourseGenerationWorkflow['course_basic_info']) {
     return {
       estimated_completion: courseInfo.estimated_duration || '1週間',
@@ -508,6 +593,137 @@ export class CoursePublisher {
         success: false,
         error: 'コース削除中にエラーが発生しました',
         details: error instanceof Error ? error.message : String(error)
+      }
+    }
+  }
+
+  /**
+   * 既存コースからIDマッピングを同期
+   * outline_dataのIDとDBのIDをタイトルベースでマッチングし、マッピングを返す
+   */
+  async syncIdsFromExistingCourse(
+    courseId: string,
+    outlineData: {
+      genres?: Array<{
+        id: string
+        title: string
+        themes: Array<{
+          id: string
+          title: string
+          sessions: Array<{
+            id: string
+            title: string
+          }>
+        }>
+      }>
+    }
+  ): Promise<{
+    success: boolean
+    idMappings?: {
+      genres: Record<string, string>
+      themes: Record<string, string>
+      sessions: Record<string, string>
+    }
+    error?: string
+  }> {
+    try {
+      console.log(`🔄 [CoursePublisher] syncIdsFromExistingCourse: courseId=${courseId}`)
+
+      // DB からジャンル取得
+      const { data: dbGenres, error: genreError } = await supabaseAdmin
+        .from('learning_genres')
+        .select('id, title, display_order')
+        .eq('course_id', courseId)
+        .order('display_order', { ascending: true })
+
+      if (genreError) {
+        throw genreError
+      }
+
+      if (!dbGenres || dbGenres.length === 0) {
+        return {
+          success: false,
+          error: 'コースにジャンルが見つかりません'
+        }
+      }
+
+      const idMappings = {
+        genres: {} as Record<string, string>,
+        themes: {} as Record<string, string>,
+        sessions: {} as Record<string, string>
+      }
+
+      // ジャンルマッピング（タイトルまたは順序でマッチング）
+      const outlineGenres = outlineData.genres || []
+      for (let i = 0; i < outlineGenres.length; i++) {
+        const outlineGenre = outlineGenres[i]
+        // タイトルでマッチング、なければ順序でマッチング
+        const dbGenre = dbGenres.find(g => g.title === outlineGenre.title) || dbGenres[i]
+        if (dbGenre) {
+          idMappings.genres[outlineGenre.id] = dbGenre.id
+          console.log(`  📋 Genre: ${outlineGenre.id} -> ${dbGenre.id} (${outlineGenre.title})`)
+
+          // テーマ取得
+          const { data: dbThemes, error: themeError } = await supabaseAdmin
+            .from('learning_themes')
+            .select('id, title, display_order')
+            .eq('genre_id', dbGenre.id)
+            .order('display_order', { ascending: true })
+
+          if (themeError) {
+            throw themeError
+          }
+
+          // テーママッピング
+          const outlineThemes = outlineGenre.themes || []
+          for (let j = 0; j < outlineThemes.length; j++) {
+            const outlineTheme = outlineThemes[j]
+            const dbTheme = dbThemes?.find(t => t.title === outlineTheme.title) || dbThemes?.[j]
+            if (dbTheme) {
+              idMappings.themes[outlineTheme.id] = dbTheme.id
+              console.log(`    📋 Theme: ${outlineTheme.id} -> ${dbTheme.id} (${outlineTheme.title})`)
+
+              // セッション取得
+              const { data: dbSessions, error: sessionError } = await supabaseAdmin
+                .from('learning_sessions')
+                .select('id, title, display_order')
+                .eq('theme_id', dbTheme.id)
+                .order('display_order', { ascending: true })
+
+              if (sessionError) {
+                throw sessionError
+              }
+
+              // セッションマッピング
+              const outlineSessions = outlineTheme.sessions || []
+              for (let k = 0; k < outlineSessions.length; k++) {
+                const outlineSession = outlineSessions[k]
+                const dbSession = dbSessions?.find(s => s.title === outlineSession.title) || dbSessions?.[k]
+                if (dbSession) {
+                  idMappings.sessions[outlineSession.id] = dbSession.id
+                  console.log(`      📋 Session: ${outlineSession.id} -> ${dbSession.id} (${outlineSession.title})`)
+                }
+              }
+            }
+          }
+        }
+      }
+
+      console.log(`✅ [CoursePublisher] ID同期完了:`, {
+        genres: Object.keys(idMappings.genres).length,
+        themes: Object.keys(idMappings.themes).length,
+        sessions: Object.keys(idMappings.sessions).length
+      })
+
+      return {
+        success: true,
+        idMappings
+      }
+    } catch (error) {
+      console.error('[CoursePublisher] ID同期エラー:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
       }
     }
   }

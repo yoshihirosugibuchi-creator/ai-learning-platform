@@ -8,7 +8,7 @@ import { contentPromptBuilder, type SessionContentRequest } from './content-prom
 
 export interface SessionContentData {
   session_id: string
-  content_type: 'text' | 'exercise' | 'image' | 'video'
+  content_type: 'text' | 'example' | 'key_points'
   title: string
   content: string | object
   duration: number

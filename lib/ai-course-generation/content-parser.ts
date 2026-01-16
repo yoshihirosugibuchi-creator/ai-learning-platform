@@ -4,22 +4,36 @@
  */
 
 // PDF解析の代替実装（Turbopack対応）
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let pdf: any = null
+let PDFParseClass: typeof import('pdf-parse').PDFParse | null = null
 
 // 動的インポートでpdf-parseを読み込み（サーバーサイドのみ）
-async function loadPDFParser() {
-  if (typeof window === 'undefined' && !pdf) {
+async function loadPDFParser(): Promise<typeof import('pdf-parse').PDFParse | null> {
+  if (typeof window === 'undefined' && !PDFParseClass) {
     try {
-      // pdf-parseはESMモジュール
-      const pdfModule = await import('pdf-parse')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      pdf = (pdfModule as any).default || pdfModule
+      // PDF.js workerパス設定（Next.js/Turbopack対応）
+      if (typeof globalThis !== 'undefined') {
+        // PDFJSライブラリが利用可能な場合のworker設定
+        try {
+          const { getDocument: _getDocument, GlobalWorkerOptions } = await import('pdfjs-dist')
+          GlobalWorkerOptions.workerSrc = new URL(
+            'pdfjs-dist/build/pdf.worker.min.mjs',
+            import.meta.url
+          ).toString()
+        } catch (workerError) {
+          console.warn('PDF.js worker setup failed:', workerError)
+        }
+      }
+
+      // pdf-parse 2.4.5はESMモジュール - PDFParseクラスを使用
+      const { PDFParse } = await import('pdf-parse')
+      PDFParseClass = PDFParse
+      console.log('PDF parser loaded successfully, PDFParse class:', typeof PDFParseClass)
     } catch (error) {
       console.warn('PDF parser not available:', error)
+      return null
     }
   }
-  return pdf
+  return PDFParseClass
 }
 import * as cheerio from 'cheerio'
 
@@ -64,9 +78,9 @@ export async function parsePDF(file: File): Promise<ParseResult> {
   try {
     console.log(`📄 [PDF Parser] Processing file: ${file.name} (${file.size} bytes)`)
     
-    // PDF parserロード
-    const pdfParser = await loadPDFParser()
-    if (!pdfParser) {
+    // PDF parserクラスロード
+    const PDFParseClass = await loadPDFParser()
+    if (!PDFParseClass) {
       return {
         success: false,
         content: '',
@@ -90,10 +104,12 @@ export async function parsePDF(file: File): Promise<ParseResult> {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
     
-    // PDF解析実行（v1 API）
-    const result = await pdfParser(buffer)
+    // PDFParseクラスを使用（v2 API）
+    const parser = new PDFParseClass({ data: buffer })
+    const result = await parser.getText()
+    await parser.destroy() // メモリ解放
     
-    console.log(`✅ [PDF Parser] Successfully extracted ${result.numpages} pages, ${result.text.length} characters`)
+    console.log(`✅ [PDF Parser] Successfully extracted text, length: ${result.text.length} characters`)
 
     // テキスト清浄化
     const cleanText = cleanExtractedText(result.text)
@@ -102,10 +118,10 @@ export async function parsePDF(file: File): Promise<ParseResult> {
       success: true,
       content: cleanText,
       metadata: {
-        pageCount: result.numpages,
+        pageCount: 1, // pdf-parse v2 では numPages は利用できません
         wordCount: estimateWordCount(cleanText),
         language: detectLanguage(cleanText),
-        author: result.info?.Author || undefined
+        author: undefined // pdf-parse v2 では info は利用できません
       }
     }
     

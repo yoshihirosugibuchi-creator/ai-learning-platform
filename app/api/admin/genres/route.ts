@@ -55,72 +55,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // タイトルから適切なIDを生成（例: "AI基礎理解" → "ai_basics"）
-    const generateGenreId = (title: string): string => {
-      // 既存データのパターンを参考に意味のあるIDを生成
-      const baseId = title
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '_') // 英数字以外をアンダースコアに
-        .replace(/_+/g, '_') // 連続するアンダースコアを1つに
-        .replace(/^_|_$/g, '') // 先頭末尾のアンダースコアを削除
-        .slice(0, 20); // 最大20文字に制限
-      
-      // より適切な英語IDに変換（簡単な例）
-      const translations: { [key: string]: string } = {
-        'ai基礎': 'ai_fundamentals',
-        'ai基礎理解': 'ai_fundamentals', 
-        'プロンプト': 'prompt',
-        'マーケティング': 'marketing',
-        '基礎': 'basics',
-        '応用': 'advanced',
-        '実践': 'practice',
-        '入門': 'introduction',
-        '基本': 'basics'
-      };
-      
-      let generatedId = baseId;
-      for (const [jp, en] of Object.entries(translations)) {
-        generatedId = generatedId.replace(jp, en);
-      }
-      
-      return generatedId || 'new_genre';
-    }
-
-    const baseGenreId = generateGenreId(createData.title);
-    
-    // IDの重複チェックと調整
-    let genreId = baseGenreId;
-    let counter = 1;
-    
-    while (true) {
-      const { data: _existing, error: checkError } = await supabaseAdmin
-        .from('learning_genres')
-        .select('id')
-        .eq('id', genreId)
-        .single()
-        
-      if (checkError && checkError.code === 'PGRST116') {
-        // IDが存在しない場合は使用可能
-        break;
-      } else if (checkError) {
-        console.error('❌ [AdminGenres] ID重複チェックエラー:', checkError)
-        return NextResponse.json(
-          { error: 'ジャンルID重複チェックに失敗しました' },
-          { status: 500 }
-        )
-      } else {
-        // IDが既に存在する場合は番号を付けて再試行
-        genreId = `${baseGenreId}_${counter}`
-        counter++
-        
-        if (counter > 100) {
-          return NextResponse.json(
-            { error: '適切なジャンルIDを生成できませんでした' },
-            { status: 500 }
-          )
-        }
-      }
-    }
+    // ID生成ヘルパー関数を使用して適切なIDを生成
+    const { generateUniqueId } = await import('@/lib/id-generation-helper')
+    const genreId = await generateUniqueId('genre', createData.title)
 
     // 新しいジャンルデータの準備
     const genreData = {

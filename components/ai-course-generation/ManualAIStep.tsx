@@ -5,7 +5,7 @@
 
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -22,7 +22,8 @@ import {
   ArrowLeft,
   Sparkles,
   ClipboardCopy,
-  Target
+  Target,
+  X
 } from 'lucide-react'
 
 interface SourceMaterial {
@@ -46,6 +47,11 @@ interface CourseGenerationWorkflow {
   learningObjectives?: string[]
   targetAudience?: string
   courseCategory?: string
+  aiOutlineResponse?: string  // AI生成レスポンスを追加
+  outline_data?: {  // 既存アウトラインデータ
+    approved?: boolean
+    genres?: Array<unknown>
+  }
   generationPreferences?: {
     sessionLength: number
     includeQuizzes: boolean
@@ -60,6 +66,7 @@ interface ManualAIStepProps {
   onAIResponse?: (response: string) => void
   onNext?: () => void
   onPrevious?: () => void
+  onSave?: () => Promise<void>  // 保存コールバック追加
 }
 
 export function ManualAIStep({ 
@@ -67,13 +74,26 @@ export function ManualAIStep({
   workflow,
   onAIResponse,
   onNext,
-  onPrevious 
+  onPrevious,
+  onSave
 }: ManualAIStepProps) {
   const { toast } = useToast()
   const [aiResponse, setAiResponse] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('')
   const [showPrompt, setShowPrompt] = useState(false)
+  const [isCopying, setIsCopying] = useState(false)
+  const [isOpening, setIsOpening] = useState(false)
+  const [isCleared, setIsCleared] = useState(false)
+
+  // 既存のAIレスポンスを復元（ワークフロー再入場時・手動クリアしていない場合）
+  useEffect(() => {
+    if (workflow?.aiOutlineResponse && !aiResponse && !isCleared) {
+      console.log('🔧 [ManualAIStep] 既存AIレスポンスを復元:', workflow.aiOutlineResponse.substring(0, 100) + '...')
+      setAiResponse(workflow.aiOutlineResponse)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflow?.aiOutlineResponse])
 
   // プロンプト生成
   const generatePrompt = () => {
@@ -131,40 +151,50 @@ ${sourcesList}
 
 \`\`\`json
 {
-  "courseTitle": "コースタイトル",
-  "courseDescription": "コースの概要説明（2-3文）",
-  "estimatedDuration": "推定学習時間",
-  "difficulty": "初級/中級/上級",
-  "learningObjectives": [
-    "学習目標1",
-    "学習目標2",
-    "学習目標3"
-  ],
+  "course": {
+    "title": "コースタイトル",
+    "description": "コースの概要説明（2-3文）",
+    "estimatedDays": 7,
+    "difficulty": "basic",
+    "targetAudience": "対象者の説明",
+    "learningObjectives": [
+      "学習目標1",
+      "学習目標2", 
+      "学習目標3"
+    ],
+    "badge_data": {}
+  },
   "genres": [
     {
-      "genreTitle": "ジャンル1タイトル",
-      "genreDescription": "ジャンルの説明",
+      "id": "genre-1",
+      "title": "ジャンル1タイトル",
+      "description": "ジャンルの説明",
+      "suggested_category_id": "1",
+      "suggested_subcategory_id": "1",
+      "estimatedDays": 3,
+      "display_order": 1,
       "themes": [
         {
-          "themeTitle": "テーマ1タイトル",
-          "themeDescription": "テーマの説明",
+          "id": "theme-1-1",
+          "title": "テーマ1タイトル",
+          "description": "テーマの説明",
+          "estimatedMinutes": 45,
+          "display_order": 1,
+          "reward_card_data": {},
           "sessions": [
             {
-              "sessionTitle": "セッション1タイトル",
-              "sessionDescription": "セッションの説明",
-              "contentType": "lecture",
-              "estimatedMinutes": 15
+              "id": "session-1-1-1",
+              "title": "セッション1タイトル",
+              "description": "セッションの説明",
+              "session_type": "knowledge",
+              "estimatedMinutes": 15,
+              "display_order": 1
             }
           ]
         }
       ]
     }
-  ],
-  "categoryMapping": {
-    "recommendedCategoryId": 1,
-    "recommendedSubcategoryId": 1,
-    "reason": "カテゴリ選択の理由"
-  }
+  ]
 }
 \`\`\`
 
@@ -174,10 +204,17 @@ ${combinedContent}
 
 ## 重要な要求事項
 1. 参考資料の内容を基に、論理的で体系的なコース構成を作成してください
-2. 学習者のレベルに応じた適切な難易度設定をしてください
+2. 学習者のレベルに応じた適切な難易度設定をしてください（basic/intermediate/advanced/expertのいずれか）
 3. 各セッションは10-20分程度の学習時間になるよう調整してください
 4. 実践的で具体的な学習内容を含めてください
-5. 必ずJSON形式で回答してください
+5. すべてのIDは一意の文字列で設定してください（genre-1, theme-1-1, session-1-1-1など）
+6. session_typeは必ず「knowledge」「practice」「case_study」のいずれかを使用してください
+   - knowledge: 知識学習セッション
+   - practice: 実践・演習セッション  
+   - case_study: ケーススタディセッション
+7. estimatedDaysは整数、estimatedMinutesは整数で設定してください
+8. display_orderは1から順番に設定してください
+9. 必ずJSON形式で回答してください
 
 よろしくお願いいたします。`
   }
@@ -201,6 +238,7 @@ ${combinedContent}
         return
       }
       
+      setIsCopying(true)
       await navigator.clipboard.writeText(generatedPrompt)
       toast({
         title: "プロンプトをコピーしました",
@@ -212,16 +250,20 @@ ${combinedContent}
         description: "手動でプロンプトを選択してコピーしてください",
         variant: "destructive"
       })
+    } finally {
+      setTimeout(() => setIsCopying(false), 200)
     }
   }
 
   // Claude Web Interfaceを開く
   const openClaudeInterface = () => {
+    setIsOpening(true)
     window.open('https://claude.ai/chat', '_blank', 'noopener,noreferrer')
+    setTimeout(() => setIsOpening(false), 200)
   }
 
   // AIレスポンス処理
-  const handleResponseSubmit = () => {
+  const handleResponseSubmit = async () => {
     if (!aiResponse.trim()) {
       toast({
         title: "AIレスポンスが入力されていません",
@@ -236,26 +278,78 @@ ${combinedContent}
       // JSON形式の検証
       JSON.parse(aiResponse)
       
-      onAIResponse?.(aiResponse)
+      console.log('🔧 [ManualAIStep] AIレスポンス保存開始:', aiResponse.substring(0, 100) + '...')
+      
+      // AIレスポンスを保存（親コンポーネントのステート更新）
+      if (onAIResponse) {
+        await onAIResponse(aiResponse)
+      }
+      
+      // ステート更新後、確実にデータベースに保存
+      if (onSave) {
+        console.log('🔧 [ManualAIStep] データベース保存実行')
+        await onSave()
+        console.log('✅ [ManualAIStep] データベース保存完了')
+      }
+      
       toast({
         title: "AIレスポンスを保存しました",
         description: "アウトラインの確認・編集ステップに進みます",
       })
+      setIsProcessing(false)
+      onNext?.()
       
-      setTimeout(() => {
-        setIsProcessing(false)
-        onNext?.()
-      }, 1000)
-      
-    } catch (_error) {
+    } catch (error) {
+      console.error('❌ [ManualAIStep] AIレスポンス保存エラー:', error)
       setIsProcessing(false)
       toast({
-        title: "JSON形式エラー",
-        description: "有効なJSON形式でレスポンスを入力してください",
+        title: error instanceof Error && error.message.includes('JSON') ? "JSON形式エラー" : "保存エラー",
+        description: error instanceof Error && error.message.includes('JSON') 
+          ? "有効なJSON形式でレスポンスを入力してください"
+          : "AIレスポンスの保存に失敗しました",
         variant: "destructive"
       })
     }
   }
+
+  // アウトラインスキップ（既存アウトラインがある場合）
+  const handleSkipToNext = () => {
+    toast({
+      title: "既存のアウトラインを使用",
+      description: "アウトラインの確認・編集ステップに進みます",
+    })
+    onNext?.()
+  }
+
+  // AIレスポンスをクリア
+  const handleClearResponse = async () => {
+    setAiResponse('')
+    setIsCleared(true)
+    
+    // outline_dataもクリアしてデータベースに保存
+    if (onAIResponse) {
+      await onAIResponse('')
+    }
+    
+    // データベースからも削除
+    if (onSave) {
+      try {
+        console.log('🔧 [ManualAIStep] AIレスポンスクリア - データベース更新')
+        await onSave()
+        console.log('✅ [ManualAIStep] クリア完了 - データベース更新済み')
+      } catch (error) {
+        console.error('❌ [ManualAIStep] クリア時のデータベース更新エラー:', error)
+      }
+    }
+    
+    toast({
+      title: "AIレスポンスをクリア",
+      description: "新しいレスポンスを入力できます",
+    })
+  }
+
+  // 既存アウトラインがあるかチェック（ユーザーがクリアした場合は無視）
+  const hasExistingOutline = !isCleared && workflow?.outline_data?.genres && workflow.outline_data.genres.length > 0
 
   const totalWordCount = sources.reduce((sum, s) => sum + (s.metadata?.wordCount || 0), 0)
 
@@ -268,8 +362,16 @@ ${combinedContent}
           AI統合基盤（手動モード）
         </h2>
         <p className="text-muted-foreground">
-          Claude Web Interfaceを使用してコースアウトラインを生成します
+          {hasExistingOutline 
+            ? 'アウトラインが既に生成されています。再生成または次のステップへ進んでください。'
+            : 'Claude Web Interfaceを使用してコースアウトラインを生成します'}
         </p>
+        {hasExistingOutline && (
+          <Badge className="mt-2 bg-green-100 text-green-800">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            アウトライン生成済み
+          </Badge>
+        )}
       </div>
 
       {/* コース情報・参考資料サマリー */}
@@ -355,21 +457,23 @@ ${combinedContent}
             </Button>
             {showPrompt && (
               <Button 
-                variant="outline"
+                variant={isCopying ? "secondary" : "outline"}
                 onClick={copyPromptToClipboard}
-                className="flex items-center gap-2"
+                disabled={isCopying}
+                className="flex items-center gap-2 transition-all"
               >
-                <Copy className="h-4 w-4" />
-                クリップボードにコピー
+                <Copy className={`h-4 w-4 ${isCopying ? 'animate-pulse' : ''}`} />
+                {isCopying ? 'コピー中...' : 'クリップボードにコピー'}
               </Button>
             )}
             <Button 
-              variant="outline"
+              variant={isOpening ? "secondary" : "outline"}
               onClick={openClaudeInterface}
-              className="flex items-center gap-2"
+              disabled={isOpening}
+              className="flex items-center gap-2 transition-all"
             >
-              <ExternalLink className="h-4 w-4" />
-              Claude Web Interfaceを開く
+              <ExternalLink className={`h-4 w-4 ${isOpening ? 'animate-pulse' : ''}`} />
+              {isOpening ? '開いています...' : 'Claude Web Interfaceを開く'}
             </Button>
           </div>
 
@@ -382,7 +486,7 @@ ${combinedContent}
               <Textarea
                 value={generatedPrompt}
                 onChange={(e) => setGeneratedPrompt(e.target.value)}
-                className="min-h-64 text-xs font-mono"
+                className="min-h-[200px] text-xs font-mono resize-y"
                 placeholder="プロンプトが生成されここに表示されます..."
               />
               <p className="text-xs text-muted-foreground">
@@ -445,44 +549,89 @@ ${combinedContent}
           <CardTitle className="flex items-center gap-2">
             <span className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
             AIレスポンスの入力
+            {aiResponse.trim() && (
+              <CheckCircle2 className="h-5 w-5 text-green-500 ml-2" />
+            )}
           </CardTitle>
           <CardDescription>
             Claude Web InterfaceからのJSON形式レスポンスをここに貼り付けてください
+            {aiResponse.trim() && (
+              <span className="text-green-600 block mt-1">✅ レスポンス入力済み（{Math.ceil(aiResponse.length / 1000)}KB）</span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Textarea
-            placeholder='{"courseTitle": "...", "courseDescription": "...", ...}'
-            value={aiResponse}
-            onChange={(e) => setAiResponse(e.target.value)}
-            className="min-h-32 font-mono text-sm"
-            disabled={isProcessing}
-          />
+          <div className="relative">
+            <Textarea
+              placeholder='{"course": {"title": "...", "description": "...", ...}, "genres": [...]}'
+              value={aiResponse}
+              onChange={(e) => {
+                setAiResponse(e.target.value)
+                if (e.target.value === '') {
+                  setIsCleared(true)
+                }
+              }}
+              className="min-h-[200px] font-mono text-sm resize-y pr-12"
+              disabled={isProcessing}
+            />
+            <Button
+              onClick={handleClearResponse}
+              size="sm"
+              variant="ghost"
+              className="absolute top-2 right-2 h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
+              title="レスポンスをクリア"
+              disabled={!aiResponse.trim()}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <AlertCircle className="h-4 w-4" />
-              JSON形式での入力が必要です
+              {hasExistingOutline ? '既存のアウトラインがあります' : 'JSON形式での入力が必要です'}
             </div>
             
-            <Button 
-              onClick={handleResponseSubmit}
-              disabled={!aiResponse.trim() || isProcessing}
-              className="flex items-center gap-2"
-            >
-              {isProcessing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  処理中...
-                </>
-              ) : (
-                <>
-                  <ClipboardCopy className="h-4 w-4" />
-                  レスポンスを保存して次へ
-                  <ArrowRight className="h-4 w-4" />
-                </>
+            <div className="flex gap-2">
+              {aiResponse.trim() && (
+                <Button 
+                  onClick={handleClearResponse}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  クリア
+                </Button>
               )}
-            </Button>
+              {hasExistingOutline && (
+                <Button 
+                  onClick={handleSkipToNext}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  生成せずに次のステップへ
+                </Button>
+              )}
+              <Button 
+                onClick={handleResponseSubmit}
+                disabled={!aiResponse.trim() || isProcessing}
+                className="flex items-center gap-2"
+              >
+                {isProcessing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    処理中...
+                  </>
+                ) : (
+                  <>
+                    <ClipboardCopy className="h-4 w-4" />
+                    {hasExistingOutline ? '再生成して次へ' : 'レスポンスを保存して次へ'}
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

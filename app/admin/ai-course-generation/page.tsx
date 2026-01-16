@@ -7,7 +7,9 @@
 
 import React, { useState } from 'react'
 import { CourseWizard } from '@/components/ai-course-generation/CourseWizard'
-import { WorkflowList } from '@/components/ai-course-generation/WorkflowList'
+import { WorkflowList, type WorkflowItem } from '@/components/ai-course-generation/WorkflowList'
+import { convertToWizardWorkflow, convertFromWizardWorkflow } from '@/lib/ai-course-generation/type-conversion'
+import { OutlineData, ContentData } from '@/lib/ai-course-generation/types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -67,6 +69,43 @@ interface CourseWorkflow {
   currentStep?: number
   created_at?: string
   updated_at?: string
+  difficultyId?: string
+  estimatedDuration?: string
+  learningObjectives?: string[]
+  targetAudience?: string
+  courseCategory?: string
+  generationPreferences?: {
+    sessionLength: number
+    includeQuizzes: boolean
+    interactivityLevel: 'low' | 'medium' | 'high'
+    contentStyle: 'formal' | 'casual' | 'technical'
+  }
+  categoryMappings?: Array<{
+    genreId: string
+    genreTitle: string
+    selectedCategoryId?: string
+    selectedSubcategoryId?: string
+    manualOverride: boolean
+  }>
+  outline_data?: {
+    course?: { title: string }
+    genres?: Array<{
+      id: string
+      title: string
+      themes: Array<{
+        id: string
+        title: string
+        sessions: Array<{ id: string; title: string }>
+      }>
+    }>
+    approved?: boolean
+    [key: string]: unknown
+  }
+  content_data?: {
+    approved?: boolean
+    [key: string]: unknown
+  }
+  [key: string]: unknown
 }
 
 export default function AdminAICourseGenerationPage() {
@@ -102,18 +141,6 @@ export default function AdminAICourseGenerationPage() {
     setShowWizard(true)
   }
 
-  interface WorkflowItem {
-    id: string
-    title: string
-    description: string
-    status: WorkflowStatus
-    sources: SourceMaterial[]
-    aiOutlineResponse?: string
-    currentStep: number
-    created_at: string
-    updated_at: string
-  }
-
   const handleSelectWorkflow = (workflowItem: WorkflowItem) => {
     const workflow: CourseWorkflow = {
       id: workflowItem.id,
@@ -124,7 +151,18 @@ export default function AdminAICourseGenerationPage() {
       aiOutlineResponse: workflowItem.aiOutlineResponse,
       currentStep: workflowItem.currentStep,
       created_at: workflowItem.created_at,
-      updated_at: workflowItem.updated_at
+      updated_at: workflowItem.updated_at,
+      // 追加フィールドも渡す
+      difficultyId: workflowItem.difficultyId,
+      estimatedDuration: workflowItem.estimatedDuration,
+      learningObjectives: workflowItem.learningObjectives,
+      targetAudience: workflowItem.targetAudience,
+      courseCategory: workflowItem.courseCategory,
+      generationPreferences: workflowItem.generationPreferences,
+      // categoryMappingsはそのまま使用
+      categoryMappings: workflowItem.categoryMappings,
+      outline_data: workflowItem.outline_data as OutlineData | undefined,
+      content_data: workflowItem.content_data as ContentData | undefined
     }
     setSelectedWorkflow(workflow)
     setShowWizard(true)
@@ -164,7 +202,8 @@ export default function AdminAICourseGenerationPage() {
 
   const handleGoBack = () => {
     setShowWizard(false)
-    setSelectedWorkflow(null)
+    // 🔧 selectedWorkflowはクリアしない（再入場時のデータ保持のため）
+    // setSelectedWorkflow(null)
   }
 
   // ウィザード表示中
@@ -185,9 +224,15 @@ export default function AdminAICourseGenerationPage() {
 
         {/* ウィザード */}
         <CourseWizard 
-          initialWorkflow={selectedWorkflow || undefined}
-          onComplete={handleWizardComplete}
-          onSave={handleWizardSave}
+          initialWorkflow={selectedWorkflow ? convertToWizardWorkflow(selectedWorkflow) : undefined}
+          onComplete={(workflow) => {
+            const converted = convertFromWizardWorkflow(workflow)
+            handleWizardComplete(converted as CourseWorkflow)
+          }}
+          onSave={(workflow) => {
+            const converted = convertFromWizardWorkflow(workflow)
+            handleWizardSave(converted as CourseWorkflow)
+          }}
         />
       </div>
     )

@@ -35,7 +35,8 @@ export async function PATCH(
 
     // 更新可能なフィールドのバリデーション
     const allowedFields = [
-      'title', 'description', 'estimated_days', 'display_order', 'badge_data'
+      'title', 'description', 'estimated_days', 'display_order', 'badge_data',
+      'category_id', 'subcategory_id'
     ]
     
     const validUpdateData: any = {}
@@ -131,6 +132,112 @@ export async function PATCH(
     return NextResponse.json(
       { 
         error: 'ジャンル更新中にエラーが発生しました',
+        details: error instanceof Error ? error.message : String(error)
+      },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * DELETE /api/admin/genres/[id]
+ * ジャンル削除（管理者用）
+ */
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { userId, role } = await getCurrentUserRole(request)
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: '認証が必要です' },
+        { status: 401 }
+      )
+    }
+
+    if (!role || (role !== 'admin' && role !== 'system_admin')) {
+      return NextResponse.json(
+        { error: '管理者のアクセス権限が必要です' },
+        { status: 403 }
+      )
+    }
+
+    const { id: genreId } = await context.params
+
+    console.log(`🗑️ [AdminGenres] ジャンル削除開始: ${genreId}`)
+
+    // 1. ジャンルの存在確認
+    const { data: genre, error: fetchError } = await supabaseAdmin
+      .from('learning_genres')
+      .select('id, title')
+      .eq('id', genreId)
+      .single()
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: '指定されたジャンルが見つかりません' },
+          { status: 404 }
+        )
+      }
+      
+      console.error('❌ [AdminGenres] ジャンル取得エラー:', fetchError)
+      return NextResponse.json(
+        { error: 'ジャンル情報の取得に失敗しました' },
+        { status: 500 }
+      )
+    }
+
+    // 2. テーマの存在確認（テーマがある場合は削除を拒否）
+    const { data: themes, error: themeCheckError } = await supabaseAdmin
+      .from('learning_themes')
+      .select('id')
+      .eq('genre_id', genreId)
+      .limit(1)
+
+    if (themeCheckError) {
+      console.error('❌ [AdminGenres] テーマチェックエラー:', themeCheckError)
+      return NextResponse.json(
+        { error: 'テーマの確認に失敗しました' },
+        { status: 500 }
+      )
+    }
+
+    if (themes && themes.length > 0) {
+      return NextResponse.json(
+        { error: 'このジャンルにはテーマが含まれています。先にテーマを削除してください。' },
+        { status: 400 }
+      )
+    }
+
+    // 3. ジャンルを削除
+    const { error: deleteError } = await supabaseAdmin
+      .from('learning_genres')
+      .delete()
+      .eq('id', genreId)
+
+    if (deleteError) {
+      console.error('❌ [AdminGenres] 削除エラー:', deleteError)
+      return NextResponse.json(
+        { error: 'ジャンルの削除に失敗しました' },
+        { status: 500 }
+      )
+    }
+
+    console.log(`✅ [AdminGenres] ジャンル削除完了: ${genre.title}`)
+
+    return NextResponse.json({
+      success: true,
+      message: `ジャンル「${genre.title}」を削除しました`
+    })
+
+  } catch (error) {
+    console.error('❌ [AdminGenres] Unexpected error:', error)
+    return NextResponse.json(
+      { 
+        error: 'ジャンル削除中にエラーが発生しました',
         details: error instanceof Error ? error.message : String(error)
       },
       { status: 500 }

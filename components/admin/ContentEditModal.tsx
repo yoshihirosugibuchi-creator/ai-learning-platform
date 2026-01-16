@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useToast } from '@/hooks/use-toast'
 import { Edit, Save, X, FileText, Clock } from 'lucide-react'
 
 interface Content {
@@ -26,13 +27,17 @@ interface ContentEditModalProps {
   onDelete?: (contentId: string) => Promise<void>
 }
 
+// Phase1準拠のコンテンツタイプ制限
 const contentTypeOptions = [
-  { value: 'text', label: 'テキスト', description: 'プレーンテキスト形式' },
-  { value: 'markdown', label: 'マークダウン', description: 'Markdown記法対応' },
-  { value: 'video', label: '動画', description: '動画コンテンツ' },
-  { value: 'audio', label: '音声', description: '音声ファイル' },
-  { value: 'image', label: '画像', description: '画像ファイル' },
-  { value: 'interactive', label: 'インタラクティブ', description: 'インタラクティブコンテンツ' }
+  { value: 'text', label: 'テキスト', description: 'プレーンテキスト形式（基本）', phase: 1 },
+  { value: 'example', label: '事例・例題', description: '具体的な事例や例題', phase: 1 },
+  { value: 'key_points', label: '重要ポイント', description: 'まとめ・要点整理', phase: 1 },
+  // Phase2機能（グレーアウト表示）
+  { value: 'markdown', label: 'マークダウン', description: 'Markdown記法対応（Phase2予定）', phase: 2, disabled: true },
+  { value: 'video', label: '動画', description: '動画コンテンツ（Phase2予定）', phase: 2, disabled: true },
+  { value: 'audio', label: '音声', description: '音声ファイル（Phase2予定）', phase: 2, disabled: true },
+  { value: 'image', label: '画像', description: '画像ファイル（Phase2予定）', phase: 2, disabled: true },
+  { value: 'interactive', label: 'インタラクティブ', description: 'インタラクティブコンテンツ（Phase3予定）', phase: 3, disabled: true }
 ]
 
 export function ContentEditModal({ 
@@ -42,6 +47,7 @@ export function ContentEditModal({
   onSave,
   onDelete 
 }: ContentEditModalProps) {
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     content_type: 'text',
     title: '',
@@ -76,6 +82,16 @@ export function ContentEditModal({
   const handleSave = async () => {
     if (!content) return
 
+    // バリデーション
+    if (!formData.content.trim()) {
+      toast({
+        title: "入力エラー",
+        description: "コンテンツの内容を入力してください",
+        variant: "destructive"
+      })
+      return
+    }
+
     setSaving(true)
     try {
       await onSave(content.id, {
@@ -85,9 +101,20 @@ export function ContentEditModal({
         duration: formData.duration,
         display_order: formData.display_order
       })
+      
+      toast({
+        title: "保存完了",
+        description: "コンテンツが正常に保存されました"
+      })
+      
       onClose()
     } catch (error) {
       console.error('Content save error:', error)
+      toast({
+        title: "保存エラー",
+        description: "コンテンツの保存に失敗しました",
+        variant: "destructive"
+      })
     } finally {
       setSaving(false)
     }
@@ -96,7 +123,8 @@ export function ContentEditModal({
   const handleDelete = async () => {
     if (!content || !onDelete) return
 
-    if (!confirm('このコンテンツを削除してもよろしいですか？')) return
+    const confirmResult = window.confirm('このコンテンツを削除してもよろしいですか？この操作は取り消せません。')
+    if (!confirmResult) return
 
     setDeleting(true)
     try {
@@ -135,9 +163,26 @@ export function ContentEditModal({
                 </SelectTrigger>
                 <SelectContent>
                   {contentTypeOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div>
-                        <div className="font-medium">{option.label}</div>
+                    <SelectItem 
+                      key={option.value} 
+                      value={option.value}
+                      disabled={option.disabled}
+                    >
+                      <div className={option.disabled ? "opacity-50" : ""}>
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium">{option.label}</div>
+                          {option.phase && (
+                            <span className={`text-xs px-1.5 py-0.5 rounded ${
+                              option.phase === 1 
+                                ? 'bg-green-100 text-green-700' 
+                                : option.phase === 2 
+                                  ? 'bg-orange-100 text-orange-700' 
+                                  : 'bg-purple-100 text-purple-700'
+                            }`}>
+                              Phase{option.phase}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-muted-foreground">{option.description}</div>
                       </div>
                     </SelectItem>

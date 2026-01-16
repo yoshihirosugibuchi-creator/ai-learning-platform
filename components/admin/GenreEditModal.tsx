@@ -142,14 +142,23 @@ export function GenreEditModal({ genre, isOpen, onClose, onSave }: GenreEditModa
 
     setSaving(true)
     try {
+      // badge_dataの各フィールドにデフォルト値を確実に設定（空文字もカバー）
+      const safeBadgeData = {
+        id: formData.badge_data?.id || `badge_${genre.id}`,
+        icon: formData.badge_data?.icon || '🏆',
+        color: formData.badge_data?.color || '#F59E0B',
+        title: formData.badge_data?.title || `${formData.title}マスター`,
+        description: formData.badge_data?.description || `${formData.title}の学習を完了`
+      }
+
       await onSave(genre.id, {
         title: formData.title,
         description: formData.description,
         estimated_days: formData.estimated_days,
         display_order: formData.display_order,
-        category_id: formData.category_id,
-        subcategory_id: formData.subcategory_id,
-        badge_data: formData.badge_data
+        category_id: formData.category_id || undefined,
+        subcategory_id: formData.subcategory_id || null,
+        badge_data: safeBadgeData
       })
       onClose()
     } catch (error) {
@@ -236,7 +245,18 @@ export function GenreEditModal({ genre, isOpen, onClose, onSave }: GenreEditModa
               <label className="text-sm font-medium mb-2 block">ジャンル名</label>
               <Input
                 value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(e) => {
+                  const newTitle = e.target.value
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    title: newTitle,
+                    badge_data: {
+                      ...prev.badge_data,
+                      title: prev.badge_data?.title || `${newTitle}マスター`,
+                      description: prev.badge_data?.description || `${newTitle}の学習を完了`
+                    }
+                  }))
+                }}
                 placeholder="ジャンル名を入力..."
               />
             </div>
@@ -291,25 +311,31 @@ export function GenreEditModal({ genre, isOpen, onClose, onSave }: GenreEditModa
             <div className="space-y-4">
               {/* バッジプレビュー */}
               <div className="p-3 bg-gray-50 rounded-lg text-center">
-                <div 
+                <div
                   className="inline-flex items-center px-3 py-1 rounded-full text-white font-medium"
-                  style={{ backgroundColor: formData.badge_data.color }}
+                  style={{ backgroundColor: formData.badge_data?.color || '#F59E0B' }}
                 >
-                  <span className="mr-1">{formData.badge_data.icon}</span>
-                  {formData.badge_data.title}
+                  <span className="mr-1">{formData.badge_data?.icon || '🏆'}</span>
+                  {formData.badge_data?.title || 'バッジ'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {formData.badge_data.description}
+                  {formData.badge_data?.description || '説明未設定'}
                 </p>
               </div>
 
               <div>
                 <label className="text-sm font-medium mb-2 block">バッジタイトル</label>
                 <Input
-                  value={formData.badge_data.title}
+                  value={formData.badge_data?.title || ''}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    badge_data: { ...prev.badge_data, title: e.target.value }
+                    badge_data: {
+                      id: prev.badge_data?.id || `badge_${Date.now()}`,
+                      icon: prev.badge_data?.icon || '🏆',
+                      color: prev.badge_data?.color || '#F59E0B',
+                      title: e.target.value,
+                      description: prev.badge_data?.description || ''
+                    }
                   }))}
                   placeholder="バッジタイトル..."
                 />
@@ -318,10 +344,16 @@ export function GenreEditModal({ genre, isOpen, onClose, onSave }: GenreEditModa
               <div>
                 <label className="text-sm font-medium mb-2 block">バッジ説明</label>
                 <Textarea
-                  value={formData.badge_data.description}
+                  value={formData.badge_data?.description || ''}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    badge_data: { ...prev.badge_data, description: e.target.value }
+                    badge_data: {
+                      id: prev.badge_data?.id || `badge_${Date.now()}`,
+                      icon: prev.badge_data?.icon || '🏆',
+                      color: prev.badge_data?.color || '#F59E0B',
+                      title: prev.badge_data?.title || '',
+                      description: e.target.value
+                    }
                   }))}
                   placeholder="バッジの説明..."
                   rows={2}
@@ -335,13 +367,20 @@ export function GenreEditModal({ genre, isOpen, onClose, onSave }: GenreEditModa
                   {badgeIconOptions.map(icon => (
                     <button
                       key={icon}
+                      type="button"
                       onClick={() => setFormData(prev => ({
                         ...prev,
-                        badge_data: { ...prev.badge_data, icon }
+                        badge_data: {
+                          id: prev.badge_data?.id || `badge_${Date.now()}`,
+                          icon: icon,
+                          color: prev.badge_data?.color || '#F59E0B',
+                          title: prev.badge_data?.title || '',
+                          description: prev.badge_data?.description || ''
+                        }
                       }))}
                       className={`p-2 text-lg rounded border-2 hover:bg-muted transition-colors ${
-                        formData.badge_data.icon === icon 
-                          ? 'border-blue-500 bg-blue-50' 
+                        (formData.badge_data?.icon || '🏆') === icon
+                          ? 'border-blue-500 bg-blue-50'
                           : 'border-border'
                       }`}
                     >
@@ -358,13 +397,20 @@ export function GenreEditModal({ genre, isOpen, onClose, onSave }: GenreEditModa
                   {badgeColorOptions.map(color => (
                     <button
                       key={color.value}
+                      type="button"
                       onClick={() => setFormData(prev => ({
                         ...prev,
-                        badge_data: { ...prev.badge_data, color: color.value }
+                        badge_data: {
+                          id: prev.badge_data?.id || `badge_${Date.now()}`,
+                          icon: prev.badge_data?.icon || '🏆',
+                          color: color.value,
+                          title: prev.badge_data?.title || '',
+                          description: prev.badge_data?.description || ''
+                        }
                       }))}
                       className={`p-2 rounded border-2 hover:bg-muted transition-colors flex items-center space-x-2 ${
-                        formData.badge_data.color === color.value 
-                          ? 'border-blue-500 bg-blue-50' 
+                        (formData.badge_data?.color || '#F59E0B') === color.value
+                          ? 'border-blue-500 bg-blue-50'
                           : 'border-border'
                       }`}
                     >

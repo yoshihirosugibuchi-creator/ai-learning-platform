@@ -1,53 +1,81 @@
 /**
  * AIコンテンツ生成ステップ (Step 5)
  * アウトライン承認後の詳細コンテンツ・クイズ生成UI
+ * ジャンル/テーマ/セッション単位での階層的生成対応
  */
 
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
-import { 
+import { supabase } from '@/lib/supabase'
+import {
   Brain,
   Copy,
   ExternalLink,
   CheckCircle2,
   AlertCircle,
   Loader2,
-  PlayCircle,
-  Download,
   FileText,
   MessageSquare,
-  Clock,
-  Target,
   Sparkles,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  ChevronRight,
+  ChevronDown,
+  Layers,
+  BookOpen,
+  Package,
+  FileCode,
+  HelpCircle
 } from 'lucide-react'
 
 interface SessionData {
   id: string
   title: string
   description?: string
-  session_type: 'content' | 'quiz' | 'exercise'
+  session_type: 'knowledge' | 'practice' | 'case_study'
   estimatedMinutes: number
+  themeId: string
   themeTitle: string
   themeDescription: string
+  genreId: string
   genreTitle: string
+  genreDescription: string
   completed?: boolean
+}
+
+interface ThemeData {
+  id: string
+  title: string
+  description: string
+  sessions: SessionData[]
+  genreId: string
+  genreTitle: string
+  completedCount: number
+  totalCount: number
+}
+
+interface GenreData {
+  id: string
+  title: string
+  description: string
+  themes: ThemeData[]
+  completedCount: number
+  totalCount: number
 }
 
 interface ContentGenerationStepProps {
   workflow: {
     id?: string
-    title: string
-    outline_data?: {
-      approved: boolean
+    // DBから取得したコース構造（Step 4以降はこちらを優先使用）
+    course_structure?: {
       genres: Array<{
         id: string
         title: string
@@ -59,37 +87,37 @@ interface ContentGenerationStepProps {
           sessions: Array<{
             id: string
             title: string
+            session_type: string
+            estimated_minutes: number
+          }>
+        }>
+      }>
+    }
+    outline_data?: {
+      approved?: boolean
+      genres?: Array<{
+        id: string
+        title: string
+        description: string
+        themes: Array<{
+          id: string
+          title: string
+          description: string
+          sessions: Array<{
+            id: string
+            title: string
             description?: string
-            session_type: 'content' | 'quiz' | 'exercise'
+            session_type: 'knowledge' | 'practice' | 'case_study'
             estimatedMinutes: number
           }>
         }>
       }>
     }
     content_data?: {
-      session_contents?: Array<{
-        id: string
-        session_id: string
-        content_type: 'text' | 'image' | 'video' | 'exercise'
-        content_data: Record<string, unknown>
-        display_order: number
-      }>
-      session_quizzes?: Array<{
-        id: string
-        session_id: string
-        question: string
-        options: string[]
-        correct_answer: number
-        explanation: string
-        display_order: number
-      }>
-      reward_cards?: Record<string, unknown>[]
-      completion_badge?: Record<string, unknown>
-      review_notes?: string
-      approved?: boolean
-      generated_at?: string
       generated_sessions?: string[]
+      [key: string]: unknown
     }
+    [key: string]: unknown
   }
   onChange: (updates: Record<string, unknown>) => void
   onNext: () => void
@@ -104,101 +132,333 @@ export function ContentGenerationStep({
 }: ContentGenerationStepProps) {
   const { toast } = useToast()
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [currentPrompt, setCurrentPrompt] = useState('')
+  const [promptContext, setPromptContext] = useState<{
+    genreId: string
+    themeId: string
+    sessionId: string
+    sessionTitle: string
+    mode: 'session' | 'theme' | 'genre'
+  } | null>(null)
   const [aiResponse, setAiResponse] = useState('')
-  const [selectedSession, setSelectedSession] = useState<SessionData | null>(null)
-  const [sessionsList, setSessionsList] = useState<SessionData[]>([])
-  const [generationMode, setGenerationMode] = useState<'single' | 'batch'>('single')
+  const [isCopied, setIsCopied] = useState(false)
+  const [isClaudeClicked, setIsClaudeClicked] = useState(false)
+  
+  // 生成単位と選択状態
+  const [generationMode, setGenerationMode] = useState<'genre' | 'theme' | 'session'>('session')
+  const [selectedGenreId, setSelectedGenreId] = useState<string>('')
+  const [selectedThemeId, setSelectedThemeId] = useState<string>('')
+  const [selectedSessionId, setSelectedSessionId] = useState<string>('')
+  
+  // UI状態
+  const [expandedGenres, setExpandedGenres] = useState<Set<string>>(new Set())
+  const [expandedThemes, setExpandedThemes] = useState<Set<string>>(new Set())
+  const [activeTab, setActiveTab] = useState<'hierarchy' | 'prompt' | 'response' | 'review'>('hierarchy')
+  
+  // コンテンツ確認用の状態
+  const [generatedContents, setGeneratedContents] = useState<Record<string, {
+    contents: Array<{ id: string; title: string | null; content: string; content_type: string; display_order: number }>
+    quizzes: Array<{ id: string; question: string; options: unknown; correct_answer: number; explanation: string; display_order: number }>
+  }>>({})
+  const [isLoadingContents, setIsLoadingContents] = useState(false)
 
-  // セッション一覧抽出
+  // コンポーネント初期化時に最新のワークフローデータを取得
   useEffect(() => {
-    const sessions: SessionData[] = []
-    const generatedSessions = workflow.content_data?.generated_sessions || []
+    const refreshWorkflowData = async () => {
+      if (!workflow.id) return
 
-    if (workflow.outline_data?.genres) {
-      for (const genre of workflow.outline_data.genres) {
-        for (const theme of genre.themes) {
-          for (const session of theme.sessions) {
-            sessions.push({
-              id: session.id,
-              title: session.title,
-              description: session.description,
-              session_type: session.session_type,
-              estimatedMinutes: session.estimatedMinutes,
-              themeTitle: theme.title,
-              themeDescription: theme.description,
-              genreTitle: genre.title,
-              completed: generatedSessions.includes(session.id)
-            })
+      try {
+        const { supabase } = await import('@/lib/supabase')
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (!session?.access_token) return
+
+        const response = await fetch(`/api/ai-course-generation/workflows/${workflow.id}`, {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          // course_structure（DBからの構造）を優先使用
+          if (data.workflow?.course_structure) {
+            onChange({ course_structure: data.workflow.course_structure })
+            console.log('✅ [ContentGenerationStep] course_structure loaded from DB')
+          } else if (data.workflow?.outline_data) {
+            // フォールバック: outline_dataを使用（DB形式のIDの場合のみ）
+            const firstSession = data.workflow.outline_data.genres?.[0]?.themes?.[0]?.sessions?.[0]
+            if (firstSession && !firstSession.id.startsWith('session-')) {
+              onChange({ outline_data: data.workflow.outline_data })
+              console.log('✅ [ContentGenerationStep] outline_data refreshed with DB IDs')
+            }
           }
         }
+      } catch (error) {
+        console.error('[ContentGenerationStep] Failed to refresh workflow:', error)
       }
     }
 
-    setSessionsList(sessions)
+    refreshWorkflowData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflow.id])
 
-    // 最初の未完了セッションを選択
-    const firstIncomplete = sessions.find(s => !s.completed)
-    if (firstIncomplete && !selectedSession) {
-      setSelectedSession(firstIncomplete)
+  // 階層構造データの生成（generatedContentsも考慮）
+  // course_structure（DBからの構造）を優先使用
+  const hierarchicalData = useMemo(() => {
+    const genresMap = new Map<string, GenreData>()
+    const generatedSessionIds = workflow.content_data?.generated_sessions || []
+    // generatedContentsのキー（セッションID）も完了とみなす
+    const generatedContentSessionIds = Object.keys(generatedContents)
+    // 両方をマージして重複除去
+    const allCompletedSessionIds = [...new Set([...generatedSessionIds, ...generatedContentSessionIds])]
+
+    // course_structure（DBから取得）を優先使用
+    const sourceGenres = workflow.course_structure?.genres || workflow.outline_data?.genres
+    const isFromDB = !!workflow.course_structure?.genres
+
+    if (isFromDB) {
+      console.log('📋 [ContentGenerationStep] Using course_structure from DB')
     }
-  }, [workflow, selectedSession])
+
+    if (sourceGenres) {
+      for (const genre of sourceGenres) {
+        const themesMap = new Map<string, ThemeData>()
+
+        for (const theme of genre.themes) {
+          const sessions: SessionData[] = theme.sessions.map((session) => {
+            // DBとoutline_dataでフィールド名が異なる場合の対応
+            const sessionType = (
+              (session as { session_type?: string }).session_type ||
+              'knowledge'
+            ) as 'knowledge' | 'practice' | 'case_study'
+            const estimatedMinutes = (
+              (session as { estimated_minutes?: number }).estimated_minutes ||
+              (session as { estimatedMinutes?: number }).estimatedMinutes ||
+              15
+            )
+
+            return {
+              id: session.id,
+              title: session.title,
+              description: (session as { description?: string }).description,
+              session_type: sessionType,
+              estimatedMinutes,
+              themeId: theme.id,
+              themeTitle: theme.title,
+              themeDescription: theme.description,
+              genreId: genre.id,
+              genreTitle: genre.title,
+              genreDescription: genre.description,
+              // generated_sessionsまたはgeneratedContentsにあれば完了
+              completed: allCompletedSessionIds.includes(session.id)
+            }
+          })
+
+          const completedCount = sessions.filter(s => s.completed).length
+
+          themesMap.set(theme.id, {
+            id: theme.id,
+            title: theme.title,
+            description: theme.description,
+            sessions,
+            genreId: genre.id,
+            genreTitle: genre.title,
+            completedCount,
+            totalCount: sessions.length
+          })
+        }
+
+        const themes = Array.from(themesMap.values())
+        const totalSessions = themes.reduce((sum, t) => sum + t.totalCount, 0)
+        const completedSessions = themes.reduce((sum, t) => sum + t.completedCount, 0)
+
+        genresMap.set(genre.id, {
+          id: genre.id,
+          title: genre.title,
+          description: genre.description,
+          themes,
+          completedCount: completedSessions,
+          totalCount: totalSessions
+        })
+      }
+    }
+
+    return Array.from(genresMap.values())
+  }, [workflow, generatedContents])
+
+  // 初期選択の設定（IDが変更された場合も再初期化）
+  useEffect(() => {
+    if (hierarchicalData.length === 0) return
+
+    // 現在選択されているIDが階層データに存在するか確認
+    const genreExists = hierarchicalData.some(g => g.id === selectedGenreId)
+    const selectedGenre = hierarchicalData.find(g => g.id === selectedGenreId)
+    const themeExists = selectedGenre?.themes.some(t => t.id === selectedThemeId) ?? false
+    const selectedTheme = selectedGenre?.themes.find(t => t.id === selectedThemeId)
+    const sessionExists = selectedTheme?.sessions.some(s => s.id === selectedSessionId) ?? false
+
+    // 選択されたIDが存在しない場合は再初期化
+    // これは outline_data のIDがDB IDに更新された場合に対応
+    const needsReinit = !selectedGenreId || !genreExists
+
+    if (needsReinit) {
+      const firstGenre = hierarchicalData[0]
+      setSelectedGenreId(firstGenre.id)
+      setExpandedGenres(new Set([firstGenre.id]))
+      console.log(`📋 [ContentGenerationStep] Genre ID updated: ${firstGenre.id}`)
+
+      if (firstGenre.themes.length > 0) {
+        const firstTheme = firstGenre.themes[0]
+        setSelectedThemeId(firstTheme.id)
+        setExpandedThemes(new Set([firstTheme.id]))
+        console.log(`📋 [ContentGenerationStep] Theme ID updated: ${firstTheme.id}`)
+
+        if (firstTheme.sessions.length > 0) {
+          const firstIncompleteSession = firstTheme.sessions.find(s => !s.completed) || firstTheme.sessions[0]
+          setSelectedSessionId(firstIncompleteSession.id)
+          console.log(`📋 [ContentGenerationStep] Session ID updated: ${firstIncompleteSession.id}`)
+        }
+      }
+    } else if (!themeExists && selectedGenre) {
+      // ジャンルは有効だがテーマIDが無効な場合
+      const firstTheme = selectedGenre.themes[0]
+      if (firstTheme) {
+        setSelectedThemeId(firstTheme.id)
+        setExpandedThemes(prev => new Set([...prev, firstTheme.id]))
+        console.log(`📋 [ContentGenerationStep] Theme ID re-synced: ${firstTheme.id}`)
+
+        if (firstTheme.sessions.length > 0) {
+          const firstIncompleteSession = firstTheme.sessions.find(s => !s.completed) || firstTheme.sessions[0]
+          setSelectedSessionId(firstIncompleteSession.id)
+        }
+      }
+    } else if (!sessionExists && selectedTheme) {
+      // テーマは有効だがセッションIDが無効な場合
+      const firstIncompleteSession = selectedTheme.sessions.find(s => !s.completed) || selectedTheme.sessions[0]
+      if (firstIncompleteSession) {
+        setSelectedSessionId(firstIncompleteSession.id)
+        console.log(`📋 [ContentGenerationStep] Session ID re-synced: ${firstIncompleteSession.id}`)
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hierarchicalData])
+
+  // 選択中のアイテムを取得
+  const getSelectedItems = () => {
+    const genre = hierarchicalData.find(g => g.id === selectedGenreId)
+    const theme = genre?.themes.find(t => t.id === selectedThemeId)
+    const session = theme?.sessions.find(s => s.id === selectedSessionId)
+    return { genre, theme, session }
+  }
 
   // プロンプト生成
   const handleGeneratePrompt = async () => {
-    if (!selectedSession) {
-      toast({
-        title: "セッションが選択されていません",
-        description: "コンテンツを生成するセッションを選択してください",
-        variant: "destructive"
+    const { genre, theme, session } = getSelectedItems()
+    
+    // ワークフローIDの検証
+    if (!workflow.id || workflow.id.startsWith('temp_')) {
+      toast({ 
+        title: "エラー", 
+        description: "ワークフローを先に保存してください", 
+        variant: "destructive" 
       })
       return
     }
-
-    if (!workflow.id) {
-      toast({
-        title: "ワークフローIDが不明です",
-        description: "先にワークフローを保存してください",
-        variant: "destructive"
+    
+    // アウトラインデータの検証
+    if (!workflow.outline_data?.approved) {
+      toast({ 
+        title: "エラー", 
+        description: "アウトラインが承認されていません", 
+        variant: "destructive" 
       })
+      return
+    }
+    
+    if (!workflow.outline_data?.genres || workflow.outline_data.genres.length === 0) {
+      toast({ 
+        title: "エラー", 
+        description: "アウトラインデータが存在しません", 
+        variant: "destructive" 
+      })
+      return
+    }
+    
+    if (generationMode === 'session' && !session) {
+      toast({ title: "エラー", description: "セッションを選択してください", variant: "destructive" })
+      return
+    }
+    if (generationMode === 'theme' && !theme) {
+      toast({ title: "エラー", description: "テーマを選択してください", variant: "destructive" })
+      return
+    }
+    if (generationMode === 'genre' && !genre) {
+      toast({ title: "エラー", description: "ジャンルを選択してください", variant: "destructive" })
       return
     }
 
     setIsGenerating(true)
     
     try {
-      const response = await fetch(`/api/ai-course-generation/workflows/${workflow.id}/generate-content`, {
+      // 認証セッション取得
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      if (!authSession?.access_token) {
+        toast({
+          title: "認証エラー",
+          description: "認証情報が見つかりません。再ログインしてください。",
+          variant: "destructive"
+        })
+        return
+      }
+
+      const params = new URLSearchParams({
+        action: 'generate_prompt'
+      })
+
+      if (generationMode === 'session') {
+        params.append('session_id', session!.id)
+      } else if (generationMode === 'theme') {
+        params.append('theme_id', theme!.id)
+        params.append('batch_mode', 'theme')
+      } else if (generationMode === 'genre') {
+        params.append('genre_id', genre!.id)
+        params.append('batch_mode', 'genre')
+      }
+
+      const response = await fetch(`/api/ai-course-generation/workflows/${workflow.id}/generate-content?${params}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-test-user-id': '82413077-a06d-4d9c-82bb-6fdb6a6b8e13', // 開発環境での認証バイパス
-          'x-test-role': 'admin'
-        },
-        body: JSON.stringify({
-          action: 'generate_prompt',
-          session_id: selectedSession.id,
-          batch_mode: generationMode === 'batch'
-        })
+          'Authorization': `Bearer ${authSession.access_token}`
+        }
       })
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'プロンプト生成に失敗しました')
-      }
-
-      setCurrentPrompt(result.prompt || result.combined_prompt || '')
+      const data = await response.json()
       
-      toast({
-        title: "プロンプト生成完了",
-        description: `${generationMode === 'batch' ? '一括' : '単一'}プロンプトが生成されました`,
-      })
-
+      if (data.success) {
+        setCurrentPrompt(data.prompt || data.combined_prompt || '')
+        // プロンプト生成時のコンテキストを保存（レスポンス処理時に使用）
+        setPromptContext({
+          genreId: genre?.id || '',
+          themeId: theme?.id || '',
+          sessionId: session?.id || '',
+          sessionTitle: session?.title || theme?.title || genre?.title || '',
+          mode: generationMode
+        })
+        setActiveTab('prompt')
+        toast({
+          title: "プロンプト生成完了",
+          description: `${generationMode === 'genre' ? 'ジャンル' : generationMode === 'theme' ? 'テーマ' : 'セッション'}単位のプロンプトを生成しました`
+        })
+      } else {
+        throw new Error(data.error)
+      }
     } catch (error) {
-      console.error('Prompt generation error:', error)
       toast({
-        title: "プロンプト生成エラー",
-        description: error instanceof Error ? error.message : 'プロンプト生成に失敗しました',
+        title: "生成エラー",
+        description: error instanceof Error ? error.message : "プロンプト生成に失敗しました",
         variant: "destructive"
       })
     } finally {
@@ -206,383 +466,931 @@ export function ContentGenerationStep({
     }
   }
 
-  // プロンプトコピー
+  // AIレスポンス処理
+  const handleProcessResponse = async () => {
+    console.log('🔘 [handleProcessResponse] ボタンクリック - 開始')
+    console.log('🔘 [handleProcessResponse] aiResponse長さ:', aiResponse.length)
+    console.log('🔘 [handleProcessResponse] promptContext:', promptContext)
+
+    if (!aiResponse.trim()) {
+      console.log('❌ [handleProcessResponse] エラー: AIレスポンスが空')
+      toast({ title: "❌ エラー", description: "AIレスポンスを入力してください", variant: "destructive" })
+      return
+    }
+
+    // プロンプト生成時のコンテキストを使用（現在の選択状態ではなく）
+    if (!promptContext) {
+      console.log('❌ [handleProcessResponse] エラー: promptContextがnull')
+      toast({
+        title: "❌ エラー",
+        description: "プロンプトを先に生成してください。セッションを選択してプロンプト生成を実行してください。",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setIsProcessing(true)
+    // プロンプト生成時に保存されたコンテキストを使用
+    const { genreId, themeId, sessionId, sessionTitle, mode } = promptContext
+
+    console.log('📋 [handleProcessResponse] 保存されたコンテキストを使用:', {
+      genreId, themeId, sessionId, sessionTitle, mode
+    })
+
+    try {
+      // AIレスポンスのJSON検証
+      try {
+        JSON.parse(aiResponse)
+      } catch (_parseError) {
+        console.error('❌ [handleProcessResponse] JSONパースエラー:', _parseError)
+        toast({
+          title: "❌ JSON形式エラー",
+          description: "AIレスポンスの形式が不正です。有効なJSONを入力してください。",
+          variant: "destructive"
+        })
+        setIsProcessing(false)
+        return
+      }
+
+      // 認証セッション取得
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      if (!authSession?.access_token) {
+        toast({
+          title: "🔐 認証エラー",
+          description: "認証情報が見つかりません。再ログインしてください。",
+          variant: "destructive"
+        })
+        return
+      }
+
+      const params = new URLSearchParams({
+        action: 'process_response'
+      })
+
+      const body: {
+        ai_response: string
+        theme_id?: string
+        genre_id?: string
+      } = {
+        ai_response: aiResponse
+      }
+
+      // プロンプト生成時のコンテキストに基づいてパラメータを設定
+      if (mode === 'session') {
+        params.append('session_id', sessionId)
+      } else if (mode === 'theme') {
+        params.append('batch_mode', 'theme')
+        body.theme_id = themeId
+      } else if (mode === 'genre') {
+        params.append('batch_mode', 'genre')
+        body.genre_id = genreId
+      }
+
+      console.log('🚀 [ContentGenerationStep] API呼び出し開始:', {
+        url: `/api/ai-course-generation/workflows/${workflow.id}/generate-content?${params}`,
+        mode: generationMode,
+        workflowId: workflow.id
+      })
+
+      const response = await fetch(`/api/ai-course-generation/workflows/${workflow.id}/generate-content?${params}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authSession.access_token}`
+        },
+        body: JSON.stringify(body)
+      })
+
+      console.log('📡 [ContentGenerationStep] API応答:', response.status, response.statusText)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ [ContentGenerationStep] API失敗:', errorText)
+        let errorData
+        try {
+          errorData = JSON.parse(errorText)
+        } catch {
+          errorData = { error: errorText }
+        }
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      console.log('✅ [ContentGenerationStep] API成功:', data)
+      
+      if (data.success) {
+        // content_dataを更新（プロンプトコンテキストを使用）
+        const currentData = workflow.content_data || {}
+        const updatedSessions = [...(currentData.generated_sessions || [])]
+
+        // コンテキストからセッションIDを取得
+        if (mode === 'session') {
+          if (!updatedSessions.includes(sessionId)) {
+            updatedSessions.push(sessionId)
+          }
+        } else if (mode === 'theme') {
+          // テーマ内のすべてのセッションを追加
+          const contextGenre = hierarchicalData.find(g => g.id === genreId)
+          const contextTheme = contextGenre?.themes.find(t => t.id === themeId)
+          contextTheme?.sessions.forEach(s => {
+            if (!updatedSessions.includes(s.id)) {
+              updatedSessions.push(s.id)
+            }
+          })
+        } else if (mode === 'genre') {
+          // ジャンル内のすべてのセッションを追加
+          const contextGenre = hierarchicalData.find(g => g.id === genreId)
+          contextGenre?.themes.forEach(t => {
+            t.sessions.forEach(s => {
+              if (!updatedSessions.includes(s.id)) {
+                updatedSessions.push(s.id)
+              }
+            })
+          })
+        }
+
+        onChange({
+          content_data: {
+            ...currentData,
+            generated_sessions: updatedSessions,
+            generated_at: new Date().toISOString()
+          }
+        })
+
+        toast({
+          title: "✅ 処理完了",
+          description: `${sessionTitle}: ${data.saved_contents || 0}個のコンテンツと${data.saved_quizzes || 0}個のクイズを保存しました`,
+          duration: 4000
+        })
+
+        // 入力をクリアして確認画面に移動
+        setAiResponse('')
+        setCurrentPrompt('')
+        setPromptContext(null)  // コンテキストをクリア
+        setActiveTab('review')  // 確認画面に遷移
+        
+        // 確認画面のコンテンツを更新
+        await loadGeneratedContents()
+      } else {
+        // APIはerrors（複数形）またはmessageを返す場合がある
+        const errorMessage = data.error ||
+          (data.errors && Array.isArray(data.errors) ? data.errors.join(', ') : null) ||
+          data.message ||
+          '不明なエラーが発生しました'
+        throw new Error(errorMessage)
+      }
+    } catch (error) {
+      console.error('❌ [ContentGenerationStep] 処理エラー:', error)
+      toast({
+        title: "❌ 処理エラー",
+        description: error instanceof Error ? error.message : "レスポンス処理に失敗しました",
+        variant: "destructive",
+        duration: 6000
+      })
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  // コピー機能
   const handleCopyPrompt = async () => {
     try {
       await navigator.clipboard.writeText(currentPrompt)
+      setIsCopied(true)
       toast({
-        title: "プロンプトをコピーしました",
-        description: "Claude Web Interfaceに貼り付けて実行してください",
+        title: "✅ コピー完了",
+        description: "プロンプトをクリップボードにコピーしました",
+        duration: 2000
       })
-    } catch (_error) {
-      toast({
-        title: "コピーに失敗しました",
-        description: "手動でプロンプトを選択してコピーしてください",
-        variant: "destructive"
-      })
-    }
-  }
-
-  // Claude Web Interface開く
-  const openClaudeInterface = () => {
-    window.open('https://claude.ai/chat', '_blank', 'noopener,noreferrer')
-  }
-
-  // AIレスポンス送信
-  const handleSubmitResponse = async () => {
-    if (!selectedSession || !aiResponse.trim()) {
-      toast({
-        title: "AIレスポンスが入力されていません",
-        description: "Claude Web InterfaceからのJSONレスポンスを入力してください",
-        variant: "destructive"
-      })
-      return
-    }
-
-    if (!workflow.id) {
-      toast({
-        title: "ワークフローIDが不明です",
-        description: "先にワークフローを保存してください",
-        variant: "destructive"
-      })
-      return
-    }
-
-    setIsGenerating(true)
-
-    try {
-      const response = await fetch(`/api/ai-course-generation/workflows/${workflow.id}/generate-content`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-test-user-id': '82413077-a06d-4d9c-82bb-6fdb6a6b8e13',
-          'x-test-role': 'admin'
-        },
-        body: JSON.stringify({
-          action: 'process_response',
-          session_id: selectedSession.id,
-          ai_response: aiResponse
-        })
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'AIレスポンス処理に失敗しました')
-      }
-
-      // ワークフロー更新
-      onChange({
-        content_data: {
-          ...workflow.content_data,
-          generated_sessions: [
-            ...(workflow.content_data?.generated_sessions || []),
-            selectedSession.id
-          ]
-        },
-        current_step: '5'
-      })
-
-      toast({
-        title: "コンテンツ生成完了！",
-        description: `${selectedSession.title}のコンテンツが正常に保存されました`,
-      })
-
-      // 次のセッション選択
-      const currentIndex = sessionsList.findIndex(s => s.id === selectedSession.id)
-      const nextSession = sessionsList[currentIndex + 1]
-      
-      if (nextSession && !nextSession.completed) {
-        setSelectedSession(nextSession)
-        setAiResponse('')
-        setCurrentPrompt('')
-      } else {
-        // 全セッション完了
-        toast({
-          title: "全セッションのコンテンツ生成完了！",
-          description: "コースが学習可能な状態になりました",
-        })
-      }
-
+      // 3秒後にリセット
+      setTimeout(() => setIsCopied(false), 3000)
     } catch (error) {
-      console.error('Response processing error:', error)
+      console.error('Copy failed:', error)
       toast({
-        title: "AIレスポンス処理エラー",
-        description: error instanceof Error ? error.message : 'レスポンス処理に失敗しました',
+        title: "❌ コピー失敗",
+        description: "プロンプトのコピーに失敗しました",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // Claudeで実行ボタンのハンドラー
+  const handleOpenClaude = () => {
+    setIsClaudeClicked(true)
+    // 3秒後にリセット
+    setTimeout(() => setIsClaudeClicked(false), 3000)
+    window.open('https://claude.ai', '_blank', 'noopener,noreferrer')
+  }
+
+  // 生成されたコンテンツを取得
+  const loadGeneratedContents = async () => {
+    if (!workflow.id) {
+      console.log('⚠️ [ContentGenerationStep] No workflow ID, skipping content load')
+      return
+    }
+
+    setIsLoadingContents(true)
+    try {
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      if (!authSession?.access_token) {
+        console.warn('⚠️ [ContentGenerationStep] No auth session')
+        return
+      }
+
+      console.log('📋 [ContentGenerationStep] Loading contents for workflow:', workflow.id)
+
+      // APIは outline_data からセッションIDを抽出するので、generated_sessions チェック不要
+      const response = await fetch(`/api/ai-course-generation/workflows/${workflow.id}/contents`, {
+        headers: {
+          'Authorization': `Bearer ${authSession.access_token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('✅ [ContentGenerationStep] Contents loaded:', {
+          total_contents: data.total_contents,
+          total_quizzes: data.total_quizzes,
+          sessions_with_content: data.sessions_with_content
+        })
+        setGeneratedContents(data.contents || {})
+      } else {
+        console.error('❌ [ContentGenerationStep] Contents API failed:', response.status)
+      }
+    } catch (error) {
+      console.error('コンテンツ取得エラー:', error)
+      toast({
+        title: "❌ エラー",
+        description: "生成されたコンテンツの取得に失敗しました",
         variant: "destructive"
       })
     } finally {
-      setIsGenerating(false)
+      setIsLoadingContents(false)
     }
   }
 
-  // 進捗計算
-  const completedCount = sessionsList.filter(s => s.completed).length
-  const totalCount = sessionsList.length
-  const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
+  // レビュータブがアクティブになった時にコンテンツをロード
+  useEffect(() => {
+    if (activeTab === 'review') {
+      loadGeneratedContents()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
+
+  // 展開/折りたたみ制御
+  const toggleGenreExpansion = (genreId: string) => {
+    const newExpanded = new Set(expandedGenres)
+    if (newExpanded.has(genreId)) {
+      newExpanded.delete(genreId)
+    } else {
+      newExpanded.add(genreId)
+    }
+    setExpandedGenres(newExpanded)
+  }
+
+  const toggleThemeExpansion = (themeId: string) => {
+    const newExpanded = new Set(expandedThemes)
+    if (newExpanded.has(themeId)) {
+      newExpanded.delete(themeId)
+    } else {
+      newExpanded.add(themeId)
+    }
+    setExpandedThemes(newExpanded)
+  }
+
+  // 完了率計算
+  const totalSessions = hierarchicalData.reduce((sum, g) => sum + g.totalCount, 0)
+  const completedSessions = hierarchicalData.reduce((sum, g) => sum + g.completedCount, 0)
+  const completionRate = totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0
+  
+  // 次に生成すべきセッションを提案
+  const getNextRecommendedAction = () => {
+    if (completedSessions === 0) {
+      return { action: 'start', message: '最初のセッションから始めましょう' }
+    }
+    
+    if (completionRate === 100) {
+      return { action: 'complete', message: '全てのコンテンツが生成されました' }
+    }
+    
+    // 未完了のセッションを探す
+    for (const genre of hierarchicalData) {
+      for (const theme of genre.themes) {
+        const incompleteSession = theme.sessions.find(s => !s.completed)
+        if (incompleteSession) {
+          return { 
+            action: 'continue', 
+            message: `次の推奨: ${genre.title} > ${theme.title} > ${incompleteSession.title}`,
+            recommendedGenre: genre.id,
+            recommendedTheme: theme.id,
+            recommendedSession: incompleteSession.id
+          }
+        }
+      }
+    }
+    
+    return { action: 'complete', message: '全てのコンテンツが生成されました' }
+  }
+  
+  const recommendation = getNextRecommendedAction()
 
   return (
     <div className="space-y-6">
       {/* ヘッダー */}
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2 flex items-center justify-center gap-2">
+      <div>
+        <h2 className="text-2xl font-semibold mb-2 flex items-center gap-2">
           <Brain className="h-6 w-6 text-purple-600" />
-          コンテンツ生成
+          コンテンツ詳細生成
         </h2>
         <p className="text-muted-foreground">
-          各セッションの詳細コンテンツ・クイズを生成してコースを完成させます
+          承認されたアウトラインに基づいて、詳細な学習コンテンツとクイズを生成します
         </p>
       </div>
 
       {/* 進捗状況 */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardContent className="pt-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">コンテンツ生成進捗</span>
-            <span className="text-sm text-muted-foreground">{completedCount}/{totalCount} セッション</span>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between text-base">
+            <span>生成進捗</span>
+            <Badge variant={completionRate === 100 ? "default" : "secondary"}>
+              {completedSessions}/{totalSessions} セッション完了
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span>全体進捗</span>
+              <span>{completionRate}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div 
+                className={`h-2.5 rounded-full transition-all ${
+                  completionRate === 100 
+                    ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                    : 'bg-gradient-to-r from-purple-500 to-purple-600'
+                }`}
+                style={{ width: `${completionRate}%` }}
+              />
+            </div>
+            
+            {/* 進捗詳細 */}
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">ジャンル:</span>
+                <span>{hierarchicalData.length}個</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">テーマ:</span>
+                <span>{hierarchicalData.reduce((sum, g) => sum + g.themes.length, 0)}個</span>
+              </div>
+            </div>
+            
+            {completionRate === 100 && (
+              <Alert className="border-green-200 bg-green-50">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  🎉 全コンテンツの生成が完了しました！「次のステップ」ボタンからコース公開へ進めます。
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
-          <div className="w-full bg-blue-200 rounded-full h-2">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-          <div className="text-xs text-blue-700 mt-1">{progressPercentage}% 完了</div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* セッション選択 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">セッション選択</CardTitle>
-            <CardDescription>コンテンツを生成するセッションを選択</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {sessionsList.map((session) => (
-              <div 
-                key={session.id}
-                className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                  selectedSession?.id === session.id 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-200 hover:border-gray-300'
-                } ${session.completed ? 'opacity-50' : ''}`}
-                onClick={() => setSelectedSession(session)}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="font-medium text-sm">{session.title}</div>
-                  {session.completed && (
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  )}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {session.genreTitle} &gt; {session.themeTitle}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className="text-xs">
-                    {session.session_type === 'content' ? '講義' : 
-                     session.session_type === 'quiz' ? 'クイズ' : '演習'}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {session.estimatedMinutes}分
-                  </span>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+      {/* メインコンテンツ */}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'hierarchy' | 'prompt' | 'response' | 'review')} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="hierarchy" className="flex items-center gap-2">
+            <Layers className="h-4 w-4" />
+            階層選択
+          </TabsTrigger>
+          <TabsTrigger value="prompt" className="flex items-center gap-2">
+            <FileCode className="h-4 w-4" />
+            プロンプト
+          </TabsTrigger>
+          <TabsTrigger value="response" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            AIレスポンス
+          </TabsTrigger>
+          <TabsTrigger value="review" className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4" />
+            コンテンツ確認
+            {completedSessions > 0 && (
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {completedSessions}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-        {/* コンテンツ生成エリア */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* 生成設定 */}
+        {/* 階層選択タブ */}
+        <TabsContent value="hierarchy" className="space-y-4">
+          {/* 推奨アクション */}
+          {recommendation.action !== 'complete' && (
+            <Alert className="border-blue-200 bg-blue-50">
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="flex items-center justify-between">
+                <span className="text-blue-800">{recommendation.message}</span>
+                {recommendation.action === 'continue' && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      if (recommendation.recommendedGenre) setSelectedGenreId(recommendation.recommendedGenre)
+                      if (recommendation.recommendedTheme) setSelectedThemeId(recommendation.recommendedTheme)
+                      if (recommendation.recommendedSession) setSelectedSessionId(recommendation.recommendedSession)
+                      
+                      // 推奨セッションまで展開
+                      if (recommendation.recommendedGenre) {
+                        setExpandedGenres(prev => new Set([...prev, recommendation.recommendedGenre]))
+                      }
+                      if (recommendation.recommendedTheme) {
+                        setExpandedThemes(prev => new Set([...prev, recommendation.recommendedTheme]))
+                      }
+                    }}
+                    className="border-blue-200 text-blue-700 hover:bg-blue-100"
+                  >
+                    <ArrowRight className="h-3 w-3 mr-1" />
+                    選択
+                  </Button>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* 生成単位選択 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                AI生成設定
-              </CardTitle>
+              <CardTitle className="text-base">生成単位を選択</CardTitle>
+              <CardDescription>
+                コンテンツを生成する単位を選択してください
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
+            <CardContent>
+              <div className="grid grid-cols-3 gap-2">
                 <Button
-                  variant={generationMode === 'single' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setGenerationMode('single')}
+                  variant={generationMode === 'genre' ? 'default' : 'outline'}
+                  onClick={() => setGenerationMode('genre')}
+                  className="flex flex-col gap-1 h-auto py-3"
                 >
-                  単一セッション
+                  <Package className="h-5 w-5" />
+                  <span className="text-xs">ジャンル単位</span>
+                  <span className="text-xs opacity-70">大量生成</span>
                 </Button>
                 <Button
-                  variant={generationMode === 'batch' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setGenerationMode('batch')}
+                  variant={generationMode === 'theme' ? 'default' : 'outline'}
+                  onClick={() => setGenerationMode('theme')}
+                  className="flex flex-col gap-1 h-auto py-3"
                 >
-                  一括生成
+                  <BookOpen className="h-5 w-5" />
+                  <span className="text-xs">テーマ単位</span>
+                  <span className="text-xs opacity-70">中量生成</span>
+                </Button>
+                <Button
+                  variant={generationMode === 'session' ? 'default' : 'outline'}
+                  onClick={() => setGenerationMode('session')}
+                  className="flex flex-col gap-1 h-auto py-3"
+                >
+                  <FileText className="h-5 w-5" />
+                  <span className="text-xs">セッション単位</span>
+                  <span className="text-xs opacity-70">個別生成</span>
                 </Button>
               </div>
-
-              {selectedSession && (
-                <div className="p-3 bg-gray-50 rounded">
-                  <div className="font-medium text-sm mb-1">{selectedSession.title}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {selectedSession.description || 'セッションの詳細説明'}
-                  </div>
-                  <div className="flex items-center gap-4 mt-2 text-xs">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {selectedSession.estimatedMinutes}分
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Target className="h-3 w-3" />
-                      {selectedSession.session_type === 'content' ? '講義' : 
-                       selectedSession.session_type === 'quiz' ? 'クイズ' : '演習'}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <Button
-                onClick={handleGeneratePrompt}
-                disabled={!selectedSession || isGenerating}
-                className="w-full"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    プロンプト生成中...
-                  </>
-                ) : (
-                  <>
-                    <PlayCircle className="h-4 w-4 mr-2" />
-                    AIプロンプト生成
-                  </>
-                )}
-              </Button>
             </CardContent>
           </Card>
 
-          {/* プロンプト表示・コピー */}
-          {currentPrompt && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    生成されたプロンプト
-                  </span>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handleCopyPrompt}>
-                      <Copy className="h-4 w-4 mr-1" />
-                      コピー
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={openClaudeInterface}>
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      Claude起動
-                    </Button>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={currentPrompt}
-                  readOnly
-                  className="min-h-32 text-xs font-mono"
-                />
-                <div className="mt-2 text-xs text-muted-foreground">
-                  プロンプト長: {Math.ceil(currentPrompt.length / 1000)}KB | 
-                  推定トークン: {Math.ceil(currentPrompt.length / 4)}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* AIレスポンス入力 */}
+          {/* 階層構造表示 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                AIレスポンス入力
-              </CardTitle>
+              <CardTitle className="text-base">コース構造</CardTitle>
               <CardDescription>
-                Claude Web InterfaceからのJSON形式レスポンスを貼り付けてください
+                生成対象を選択してください（{generationMode === 'genre' ? 'ジャンル' : generationMode === 'theme' ? 'テーマ' : 'セッション'}を選択）
               </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {hierarchicalData.map(genre => (
+                  <div key={genre.id} className="border rounded-lg">
+                    {/* ジャンルレベル */}
+                    <div
+                      className={`p-3 hover:bg-gray-50 cursor-pointer flex items-center justify-between ${
+                        generationMode === 'genre' && selectedGenreId === genre.id ? 'bg-purple-50 border-purple-300' : ''
+                      }`}
+                      onClick={() => {
+                        setSelectedGenreId(genre.id)
+                        toggleGenreExpansion(genre.id)
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); toggleGenreExpansion(genre.id) }}>
+                          {expandedGenres.has(genre.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </button>
+                        <Package className="h-4 w-4 text-purple-600" />
+                        <span className="font-medium">{genre.title}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {genre.completedCount}/{genre.totalCount}
+                        </Badge>
+                      </div>
+                      {genre.completedCount === genre.totalCount && (
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      )}
+                    </div>
+
+                    {/* テーマレベル */}
+                    {expandedGenres.has(genre.id) && (
+                      <div className="pl-6">
+                        {genre.themes.map(theme => (
+                          <div key={theme.id}>
+                            <div
+                              className={`p-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between ${
+                                generationMode === 'theme' && selectedThemeId === theme.id ? 'bg-blue-50 border-blue-300' : ''
+                              }`}
+                              onClick={() => {
+                                setSelectedGenreId(genre.id)
+                                setSelectedThemeId(theme.id)
+                                toggleThemeExpansion(theme.id)
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <button onClick={(e) => { e.stopPropagation(); toggleThemeExpansion(theme.id) }}>
+                                  {expandedThemes.has(theme.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                </button>
+                                <BookOpen className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm">{theme.title}</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {theme.completedCount}/{theme.totalCount}
+                                </Badge>
+                              </div>
+                              {theme.completedCount === theme.totalCount && (
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              )}
+                            </div>
+
+                            {/* セッションレベル */}
+                            {expandedThemes.has(theme.id) && (
+                              <div className="pl-6">
+                                {theme.sessions.map(session => (
+                                  <div
+                                    key={session.id}
+                                    className={`p-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between ${
+                                      generationMode === 'session' && selectedSessionId === session.id ? 'bg-green-50 border-green-300' : ''
+                                    }`}
+                                    onClick={() => {
+                                      setSelectedGenreId(genre.id)
+                                      setSelectedThemeId(theme.id)
+                                      setSelectedSessionId(session.id)
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <FileText className="h-4 w-4 text-gray-600" />
+                                      <span className="text-sm">{session.title}</span>
+                                      <Badge variant="secondary" className="text-xs">
+                                        {session.session_type === 'knowledge' ? '知識' : 
+                                         session.session_type === 'practice' ? '実践' : 'ケース'}
+                                      </Badge>
+                                      <span className="text-xs text-gray-500">{session.estimatedMinutes}分</span>
+                                    </div>
+                                    {session.completed && (
+                                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 生成ボタン */}
+          <div className="flex justify-center">
+            <Button 
+              onClick={handleGeneratePrompt}
+              disabled={isGenerating}
+              size="lg"
+              className="flex items-center gap-2"
+            >
+              {isGenerating ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Sparkles className="h-5 w-5" />
+              )}
+              {generationMode === 'genre' ? 'ジャンル' : generationMode === 'theme' ? 'テーマ' : 'セッション'}のプロンプト生成
+            </Button>
+          </div>
+        </TabsContent>
+
+        {/* プロンプトタブ */}
+        <TabsContent value="prompt" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center justify-between">
+                <span>生成されたプロンプト</span>
+                {currentPrompt && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={isCopied ? "default" : "outline"}
+                      onClick={handleCopyPrompt}
+                      className={isCopied ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+                    >
+                      {isCopied ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                          コピー済み!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4 mr-1" />
+                          コピー
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={isClaudeClicked ? "default" : "outline"}
+                      onClick={handleOpenClaude}
+                      className={isClaudeClicked ? "bg-purple-600 hover:bg-purple-700 text-white" : ""}
+                    >
+                      {isClaudeClicked ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                          開きました!
+                        </>
+                      ) : (
+                        <>
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          Claudeで実行
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {currentPrompt ? (
+                <>
+                  {/* 対象セッション表示 */}
+                  {promptContext && (
+                    <Alert className="mb-3 bg-blue-50 border-blue-200">
+                      <FileText className="h-4 w-4 text-blue-600" />
+                      <AlertDescription className="text-blue-800">
+                        <strong>対象:</strong> {promptContext.sessionTitle}
+                        <span className="ml-2 text-xs">
+                          ({promptContext.mode === 'session' ? 'セッション' :
+                            promptContext.mode === 'theme' ? 'テーマ' : 'ジャンル'}単位)
+                        </span>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  <Textarea
+                    value={currentPrompt}
+                    readOnly
+                    className="min-h-[400px] font-mono text-xs"
+                  />
+                </>
+              ) : (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    階層選択タブで対象を選択し、プロンプトを生成してください
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* AIレスポンスタブ */}
+        <TabsContent value="response" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">AIレスポンス入力</CardTitle>
+              <CardDescription>
+                Claude Web Interfaceから生成結果をコピーして貼り付けてください
+              </CardDescription>
+              {/* 対象セッション表示 */}
+              {promptContext && (
+                <Alert className="mt-2 bg-blue-50 border-blue-200">
+                  <FileText className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-800">
+                    <strong>保存先:</strong> {promptContext.sessionTitle}
+                    <span className="ml-2 text-xs">
+                      ({promptContext.mode === 'session' ? 'セッション' :
+                        promptContext.mode === 'theme' ? 'テーマ' : 'ジャンル'}単位)
+                    </span>
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <Textarea
-                placeholder='{"session_contents": [...], "session_quizzes": [...], ...}'
                 value={aiResponse}
                 onChange={(e) => setAiResponse(e.target.value)}
-                className="min-h-32 font-mono text-sm"
-                disabled={isGenerating}
+                placeholder="生成されたJSONレスポンスをここに貼り付けてください..."
+                className="min-h-[400px] font-mono text-xs"
               />
-              
-              <div className="flex justify-between items-center">
-                <div className="text-sm text-muted-foreground">
-                  {aiResponse && (
-                    <>
-                      文字数: {aiResponse.length} | 
-                      JSON: {isValidJSON(aiResponse) ? '✅ 有効' : '❌ 無効'}
-                    </>
-                  )}
-                </div>
-                <Button 
-                  onClick={handleSubmitResponse}
-                  disabled={!aiResponse.trim() || !isValidJSON(aiResponse) || isGenerating}
-                  className="flex items-center gap-2"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      処理中...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="h-4 w-4" />
-                      コンテンツ保存
-                    </>
-                  )}
-                </Button>
-              </div>
+              <Button 
+                onClick={handleProcessResponse}
+                disabled={isProcessing || !aiResponse.trim()}
+                className="w-full"
+              >
+                {isProcessing ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                )}
+                AIレスポンスを処理して保存
+              </Button>
             </CardContent>
           </Card>
-        </div>
+        </TabsContent>
+
+        {/* コンテンツ確認タブ */}
+        <TabsContent value="review" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center justify-between">
+                <span>生成されたコンテンツ</span>
+                <Button size="sm" variant="outline" onClick={loadGeneratedContents}>
+                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                  更新
+                </Button>
+              </CardTitle>
+              <CardDescription>
+                生成済みのセッションコンテンツとクイズを確認できます
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingContents ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span>コンテンツを読み込み中...</span>
+                </div>
+              ) : (completedSessions === 0 && Object.keys(generatedContents).length === 0) ? (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    まだコンテンツが生成されていません。まず「階層選択」タブでセッションを選択し、プロンプトを生成してコンテンツを作成してください。
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <div className="space-y-6">
+                  {hierarchicalData.map(genre => (
+                    <div key={genre.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                          <Package className="h-5 w-5 text-purple-600" />
+                          {genre.title}
+                        </h3>
+                        <Badge variant="outline">
+                          {genre.completedCount}/{genre.totalCount} セッション完了
+                        </Badge>
+                      </div>
+                      
+                      {genre.themes.map(theme => (
+                        <div key={theme.id} className="ml-4 mb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-md font-medium flex items-center gap-2">
+                              <BookOpen className="h-4 w-4 text-blue-600" />
+                              {theme.title}
+                            </h4>
+                            <Badge variant="outline" className="text-xs">
+                              {theme.completedCount}/{theme.totalCount}
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid gap-3 ml-6">
+                            {theme.sessions.filter(session => session.completed || generatedContents[session.id]).map(session => {
+                              const sessionContent = generatedContents[session.id]
+                              const hasContent = sessionContent && (sessionContent.contents?.length > 0 || sessionContent.quizzes?.length > 0)
+                              return (
+                                <div key={session.id} className="border rounded-lg p-3 bg-green-50">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <h5 className="font-medium flex items-center gap-2">
+                                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                      {session.title}
+                                    </h5>
+                                    <div className="flex gap-2">
+                                      <Badge variant="secondary" className="text-xs">
+                                        {session.session_type === 'knowledge' ? '知識' :
+                                         session.session_type === 'practice' ? '実践' : 'ケース'}
+                                      </Badge>
+                                      <Badge variant="outline" className="text-xs">
+                                        {session.estimatedMinutes}分
+                                      </Badge>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-sm text-gray-600 space-y-1">
+                                    <div className="flex justify-between">
+                                      <span>生成状況:</span>
+                                      <span className="text-green-600">{hasContent ? '✅ 完了' : '⏳ 処理中'}</span>
+                                    </div>
+                                    {hasContent && (
+                                      <div className="flex justify-between">
+                                        <span>コンテンツ: {sessionContent.contents?.length || 0}個 / クイズ: {sessionContent.quizzes?.length || 0}個</span>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* コンテンツ詳細 */}
+                                  {hasContent && sessionContent.contents && sessionContent.contents.length > 0 && (
+                                    <div className="mt-3 border-t pt-3 space-y-3">
+                                      <h6 className="font-medium text-sm flex items-center gap-1">
+                                        <BookOpen className="h-3 w-3" />
+                                        コンテンツ
+                                      </h6>
+                                      {sessionContent.contents.map((content, idx: number) => (
+                                        <div key={idx} className="bg-white border rounded p-3 text-sm">
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <Badge variant="outline" className="text-xs">
+                                              {content.content_type === 'text' ? 'テキスト' :
+                                               content.content_type === 'example' ? '事例' : 'ポイント'}
+                                            </Badge>
+                                            <span className="font-medium">{content.title || 'タイトルなし'}</span>
+                                          </div>
+                                          <p className="text-gray-700 whitespace-pre-wrap text-xs max-h-32 overflow-y-auto">
+                                            {content.content || 'コンテンツなし'}
+                                          </p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {/* クイズ詳細 */}
+                                  {hasContent && sessionContent.quizzes && sessionContent.quizzes.length > 0 && (
+                                    <div className="mt-3 border-t pt-3 space-y-3">
+                                      <h6 className="font-medium text-sm flex items-center gap-1">
+                                        <HelpCircle className="h-3 w-3" />
+                                        クイズ
+                                      </h6>
+                                      {sessionContent.quizzes.map((quiz, idx: number) => (
+                                        <div key={idx} className="bg-white border rounded p-3 text-sm">
+                                          <p className="font-medium mb-2">{quiz.question || '問題なし'}</p>
+                                          <div className="space-y-1 mb-2">
+                                            {(Array.isArray(quiz.options) ? quiz.options : []).map((opt, optIdx: number) => (
+                                              <div key={optIdx} className={`text-xs px-2 py-1 rounded ${
+                                                optIdx === quiz.correct_answer
+                                                  ? 'bg-green-100 text-green-800 font-medium'
+                                                  : 'bg-gray-50'
+                                              }`}>
+                                                {optIdx + 1}. {opt}
+                                              </div>
+                                            ))}
+                                          </div>
+                                          <p className="text-xs text-gray-600">
+                                            <strong>解説:</strong> {quiz.explanation || '解説なし'}
+                                          </p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* ナビゲーション */}
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={onPrevious}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          前のステップ
+        </Button>
+        <Button 
+          onClick={onNext}
+          disabled={completionRate < 100}
+        >
+          次のステップ
+          <ArrowRight className="h-4 w-4 ml-2" />
+        </Button>
       </div>
 
-      {/* 注意事項 */}
+      {/* ヒント */}
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          <strong>手動AIモードについて:</strong> 
-          Claude Web Interfaceでプロンプトを実行し、JSON形式のレスポンスを上記に貼り付けてください。
-          将来のClaude API統合により、このプロセスは自動化されます。
+          <strong>ヒント：</strong>効率的な生成のために、テーマ単位での生成を推奨します。
+          ジャンル単位は一度に大量のコンテンツが生成されるため、トークン制限に注意してください。
         </AlertDescription>
       </Alert>
-
-      {/* フッター */}
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={onPrevious} className="flex items-center gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          前のステップ
-        </Button>
-        
-        <Button 
-          onClick={onNext}
-          disabled={progressPercentage < 100}
-          className="flex items-center gap-2"
-        >
-          コース完成・次へ
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
     </div>
   )
-}
-
-// ヘルパー関数
-function isValidJSON(str: string): boolean {
-  try {
-    JSON.parse(str)
-    return true
-  } catch {
-    return false
-  }
 }

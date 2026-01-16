@@ -18,7 +18,7 @@ interface SessionUpdateRequest {
 }
 
 // ID生成関数（既存パターンに合わせた英数記号）
-const generateSessionId = (title: string, theme_id: string, session_type: string): string => {
+const _generateSessionId = (title: string, theme_id: string, session_type: string): string => {
   const baseId = title
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '_')
@@ -93,16 +93,25 @@ export async function POST(request: NextRequest) {
     const body: SessionCreateRequest = await request.json()
     const { theme_id, title, estimated_minutes, session_type, display_order } = body
 
+    // デバッグログ
+    console.log('🔍 [AdminSessions] Request body:', {
+      theme_id, title, estimated_minutes, session_type, display_order,
+      theme_id_type: typeof theme_id,
+      title_type: typeof title,
+      session_type_type: typeof session_type
+    })
+
     // 必須フィールド検証
     if (!theme_id || !title || !session_type) {
+      console.error('❌ [AdminSessions] Missing fields:', { theme_id, title, session_type })
       return NextResponse.json(
         { error: 'Missing required fields: theme_id, title, session_type' },
         { status: 400 }
       )
     }
 
-    // session_type検証
-    const validSessionTypes = ['knowledge', 'practice', 'case_study']
+    // session_type検証（Phase1-3対応）
+    const validSessionTypes = ['knowledge', 'practice', 'case_study', 'review', 'assessment']
     if (!validSessionTypes.includes(session_type)) {
       return NextResponse.json(
         { error: `Invalid session_type. Must be one of: ${validSessionTypes.join(', ')}` },
@@ -124,30 +133,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // ID生成（重複チェック付き）
-    let sessionId = generateSessionId(title, theme_id, session_type)
-    let counter = 1
-    const maxAttempts = 10
-
-    while (counter <= maxAttempts) {
-      const { data: existing } = await supabaseAdmin
-        .from('learning_sessions')
-        .select('id')
-        .eq('id', sessionId)
-        .single()
-
-      if (!existing) break
-
-      sessionId = `${generateSessionId(title, theme_id, session_type)}_${counter}`
-      counter++
-    }
-
-    if (counter > maxAttempts) {
-      return NextResponse.json(
-        { error: 'Failed to generate unique session ID' },
-        { status: 500 }
-      )
-    }
+    // ID生成ヘルパー関数を使用して適切なIDを生成
+    const { generateUniqueId } = await import('@/lib/id-generation-helper')
+    const sessionId = await generateUniqueId('session', title)
 
     // セッション作成
     const sessionData = {

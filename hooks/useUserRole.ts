@@ -51,10 +51,13 @@ export function useUserRole() {
         setError(null)
         console.log('🔄 Fetching fresh user role from API...')
 
-        // Get session token from Supabase directly with faster timeout
+        // Get session token from Supabase directly with graceful timeout handling
         const sessionPromise = supabase.auth.getSession()
-        const timeoutPromise: Promise<never> = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Session fetch timeout')), 5000)
+        const timeoutPromise: Promise<{ data: { session: null } }> = new Promise((resolve) =>
+          setTimeout(() => {
+            console.warn('🔥 Session fetch timed out after 5s, treating as no session')
+            resolve({ data: { session: null } })
+          }, 5000)
         )
         
         const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise])

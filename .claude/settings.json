@@ -1,0 +1,11 @@
+{
+  "memoryFiles": ["CLAUDE.md"],
+  "environment": {
+    "NODE_ENV": "development"
+  },
+  "permissions": {
+    "allowedTools": ["*"],
+    "allowedDirectories": ["./"]
+  },
+  "startupInstructions": "Always read and follow CLAUDE.md guidelines before starting any work."
+}

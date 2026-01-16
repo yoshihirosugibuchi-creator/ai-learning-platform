@@ -69,7 +69,22 @@ export async function GET(request: NextRequest) {
       description: ((workflow.course_basic_info as { description?: string }) || {}).description || workflow.description || '',
       sources: workflow.source_materials || [],
       aiOutlineResponse: (workflow.outline_data as { ai_response_raw?: string } | null)?.ai_response_raw || null,
-      currentStep: parseInt(workflow.current_step || '0')
+      // DBのcurrent_stepをそのまま使用（最後に作業していたステップに戻る）
+      currentStep: parseInt(workflow.current_step || '0'),
+      
+      // 🔧 Step1で必要なフィールドを追加（course_basic_infoから抽出）
+      difficultyId: ((workflow.course_basic_info as { difficulty?: string }) || {}).difficulty || '',
+      estimatedDuration: ((workflow.course_basic_info as { estimated_duration?: string }) || {}).estimated_duration || '',
+      learningObjectives: ((workflow.course_basic_info as { learning_objectives?: string[] }) || {}).learning_objectives || [],
+      targetAudience: ((workflow.course_basic_info as { target_audience?: string }) || {}).target_audience || '',
+      courseCategory: ((workflow.course_basic_info as { course_category?: string }) || {}).course_category || '',
+      generationPreferences: ((workflow.course_basic_info as { generation_preferences?: Record<string, unknown> }) || {}).generation_preferences || workflow.generation_preferences || {
+        sessionLength: 15,
+        includeQuizzes: true,
+        interactivityLevel: 'medium',
+        contentStyle: 'formal'
+      },
+      categoryMappings: workflow.category_mappings || []
     })) || []
 
     return NextResponse.json({

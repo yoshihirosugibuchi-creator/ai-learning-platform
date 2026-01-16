@@ -150,3 +150,109 @@ export async function PATCH(
     )
   }
 }
+
+/**
+ * DELETE /api/admin/themes/[id]
+ * テーマ削除（管理者用）
+ */
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { userId, role } = await getCurrentUserRole(request)
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: '認証が必要です' },
+        { status: 401 }
+      )
+    }
+
+    if (!role || (role !== 'admin' && role !== 'system_admin')) {
+      return NextResponse.json(
+        { error: '管理者のアクセス権限が必要です' },
+        { status: 403 }
+      )
+    }
+
+    const { id: themeId } = await context.params
+
+    console.log(`🗑️ [AdminThemes] テーマ削除開始: ${themeId}`)
+
+    // 1. テーマの存在確認
+    const { data: theme, error: fetchError } = await supabaseAdmin
+      .from('learning_themes')
+      .select('id, title')
+      .eq('id', themeId)
+      .single()
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: '指定されたテーマが見つかりません' },
+          { status: 404 }
+        )
+      }
+      
+      console.error('❌ [AdminThemes] テーマ取得エラー:', fetchError)
+      return NextResponse.json(
+        { error: 'テーマ情報の取得に失敗しました' },
+        { status: 500 }
+      )
+    }
+
+    // 2. セッションの存在確認（セッションがある場合は削除を拒否）
+    const { data: sessions, error: sessionCheckError } = await supabaseAdmin
+      .from('learning_sessions')
+      .select('id')
+      .eq('theme_id', themeId)
+      .limit(1)
+
+    if (sessionCheckError) {
+      console.error('❌ [AdminThemes] セッションチェックエラー:', sessionCheckError)
+      return NextResponse.json(
+        { error: 'セッションの確認に失敗しました' },
+        { status: 500 }
+      )
+    }
+
+    if (sessions && sessions.length > 0) {
+      return NextResponse.json(
+        { error: 'このテーマにはセッションが含まれています。先にセッションを削除してください。' },
+        { status: 400 }
+      )
+    }
+
+    // 3. テーマを削除
+    const { error: deleteError } = await supabaseAdmin
+      .from('learning_themes')
+      .delete()
+      .eq('id', themeId)
+
+    if (deleteError) {
+      console.error('❌ [AdminThemes] 削除エラー:', deleteError)
+      return NextResponse.json(
+        { error: 'テーマの削除に失敗しました' },
+        { status: 500 }
+      )
+    }
+
+    console.log(`✅ [AdminThemes] テーマ削除完了: ${theme.title}`)
+
+    return NextResponse.json({
+      success: true,
+      message: `テーマ「${theme.title}」を削除しました`
+    })
+
+  } catch (error) {
+    console.error('❌ [AdminThemes] Unexpected error:', error)
+    return NextResponse.json(
+      { 
+        error: 'テーマ削除中にエラーが発生しました',
+        details: error instanceof Error ? error.message : String(error)
+      },
+      { status: 500 }
+    )
+  }
+}

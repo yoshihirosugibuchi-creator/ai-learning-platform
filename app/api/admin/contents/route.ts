@@ -4,7 +4,7 @@ import { getCurrentUserRole } from '@/lib/auth-helpers'
 
 interface ContentCreateRequest {
   session_id: string
-  content_type: 'text' | 'image' | 'video' | 'example' | 'key_points'
+  content_type: 'text' | 'example' | 'key_points'
   title?: string
   content: string
   duration?: number
@@ -12,7 +12,7 @@ interface ContentCreateRequest {
 }
 
 interface ContentUpdateRequest {
-  content_type?: 'text' | 'image' | 'video' | 'example' | 'key_points'
+  content_type?: 'text' | 'example' | 'key_points'
   title?: string
   content?: string
   duration?: number
@@ -21,19 +21,9 @@ interface ContentUpdateRequest {
 
 // ID生成関数（既存パターンに合わせた英数記号）
 const generateContentId = (session_id: string, content_type: string, display_order: number): string => {
-  // session_id_content_type_order パターン
-  const typeMapping: { [key: string]: string } = {
-    'text': 'content',
-    'image': 'image', 
-    'video': 'video',
-    'example': 'example',
-    'key_points': 'points'
-  }
-
-  const typeSuffix = typeMapping[content_type] || 'content'
+  // session_id_content_order パターン（実際のデータに基づく）
   const orderNum = display_order || 1
-  
-  return `${session_id}_${typeSuffix}_${orderNum}`
+  return `${session_id}_content_${orderNum}`
 }
 
 // コンテンツ作成（POST）
@@ -67,8 +57,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // content_type検証
-    const validContentTypes = ['text', 'image', 'video', 'example', 'key_points']
+    // content_type検証（Phase1-3対応）
+    const validContentTypes = ['text', 'example', 'key_points', 'image', 'video', 'interactive']
     if (!validContentTypes.includes(content_type)) {
       return NextResponse.json(
         { error: `Invalid content_type. Must be one of: ${validContentTypes.join(', ')}` },
@@ -257,9 +247,9 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // content_type検証
+    // content_type検証（Phase1-3対応）
     if (content_type) {
-      const validContentTypes = ['text', 'image', 'video', 'example', 'key_points']
+      const validContentTypes = ['text', 'example', 'key_points', 'image', 'video', 'interactive']
       if (!validContentTypes.includes(content_type)) {
         return NextResponse.json(
           { error: `Invalid content_type. Must be one of: ${validContentTypes.join(', ')}` },

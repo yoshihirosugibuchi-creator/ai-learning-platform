@@ -15,10 +15,9 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
 import { type CourseWizardWorkflow } from '@/lib/ai-course-generation/type-conversion'
-import { getSkillLevelIds, validateDifficulty } from '@/lib/skill-levels-helper'
+// Note: skill-levels-helper functions are server-side only
 import { 
   CheckCircle2, 
-  XCircle, 
   Edit, 
   Save, 
   AlertCircle,
@@ -27,7 +26,9 @@ import {
   Target,
   Users,
   Star,
-  Loader2
+  Loader2,
+  ArrowLeft,
+  ArrowRight
 } from 'lucide-react'
 
 // 型定義（skill_levelsベース）
@@ -66,7 +67,7 @@ interface SessionOutline {
   id: string
   title: string
   description?: string
-  session_type: 'content' | 'quiz' | 'exercise'
+  session_type: 'knowledge' | 'practice' | 'case_study'
   estimatedMinutes: number
   display_order: number
 }
@@ -77,7 +78,6 @@ interface OutlineReviewStepProps {
     outline_data?: {
       course?: CourseOutline
       genres?: GenreOutline[]
-      review_notes?: string
       approved?: boolean
       generated_at?: string
       ai_response_raw?: string
@@ -113,8 +113,8 @@ const getDifficultyInfo = (difficulty: string): DifficultyInfo => {
 export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: OutlineReviewStepProps) {
   const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
-  const [reviewNotes, setReviewNotes] = useState('')
   const [editedOutline, setEditedOutline] = useState<CourseOutline | null>(null)
+  const [editedGenres, setEditedGenres] = useState<GenreOutline[]>([])
   const [isCreatingDraft, setIsCreatingDraft] = useState(false)
   const [_validSkillLevels, setValidSkillLevels] = useState<string[]>(['basic', 'intermediate', 'advanced', 'expert'])
   
@@ -126,11 +126,13 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
   
   const [parseError, setParseError] = useState<string | null>(null)
 
-  // skill_levels動的取得
+  // skill_levels API経由取得
   useEffect(() => {
     const loadSkillLevels = async () => {
       try {
-        const skillLevelIds = await getSkillLevelIds()
+        const { ApiClient } = await import('@/lib/api-helpers')
+        const skillLevelsResult = await ApiClient.get<{ skill_levels: Array<{ id: string; name: string }> }>('/api/skill-levels')
+        const skillLevelIds = skillLevelsResult.skill_levels?.map(level => level.id) || []
         setValidSkillLevels(skillLevelIds)
         console.log('📋 [OutlineReview] Loaded skill levels:', skillLevelIds)
       } catch (error) {
@@ -144,8 +146,23 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
   // AI生成レスポンスからアウトライン解析
   useEffect(() => {
     const parseOutline = async () => {
+      // 既存のoutline_dataを優先して使用（編集済みデータ）
+      if (workflow.outline_data && workflow.outline_data.course && workflow.outline_data.genres) {
+        console.log('📋 [OutlineReview] 既存のoutline_dataを使用')
+        setParsedOutline({
+          course: workflow.outline_data.course,
+          genres: workflow.outline_data.genres
+        })
+        setEditedOutline(workflow.outline_data.course)
+        setEditedGenres(workflow.outline_data.genres)
+        setParseError(null)
+        return
+      }
+      
+      // outline_dataがない場合はaiOutlineResponseから解析
       if (workflow.aiOutlineResponse) {
         try {
+          console.log('🔄 [OutlineReview] AIレスポンスを解析')
           // JSON解析を試行
           const parsed = JSON.parse(workflow.aiOutlineResponse)
           
@@ -154,12 +171,12 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
             throw new Error('Invalid outline structure')
           }
           
-          // difficulty検証・修正
+          // difficulty検証・修正（フォールバック対応）
           if (parsed.course && parsed.course.difficulty) {
-            const validatedDifficulty = await validateDifficulty(parsed.course.difficulty)
-            if (validatedDifficulty !== parsed.course.difficulty) {
-              console.log(`🔧 [OutlineReview] Difficulty corrected: ${parsed.course.difficulty} -> ${validatedDifficulty}`)
-              parsed.course.difficulty = validatedDifficulty
+            const validDifficulties = ['basic', 'intermediate', 'advanced', 'expert']
+            if (!validDifficulties.includes(parsed.course.difficulty)) {
+              console.log(`🔧 [OutlineReview] Difficulty corrected: ${parsed.course.difficulty} -> basic`)
+              parsed.course.difficulty = 'basic'
             }
           } else {
             // difficulty未設定の場合はbasicをデフォルト
@@ -168,12 +185,8 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
           
           setParsedOutline(parsed)
           setEditedOutline(parsed.course)
+          setEditedGenres(parsed.genres)
           setParseError(null)
-          
-          // workflow.outline_dataに保存された情報も確認
-          if (workflow.outline_data) {
-            setReviewNotes(workflow.outline_data.review_notes || '')
-          }
           
         } catch (error) {
           console.error('❌ Outline parsing error:', error)
@@ -186,20 +199,70 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
     parseOutline()
   }, [workflow.aiOutlineResponse, workflow.outline_data])
 
+  // ジャンルタイトル編集
+  const handleGenreEdit = (genreIndex: number, field: string, value: string) => {
+    setEditedGenres(prev => {
+      const newGenres = [...prev]
+      newGenres[genreIndex] = {
+        ...newGenres[genreIndex],
+        [field]: value
+      }
+      return newGenres
+    })
+  }
+
+  // テーマ編集
+  const handleThemeEdit = (genreIndex: number, themeIndex: number, field: string, value: string | number) => {
+    setEditedGenres(prev => {
+      const newGenres = [...prev]
+      const newThemes = [...newGenres[genreIndex].themes]
+      newThemes[themeIndex] = {
+        ...newThemes[themeIndex],
+        [field]: value
+      }
+      newGenres[genreIndex] = {
+        ...newGenres[genreIndex],
+        themes: newThemes
+      }
+      return newGenres
+    })
+  }
+
+  // セッション編集
+  const handleSessionEdit = (genreIndex: number, themeIndex: number, sessionIndex: number, field: string, value: string | number) => {
+    setEditedGenres(prev => {
+      const newGenres = [...prev]
+      const newThemes = [...newGenres[genreIndex].themes]
+      const newSessions = [...newThemes[themeIndex].sessions]
+      newSessions[sessionIndex] = {
+        ...newSessions[sessionIndex],
+        [field]: value
+      }
+      newThemes[themeIndex] = {
+        ...newThemes[themeIndex],
+        sessions: newSessions
+      }
+      newGenres[genreIndex] = {
+        ...newGenres[genreIndex],
+        themes: newThemes
+      }
+      return newGenres
+    })
+  }
+
   // アウトライン編集保存
   const handleSaveEdits = () => {
-    if (!parsedOutline || !editedOutline) return
+    if (!editedOutline || !editedGenres) return
 
     const updatedOutline = {
-      ...parsedOutline,
-      course: editedOutline
+      course: editedOutline,
+      genres: editedGenres
     }
     
     onChange({
       outline_data: {
         course: editedOutline,
-        genres: parsedOutline.genres,
-        review_notes: reviewNotes,
+        genres: editedGenres,
         approved: false,
         generated_at: workflow.outline_data?.generated_at || new Date().toISOString(),
         ai_response_raw: workflow.aiOutlineResponse
@@ -228,7 +291,6 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
         outline_data: {
           course: editedOutline || parsedOutline.course,
           genres: parsedOutline.genres,
-          review_notes: reviewNotes,
           approved: true,
           generated_at: workflow.outline_data?.generated_at || new Date().toISOString(),
           ai_response_raw: workflow.aiOutlineResponse
@@ -273,6 +335,25 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
         }
 
         if (result.success) {
+          // 最新のワークフローデータを再取得してstateを更新
+          const workflowResponse = await fetch(`/api/ai-course-generation/workflows/${wizardWorkflow.id}`, {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          })
+
+          if (workflowResponse.ok) {
+            const workflowData = await workflowResponse.json()
+            if (workflowData.workflow?.outline_data) {
+              // 更新されたoutline_data（DB IDに置換済み）で親コンポーネントを更新
+              onChange({
+                outline_data: workflowData.workflow.outline_data,
+                published_course_id: result.course_id
+              })
+              console.log('✅ [OutlineReview] outline_data updated with DB IDs')
+            }
+          }
+
           toast({
             title: "✅ アウトライン承認・コース作成完了",
             description: `ドラフトコース「${result.course_id}」を learning_courses テーブルに作成しました。`
@@ -302,28 +383,6 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
     }
   }
 
-  // アウトライン差し戻し
-  const handleReject = () => {
-    onChange({
-      outline_data: {
-        course: editedOutline || parsedOutline?.course,
-        genres: parsedOutline?.genres || [],
-        review_notes: reviewNotes,
-        approved: false,
-        generated_at: workflow.outline_data?.generated_at || new Date().toISOString(),
-        ai_response_raw: workflow.aiOutlineResponse
-      },
-      status: 'outline_draft'
-    })
-    
-    toast({
-      title: "アウトライン差し戻し",
-      description: "修正指示を記録しました。Step 2に戻って再生成してください。",
-      variant: "default"
-    })
-    
-    onPrevious()
-  }
 
   // 総学習時間計算
   const calculateTotalMinutes = () => {
@@ -509,40 +568,126 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
       {/* ジャンル・テーマ構成 */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">コース構成</h3>
-        {parsedOutline.genres.map((genre, genreIndex) => (
+        {parsedOutline && parsedOutline.genres && parsedOutline.genres.length > 0 ? (
+          (isEditing ? editedGenres : parsedOutline.genres).map((genre, genreIndex) => (
           <Card key={genre.id} className="border-l-4 border-l-blue-500">
             <CardHeader>
-              <CardTitle className="text-base">
-                ジャンル {genreIndex + 1}: {genre.title}
-              </CardTitle>
-              <CardDescription>{genre.description}</CardDescription>
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <Input
+                        value={genre.title}
+                        onChange={(e) => handleGenreEdit(genreIndex, 'title', e.target.value)}
+                        placeholder="ジャンルタイトル"
+                        className="font-medium"
+                      />
+                      <Textarea
+                        value={genre.description}
+                        onChange={(e) => handleGenreEdit(genreIndex, 'description', e.target.value)}
+                        placeholder="ジャンルの説明"
+                        rows={2}
+                        className="text-sm"
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <CardTitle className="text-base">
+                        ジャンル {genreIndex + 1}: {genre.title}
+                      </CardTitle>
+                      <CardDescription>{genre.description}</CardDescription>
+                    </>
+                  )}
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {genre.themes.map((theme, themeIndex) => (
                   <div key={theme.id} className="border rounded-lg p-3 bg-gray-50">
                     <div className="flex justify-between items-start mb-2">
-                      <h5 className="font-medium text-sm">
-                        テーマ {themeIndex + 1}: {theme.title}
-                      </h5>
-                      <Badge variant="secondary" className="text-xs">
-                        {theme.estimatedMinutes}分
-                      </Badge>
+                      {isEditing ? (
+                        <div className="flex-1 space-y-2 mr-3">
+                          <Input
+                            value={theme.title}
+                            onChange={(e) => handleThemeEdit(genreIndex, themeIndex, 'title', e.target.value)}
+                            placeholder="テーマタイトル"
+                            className="text-sm font-medium"
+                          />
+                          <Textarea
+                            value={theme.description}
+                            onChange={(e) => handleThemeEdit(genreIndex, themeIndex, 'description', e.target.value)}
+                            placeholder="テーマの説明"
+                            rows={2}
+                            className="text-xs"
+                          />
+                        </div>
+                      ) : (
+                        <h5 className="font-medium text-sm">
+                          テーマ {themeIndex + 1}: {theme.title}
+                        </h5>
+                      )}
+                      <div className="flex flex-col gap-1">
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            value={theme.estimatedMinutes}
+                            onChange={(e) => handleThemeEdit(genreIndex, themeIndex, 'estimatedMinutes', parseInt(e.target.value))}
+                            className="w-20 text-xs"
+                            min="1"
+                          />
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">
+                            {theme.estimatedMinutes}分
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-2">{theme.description}</p>
+                    {!isEditing && (
+                      <p className="text-xs text-muted-foreground mb-2">{theme.description}</p>
+                    )}
                     
                     {/* セッション一覧 */}
                     <div className="space-y-1">
                       {theme.sessions.map((session, sessionIndex) => (
                         <div key={session.id} className="flex items-center justify-between text-xs bg-white rounded p-2">
-                          <span>
-                            {sessionIndex + 1}. {session.title}
-                            <Badge variant="outline" className="ml-2 text-xs">
-                              {session.session_type === 'content' ? '講義' : 
-                               session.session_type === 'quiz' ? 'クイズ' : '演習'}
-                            </Badge>
-                          </span>
-                          <span className="text-muted-foreground">{session.estimatedMinutes}分</span>
+                          {isEditing ? (
+                            <div className="flex-1 flex gap-2 items-center">
+                              <Input
+                                value={session.title}
+                                onChange={(e) => handleSessionEdit(genreIndex, themeIndex, sessionIndex, 'title', e.target.value)}
+                                placeholder="セッションタイトル"
+                                className="text-xs flex-1"
+                              />
+                              <select
+                                value={session.session_type}
+                                onChange={(e) => handleSessionEdit(genreIndex, themeIndex, sessionIndex, 'session_type', e.target.value)}
+                                className="text-xs border rounded px-2 py-1"
+                              >
+                                <option value="knowledge">知識学習</option>
+                                <option value="practice">実践演習</option>
+                                <option value="case_study">ケーススタディ</option>
+                              </select>
+                              <Input
+                                type="number"
+                                value={session.estimatedMinutes}
+                                onChange={(e) => handleSessionEdit(genreIndex, themeIndex, sessionIndex, 'estimatedMinutes', parseInt(e.target.value))}
+                                className="w-16 text-xs"
+                                min="1"
+                              />
+                            </div>
+                          ) : (
+                            <>
+                              <span>
+                                {sessionIndex + 1}. {session.title}
+                                <Badge variant="outline" className="ml-2 text-xs">
+                                  {session.session_type === 'knowledge' ? '知識学習' : 
+                                   session.session_type === 'practice' ? '実践演習' : 'ケーススタディ'}
+                                </Badge>
+                              </span>
+                              <span className="text-muted-foreground">{session.estimatedMinutes}分</span>
+                            </>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -551,47 +696,47 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
               </div>
             </CardContent>
           </Card>
-        ))}
+          ))
+        ) : parsedOutline ? (
+          <Alert className="border-amber-200 bg-amber-50">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800">
+              <strong>コース構成が空です。</strong><br />
+              Step 3でAIレスポンスを再入力してコース構成を生成してください。
+            </AlertDescription>
+          </Alert>
+        ) : null}
       </div>
 
-      {/* レビューノート */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">レビューノート</CardTitle>
-          <CardDescription>
-            アウトラインに対するコメントや修正指示を記録してください
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            value={reviewNotes}
-            onChange={(e) => setReviewNotes(e.target.value)}
-            placeholder="アウトラインの評価、修正要望、改善提案などを記入してください..."
-            rows={4}
-          />
-        </CardContent>
-      </Card>
 
-      {/* アクション */}
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={onPrevious}>
+      {/* アクションボタン */}
+      <div className="flex justify-between items-center">
+        <Button 
+          variant="outline" 
+          onClick={onPrevious}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
           前のステップ
         </Button>
         
-        <div className="space-x-3">
-          <Button 
-            variant="destructive" 
-            onClick={handleReject}
-            className="flex items-center gap-2"
-          >
-            <XCircle className="h-4 w-4" />
-            修正要求
-          </Button>
+        <div className="flex gap-3">
+          {isEditing && (
+            <Button 
+              onClick={handleSaveEdits}
+              variant="secondary"
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              編集を保存
+            </Button>
+          )}
+          
           
           <Button 
             onClick={handleApprove}
             disabled={isCreatingDraft}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
           >
             {isCreatingDraft ? (
               <>
@@ -601,7 +746,8 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
             ) : (
               <>
                 <CheckCircle2 className="h-4 w-4" />
-                承認・次のステップ
+                承認して次のステップ
+                <ArrowRight className="h-4 w-4" />
               </>
             )}
           </Button>

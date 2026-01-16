@@ -17,22 +17,12 @@ import {
   TrendingUp,
   Plus,
   X,
-  ArrowRight,
   Settings,
   Lightbulb,
   Users
 } from 'lucide-react'
 
-// ワークフロー状態の型定義
-export type WorkflowStatus = 
-  | 'draft' 
-  | 'source_analysis' 
-  | 'outline_draft' 
-  | 'manual_input_required'
-  | 'outline_approved' 
-  | 'content_draft' 
-  | 'content_approved' 
-  | 'published'
+import { WorkflowStatus } from '@/lib/ai-course-generation/types'
 
 interface SourceMaterial {
   id: string
@@ -50,18 +40,14 @@ interface SourceMaterial {
   }
 }
 
-interface CourseGenerationWorkflow {
+interface CourseSetupWorkflow {
   id?: string
   title: string
   description: string
   status: WorkflowStatus
   sources: SourceMaterial[]
-  aiOutlineResponse?: string
-  currentStep: number
-  created_at?: string
-  updated_at?: string
-  // コース設定関連の新しいフィールド
-  difficultyId?: string  // skill_levelsテーブルのIDを参照
+  currentStep?: number
+  difficultyId?: string
   estimatedDuration?: string
   learningObjectives?: string[]
   targetAudience?: string
@@ -69,15 +55,16 @@ interface CourseGenerationWorkflow {
   generationPreferences?: {
     sessionLength: number
     includeQuizzes: boolean
-    interactivityLevel: 'low' | 'medium' | 'high'  // コンテンツの相互作用レベル
+    interactivityLevel: 'low' | 'medium' | 'high'
     contentStyle: 'formal' | 'casual' | 'technical'
   }
 }
 
 interface CourseSetupStepProps {
-  workflow: CourseGenerationWorkflow
-  onChange: (workflow: CourseGenerationWorkflow) => void
+  workflow: CourseSetupWorkflow
+  onChange: (workflow: CourseSetupWorkflow) => void
   onNext: () => void
+  onSave?: (workflow?: CourseSetupWorkflow) => Promise<void>
 }
 
 interface SkillLevel {
@@ -97,23 +84,12 @@ const DURATION_OPTIONS = [
   { value: '4時間以上', label: '4時間以上' }
 ]
 
-interface Category {
-  category_id: string
-  name: string
-  description?: string
-  type: string
-  icon?: string
-  color?: string
-  display_order: number
-  is_active: boolean
-}
 
-export function CourseSetupStep({ workflow, onChange, onNext }: CourseSetupStepProps) {
+export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSetupStepProps) {
   const [learningObjective, setLearningObjective] = useState('')
   const [skillLevels, setSkillLevels] = useState<SkillLevel[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
   const [isLoadingSkillLevels, setIsLoadingSkillLevels] = useState(true)
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
 
   // スキルレベル取得
   useEffect(() => {
@@ -132,28 +108,9 @@ export function CourseSetupStep({ workflow, onChange, onNext }: CourseSetupStepP
     loadSkillLevels()
   }, [])
 
-  // カテゴリー取得
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const { ApiClient } = await import('@/lib/api-helpers')
-        const data = await ApiClient.get<{ categories: Category[] }>('/api/categories')
-        console.log('Categories API response:', data) // デバッグ用
-        const categoryList = data.categories || []
-        console.log('Active categories:', categoryList.filter((c: Category) => c.is_active)) // デバッグ用
-        setCategories(categoryList)
-      } catch (error) {
-        console.error('Failed to load categories:', error)
-      } finally {
-        setIsLoadingCategories(false)
-      }
-    }
-
-    loadCategories()
-  }, [])
 
   // フォームの状態更新
-  const updateWorkflow = (updates: Partial<CourseGenerationWorkflow>) => {
+  const updateWorkflow = (updates: Partial<CourseSetupWorkflow>) => {
     onChange({ ...workflow, ...updates })
   }
 
@@ -177,7 +134,7 @@ export function CourseSetupStep({ workflow, onChange, onNext }: CourseSetupStepP
   }
 
   // 生成設定の更新
-  const updateGenerationPreferences = (updates: Partial<CourseGenerationWorkflow['generationPreferences']>) => {
+  const updateGenerationPreferences = (updates: Partial<CourseSetupWorkflow['generationPreferences']>) => {
     updateWorkflow({
       generationPreferences: {
         sessionLength: 15,
@@ -190,11 +147,61 @@ export function CourseSetupStep({ workflow, onChange, onNext }: CourseSetupStepP
     })
   }
 
+  // 保存ハンドラー - 現在の入力値で即座に保存
+  const handleSave = async (e?: React.MouseEvent<HTMLButtonElement>) => {
+    // イベント伝播とデフォルト動作を厳格に停止
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+      // ネイティブイベントでのstopImmediatePropagation
+      const nativeEvent = e.nativeEvent
+      if (nativeEvent && nativeEvent.stopImmediatePropagation) {
+        nativeEvent.stopImmediatePropagation()
+      }
+    }
+    
+    console.log('🔧 [CourseSetupStep] 保存ボタンクリック')
+    console.log('📋 [CourseSetupStep] 保存時の状態:', { 
+      hasOnSave: !!onSave, 
+      workflowTitle: workflow.title,
+      workflowId: workflow.id,
+      difficultyId: workflow.difficultyId,
+      estimatedDuration: workflow.estimatedDuration,
+      learningObjectivesCount: workflow.learningObjectives?.length 
+    })
+    
+    // 下書き保存なのでタイトルチェックは不要
+    
+    setIsSaving(true)
+    try {
+      // 現在の入力値を確実に保存するため、最新のworkflow状態で保存
+      console.log('💾 [CourseSetupStep] API呼び出し開始')
+      console.log('💾 [CourseSetupStep] 保存データ詳細:', JSON.stringify(workflow, null, 2))
+      
+      // onSaveが提供されている場合はそれを使用、そうでなければ何もしない
+      if (onSave) {
+        // 重要: undefinedを渡すことで、CourseWizard側で現在の状態を使用させる
+        await onSave()
+        console.log('✅ [CourseSetupStep] onSave経由で保存完了（CourseWizardの現在状態を使用）')
+      } else {
+        console.log('⚠️ [CourseSetupStep] onSave未定義のため保存スキップ')
+      }
+    } catch (error) {
+      console.error('❌ [CourseSetupStep] 保存エラー詳細:', error)
+      alert(`保存に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   // 次ステップへ進む前のバリデーション
   const handleNext = () => {
+    console.log('🚨 [CourseSetupStep] handleNext が呼ばれました！なぜ？')
+    console.trace('🔍 [CourseSetupStep] handleNext 呼び出しスタック:')
     if (!workflow.title.trim()) {
       return // エラーハンドリングは親コンポーネントで行う
     }
+    console.log('⏭️ [CourseSetupStep] onNext() 実行開始')
     onNext()
   }
 
@@ -334,30 +341,6 @@ export function CourseSetupStep({ workflow, onChange, onNext }: CourseSetupStepP
             </select>
           </div>
 
-          {/* カテゴリ */}
-          <div>
-            <Label htmlFor="courseCategory">カテゴリ</Label>
-            {isLoadingCategories ? (
-              <div className="text-sm text-muted-foreground mt-2">カテゴリを読み込み中...</div>
-            ) : (
-              <select
-                id="courseCategory"
-                value={workflow.courseCategory || ''}
-                onChange={(e) => updateWorkflow({ courseCategory: e.target.value })}
-                className="mt-1 w-full p-2 border border-border rounded-md"
-              >
-                <option value="">選択してください</option>
-                {categories
-                  .filter(category => category.is_active)  // アクティブなカテゴリーのみ表示
-                  .sort((a, b) => a.display_order - b.display_order)  // 表示順でソート
-                  .map((category, index) => (
-                    <option key={`category-${category.category_id}-${index}`} value={category.name}>
-                      {category.name}
-                    </option>
-                  ))}
-              </select>
-            )}
-          </div>
         </CardContent>
       </Card>
 
@@ -404,6 +387,7 @@ export function CourseSetupStep({ workflow, onChange, onNext }: CourseSetupStepP
                   <Lightbulb className="h-4 w-4 text-yellow-600 flex-shrink-0" />
                   <span className="flex-1 text-sm">{objective}</span>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => removeLearningObjective(index)}
@@ -493,7 +477,7 @@ export function CourseSetupStep({ workflow, onChange, onNext }: CourseSetupStepP
         </CardContent>
       </Card>
 
-      {/* 次へボタン */}
+      {/* ナビゲーション */}
       <div className="flex justify-between items-center">
         <div className="text-sm text-muted-foreground">
           {isFormValid ? (
@@ -503,14 +487,32 @@ export function CourseSetupStep({ workflow, onChange, onNext }: CourseSetupStepP
           )}
         </div>
         
-        <Button 
-          onClick={handleNext}
-          disabled={!isFormValid}
-          className="flex items-center gap-2"
-        >
-          参考資料アップロードへ
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving || !workflow.title.trim()}
+            className="min-w-32"
+          >
+            {isSaving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 border-t-transparent mr-2" />
+                保存中...
+              </>
+            ) : (
+              '下書き保存'
+            )}
+          </Button>
+          
+          <Button 
+            type="button"
+            onClick={handleNext}
+            disabled={!isFormValid}
+            className="min-w-40"
+          >
+            次のステップ
+          </Button>
+        </div>
       </div>
     </div>
   )

@@ -68,9 +68,9 @@ export async function PATCH(
       )
     }
 
-    // quiz_typeの検証
+    // quiz_typeの検証（Phase1-3対応）
     if (validUpdateData.quiz_type) {
-      const validTypes = ['multiple_choice', 'true_false', 'fill_blank', 'short_answer']
+      const validTypes = ['single_choice', 'multiple_choice', 'true_false', 'fill_blank', 'short_answer', 'sorting', 'essay']
       if (!validTypes.includes(validUpdateData.quiz_type)) {
         return NextResponse.json(
           { error: '無効なクイズタイプです' },
@@ -118,10 +118,7 @@ export async function PATCH(
       )
     }
 
-    // updated_atを自動設定
-    validUpdateData.updated_at = new Date().toISOString()
-
-    // データベース更新
+    // データベース更新（session_quizzesテーブルにはupdated_atカラムがないため設定しない）
     const { data: updatedQuiz, error: updateError } = await supabaseAdmin
       .from('session_quizzes')
       .update(validUpdateData)

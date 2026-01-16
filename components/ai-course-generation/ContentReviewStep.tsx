@@ -5,7 +5,7 @@
 
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -15,20 +15,17 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
-import { coursePublisher } from '@/lib/ai-course-generation/course-publisher'
 import { convertToPublisherWorkflow, type CourseWizardWorkflow } from '@/lib/ai-course-generation/type-conversion'
-import { 
-  CheckCircle2, 
-  XCircle, 
-  Edit, 
-  Save, 
+import {
+  CheckCircle2,
+  Edit,
+  Save,
   AlertCircle,
   BookOpen,
   HelpCircle,
   Award,
   Star,
   Target,
-  Play,
   Loader2
 } from 'lucide-react'
 
@@ -36,7 +33,7 @@ import {
 interface SessionContent {
   id: string
   session_id: string
-  content_type: 'text' | 'image' | 'video' | 'exercise'
+  content_type: 'text' | 'example' | 'key_points'
   content_data: Record<string, unknown>
   display_order: number
 }
@@ -56,26 +53,30 @@ interface ContentData {
   session_quizzes: SessionQuiz[]
   reward_cards: Record<string, unknown>[]
   completion_badge?: Record<string, unknown>
-  review_notes?: string
   approved: boolean
   generated_at?: string
+  generated_sessions?: string[]  // AIレスポンス処理済みセッションID一覧
 }
 
 interface ContentReviewStepProps {
   workflow: {
+    id: string
     content_data?: ContentData
     outline_data?: {
       course?: { title: string }
       genres?: Array<{
         id: string
         title: string
+        description: string
         themes: Array<{
           id: string
           title: string
+          estimatedMinutes: number
           sessions: Array<{
             id: string
             title: string
             session_type: string
+            estimatedMinutes: number
           }>
         }>
       }>
@@ -87,36 +88,237 @@ interface ContentReviewStepProps {
   onPrevious: () => void
 }
 
-// コンテンツタイプ表示マッピング
+// コンテンツタイプ表示マッピング (Phase1対応)
 const contentTypeLabels = {
   text: { label: 'テキスト', icon: BookOpen, color: 'bg-blue-100 text-blue-800' },
-  image: { label: '画像', icon: Star, color: 'bg-green-100 text-green-800' },
-  video: { label: '動画', icon: Play, color: 'bg-purple-100 text-purple-800' },
-  exercise: { label: '演習', icon: Target, color: 'bg-orange-100 text-orange-800' }
+  example: { label: '事例・例', icon: Star, color: 'bg-green-100 text-green-800' },
+  key_points: { label: 'ポイント', icon: Target, color: 'bg-orange-100 text-orange-800' }
 }
 
 export function ContentReviewStep({ workflow, onChange, onNext, onPrevious }: ContentReviewStepProps) {
   const { toast } = useToast()
-  const [reviewNotes, setReviewNotes] = useState(workflow.content_data?.review_notes || '')
   const [editingContent, setEditingContent] = useState<string | null>(null)
   const [editingQuiz, setEditingQuiz] = useState<string | null>(null)
   const [isCreatingComingSoon, setIsCreatingComingSoon] = useState(false)
+  const [isLoadingContents, setIsLoadingContents] = useState(true)
+  const [loadedContents, setLoadedContents] = useState<SessionContent[]>([])
+  const [loadedQuizzes, setLoadedQuizzes] = useState<SessionQuiz[]>([])
+  const [loadedRewardCards, setLoadedRewardCards] = useState<Array<Record<string, unknown>>>([])
+  const [loadedCompletionBadge, setLoadedCompletionBadge] = useState<Record<string, unknown> | null>(null)
 
-  const contentData = workflow.content_data
+  // DBからコンテンツを取得
+  const fetchContents = useCallback(async () => {
+    if (!workflow.id) {
+      setIsLoadingContents(false)
+      return
+    }
 
-  // コンテンツが生成されていない場合のメッセージ
-  if (!contentData || (!contentData.session_contents.length && !contentData.session_quizzes.length)) {
+    try {
+      console.log('📋 [ContentReview] Fetching contents for workflow:', workflow.id)
+
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        console.warn('⚠️ [ContentReview] No session, skipping content fetch')
+        setIsLoadingContents(false)
+        return
+      }
+
+      const response = await fetch(`/api/ai-course-generation/workflows/${workflow.id}/contents`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('✅ [ContentReview] Contents loaded:', {
+          total_contents: data.total_contents,
+          total_quizzes: data.total_quizzes,
+          sessions_with_content: data.sessions_with_content
+        })
+
+        // コンテンツを配列に変換
+        const allContents: SessionContent[] = []
+        const allQuizzes: SessionQuiz[] = []
+
+        if (data.contents) {
+          Object.entries(data.contents).forEach(([sessionId, sessionData]) => {
+            const sd = sessionData as { contents: Array<Record<string, unknown>>, quizzes: Array<Record<string, unknown>> }
+
+            sd.contents?.forEach((content, index) => {
+              allContents.push({
+                id: `${sessionId}_content_${index}`,
+                session_id: sessionId,
+                content_type: (content.content_type as 'text' | 'example' | 'key_points') || 'text',
+                content_data: {
+                  title: content.title || '',
+                  content: content.content || ''
+                },
+                display_order: (content.display_order as number) || index
+              })
+            })
+
+            sd.quizzes?.forEach((quiz, index) => {
+              allQuizzes.push({
+                id: `${sessionId}_quiz_${index}`,
+                session_id: sessionId,
+                question: (quiz.question as string) || '',
+                options: (quiz.options as string[]) || [],
+                correct_answer: (quiz.correct_answer as number) || 0,
+                explanation: (quiz.explanation as string) || '',
+                display_order: (quiz.display_order as number) || index
+              })
+            })
+          })
+        }
+
+        setLoadedContents(allContents)
+        setLoadedQuizzes(allQuizzes)
+        console.log(`📋 [ContentReview] Parsed ${allContents.length} contents, ${allQuizzes.length} quizzes`)
+
+        // ナレッジカードと修了証バッジを設定
+        if (data.reward_cards) {
+          setLoadedRewardCards(data.reward_cards)
+          console.log(`📋 [ContentReview] Loaded ${data.reward_cards.length} reward cards`)
+        }
+        if (data.completion_badge) {
+          setLoadedCompletionBadge(data.completion_badge)
+          console.log(`📋 [ContentReview] Loaded completion badge`)
+        }
+      } else {
+        console.error('❌ [ContentReview] Failed to fetch contents:', response.status)
+      }
+    } catch (error) {
+      console.error('❌ [ContentReview] Error fetching contents:', error)
+    } finally {
+      setIsLoadingContents(false)
+    }
+  }, [workflow.id])
+
+  useEffect(() => {
+    fetchContents()
+  }, [fetchContents])
+
+  // content_dataを構築（DBから取得したデータとworkflow.content_dataをマージ）
+  const contentData: ContentData = {
+    session_contents: loadedContents.length > 0 ? loadedContents : (workflow.content_data?.session_contents || []),
+    session_quizzes: loadedQuizzes.length > 0 ? loadedQuizzes : (workflow.content_data?.session_quizzes || []),
+    reward_cards: loadedRewardCards.length > 0 ? loadedRewardCards : (workflow.content_data?.reward_cards || []),
+    completion_badge: loadedCompletionBadge || workflow.content_data?.completion_badge,
+    approved: workflow.content_data?.approved || false,
+    generated_at: workflow.content_data?.generated_at,
+    generated_sessions: workflow.content_data?.generated_sessions
+  }
+
+  // ローディング中の表示
+  if (isLoadingContents) {
     return (
       <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">コンテンツレビュー</h2>
+          <p className="text-muted-foreground">
+            AI生成されたコンテンツの確認・編集を行います
+          </p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">コンテンツを読み込み中...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // コンテンツが生成されていない場合のメッセージと仮コンテンツ表示
+  if (!contentData || (!contentData.session_contents?.length && !contentData.session_quizzes?.length)) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">コンテンツレビュー</h2>
+          <p className="text-muted-foreground">
+            AI生成されたコンテンツの確認・編集を行います
+          </p>
+        </div>
+
         <Alert variant="default">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            詳細コンテンツがまだ生成されていません。Step 5で先にコンテンツ生成を実行してください。
+            詳細コンテンツがまだ生成されていません。現在のアウトライン構造を表示しています。
           </AlertDescription>
         </Alert>
+
+        {/* アウトライン構造の表示 */}
+        {workflow.outline_data?.genres && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">現在のコース構成</h3>
+            
+            {/* AI生成状況サマリー */}
+            {contentData?.generated_sessions && contentData.generated_sessions.length > 0 && (
+              <Alert className="border-green-200 bg-green-50">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  <strong>{contentData.generated_sessions.length}個のセッション</strong>でAIレスポンスが処理されました。
+                  <div className="mt-2 text-xs">
+                    処理済みセッションID: {contentData.generated_sessions.join(', ')}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {workflow.outline_data.genres.map((genre, genreIndex) => (
+              <Card key={genre.id} className="border-l-4 border-l-green-500">
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    ジャンル {genreIndex + 1}: {genre.title}
+                  </CardTitle>
+                  <CardDescription>{genre.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {genre.themes.map((theme, themeIndex) => (
+                      <div key={theme.id} className="border rounded-lg p-3 bg-gray-50">
+                        <h5 className="font-medium text-sm mb-2">
+                          テーマ {themeIndex + 1}: {theme.title} ({theme.estimatedMinutes}分)
+                        </h5>
+                        <div className="space-y-1">
+                          {theme.sessions.map((session, sessionIndex) => {
+                            const isGenerated = contentData?.generated_sessions?.includes(session.id)
+                            return (
+                              <div key={session.id} className={`text-xs rounded p-2 flex justify-between ${
+                                isGenerated ? 'bg-green-50 border border-green-200' : 'bg-white'
+                              }`}>
+                                <span>
+                                  {sessionIndex + 1}. {session.title}
+                                  <Badge variant="outline" className="ml-2 text-xs">
+                                    {session.session_type === 'knowledge' ? '知識学習' : 
+                                     session.session_type === 'practice' ? '実践演習' : 'ケーススタディ'}
+                                  </Badge>
+                                  {isGenerated && (
+                                    <Badge variant="default" className="ml-2 text-xs bg-green-600">
+                                      AI生成済み
+                                    </Badge>
+                                  )}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {session.estimatedMinutes}分
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
         
-        <div className="space-x-4">
-          <Button variant="outline" onClick={onPrevious}>戻る</Button>
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={onPrevious}>前のステップ</Button>
+          <Button onClick={onNext}>次のステップ（仮）</Button>
         </div>
       </div>
     )
@@ -208,34 +410,54 @@ export function ContentReviewStep({ workflow, onChange, onNext, onPrevious }: Co
     setIsCreatingComingSoon(true)
 
     try {
+      // 認証セッション取得
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      if (!authSession?.access_token) {
+        toast({
+          title: "🔐 認証エラー",
+          description: "認証情報が見つかりません。再ログインしてください。",
+          variant: "destructive"
+        })
+        setIsCreatingComingSoon(false)
+        return
+      }
+
       // ワークフロー更新
       onChange({
         content_data: {
           ...contentData,
-          review_notes: reviewNotes,
           approved: true
         },
         status: 'content_approved'
       })
 
-      // コンテンツ承認済みの場合、coming_soonコース作成  
+      // コンテンツ承認済みの場合、coming_soonコース作成
       const wizardWorkflow = workflow as CourseWizardWorkflow
       if (wizardWorkflow.content_data?.approved || true) { // 承認処理なので常にtrue
         // 型変換: CourseWizard型 → CourseGenerationWorkflow型
-        const publishWorkflow = await convertToPublisherWorkflow({
+        const _publishWorkflow = await convertToPublisherWorkflow({
           ...wizardWorkflow,
           content_data: {
             ...contentData,
-            review_notes: reviewNotes,
             approved: true
           },
           status: 'content_approved'
         })
-        
-        const publishResult = await coursePublisher.publishFromContent(publishWorkflow, {
-          status: 'coming_soon',
-          generateIds: true
+
+        const response = await fetch(`/api/ai-course-generation/workflows/${workflow.id}/publish-content`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authSession.access_token}`
+          },
+          body: JSON.stringify({
+            status: 'coming_soon',
+            generateIds: true
+          })
         })
+
+        const publishResult = await response.json()
 
         if (publishResult.success) {
           toast({
@@ -270,26 +492,6 @@ export function ContentReviewStep({ workflow, onChange, onNext, onPrevious }: Co
     }
   }
 
-  // コンテンツ差し戻し
-  const handleReject = () => {
-    onChange({
-      content_data: {
-        ...contentData,
-        review_notes: reviewNotes,
-        approved: false
-      },
-      status: 'content_draft'
-    })
-    
-    toast({
-      title: "コンテンツ差し戻し",
-      description: "修正指示を記録しました。Step 5に戻って再生成してください。",
-      variant: "default"
-    })
-    
-    onPrevious()
-  }
-
   // 統計情報計算
   const totalContents = contentData.session_contents.length
   const totalQuizzes = contentData.session_quizzes.length
@@ -305,6 +507,26 @@ export function ContentReviewStep({ workflow, onChange, onNext, onPrevious }: Co
           AI生成されたコンテンツとクイズを確認し、必要に応じて編集・承認してください
         </p>
       </div>
+
+      {/* AI生成状況 */}
+      {contentData?.generated_sessions && contentData.generated_sessions.length > 0 && (
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <AlertDescription>
+            <div className="font-semibold text-green-800 mb-1">
+              AIレスポンス処理状況
+            </div>
+            <div className="text-sm text-green-700">
+              {contentData.generated_sessions.length}個のセッションでコンテンツが生成されました
+            </div>
+            {contentData.generated_at && (
+              <div className="text-xs text-green-600 mt-1">
+                最終生成日時: {new Date(contentData.generated_at).toLocaleString('ja-JP')}
+              </div>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* 統計情報 */}
       <Card className="border-green-200 bg-green-50">
@@ -342,16 +564,42 @@ export function ContentReviewStep({ workflow, onChange, onNext, onPrevious }: Co
         <TabsContent value="sessions" className="space-y-4">
           <div className="space-y-6">
             {Array.from(sessionMap.entries()).map(([sessionId, sessionData]) => {
-              if (sessionData.contents.length === 0 && sessionData.quizzes.length === 0) return null
+              const isGenerated = contentData?.generated_sessions?.includes(sessionId)
+              
+              // 生成されていないセッションは非表示オプション
+              if (!isGenerated && sessionData.contents.length === 0 && sessionData.quizzes.length === 0) {
+                return (
+                  <Card key={sessionId} className="border-2 border-gray-200 bg-gray-50">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-lg text-gray-500">{sessionData.sessionInfo.title}</span>
+                          <Badge variant="outline" className="text-xs bg-gray-100">
+                            未生成
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Step 5でAIレスポンスを処理してください
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                )
+              }
               
               return (
-                <Card key={sessionId} className="border-2">
+                <Card key={sessionId} className={`border-2 ${isGenerated ? 'border-green-300' : ''}`}>
                   <CardHeader>
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-lg">{sessionData.sessionInfo.title}</span>
                       <Badge variant="outline" className="text-xs">
                         {sessionData.contents.length}コンテンツ・{sessionData.quizzes.length}クイズ
                       </Badge>
+                      {isGenerated && (
+                        <Badge variant="default" className="text-xs bg-green-600">
+                          AI生成済み
+                        </Badge>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -400,21 +648,29 @@ export function ContentReviewStep({ workflow, onChange, onNext, onPrevious }: Co
                                         id={`content-${content.id}`}
                                       />
                                     </div>
-                                    <Button 
-                                      onClick={() => {
-                                        const titleInput = document.getElementById(`title-${content.id}`) as HTMLInputElement
-                                        const contentInput = document.getElementById(`content-${content.id}`) as HTMLTextAreaElement
-                                        
-                                        handleSaveContent(content.id, {
-                                          title: titleInput?.value || '',
-                                          content: contentInput?.value || ''
-                                        })
-                                      }}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <Save className="h-4 w-4" />
-                                      保存
-                                    </Button>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => setEditingContent(null)}
+                                      >
+                                        キャンセル
+                                      </Button>
+                                      <Button
+                                        onClick={() => {
+                                          const titleInput = document.getElementById(`title-${content.id}`) as HTMLInputElement
+                                          const contentInput = document.getElementById(`content-${content.id}`) as HTMLTextAreaElement
+
+                                          handleSaveContent(content.id, {
+                                            title: titleInput?.value || '',
+                                            content: contentInput?.value || ''
+                                          })
+                                        }}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <Save className="h-4 w-4" />
+                                        保存
+                                      </Button>
+                                    </div>
                                   </div>
                                 ) : (
                                   <div className="space-y-2">
@@ -492,25 +748,33 @@ export function ContentReviewStep({ workflow, onChange, onNext, onPrevious }: Co
                                         id={`explanation-${quiz.id}`}
                                       />
                                     </div>
-                                    <Button 
-                                      onClick={() => {
-                                        const questionInput = document.getElementById(`question-${quiz.id}`) as HTMLTextAreaElement
-                                        const optionsInput = document.getElementById(`options-${quiz.id}`) as HTMLTextAreaElement
-                                        const answerInput = document.getElementById(`answer-${quiz.id}`) as HTMLInputElement
-                                        const explanationInput = document.getElementById(`explanation-${quiz.id}`) as HTMLTextAreaElement
-                                        
-                                        handleSaveQuiz(quiz.id, {
-                                          question: questionInput?.value || '',
-                                          options: optionsInput?.value.split('\n').filter(opt => opt.trim()),
-                                          correct_answer: parseInt(answerInput?.value || '1') - 1,
-                                          explanation: explanationInput?.value || ''
-                                        })
-                                      }}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <Save className="h-4 w-4" />
-                                      保存
-                                    </Button>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => setEditingQuiz(null)}
+                                      >
+                                        キャンセル
+                                      </Button>
+                                      <Button
+                                        onClick={() => {
+                                          const questionInput = document.getElementById(`question-${quiz.id}`) as HTMLTextAreaElement
+                                          const optionsInput = document.getElementById(`options-${quiz.id}`) as HTMLTextAreaElement
+                                          const answerInput = document.getElementById(`answer-${quiz.id}`) as HTMLInputElement
+                                          const explanationInput = document.getElementById(`explanation-${quiz.id}`) as HTMLTextAreaElement
+
+                                          handleSaveQuiz(quiz.id, {
+                                            question: questionInput?.value || '',
+                                            options: optionsInput?.value.split('\n').filter(opt => opt.trim()),
+                                            correct_answer: parseInt(answerInput?.value || '1') - 1,
+                                            explanation: explanationInput?.value || ''
+                                          })
+                                        }}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <Save className="h-4 w-4" />
+                                        保存
+                                      </Button>
+                                    </div>
                                   </div>
                                 ) : (
                                   <div className="space-y-3">
@@ -611,58 +875,35 @@ export function ContentReviewStep({ workflow, onChange, onNext, onPrevious }: Co
         </TabsContent>
       </Tabs>
 
-      {/* レビューノート */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">レビューノート</CardTitle>
-          <CardDescription>
-            コンテンツに対するコメントや修正指示を記録してください
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            value={reviewNotes}
-            onChange={(e) => setReviewNotes(e.target.value)}
-            placeholder="コンテンツの評価、修正要望、改善提案などを記入してください..."
-            rows={4}
-          />
+      {/* アクション (ステップ固有) */}
+      <Card className="border-green-200 bg-green-50">
+        <CardContent className="pt-4">
+          <div className="flex justify-center">
+            <Button
+              onClick={handleApprove}
+              disabled={isCreatingComingSoon}
+              className="min-w-40 flex items-center gap-2 bg-green-600 hover:bg-green-700"
+            >
+              {isCreatingComingSoon ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Coming Soon作成中...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  コンテンツ承認
+                </>
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      {/* アクション */}
+      {/* ナビゲーション */}
       <div className="flex justify-between">
-        <Button variant="outline" onClick={onPrevious}>
-          前のステップ
-        </Button>
-        
-        <div className="space-x-3">
-          <Button 
-            variant="destructive" 
-            onClick={handleReject}
-            className="flex items-center gap-2"
-          >
-            <XCircle className="h-4 w-4" />
-            修正要求
-          </Button>
-          
-          <Button 
-            onClick={handleApprove}
-            disabled={isCreatingComingSoon}
-            className="min-w-40 flex items-center gap-2"
-          >
-            {isCreatingComingSoon ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Coming Soon作成中...
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="h-4 w-4" />
-                承認・次のステップ
-              </>
-            )}
-          </Button>
-        </div>
+        <Button variant="outline" onClick={onPrevious}>前のステップ</Button>
+        <Button onClick={onNext}>次のステップ</Button>
       </div>
     </div>
   )

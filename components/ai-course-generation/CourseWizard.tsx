@@ -5,7 +5,7 @@
 
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -19,70 +19,33 @@ import { CategoryMappingStep } from './CategoryMappingStep'
 import { OutlineReviewStep } from './OutlineReviewStep'
 import { ContentReviewStep } from './ContentReviewStep'
 import { ContentGenerationStep } from './ContentGenerationStep'
-// import { FinalReviewStep } from './FinalReviewStep'
-import { 
-  CheckCircle2, 
-  Clock, 
+import { CoursePublishStep } from './CoursePublishStep'
+import {
+  CheckCircle2,
+  Clock,
   Brain,
   FileText,
   Settings,
   Layers,
   BookOpen,
-  Eye,
   Search
 } from 'lucide-react'
+import { type CourseWizardWorkflow } from '@/lib/ai-course-generation/type-conversion'
+import type { 
+  WorkflowStatus, 
+  SourceMaterial
+} from '@/lib/ai-course-generation/types'
+import type { CourseWizardCategoryMapping } from '@/lib/ai-course-generation/type-conversion'
 
-// ワークフロー状態の型定義
-export type WorkflowStatus = 
-  | 'draft' 
-  | 'source_analysis' 
-  | 'outline_draft' 
-  | 'manual_input_required'
-  | 'outline_approved' 
-  | 'content_draft' 
-  | 'content_approved' 
-  | 'published'
-
-interface SourceMaterial {
-  id: string
-  type: 'pdf' | 'url' | 'text'
-  title: string
-  content: string
-  originalUrl?: string
-  fileSize?: number
-  extractedAt: string
-  metadata?: {
-    pageCount?: number
-    wordCount?: number
-    language?: string
-    author?: string
-  }
-}
-
-// カテゴリマッピングの型定義
-interface CategoryMapping {
-  genreId: string
-  genreTitle: string
-  selectedCategoryId?: string
-  selectedSubcategoryId?: string
-  aiRecommendedCategoryId?: string
-  aiRecommendedSubcategoryId?: string
-  confidenceScore?: number
-  manualOverride: boolean
-}
-
-interface CourseGenerationWorkflow {
+// CourseSetupStep の型定義をインポート
+interface _CourseSetupWorkflow {
   id?: string
   title: string
   description: string
   status: WorkflowStatus
   sources: SourceMaterial[]
-  aiOutlineResponse?: string
-  currentStep: number
-  created_at?: string
-  updated_at?: string
-  // コース設定関連の新しいフィールド
-  difficultyId?: string  // skill_levelsテーブルのIDを参照
+  currentStep?: number
+  difficultyId?: string
   estimatedDuration?: string
   learningObjectives?: string[]
   targetAudience?: string
@@ -90,36 +53,12 @@ interface CourseGenerationWorkflow {
   generationPreferences?: {
     sessionLength: number
     includeQuizzes: boolean
-    interactivityLevel: 'low' | 'medium' | 'high'  // コンテンツの相互作用レベル
+    interactivityLevel: 'low' | 'medium' | 'high'
     contentStyle: 'formal' | 'casual' | 'technical'
   }
-  // カテゴリマッピング情報
-  categoryMappings?: CategoryMapping[]
-  // コンテンツデータ（Phase 2で追加）
-  content_data?: {
-    session_contents: Array<{
-      id: string
-      session_id: string
-      content_type: 'text' | 'image' | 'video' | 'exercise'
-      content_data: Record<string, unknown>
-      display_order: number
-    }>
-    session_quizzes: Array<{
-      id: string
-      session_id: string
-      question: string
-      options: string[]
-      correct_answer: number
-      explanation: string
-      display_order: number
-    }>
-    reward_cards: Record<string, unknown>[]
-    completion_badge?: Record<string, unknown>
-    review_notes?: string
-    approved: boolean
-    generated_at?: string
-  }
 }
+
+// 旧型定義削除済み - type-conversion.tsの統一型を使用
 
 // ウィザードステップ定義
 const WIZARD_STEPS = [
@@ -174,17 +113,17 @@ const WIZARD_STEPS = [
   },
   {
     id: 7,
-    title: '最終レビュー',
-    description: 'コース公開前の最終確認',
-    icon: Eye,
+    title: '生成完了',
+    description: '生成内容の確認・完了',
+    icon: CheckCircle2,
     status: 'content_approved' as WorkflowStatus
   }
 ]
 
 interface CourseWizardProps {
-  initialWorkflow?: Partial<CourseGenerationWorkflow>
-  onComplete?: (workflow: CourseGenerationWorkflow) => void
-  onSave?: (workflow: CourseGenerationWorkflow) => void
+  initialWorkflow?: Partial<CourseWizardWorkflow>
+  onComplete?: (workflow: CourseWizardWorkflow) => void
+  onSave?: (workflow: CourseWizardWorkflow) => void
 }
 
 export function CourseWizard({ 
@@ -195,40 +134,69 @@ export function CourseWizard({
   const { toast } = useToast()
   
   // ワークフロー状態管理
-  const [workflow, setWorkflow] = useState<CourseGenerationWorkflow>({
+  const [workflow, setWorkflow] = useState<CourseWizardWorkflow>({
+    id: '',
     title: '',
     description: '',
-    status: 'draft',
+    status: 'draft' as WorkflowStatus,
     sources: [],
-    currentStep: 0,
-    ...initialWorkflow
+    ...initialWorkflow,
+    // DBのcurrentStepをそのまま使用（最後に作業していたステップに戻る）
+    currentStep: initialWorkflow?.currentStep ?? 0
   })
 
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [_autoSaveEnabled, _setAutoSaveEnabled] = useState(true)
 
   // initialWorkflow が変更された時にワークフロー状態を更新
   useEffect(() => {
     if (initialWorkflow) {
-      setWorkflow(_prev => ({
-        // デフォルト値
-        title: '',
-        description: '',
-        status: 'draft',
-        sources: [],
-        currentStep: 0,
-        difficultyId: undefined,
-        estimatedDuration: undefined,
-        learningObjectives: undefined,
-        targetAudience: undefined,
-        courseCategory: undefined,
-        generationPreferences: undefined,
-        categoryMappings: undefined,
-        // initialWorkflowの値で上書き（既存データを保持）
-        ...initialWorkflow
-      }))
+      // 新規作成時（IDなし）または異なるワークフロー読み込み時
+      const isNewWorkflow = !workflow.id && !initialWorkflow.id
+      const isDifferentWorkflow = initialWorkflow.id && initialWorkflow.id !== workflow.id
+      
+      if (isNewWorkflow || isDifferentWorkflow) {
+        setWorkflow({
+          id: initialWorkflow.id || '',
+          title: initialWorkflow.title || '',
+          description: initialWorkflow.description || '',
+          status: initialWorkflow.status || 'draft',
+          sources: initialWorkflow.sources || [],
+          ...initialWorkflow,
+          // DBのcurrentStepをそのまま使用（最後に作業していたステップに戻る）
+          currentStep: initialWorkflow.currentStep ?? 0
+        } as CourseWizardWorkflow)
+      }
     }
-  }, [initialWorkflow])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialWorkflow?.id, workflow.id]) // IDの変更を確実に監視、initialWorkflow全体の依存関係は意図的に除外
+
+  // 自動保存機能（ワークフロー変更から3秒後に実行）
+  useEffect(() => {
+    if (!_autoSaveEnabled || !workflow.id || !workflow.title.trim()) return
+
+    const autoSaveTimer = setTimeout(async () => {
+      console.log('🔄 [CourseWizard] 自動保存実行')
+      try {
+        await handleSave()
+        console.log('✅ [CourseWizard] 自動保存完了')
+      } catch (error) {
+        console.error('❌ [CourseWizard] 自動保存エラー:', error)
+      }
+    }, 3000) // 3秒後に自動保存
+
+    return () => clearTimeout(autoSaveTimer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    workflow.title, 
+    workflow.description, 
+    workflow.difficultyId,
+    workflow.learningObjectives, 
+    workflow.aiOutlineResponse,
+    workflow.categoryMappings,
+    workflow.outline_data
+  ])
 
   // 認証ヘッダー取得ヘルパー
   const getAuthHeaders = async () => {
@@ -267,14 +235,15 @@ export function CourseWizard({
       return
     }
 
-    if (workflow.currentStep === 1 && workflow.sources.length === 0) {
-      toast({
-        title: "参考資料が必要です",
-        description: "最低1つの参考資料をアップロードしてください",
-        variant: "destructive"
-      })
-      return
-    }
+    // Step 2: 参考資料は任意のためチェックを削除
+    // if (workflow.currentStep === 1 && workflow.sources.length === 0) {
+    //   toast({
+    //     title: "参考資料が必要です",
+    //     description: "最低1つの参考資料をアップロードしてください",
+    //     variant: "destructive"
+    //   })
+    //   return
+    // }
 
     if (workflow.currentStep === 2 && !workflow.aiOutlineResponse) {
       toast({
@@ -294,7 +263,7 @@ export function CourseWizard({
       return
     }
 
-    if (workflow.currentStep === 4 && (!workflow.categoryMappings || workflow.categoryMappings.length === 0 || !workflow.categoryMappings.every(m => m.selectedCategoryId))) {
+    if (workflow.currentStep === 4 && (!workflow.categoryMappings || workflow.categoryMappings.length === 0 || !workflow.categoryMappings.every((m: CourseWizardCategoryMapping) => m.selectedCategoryId))) {
       toast({
         title: "カテゴリマッピングが必要です",
         description: "全てのジャンルにカテゴリを設定してください",
@@ -303,14 +272,8 @@ export function CourseWizard({
       return
     }
 
-    if (workflow.currentStep === 6 && (!workflow.content_data?.approved)) {
-      toast({
-        title: "コンテンツレビューが必要です",
-        description: "コンテンツの承認が完了していません",
-        variant: "destructive"
-      })
-      return
-    }
+    // Step 6 (ContentReviewStep) の検証はContentReviewStep内のhandleApproveで行うためスキップ
+    // handleApproveで承認処理完了後にonNext()が呼ばれるので、ここでの検証は不要
 
     // ワークフロー更新
     const updatedWorkflow = {
@@ -338,34 +301,48 @@ export function CourseWizard({
       const updatedWorkflow = {
         ...workflow,
         currentStep: workflow.currentStep - 1,
-        status: WIZARD_STEPS[workflow.currentStep - 1]?.status || workflow.status
+        // ⚠️ 承認済み状態は保持（ステータスを戻さない）
+        // status: WIZARD_STEPS[workflow.currentStep - 1]?.status || workflow.status
       }
       setWorkflow(updatedWorkflow)
     }
   }
 
   // ワークフロー保存（API経由）
-  const handleSave = async (workflowToSave = workflow) => {
+  const handleSave = useCallback(async (workflowToSave?: CourseWizardWorkflow) => {
+    const saveWorkflow = workflowToSave || workflow
+    console.log('💾 [CourseWizard] handleSave開始:', { 
+      hasWorkflowToSave: !!workflowToSave, 
+      saveTitle: saveWorkflow.title,
+      saveId: saveWorkflow.id,
+      categoryMappings: saveWorkflow.categoryMappings
+    })
     setIsSaving(true)
     try {
       const authHeaders = await getAuthHeaders()
       
-      if (workflowToSave.id) {
+      if (saveWorkflow.id) {
         // 既存ワークフローの更新
-        const response = await fetch(`/api/ai-course-generation/workflows/${workflowToSave.id}`, {
+        const response = await fetch(`/api/ai-course-generation/workflows/${saveWorkflow.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             ...authHeaders,
           },
           body: JSON.stringify({
-            title: workflowToSave.title,
-            description: workflowToSave.description,
-            status: workflowToSave.status,
-            currentStep: workflowToSave.currentStep,
-            sources: workflowToSave.sources,
-            aiOutlineResponse: workflowToSave.aiOutlineResponse,
-            categoryMappings: workflowToSave.categoryMappings
+            title: saveWorkflow.title,
+            description: saveWorkflow.description,
+            status: saveWorkflow.status,
+            currentStep: saveWorkflow.currentStep,
+            sources: saveWorkflow.sources,
+            aiOutlineResponse: saveWorkflow.aiOutlineResponse,
+            outline_data: saveWorkflow.outline_data,
+            categoryMappings: saveWorkflow.categoryMappings,
+            difficultyId: saveWorkflow.difficultyId,
+            estimatedDuration: saveWorkflow.estimatedDuration,
+            learningObjectives: saveWorkflow.learningObjectives,
+            targetAudience: saveWorkflow.targetAudience,
+            generationPreferences: saveWorkflow.generationPreferences
           })
         })
 
@@ -375,13 +352,13 @@ export function CourseWizard({
         }
 
         const result = await response.json()
-        // 現在のステップとステータスを保持しながらサーバーレスポンスを適用
-        setWorkflow(prev => ({ 
-          ...prev, 
-          ...result.workflow,
-          currentStep: prev.currentStep, // 現在のステップを保持
-          status: prev.status           // 現在のステータスを保持
-        }))
+        // 保存後は入力状態を変更しない（IDのみ更新）
+        if (result.workflow.id) {
+          setWorkflow(prev => ({ 
+            ...prev,
+            id: result.workflow.id
+          }))
+        }
         
       } else {
         // 新規ワークフロー作成
@@ -392,11 +369,17 @@ export function CourseWizard({
             ...authHeaders,
           },
           body: JSON.stringify({
-            title: workflowToSave.title || '新しいAI生成コース',
-            description: workflowToSave.description,
-            sources: workflowToSave.sources,
-            aiOutlineResponse: workflowToSave.aiOutlineResponse,
-            categoryMappings: workflowToSave.categoryMappings
+            title: saveWorkflow.title || '新しいAI生成コース',
+            description: saveWorkflow.description,
+            sources: saveWorkflow.sources,
+            aiOutlineResponse: saveWorkflow.aiOutlineResponse,
+            outline_data: saveWorkflow.outline_data,
+            categoryMappings: saveWorkflow.categoryMappings,
+            difficultyId: saveWorkflow.difficultyId,
+            estimatedDuration: saveWorkflow.estimatedDuration,
+            learningObjectives: saveWorkflow.learningObjectives,
+            targetAudience: saveWorkflow.targetAudience,
+            generationPreferences: saveWorkflow.generationPreferences
           })
         })
 
@@ -406,18 +389,16 @@ export function CourseWizard({
         }
 
         const result = await response.json()
-        // 新規作成時は現在のステップとステータスを保持
+        // 新規作成時もIDのみ設定、入力値は維持
         setWorkflow(prev => ({ 
-          ...prev, 
-          ...result.workflow,
-          currentStep: prev.currentStep, // 現在のステップを保持
-          status: prev.status           // 現在のステータスを保持
+          ...prev,
+          id: result.workflow.id
         }))
       }
 
       // カスタム保存ハンドラーがあれば実行
       if (onSave) {
-        await onSave(workflowToSave)
+        await onSave(saveWorkflow)
       }
 
       setLastSaved(new Date())
@@ -436,7 +417,7 @@ export function CourseWizard({
     } finally {
       setIsSaving(false)
     }
-  }
+  }, [workflow, toast, onSave])
 
   // 参考資料変更ハンドラ
   const handleSourcesChange = (sources: SourceMaterial[]) => {
@@ -447,47 +428,249 @@ export function CourseWizard({
   }
 
   // AIレスポンス変更ハンドラ
-  const handleAIResponse = (aiResponse: string) => {
-    setWorkflow(prev => ({
-      ...prev,
-      aiOutlineResponse: aiResponse
-    }))
+  const handleAIResponse = async (aiResponse: string) => {
+    console.log('🔧 [CourseWizard] handleAIResponse開始:', aiResponse ? aiResponse.substring(0, 200) + '...' : 'CLEAR')
+    
+    // 空文字列の場合はクリア処理
+    if (!aiResponse.trim()) {
+      console.log('🔧 [CourseWizard] AIレスポンスクリア処理')
+      setWorkflow(prev => ({
+        ...prev,
+        aiOutlineResponse: '',
+        outline_data: undefined
+      }))
+      console.log('✅ [CourseWizard] AIレスポンスとoutline_dataをクリア完了')
+      return
+    }
+    
+    try {
+      // JSON解析を試行
+      const parsed = JSON.parse(aiResponse)
+      console.log('✅ [CourseWizard] JSON解析成功:', { course: !!parsed.course, genres: parsed.genres?.length })
+      
+      // 最低限の構造チェック
+      if (!parsed.course || !parsed.genres) {
+        console.warn('❌ [CourseWizard] Invalid outline structure - missing course or genres')
+        setWorkflow(prev => ({
+          ...prev,
+          aiOutlineResponse: aiResponse
+        }))
+        return
+      }
+      
+      // difficulty検証・修正（フォールバック対応）
+      if (parsed.course && parsed.course.difficulty) {
+        const validDifficulties = ['basic', 'intermediate', 'advanced', 'expert']
+        if (!validDifficulties.includes(parsed.course.difficulty)) {
+          console.log(`🔧 [CourseWizard] Difficulty corrected: ${parsed.course.difficulty} -> basic`)
+          parsed.course.difficulty = 'basic'
+        }
+      } else {
+        // difficulty未設定の場合はbasicをデフォルト
+        console.log('🔧 [CourseWizard] Setting default difficulty: basic')
+        parsed.course.difficulty = 'basic'
+      }
+
+      // クライアントサイドID生成ライブラリをインポート
+      const { generateClientId } = await import('@/lib/id-generation-client')
+
+      // 型定義
+      interface ParsedGenre {
+        id?: string
+        title: string
+        description: string
+        suggested_category_id?: string
+        suggested_subcategory_id?: string
+        estimatedDays?: number
+        themes?: ParsedTheme[]
+        [key: string]: unknown
+      }
+      
+      interface ParsedTheme {
+        id?: string
+        title: string
+        description: string
+        estimatedMinutes?: number
+        reward_card_data?: Record<string, unknown>
+        sessions?: ParsedSession[]
+        [key: string]: unknown
+      }
+      
+      interface ParsedSession {
+        id?: string
+        title: string
+        description?: string
+        session_type?: string
+        estimatedMinutes?: number
+        [key: string]: unknown
+      }
+
+      // ID生成処理（本番環境パターンに合わせて）
+      const processedGenres = await Promise.all(
+        (parsed.genres as ParsedGenre[]).map(async (genre, genreIndex: number) => {
+          const genreId = genre.id || await generateClientId('genre', genre.title)
+          console.log(`🔧 [CourseWizard] Genre ID生成: "${genre.title}" -> "${genreId}"`)
+          
+          const processedThemes = await Promise.all(
+            (genre.themes || []).map(async (theme, themeIndex: number) => {
+              const themeId = theme.id || await generateClientId('theme', theme.title)
+              console.log(`🔧 [CourseWizard] Theme ID生成: "${theme.title}" -> "${themeId}"`)
+              
+              const processedSessions = await Promise.all(
+                (theme.sessions || []).map(async (session, sessionIndex: number) => {
+                  const sessionId = session.id || await generateClientId('session', session.title)
+                  console.log(`🔧 [CourseWizard] Session ID生成: "${session.title}" -> "${sessionId}"`)
+                  
+                  return {
+                    ...session,
+                    id: sessionId,
+                    title: session.title,
+                    description: session.description,
+                    session_type: (session.session_type as 'knowledge' | 'practice' | 'case_study') || 'knowledge',
+                    estimatedMinutes: session.estimatedMinutes || 15,
+                    display_order: sessionIndex
+                  }
+                })
+              )
+              
+              return {
+                ...theme,
+                id: themeId,
+                title: theme.title,
+                description: theme.description,
+                estimatedMinutes: theme.estimatedMinutes || 15,
+                display_order: themeIndex,
+                reward_card_data: theme.reward_card_data,
+                sessions: processedSessions
+              }
+            })
+          )
+          
+          return {
+            ...genre,
+            id: genreId,
+            title: genre.title,
+            description: genre.description,
+            suggested_category_id: genre.suggested_category_id,
+            suggested_subcategory_id: genre.suggested_subcategory_id,
+            estimatedDays: genre.estimatedDays || 1,
+            display_order: genreIndex,
+            themes: processedThemes
+          }
+        })
+      )
+      
+      const newOutlineData = {
+        course: parsed.course,
+        genres: processedGenres,
+        approved: false,
+        generated_at: new Date().toISOString(),
+        ai_response_raw: aiResponse
+      }
+      
+      console.log('📋 [CourseWizard] outline_data生成:', {
+        courseTitle: newOutlineData.course.title,
+        genresCount: newOutlineData.genres.length,
+        firstGenreTitle: newOutlineData.genres[0]?.title
+      })
+      
+      // ワークフロー更新（AIレスポンス + 解析済みoutline_data）
+      setWorkflow(prev => {
+        const updated = {
+          ...prev,
+          aiOutlineResponse: aiResponse,
+          outline_data: newOutlineData
+        }
+        console.log('🔄 [CourseWizard] ワークフロー更新:', {
+          hasAiResponse: !!updated.aiOutlineResponse,
+          hasOutlineData: !!updated.outline_data,
+          outlineGenresCount: updated.outline_data?.genres?.length
+        })
+        return updated
+      })
+      
+      console.log('✅ [CourseWizard] AIレスポンス解析完了:', {
+        courseTitle: newOutlineData.course.title,
+        genresCount: newOutlineData.genres.length
+      })
+      
+    } catch (error) {
+      console.error('❌ [CourseWizard] AIレスポンス解析エラー:', error)
+      // 解析エラーの場合はaiOutlineResponseのみ保存
+      setWorkflow(prev => ({
+        ...prev,
+        aiOutlineResponse: aiResponse
+      }))
+    }
   }
 
   // カテゴリマッピング変更ハンドラ
-  const handleCategoryMappingChange = (updates: { categoryMappings: CategoryMapping[] }) => {
-    setWorkflow(prev => ({
-      ...prev,
-      categoryMappings: updates.categoryMappings
-    }))
-  }
+  const handleCategoryMappingChange = useCallback((updates: { categoryMappings: CourseWizardCategoryMapping[] }) => {
+    console.log('📥 [CourseWizard] カテゴリマッピング受信:', {
+      mappingsCount: updates.categoryMappings?.length,
+      mappings: updates.categoryMappings
+    })
 
-  // 自動保存機能
-  useEffect(() => {
-    const autoSave = async () => {
-      // 基本情報が入力されていれば自動保存
-      if (workflow.title.trim() || workflow.description.trim() || workflow.sources.length > 0 || workflow.aiOutlineResponse) {
-        await handleSave()
+    // 同期的に更新（onNextが呼ばれる前に確実に反映させるため）
+    setWorkflow(prev => {
+      const updatedWorkflow = {
+        ...prev,
+        categoryMappings: updates.categoryMappings
       }
-    }
 
-    // 変更から3秒後に自動保存
-    const timer = setTimeout(autoSave, 3000)
-    return () => clearTimeout(timer)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workflow.title, workflow.description, workflow.difficultyId, workflow.learningObjectives, workflow.sources, workflow.aiOutlineResponse, workflow.categoryMappings, workflow.currentStep])
+      // データベースに保存（非同期で実行）
+      if (prev.id) {
+        handleSave(updatedWorkflow)
+      }
+
+      return updatedWorkflow
+    })
+  }, [handleSave])
+
 
   // 現在のステップコンポーネントをレンダリング
   const renderCurrentStep = () => {
     switch (workflow.currentStep) {
-      case 0:
+      case 0: {
+        // CourseWizardWorkflow用の簡易型変換
+        // 🔧 Step1に戻った時にworkflow状態が正しく反映されるよう、スプレッド演算子で直接マッピング
+        const courseSetupData = {
+          ...workflow, // すべてのworkflow状態を引き継ぎ
+          // 明示的に必要なフィールドを確認（デバッグ用）
+          id: workflow.id,
+          title: workflow.title,
+          description: workflow.description,
+          status: workflow.status,
+          sources: workflow.sources,
+          currentStep: workflow.currentStep,
+          difficultyId: workflow.difficultyId,
+          targetAudience: workflow.targetAudience,
+          learningObjectives: workflow.learningObjectives,
+          estimatedDuration: workflow.estimatedDuration,
+          courseCategory: workflow.courseCategory,
+          generationPreferences: workflow.generationPreferences
+        }
+        
+
         return (
           <CourseSetupStep 
-            workflow={workflow} 
-            onChange={setWorkflow} 
-            onNext={handleNextStep} 
+            workflow={courseSetupData} 
+            onChange={(updatedWorkflow) => {
+              const convertedWorkflow: CourseWizardWorkflow = {
+                ...workflow,
+                ...updatedWorkflow
+              }
+              setWorkflow(convertedWorkflow)
+            }} 
+            onNext={handleNextStep}
+            onSave={async () => {
+              console.log('🔧 [CourseWizard] Step1保存コール')
+              console.log('💾 [CourseWizard] 現在の状態で保存:', workflow)
+              await handleSave(workflow)
+            }}
           />
         )
+      }
       
       case 1:
         return (
@@ -508,18 +691,85 @@ export function CourseWizard({
             onAIResponse={handleAIResponse}
             onNext={handleNextStep}
             onPrevious={handlePreviousStep}
+            onSave={async () => {
+              console.log('🔧 [CourseWizard] ManualAIStepからの保存コール')
+              await handleSave()
+            }}
           />
         )
       
-      case 3:
+      case 3: {
+        // aiOutlineResponseが存在しない場合は前のステップに戻る指示を表示
+        if (!workflow.aiOutlineResponse) {
+          return (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-semibold mb-2">アウトラインが必要です</h3>
+              <p className="text-muted-foreground mb-4">Step2でAIアウトラインを生成してください</p>
+              <Button onClick={handlePreviousStep}>前のステップに戻る</Button>
+            </div>
+          )
+        }
+        
+        const outlineWorkflow = {
+          aiOutlineResponse: workflow.aiOutlineResponse,
+          outline_data: workflow.outline_data ? workflow.outline_data as {
+            course?: {
+              title: string
+              description: string
+              estimatedDays: number
+              difficulty: string
+              targetAudience: string
+              learningObjectives: string[]
+              badge_data?: Record<string, unknown>
+            }
+            genres?: Array<{
+              id: string
+              title: string
+              description: string
+              suggested_category_id?: string
+              suggested_subcategory_id?: string
+              estimatedDays: number
+              display_order: number
+              themes: Array<{
+                id: string
+                title: string
+                description: string
+                estimatedMinutes: number
+                display_order: number
+                reward_card_data?: Record<string, unknown>
+                sessions: Array<{
+                  id: string
+                  title: string
+                  description?: string
+                  session_type: 'knowledge' | 'practice' | 'case_study'
+                  estimatedMinutes: number
+                  display_order: number
+                }>
+              }>
+            }>
+            review_notes?: string
+            approved?: boolean
+            generated_at?: string
+            ai_response_raw?: string
+          } : undefined,
+          status: workflow.status
+        }
         return (
           <OutlineReviewStep 
-            workflow={workflow}
-            onChange={(updates) => setWorkflow(prev => ({ ...prev, ...updates }))}
+            workflow={outlineWorkflow}
+            onChange={async (updates: Record<string, unknown>) => {
+              setWorkflow(prev => ({ ...prev, ...updates }))
+              // outline_dataが含まれている場合（承認時）、データベースに保存
+              const outlineData = updates.outline_data as { approved?: boolean } | undefined
+              if (outlineData?.approved) {
+                await handleSave({ ...workflow, ...updates })
+              }
+            }}
             onNext={handleNextStep}
             onPrevious={handlePreviousStep}
           />
         )
+      }
       
       case 4:
         return (
@@ -531,48 +781,166 @@ export function CourseWizard({
           />
         )
       
-      case 5:
+      case 5: {
+        const contentWorkflow = {
+          id: workflow.id || `temp_${Date.now()}`,
+          title: workflow.title,
+          outline_data: {
+            approved: workflow.outline_data?.approved || true,
+            genres: (workflow.outline_data?.genres || []).map(genre => {
+              const g = genre as { 
+                id: string; 
+                title: string; 
+                description?: string;
+                themes?: Array<{
+                  id: string;
+                  title: string;
+                  description?: string;
+                  sessions?: Array<{
+                    id: string;
+                    title: string;
+                  }>;
+                }>;
+              }
+              return {
+                id: g.id,
+                title: g.title,
+                description: g.description || '',
+                themes: (g.themes || []).map(theme => {
+                  const t = theme as {
+                    id: string;
+                    title: string;
+                    description?: string;
+                    estimatedMinutes?: number;
+                    sessions?: Array<{
+                      id: string;
+                      title: string;
+                      description?: string;
+                      session_type?: string;
+                      estimatedMinutes?: number;
+                    }>;
+                  }
+                  return {
+                    id: t.id,
+                    title: t.title,
+                    description: t.description || '',
+                    sessions: (t.sessions || []).map(session => ({
+                      id: session.id,
+                      title: session.title,
+                      description: session.description || '',
+                      session_type: (session.session_type || 'knowledge') as 'knowledge' | 'practice' | 'case_study',
+                      estimatedMinutes: session.estimatedMinutes || 15
+                    }))
+                  }
+                })
+              }
+            })
+          },
+          category_mappings: workflow.categoryMappings || []
+        }
         return (
           <ContentGenerationStep 
-            workflow={workflow} 
+            workflow={contentWorkflow} 
             onChange={(updates) => setWorkflow(prev => ({ ...prev, ...updates }))}
             onNext={handleNextStep}
             onPrevious={handlePreviousStep}
           />
         )
+      }
       
-      case 6:
+      case 6: {
+        const reviewWorkflow = {
+          id: workflow.id || `temp_${Date.now()}`,
+          content_data: {
+            session_contents: [],
+            session_quizzes: [],
+            reward_cards: [],
+            approved: workflow.content_data?.approved || false,
+            ...(workflow.content_data || {})
+          },
+          outline_data: workflow.outline_data ? {
+            course: workflow.outline_data.course,
+            genres: (workflow.outline_data.genres || []).map(genre => {
+              const fullGenre = genre as { 
+                id: string; 
+                title: string;
+                description: string;
+                themes: Array<{
+                  id: string;
+                  title: string;
+                  estimatedMinutes: number;
+                  sessions: Array<{
+                    id: string;
+                    title: string;
+                    estimatedMinutes: number;
+                  }>;
+                }>;
+              }
+              return {
+                id: fullGenre.id,
+                title: fullGenre.title,
+                description: fullGenre.description,
+                themes: fullGenre.themes.map(theme => ({
+                  id: theme.id,
+                  title: theme.title,
+                  estimatedMinutes: theme.estimatedMinutes,
+                  sessions: theme.sessions.map(session => ({
+                    id: session.id,
+                    title: session.title,
+                    session_type: 'knowledge' as const,
+                    estimatedMinutes: session.estimatedMinutes
+                  }))
+                }))
+              }
+            })
+          } : undefined,
+          status: workflow.status
+        }
         return (
           <ContentReviewStep 
-            workflow={workflow}
+            workflow={reviewWorkflow}
             onChange={(updates) => setWorkflow(prev => ({ ...prev, ...updates }))}
             onNext={handleNextStep}
             onPrevious={handlePreviousStep}
           />
         )
+      }
       
-      case 7:
-        // return <FinalReviewStep workflow={workflow} onChange={setWorkflow} onComplete={onComplete} />
+      case 7: {
+        // コース公開ステップ
+        const publishWorkflow = {
+          id: workflow.id,
+          title: workflow.title,
+          description: workflow.description,
+          outline_data: workflow.outline_data,
+          content_data: workflow.content_data,
+          category_mappings: workflow.categoryMappings
+        }
+        
         return (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-semibold mb-2">最終レビュー</h3>
-            <p className="text-muted-foreground mb-4">この機能は開発中です</p>
-            <div className="space-x-4">
-              <Button variant="outline" onClick={handlePreviousStep}>戻る</Button>
-              <Button 
-                onClick={() => {
-                  toast({
-                    title: "コース作成完了",
-                    description: "AI生成コースが正常に作成されました（模擬）",
-                  })
-                  onComplete?.(workflow)
-                }}
-              >
-                コース作成完了
-              </Button>
-            </div>
-          </div>
+          <CoursePublishStep 
+            workflow={publishWorkflow}
+            onChange={(updates) => setWorkflow(prev => ({ ...prev, ...updates }))}
+            onPrevious={handlePreviousStep}
+            onComplete={() => {
+              toast({
+                title: "✅ コース作成完了",
+                description: "AI生成コースが正常に作成され、coming_soon状態で公開されました",
+                duration: 5000
+              })
+              // ワークフローを完了状態に更新
+              setWorkflow(prev => ({ 
+                ...prev, 
+                status: 'published' as WorkflowStatus 
+              }))
+              // 完了コールバック
+              if (onComplete) {
+                onComplete(workflow)
+              }
+            }}
+          />
         )
+      }
       
       default:
         return <div>Unknown step</div>
@@ -674,7 +1042,7 @@ export function CourseWizard({
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">
-                  {workflow.sources.reduce((sum, s) => sum + (s.metadata?.wordCount || 0), 0).toLocaleString()} 単語
+                  {workflow.sources.reduce((sum: number, s: SourceMaterial) => sum + (s.metadata?.wordCount || 0), 0).toLocaleString()} 単語
                 </span>
               </div>
               <div className="flex items-center gap-2 ml-auto">
@@ -702,18 +1070,7 @@ export function CourseWizard({
         </CardContent>
       </Card>
 
-      {/* フッターアクション */}
-      <div className="flex justify-end items-center">
-        <Button
-          variant="outline"
-          onClick={() => handleSave()}
-          disabled={isSaving || !workflow.title}
-          className="flex items-center gap-2"
-        >
-          {isSaving && <Clock className="h-4 w-4 animate-spin" />}
-          下書き保存
-        </Button>
-      </div>
+
     </div>
   )
 }

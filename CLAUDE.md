@@ -1,7 +1,57 @@
 # AI Learning Platform - Claude開発ガイド
 
 **対象**: Claude Code AI Assistant  
-**最終更新**: 2025年12月8日
+**最終更新**: 2025年12月24日
+
+---
+
+## 🚨 **Git安全運用ルール（2025年12月24日追加 - 最高優先度）**
+
+### **❌ 絶対禁止事項**
+
+#### **1. git checkout の無断実行**
+- `git checkout <commit>` - **絶対禁止**
+- `git checkout <branch>` - **3回確認必須**  
+- `git checkout -- <file>` - **ユーザー許可必須**
+
+#### **2. 必須確認プロセス**
+```
+⚠️ git checkout実行前の必須手順:
+1. 【第1確認】ユーザーに目的・影響範囲を説明
+2. 【第2確認】対象ファイル・コミットの詳細確認
+3. 【第3確認】最終実行許可の取得
+```
+
+### **✅ 安全な作業環境設定**
+
+#### **1. git worktree設定**
+```bash
+# 過去コミット調査用の隔離環境作成
+mkdir -p ../git-inspection
+git worktree add ../git-inspection/<commit-hash> <commit-hash>
+# 調査後: git worktree remove ../git-inspection/<commit-hash>
+```
+
+#### **2. 安全な調査コマンド**
+```bash
+# ✅ 許可されたコマンド
+git show <commit>:<file>     # ファイル内容表示のみ
+git diff <commit> <file>     # 差分表示のみ  
+git log --oneline            # 履歴確認のみ
+
+# ❌ 禁止コマンド
+git checkout <commit>        # 現在の作業環境を破壊
+git reset --hard             # 作業内容消失
+```
+
+### **🔒 緊急時プロトコル**
+```
+もしgit checkoutを実行してしまった場合:
+1. 即座に作業停止
+2. `git status` で影響確認
+3. ユーザーに状況報告  
+4. ユーザー指示を待つ（勝手な復旧禁止）
+```
 
 ---
 

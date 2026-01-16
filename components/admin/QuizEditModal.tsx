@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
+import { useToast } from '@/hooks/use-toast'
 import { Edit, Save, X, HelpCircle, Plus, Minus, CheckCircle } from 'lucide-react'
 
 interface Quiz {
@@ -29,11 +30,16 @@ interface QuizEditModalProps {
   onDelete?: (quizId: string) => Promise<void>
 }
 
+// Phase1準拠のクイズタイプ制限
 const quizTypeOptions = [
-  { value: 'multiple_choice', label: '選択問題', description: '複数の選択肢から正解を選ぶ' },
-  { value: 'true_false', label: '○×問題', description: '正誤を判定する問題' },
-  { value: 'fill_blank', label: '穴埋め問題', description: '空欄を埋める問題' },
-  { value: 'short_answer', label: '記述問題', description: '短い記述で回答' }
+  { value: 'single_choice', label: '単一選択問題', description: '1つの正解を選ぶ選択問題', phase: 1 },
+  { value: 'multiple_choice', label: '複数選択問題', description: '複数の選択肢から正解を選ぶ（Phase2で対応予定）', phase: 2, disabled: true },
+  // Phase2機能（将来対応予定）
+  { value: 'true_false', label: '○×問題', description: '正誤を判定する問題（Phase2予定）', phase: 2, disabled: true },
+  { value: 'sorting', label: '並び替え問題', description: '順序を正しく並び替える（Phase2予定）', phase: 2, disabled: true },
+  // Phase3機能（将来対応予定）
+  { value: 'fill_blank', label: '穴埋め問題', description: 'AI採点による空欄埋め（Phase3予定）', phase: 3, disabled: true },
+  { value: 'essay', label: '記述問題', description: 'AI採点による記述回答（Phase3予定）', phase: 3, disabled: true }
 ]
 
 export function QuizEditModal({ 
@@ -43,12 +49,13 @@ export function QuizEditModal({
   onSave,
   onDelete 
 }: QuizEditModalProps) {
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     question: '',
     options: ['', '', '', ''],
     correct_answer: 0,
     explanation: '',
-    quiz_type: 'multiple_choice',
+    quiz_type: 'single_choice',
     display_order: 1
   })
   const [saving, setSaving] = useState(false)
@@ -56,13 +63,49 @@ export function QuizEditModal({
 
   useEffect(() => {
     if (quiz) {
+      // optionsが配列であることを保証し、オブジェクト配列の場合は文字列配列に変換
+      let safeOptions: string[] = []
+      
+      // 文字列として格納されているJSONをパース
+      let parsedOptions = quiz.options
+      if (typeof quiz.options === 'string') {
+        try {
+          parsedOptions = JSON.parse(quiz.options)
+        } catch (e) {
+          console.error('Failed to parse quiz options:', e)
+          parsedOptions = []
+        }
+      }
+      
+      if (Array.isArray(parsedOptions)) {
+        if (parsedOptions.length > 0 && typeof parsedOptions[0] === 'object' && 'text' in parsedOptions[0]) {
+          // オブジェクト配列の場合（[{text: "選択肢1", isCorrect: true}, ...]）
+          const objectOptions = parsedOptions as unknown as { text: string; isCorrect: boolean }[]
+          safeOptions = objectOptions.map(opt => opt.text || '')
+        } else if (parsedOptions.length > 0 && typeof parsedOptions[0] === 'string') {
+          // 文字列配列の場合（["選択肢1", "選択肢2", ...]）
+          safeOptions = parsedOptions as string[]
+        } else {
+          // 空の配列の場合のデフォルト
+          safeOptions = ['', '', '', '']
+        }
+      } else {
+        // optionsが配列でない場合のデフォルト
+        safeOptions = ['', '', '', '']
+      }
+      
+      // 最低4つの選択肢を保証
+      while (safeOptions.length < 4) {
+        safeOptions.push('')
+      }
+      
       setFormData({
-        question: quiz.question,
-        options: quiz.options,
-        correct_answer: quiz.correct_answer,
-        explanation: quiz.explanation,
-        quiz_type: quiz.quiz_type,
-        display_order: quiz.display_order
+        question: quiz.question || '',
+        options: safeOptions,
+        correct_answer: quiz.correct_answer || 0,
+        explanation: quiz.explanation || '',
+        quiz_type: quiz.quiz_type || 'single_choice',
+        display_order: quiz.display_order || 1
       })
     } else {
       // 新規作成時のデフォルト値
@@ -71,41 +114,55 @@ export function QuizEditModal({
         options: ['', '', '', ''],
         correct_answer: 0,
         explanation: '',
-        quiz_type: 'multiple_choice',
+        quiz_type: 'single_choice',
         display_order: 1
       })
     }
   }, [quiz])
 
   const handleSave = async () => {
-    if (!quiz) return
-
     // バリデーション
     if (!formData.question.trim()) {
-      alert('問題文を入力してください')
+      toast({
+        title: "入力エラー",
+        description: "問題文を入力してください",
+        variant: "destructive"
+      })
       return
     }
 
-    if (formData.quiz_type === 'multiple_choice') {
+    if (formData.quiz_type === 'single_choice' || formData.quiz_type === 'multiple_choice') {
       const validOptions = formData.options.filter(opt => opt.trim())
       if (validOptions.length < 2) {
-        alert('選択肢を2つ以上入力してください')
+        toast({
+          title: "入力エラー",
+          description: "選択肢を2つ以上入力してください",
+          variant: "destructive"
+        })
         return
       }
       if (!formData.options[formData.correct_answer]?.trim()) {
-        alert('正解の選択肢を設定してください')
+        toast({
+          title: "入力エラー",
+          description: "正解の選択肢を設定してください",
+          variant: "destructive"
+        })
         return
       }
     }
 
     if (!formData.explanation.trim()) {
-      alert('解説を入力してください')
+      toast({
+        title: "入力エラー",
+        description: "解説を入力してください",
+        variant: "destructive"
+      })
       return
     }
 
     setSaving(true)
     try {
-      await onSave(quiz.id, {
+      await onSave(quiz ? quiz.id : '', {
         question: formData.question,
         options: formData.options,
         correct_answer: formData.correct_answer,
@@ -113,9 +170,20 @@ export function QuizEditModal({
         quiz_type: formData.quiz_type,
         display_order: formData.display_order
       })
+      
+      toast({
+        title: "保存完了",
+        description: "クイズが正常に保存されました"
+      })
+      
       onClose()
     } catch (error) {
       console.error('Quiz save error:', error)
+      toast({
+        title: "保存エラー",
+        description: "クイズの保存に失敗しました",
+        variant: "destructive"
+      })
     } finally {
       setSaving(false)
     }
@@ -124,7 +192,8 @@ export function QuizEditModal({
   const handleDelete = async () => {
     if (!quiz || !onDelete) return
 
-    if (!confirm('このクイズを削除してもよろしいですか？')) return
+    const confirmResult = window.confirm('このクイズを削除してもよろしいですか？この操作は取り消せません。')
+    if (!confirmResult) return
 
     setDeleting(true)
     try {
@@ -207,9 +276,26 @@ export function QuizEditModal({
                 </SelectTrigger>
                 <SelectContent>
                   {quizTypeOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div>
-                        <div className="font-medium">{option.label}</div>
+                    <SelectItem 
+                      key={option.value} 
+                      value={option.value}
+                      disabled={option.disabled}
+                    >
+                      <div className={option.disabled ? "opacity-50" : ""}>
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium">{option.label}</div>
+                          {option.phase && (
+                            <span className={`text-xs px-1.5 py-0.5 rounded ${
+                              option.phase === 1 
+                                ? 'bg-green-100 text-green-700' 
+                                : option.phase === 2 
+                                  ? 'bg-orange-100 text-orange-700' 
+                                  : 'bg-purple-100 text-purple-700'
+                            }`}>
+                              Phase{option.phase}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-muted-foreground">{option.description}</div>
                       </div>
                     </SelectItem>
@@ -252,12 +338,12 @@ export function QuizEditModal({
             />
           </div>
 
-          {/* 選択肢（選択問題・○×問題の場合） */}
-          {(formData.quiz_type === 'multiple_choice' || formData.quiz_type === 'true_false') && (
+          {/* 選択肢（選択問題の場合） */}
+          {(formData.quiz_type === 'single_choice' || formData.quiz_type === 'multiple_choice' || formData.quiz_type === 'true_false') && (
             <div>
               <div className="flex items-center justify-between mb-3">
                 <label className="text-sm font-medium">選択肢</label>
-                {formData.quiz_type === 'multiple_choice' && (
+                {(formData.quiz_type === 'single_choice' || formData.quiz_type === 'multiple_choice') && (
                   <Button 
                     type="button"
                     variant="outline" 
@@ -279,7 +365,7 @@ export function QuizEditModal({
                     correct_answer: parseInt(value) 
                   }))}
                 >
-                  {formData.options.map((option, index) => (
+                  {(Array.isArray(formData.options) ? formData.options : []).map((option, index) => (
                     <div key={index} className="flex items-center space-x-3">
                       <RadioGroupItem value={index.toString()} id={`option-${index}`} />
                       <Input
@@ -293,7 +379,7 @@ export function QuizEditModal({
                           <CheckCircle className="h-4 w-4 text-green-500" />
                         )}
                       </Label>
-                      {formData.quiz_type === 'multiple_choice' && formData.options.length > 2 && (
+                      {(formData.quiz_type === 'single_choice' || formData.quiz_type === 'multiple_choice') && formData.options.length > 2 && (
                         <Button
                           type="button"
                           variant="ghost"
@@ -334,9 +420,9 @@ export function QuizEditModal({
               <div className="p-4 border rounded-lg bg-gray-50">
                 <div className="font-medium mb-3">{formData.question}</div>
                 
-                {(formData.quiz_type === 'multiple_choice' || formData.quiz_type === 'true_false') && (
+                {(formData.quiz_type === 'single_choice' || formData.quiz_type === 'multiple_choice' || formData.quiz_type === 'true_false') && (
                   <div className="space-y-2 mb-3">
-                    {formData.options.filter(opt => opt.trim()).map((option, index) => (
+                    {(Array.isArray(formData.options) ? formData.options : []).filter(opt => opt && typeof opt === 'string' && opt.trim()).map((option, index) => (
                       <div 
                         key={index} 
                         className={`p-2 rounded text-sm ${

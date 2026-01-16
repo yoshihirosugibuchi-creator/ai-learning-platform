@@ -28,8 +28,30 @@ import {
   HelpCircle,
   Layers,
   Gift,
-  Sparkles
+  Sparkles,
+  GripVertical,
+  Trash2,
+  Plus
 } from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import {
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -38,6 +60,7 @@ import { ThemeEditModal } from '@/components/admin/ThemeEditModal'
 import { SessionEditModal } from '@/components/admin/SessionEditModal'
 import { ContentEditModal } from '@/components/admin/ContentEditModal'
 import { QuizEditModal } from '@/components/admin/QuizEditModal'
+import { SessionContentDrawer } from '@/components/admin/SessionContentDrawer'
 
 interface Course {
   id: string
@@ -522,8 +545,17 @@ export default function CourseEditPage() {
     }
   }
 
-  // テーマ追加
-  const handleAddTheme = async (genreId: string) => {
+  // テーマ・セッション追加関数はContentEditTab内に移動済み
+
+  // ジャンル削除
+  const handleDeleteGenre = async (genreId: string) => {
+    const genre = courseStructure?.genres?.find(g => g.id === genreId)
+    if (!genre) return
+
+    if (!confirm(`ジャンル「${genre.title}」を削除しますか？この操作は取り消せません。`)) {
+      return
+    }
+
     try {
       const { supabase } = await import('@/lib/supabase')
       const { data: { session } } = await supabase.auth.getSession()
@@ -532,43 +564,49 @@ export default function CourseEditPage() {
         throw new Error('認証が必要です')
       }
 
-      const response = await fetch('/api/admin/themes', {
-        method: 'POST',
+      const response = await fetch(`/api/admin/genres/${genreId}`, {
+        method: 'DELETE',
         headers: { 
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify({
-          genre_id: genreId,
-          title: '新しいテーマ',
-          description: 'テーマの説明を入力してください',
-          estimated_minutes: 15,
-          display_order: 1
-        })
+        }
       })
 
       if (response.ok) {
         toast({
-          title: "追加完了",
-          description: "新しいテーマが追加されました"
+          title: "削除完了",
+          description: `ジャンル「${genre.title}」を削除しました`
         })
         await fetchCourseStructure()
       } else {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'テーマの追加に失敗しました')
+        throw new Error(errorData.error || 'ジャンルの削除に失敗しました')
       }
     } catch (error) {
-      console.error('Add theme error:', error)
+      console.error('Delete genre error:', error)
       toast({
         title: "エラー",
-        description: error instanceof Error ? error.message : "テーマの追加に失敗しました",
+        description: error instanceof Error ? error.message : "ジャンルの削除に失敗しました",
         variant: "destructive"
       })
     }
   }
 
-  // セッション追加
-  const handleAddSession = async (themeId: string) => {
+  // テーマ削除
+  const handleDeleteTheme = async (themeId: string) => {
+    let themeName = ''
+    for (const genre of courseStructure?.genres || []) {
+      const theme = genre.themes.find(t => t.id === themeId)
+      if (theme) {
+        themeName = theme.title
+        break
+      }
+    }
+
+    if (!confirm(`テーマ「${themeName}」を削除しますか？この操作は取り消せません。`)) {
+      return
+    }
+
     try {
       const { supabase } = await import('@/lib/supabase')
       const { data: { session } } = await supabase.auth.getSession()
@@ -577,36 +615,88 @@ export default function CourseEditPage() {
         throw new Error('認証が必要です')
       }
 
-      const response = await fetch('/api/admin/sessions', {
-        method: 'POST',
+      const response = await fetch(`/api/admin/themes/${themeId}`, {
+        method: 'DELETE',
         headers: { 
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify({
-          theme_id: themeId,
-          title: '新しいセッション',
-          estimated_minutes: 5,
-          session_type: 'knowledge',
-          display_order: 1
-        })
+        }
       })
 
       if (response.ok) {
         toast({
-          title: "追加完了",
-          description: "新しいセッションが追加されました"
+          title: "削除完了",
+          description: `テーマ「${themeName}」を削除しました`
+        })
+        await fetchCourseStructure()
+      } else {
+        let errorMessage = 'テーマの削除に失敗しました'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch (parseError) {
+          console.warn('Failed to parse error response:', parseError)
+        }
+        throw new Error(errorMessage)
+      }
+    } catch (error) {
+      console.error('Delete theme error:', error)
+      toast({
+        title: "エラー",
+        description: error instanceof Error ? error.message : "テーマの削除に失敗しました",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // セッション削除
+  const handleDeleteSession = async (sessionId: string) => {
+    let sessionName = ''
+    for (const genre of courseStructure?.genres || []) {
+      for (const theme of genre.themes) {
+        const session = theme.sessions.find(s => s.id === sessionId)
+        if (session) {
+          sessionName = session.title
+          break
+        }
+      }
+    }
+
+    if (!confirm(`セッション「${sessionName}」を削除しますか？この操作は取り消せません。`)) {
+      return
+    }
+
+    try {
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('認証が必要です')
+      }
+
+      const response = await fetch(`/api/admin/sessions/${sessionId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json' 
+        }
+      })
+
+      if (response.ok) {
+        toast({
+          title: "削除完了",
+          description: `セッション「${sessionName}」を削除しました`
         })
         await fetchCourseStructure()
       } else {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'セッションの追加に失敗しました')
+        throw new Error(errorData.error || 'セッションの削除に失敗しました')
       }
     } catch (error) {
-      console.error('Add session error:', error)
+      console.error('Delete session error:', error)
       toast({
         title: "エラー",
-        description: error instanceof Error ? error.message : "セッションの追加に失敗しました",
+        description: error instanceof Error ? error.message : "セッションの削除に失敗しました",
         variant: "destructive"
       })
     }
@@ -707,10 +797,14 @@ export default function CourseEditPage() {
             setCourseStructure={setCourseStructure}
             courseId={courseId}
             toast={toast}
-            onAddTheme={handleAddTheme}
-            onAddSession={handleAddSession}
+            onAddTheme={async (_genreId) => {}} // ContentEditTab内で処理
+            onAddSession={async (_themeId) => {}} // ContentEditTab内で処理
+            fetchCourseStructure={fetchCourseStructure}
             handleAddContent={handleAddContent}
             handleAddQuiz={handleAddQuiz}
+            handleDeleteGenre={handleDeleteGenre}
+            handleDeleteTheme={handleDeleteTheme}
+            handleDeleteSession={handleDeleteSession}
           />
         </TabsContent>
       </Tabs>
@@ -1232,16 +1326,369 @@ function BasicInfoTab({
   )
 }
 
+// ソート可能ジャンルコンポーネント
+function SortableGenre({ genre, onEdit, onAddTheme, onDelete, children }: { 
+  genre: Genre
+  onEdit: (genre: Genre) => void
+  onAddTheme: (genreId: string) => Promise<void>
+  onDelete: (genreId: string) => Promise<void>
+  children?: React.ReactNode 
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: genre.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  const canDelete = genre.themes.length === 0
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={`border-2 border-blue-200 bg-blue-50 rounded-lg p-4 mb-4 ${
+        isDragging ? 'opacity-50 bg-blue-100' : ''
+      }`}
+    >
+      {/* ジャンルヘッダー */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center">
+          <div 
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-blue-100 rounded mr-2"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="h-4 w-4 text-blue-400" />
+          </div>
+          <div className="flex items-center">
+            <BookOpen className="h-5 w-5 mr-2 text-blue-600" />
+            <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded mr-2">
+              ジャンル
+            </span>
+            <h3 className="font-semibold text-blue-800">{genre.title}</h3>
+            {genre.badge_data && (
+              <Award className="h-4 w-4 ml-2 text-amber-500" />
+            )}
+          </div>
+        </div>
+
+        {/* 統一操作パネル */}
+        <div className="flex items-center space-x-1">
+          <span className="text-xs text-blue-600 mr-2">
+            📊 順序: {genre.display_order} | ⏱️ {genre.estimated_days}日間
+          </span>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => onEdit(genre)}
+            className="border-blue-300 text-blue-700 hover:bg-blue-100"
+          >
+            <Edit className="h-3 w-3 mr-1" />
+            編集
+          </Button>
+          {canDelete ? (
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => onDelete(genre.id)}
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              削除
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              size="sm"
+              disabled
+              title="子要素があるため削除できません"
+              className="border-gray-300 text-gray-400"
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              削除
+            </Button>
+          )}
+        </div>
+      </div>
+      
+      {/* 説明 */}
+      <p className="text-sm text-blue-700 mb-3 pl-7">{genre.description}</p>
+      
+      {/* 子要素 */}
+      {children}
+      
+      {/* テーマ追加ボタン（ジャンル内・下部・中央） */}
+      <div className="mt-4 pt-3 border-t border-blue-200 text-center">
+        <Button
+          variant="outline"
+          onClick={() => onAddTheme(genre.id)}
+          className="text-green-600 border-green-300 hover:bg-green-50 font-medium"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          このジャンルにテーマ追加
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// ソート可能テーマコンポーネント
+function SortableTheme({ theme, onEdit, onAddSession: _onAddSession, onDelete, children }: { 
+  theme: Theme
+  onEdit: (theme: Theme, genreId: string) => void
+  onAddSession: (themeId: string) => Promise<void>
+  onDelete: (themeId: string) => Promise<void>
+  children?: React.ReactNode 
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: theme.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  const canDelete = theme.sessions.length === 0
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={`ml-6 border-2 border-green-200 bg-green-50 rounded-lg p-3 mb-3 ${
+        isDragging ? 'opacity-50 bg-green-100' : ''
+      }`}
+    >
+      {/* テーマヘッダー */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center">
+          <div 
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-green-100 rounded mr-2"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="h-3 w-3 text-green-400" />
+          </div>
+          <div className="flex items-center">
+            <FileText className="h-4 w-4 mr-2 text-green-600" />
+            <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded mr-2">
+              テーマ
+            </span>
+            <h4 className="font-medium text-green-800">{theme.title}</h4>
+            {theme.reward_card_data && (
+              <Gift className="h-4 w-4 ml-2 text-green-500" />
+            )}
+          </div>
+        </div>
+
+        {/* 統一操作パネル */}
+        <div className="flex items-center space-x-1">
+          <span className="text-xs text-green-600 mr-2">
+            📊 順序: {theme.display_order} | ⏱️ {theme.estimated_minutes}分
+          </span>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => onEdit(theme, theme.genre_id)}
+            className="border-green-300 text-green-700 hover:bg-green-100"
+          >
+            <Edit className="h-3 w-3 mr-1" />
+            編集
+          </Button>
+          {canDelete ? (
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => onDelete(theme.id)}
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              削除
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              size="sm"
+              disabled
+              title="子要素があるため削除できません"
+              className="border-gray-300 text-gray-400"
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              削除
+            </Button>
+          )}
+        </div>
+      </div>
+      
+      {/* 説明 */}
+      <p className="text-sm text-green-700 mb-2 pl-5">{theme.description}</p>
+      
+      {/* 子要素 */}
+      {children}
+    </div>
+  )
+}
+
+// ソート可能セッションコンポーネント
+function SortableSession({ session, onEdit, onDelete, handleAddContent, handleAddQuiz, onContentSave, onQuizSave, onContentDelete, onQuizDelete }: { 
+  session: Session
+  onEdit: (session: Session) => void
+  onDelete: (sessionId: string) => Promise<void>
+  handleAddContent: (sessionId: string) => Promise<void>
+  handleAddQuiz: (sessionId: string) => Promise<void>
+  onContentSave: (contentId: string, data: Partial<Content>) => Promise<void>
+  onQuizSave: (quizId: string, data: Partial<Quiz>) => Promise<void>
+  onContentDelete: (contentId: string) => Promise<void>
+  onQuizDelete: (quizId: string) => Promise<void>
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: session.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  const canDelete = session.contents.length === 0 && session.quizzes.length === 0
+  
+  const getSessionTypeLabel = (type: string) => {
+    switch (type) {
+      case 'knowledge': return '知識'
+      case 'practice': return '実践'
+      case 'case_study': return 'ケーススタディ'
+      default: return type
+    }
+  }
+
+  const getSessionTypeIcon = (type: string) => {
+    switch (type) {
+      case 'knowledge': return '📖'
+      case 'practice': return '🛠️'
+      case 'case_study': return '📊'
+      default: return '🎯'
+    }
+  }
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={`ml-8 border-2 border-purple-200 bg-purple-50 rounded-lg p-3 mb-2 ${
+        isDragging ? 'opacity-50 bg-purple-100' : ''
+      }`}
+    >
+      {/* セッションヘッダー */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center">
+          <div 
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-purple-100 rounded mr-2"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="h-3 w-3 text-purple-400" />
+          </div>
+          <div className="flex items-center">
+            <HelpCircle className="h-4 w-4 mr-2 text-purple-600" />
+            <span className="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded mr-2">
+              セッション
+            </span>
+            <span className="text-lg mr-2">{getSessionTypeIcon(session.session_type)}</span>
+            <span className="font-medium text-purple-800">{session.title}</span>
+          </div>
+        </div>
+
+        {/* 統一操作パネル */}
+        <div className="flex items-center space-x-1">
+          <span className="text-xs text-purple-600 mr-2">
+            📊 順序: {session.display_order} | 
+            {getSessionTypeLabel(session.session_type)} | 
+            ⏱️ {session.estimated_minutes}分
+          </span>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => onEdit(session)}
+            className="border-purple-300 text-purple-700 hover:bg-purple-100"
+          >
+            <Edit className="h-3 w-3 mr-1" />
+            編集
+          </Button>
+          <SessionContentDrawer
+            session={session}
+            onSessionUpdate={async () => {}} // セッション更新は別で処理
+            onAddContent={handleAddContent}
+            onAddQuiz={handleAddQuiz}
+            onContentSave={onContentSave}
+            onQuizSave={onQuizSave}
+            onContentDelete={onContentDelete}
+            onQuizDelete={onQuizDelete}
+          />
+          {canDelete ? (
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => onDelete(session.id)}
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              削除
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              size="sm"
+              disabled
+              title="コンテンツまたはクイズがあるため削除できません"
+              className="border-gray-300 text-gray-400"
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              削除
+            </Button>
+          )}
+        </div>
+      </div>
+      
+      {/* コンテンツ・クイズ数表示 */}
+      <div className="text-xs text-purple-700 pl-5">
+        📄 コンテンツ: {session.contents.length}個 | ❓ クイズ: {session.quizzes.length}個
+      </div>
+    </div>
+  )
+}
+
 // コンテンツ編集タブ
 function ContentEditTab({ 
   courseStructure, 
   setCourseStructure, 
   courseId, 
   toast,
-  onAddTheme,
-  onAddSession,
+  onAddTheme: _onAddTheme,
+  onAddSession: _onAddSession,
+  fetchCourseStructure,
   handleAddContent,
-  handleAddQuiz
+  handleAddQuiz,
+  handleDeleteGenre,
+  handleDeleteTheme,
+  handleDeleteSession
 }: {
   courseStructure: Course | null
   setCourseStructure: React.Dispatch<React.SetStateAction<Course | null>>
@@ -1249,8 +1696,12 @@ function ContentEditTab({
   toast: (options: { title: string; description: string; variant?: 'destructive' }) => void
   onAddTheme: (genreId: string) => Promise<void>
   onAddSession: (themeId: string) => Promise<void>
+  fetchCourseStructure: () => Promise<void>
   handleAddContent: (sessionId: string) => Promise<void>
   handleAddQuiz: (sessionId: string) => Promise<void>
+  handleDeleteGenre: (genreId: string) => Promise<void>
+  handleDeleteTheme: (themeId: string) => Promise<void>
+  handleDeleteSession: (sessionId: string) => Promise<void>
 }) {
   const [editingGenre, setEditingGenre] = useState<Genre | null>(null)
   const [editingTheme, setEditingTheme] = useState<Theme | null>(null)
@@ -1258,6 +1709,278 @@ function ContentEditTab({
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [editingContent, setEditingContent] = useState<Content | null>(null)
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null)
+
+  // ドラッグアンドドロップ用センサー
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  // テーマ追加（モーダル表示）
+  const handleAddTheme = async (genreId: string) => {
+    // 現在のテーマ数から次の表示順序を計算
+    const genre = courseStructure?.genres?.find(g => g.id === genreId)
+    const nextDisplayOrder = genre ? genre.themes.length + 1 : 1
+    
+    // モーダルを開く（新規作成モード）
+    setEditingTheme({
+      id: '',
+      genre_id: genreId,
+      title: '',
+      description: '',
+      display_order: nextDisplayOrder,
+      estimated_minutes: 15,
+      reward_card_data: null,
+      sessions: []
+    })
+    setEditingThemeGenreId(genreId)
+  }
+
+  // セッション追加（モーダル表示）
+  const handleAddSession = async (themeId: string) => {
+    // 現在のセッション数から次の表示順序を計算
+    const theme = courseStructure?.genres?.flatMap(g => g.themes).find(t => t.id === themeId)
+    const nextDisplayOrder = theme ? theme.sessions.length + 1 : 1
+    
+    // モーダルを開く（新規作成モード）
+    setEditingSession({
+      id: '',
+      theme_id: themeId,
+      title: '',
+      session_type: 'knowledge',
+      display_order: nextDisplayOrder,
+      estimated_minutes: 5,
+      contents: [],
+      quizzes: []
+    })
+  }
+
+  // ジャンル並び替えハンドラー
+  const handleGenreDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id || !courseStructure?.genres) return
+
+    const oldIndex = courseStructure.genres.findIndex((genre) => genre.id === active.id)
+    const newIndex = courseStructure.genres.findIndex((genre) => genre.id === over.id)
+
+    if (oldIndex === -1 || newIndex === -1) return
+
+    // 楽観的更新
+    const reorderedGenres = arrayMove(courseStructure.genres, oldIndex, newIndex)
+    setCourseStructure(prev => prev ? { ...prev, genres: reorderedGenres } : null)
+
+    // display_orderを更新
+    const updatedGenres = reorderedGenres.map((genre, index) => ({
+      ...genre,
+      display_order: index + 1
+    }))
+
+    try {
+      // 🔐 CLAUDE.md準拠：認証ヘッダー追加
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('認証が必要です')
+      }
+
+      // APIで順序更新
+      const updatePromises = updatedGenres.map((genre) =>
+        fetch(`/api/admin/genres/${genre.id}/order`, {
+          method: 'PATCH',
+          headers: { 
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({ display_order: genre.display_order })
+        })
+      )
+
+      await Promise.all(updatePromises)
+
+      // ローカル状態を最終更新
+      setCourseStructure(prev => prev ? { ...prev, genres: updatedGenres } : null)
+
+      toast({
+        title: '並び順を更新しました',
+        description: 'ジャンルの表示順序が正常に更新されました。',
+      })
+    } catch (_error) {
+      // エラー時はロールバック
+      setCourseStructure(prev => prev ? { ...prev, genres: courseStructure.genres } : null)
+      toast({
+        title: '並び順の更新に失敗しました',
+        description: 'エラーが発生しました。再度お試しください。',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  // テーマ並び替えハンドラー（ジャンル内）
+  const handleThemeDragEnd = async (event: DragEndEvent, genreId: string) => {
+    const { active, over } = event
+    if (!over || active.id === over.id || !courseStructure?.genres) return
+
+    const genre = courseStructure.genres.find(g => g.id === genreId)
+    if (!genre) return
+
+    const oldIndex = genre.themes.findIndex((theme) => theme.id === active.id)
+    const newIndex = genre.themes.findIndex((theme) => theme.id === over.id)
+
+    if (oldIndex === -1 || newIndex === -1) return
+
+    // 楽観的更新
+    const reorderedThemes = arrayMove(genre.themes, oldIndex, newIndex)
+    setCourseStructure(prev => {
+      if (!prev?.genres) return prev
+      return {
+        ...prev,
+        genres: prev.genres.map(g => 
+          g.id === genreId ? { ...g, themes: reorderedThemes } : g
+        )
+      }
+    })
+
+    // display_orderを更新
+    const updatedThemes = reorderedThemes.map((theme, index) => ({
+      ...theme,
+      display_order: index + 1
+    }))
+
+    try {
+      // 🔐 CLAUDE.md準拠：認証ヘッダー追加
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('認証が必要です')
+      }
+
+      // APIで順序更新
+      const updatePromises = updatedThemes.map((theme) =>
+        fetch(`/api/admin/themes/${theme.id}/order`, {
+          method: 'PATCH',
+          headers: { 
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({ display_order: theme.display_order })
+        })
+      )
+
+      await Promise.all(updatePromises)
+
+      toast({
+        title: '並び順を更新しました',
+        description: 'テーマの表示順序が正常に更新されました。',
+      })
+    } catch (_error) {
+      // エラー時はロールバック
+      setCourseStructure(prev => {
+        if (!prev?.genres) return prev
+        return {
+          ...prev,
+          genres: prev.genres.map(g => 
+            g.id === genreId ? { ...g, themes: genre.themes } : g
+          )
+        }
+      })
+      toast({
+        title: '並び順の更新に失敗しました',
+        description: 'エラーが発生しました。再度お試しください。',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  // セッション並び替えハンドラー（テーマ内）
+  const handleSessionDragEnd = async (event: DragEndEvent, themeId: string) => {
+    const { active, over } = event
+    if (!over || active.id === over.id || !courseStructure?.genres) return
+
+    let theme: Theme | undefined
+    for (const genre of courseStructure.genres) {
+      theme = genre.themes.find(t => t.id === themeId)
+      if (theme) break
+    }
+    if (!theme) return
+
+    const oldIndex = theme.sessions.findIndex((session) => session.id === active.id)
+    const newIndex = theme.sessions.findIndex((session) => session.id === over.id)
+
+    if (oldIndex === -1 || newIndex === -1) return
+
+    // 楽観的更新
+    const reorderedSessions = arrayMove(theme.sessions, oldIndex, newIndex)
+    setCourseStructure(prev => {
+      if (!prev?.genres) return prev
+      return {
+        ...prev,
+        genres: prev.genres.map(g => ({
+          ...g,
+          themes: g.themes.map(t => 
+            t.id === themeId ? { ...t, sessions: reorderedSessions } : t
+          )
+        }))
+      }
+    })
+
+    // display_orderを更新
+    const updatedSessions = reorderedSessions.map((session, index) => ({
+      ...session,
+      display_order: index + 1
+    }))
+
+    try {
+      // 🔐 CLAUDE.md準拠：認証ヘッダー追加
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      
+      if (!authSession?.access_token) {
+        throw new Error('認証が必要です')
+      }
+
+      // APIで順序更新
+      const updatePromises = updatedSessions.map((session) =>
+        fetch(`/api/admin/sessions/${session.id}/order`, {
+          method: 'PATCH',
+          headers: { 
+            'Authorization': `Bearer ${authSession.access_token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({ display_order: session.display_order })
+        })
+      )
+
+      await Promise.all(updatePromises)
+
+      toast({
+        title: '並び順を更新しました',
+        description: 'セッションの表示順序が正常に更新されました。',
+      })
+    } catch (_error) {
+      // エラー時はロールバック
+      setCourseStructure(prev => {
+        if (!prev?.genres) return prev
+        return {
+          ...prev,
+          genres: prev.genres.map(g => ({
+            ...g,
+            themes: g.themes.map(t => 
+              t.id === themeId ? { ...t, sessions: theme!.sessions } : t
+            )
+          }))
+        }
+      })
+      toast({
+        title: '並び順の更新に失敗しました',
+        description: 'エラーが発生しました。再度お試しください。',
+        variant: 'destructive'
+      })
+    }
+  }
 
   const handleGenreSave = async (genreId: string, data: Partial<Genre>) => {
     try {
@@ -1433,46 +2156,82 @@ function ContentEditTab({
         throw new Error('認証が必要です')
       }
 
-      const response = await fetch(`/api/admin/sessions/${sessionId}`, {
-        method: 'PATCH',
-        headers: { 
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify(data)
-      })
+      // 新規作成か既存編集かを判定
+      const isNewSession = !sessionId || sessionId === ''
+      
+      if (isNewSession) {
+        // 新規作成（POST）
+        const response = await fetch('/api/admin/sessions', {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify(data)
+        })
 
-      if (response.ok) {
-        toast({
-          title: "保存完了",
-          description: "セッション情報が正常に更新されました"
-        })
-        
-        // ローカル状態を更新
-        setCourseStructure(prev => {
-          if (!prev || !prev.genres) return prev
-          return {
-            ...prev,
-            genres: prev.genres.map(genre => ({
-              ...genre,
-              themes: genre.themes.map(theme => ({
-                ...theme,
-                sessions: theme.sessions.map(session => 
-                  session.id === sessionId ? { ...session, ...data } : session
-                )
-              }))
-            }))
+        if (response.ok) {
+          const _result = await response.json()
+          toast({
+            title: "追加完了",
+            description: "新しいセッションが追加されました"
+          })
+          
+          // 画面を再読み込みして最新データを表示
+          await fetchCourseStructure()
+        } else {
+          let errorMessage = 'セッションの追加に失敗しました'
+          try {
+            const errorData = await response.json()
+            errorMessage = errorData.error || errorMessage
+          } catch (parseError) {
+            console.warn('Failed to parse error response:', parseError)
           }
-        })
+          throw new Error(errorMessage)
+        }
       } else {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'セッションの更新に失敗しました')
+        // 既存編集（PATCH）
+        const response = await fetch(`/api/admin/sessions/${sessionId}`, {
+          method: 'PATCH',
+          headers: { 
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify(data)
+        })
+
+        if (response.ok) {
+          toast({
+            title: "保存完了",
+            description: "セッション情報が正常に更新されました"
+          })
+          
+          // ローカル状態を更新
+          setCourseStructure(prev => {
+            if (!prev || !prev.genres) return prev
+            return {
+              ...prev,
+              genres: prev.genres.map(genre => ({
+                ...genre,
+                themes: genre.themes.map(theme => ({
+                  ...theme,
+                  sessions: theme.sessions.map(session => 
+                    session.id === sessionId ? { ...session, ...data } : session
+                  )
+                }))
+              }))
+            }
+          })
+        } else {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'セッションの更新に失敗しました')
+        }
       }
     } catch (error) {
       console.error('Session save error:', error)
       toast({
         title: "エラー",
-        description: error instanceof Error ? error.message : "セッションの更新に失敗しました",
+        description: error instanceof Error ? error.message : "セッションの保存に失敗しました",
         variant: "destructive"
       })
     }
@@ -1488,43 +2247,68 @@ function ContentEditTab({
         throw new Error('認証が必要です')
       }
 
-      const response = await fetch(`/api/admin/contents/${contentId}`, {
-        method: 'PATCH',
-        headers: { 
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify(data)
-      })
-
-      if (response.ok) {
-        toast({
-          title: "保存完了",
-          description: "コンテンツ情報が正常に更新されました"
+      if (contentId === '') {
+        // 新規作成
+        const response = await fetch('/api/admin/contents', {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify(data)
         })
-        
-        // ローカル状態を更新
-        setCourseStructure(prev => {
-          if (!prev || !prev.genres) return prev
-          return {
-            ...prev,
-            genres: prev.genres.map(genre => ({
-              ...genre,
-              themes: genre.themes.map(theme => ({
-                ...theme,
-                sessions: theme.sessions.map(session => ({
-                  ...session,
-                  contents: session.contents.map(content =>
-                    content.id === contentId ? { ...content, ...data } : content
-                  )
+
+        if (response.ok) {
+          toast({
+            title: "作成完了",
+            description: "新しいコンテンツが作成されました"
+          })
+          // 構造データを再取得
+          await fetchCourseStructure()
+        } else {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'コンテンツの作成に失敗しました')
+        }
+      } else {
+        // 既存更新
+        const response = await fetch(`/api/admin/contents/${contentId}`, {
+          method: 'PATCH',
+          headers: { 
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify(data)
+        })
+
+        if (response.ok) {
+          toast({
+            title: "保存完了",
+            description: "コンテンツ情報が正常に更新されました"
+          })
+          
+          // ローカル状態を更新
+          setCourseStructure(prev => {
+            if (!prev || !prev.genres) return prev
+            return {
+              ...prev,
+              genres: prev.genres.map(genre => ({
+                ...genre,
+                themes: genre.themes.map(theme => ({
+                  ...theme,
+                  sessions: theme.sessions.map(session => ({
+                    ...session,
+                    contents: session.contents.map(content =>
+                      content.id === contentId ? { ...content, ...data } : content
+                    )
+                  }))
                 }))
               }))
-            }))
-          }
-        })
-      } else {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'コンテンツの更新に失敗しました')
+            }
+          })
+        } else {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'コンテンツの更新に失敗しました')
+        }
       }
     } catch (error) {
       console.error('Content save error:', error)
@@ -1546,19 +2330,115 @@ function ContentEditTab({
         throw new Error('認証が必要です')
       }
 
-      const response = await fetch(`/api/admin/quizzes/${quizId}`, {
-        method: 'PATCH',
+      if (quizId === '') {
+        // 新規作成
+        console.log('Creating new quiz with data:', data)
+        const response = await fetch('/api/admin/quizzes', {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify(data)
+        })
+
+        if (response.ok) {
+          toast({
+            title: "作成完了",
+            description: "新しいクイズが作成されました"
+          })
+          // 構造データを再取得
+          await fetchCourseStructure()
+        } else {
+          const errorData = await response.json()
+          console.error('Quiz creation error:', errorData)
+          throw new Error(errorData.error || 'クイズの作成に失敗しました')
+        }
+      } else {
+        // 既存更新
+        console.log('Updating quiz with id:', quizId, 'data:', data)
+        const response = await fetch(`/api/admin/quizzes/${quizId}`, {
+          method: 'PATCH',
+          headers: { 
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify(data)
+        })
+
+        console.log('Update response status:', response.status, 'statusText:', response.statusText)
+        
+        if (response.ok) {
+          toast({
+            title: "保存完了",
+            description: "クイズ情報が正常に更新されました"
+          })
+          
+          // ローカル状態を更新
+          setCourseStructure(prev => {
+            if (!prev || !prev.genres) return prev
+            return {
+              ...prev,
+              genres: prev.genres.map(genre => ({
+                ...genre,
+                themes: genre.themes.map(theme => ({
+                  ...theme,
+                  sessions: theme.sessions.map(session => ({
+                    ...session,
+                    quizzes: session.quizzes.map(quiz =>
+                      quiz.id === quizId ? { ...quiz, ...data } : quiz
+                    )
+                  }))
+                }))
+              }))
+            }
+          })
+        } else {
+          let errorData
+          try {
+            const responseText = await response.text()
+            console.log('Raw response:', responseText)
+            errorData = responseText ? JSON.parse(responseText) : { error: 'Empty response' }
+          } catch (e) {
+            console.error('Failed to parse error response:', e)
+            errorData = { error: `HTTP ${response.status}: ${response.statusText}` }
+          }
+          console.error('Quiz update error:', errorData)
+          throw new Error(errorData.error || 'クイズの更新に失敗しました')
+        }
+      }
+    } catch (error) {
+      console.error('Quiz save error:', error)
+      toast({
+        title: "エラー",
+        description: error instanceof Error ? error.message : "クイズの保存に失敗しました",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // コンテンツ削除
+  const handleContentDelete = async (contentId: string) => {
+    try {
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('認証が必要です')
+      }
+
+      const response = await fetch(`/api/admin/contents/${contentId}`, {
+        method: 'DELETE',
         headers: { 
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify(data)
+        }
       })
 
       if (response.ok) {
         toast({
-          title: "保存完了",
-          description: "クイズ情報が正常に更新されました"
+          title: "削除完了",
+          description: "コンテンツが正常に削除されました"
         })
         
         // ローカル状態を更新
@@ -1572,9 +2452,7 @@ function ContentEditTab({
                 ...theme,
                 sessions: theme.sessions.map(session => ({
                   ...session,
-                  quizzes: session.quizzes.map(quiz =>
-                    quiz.id === quizId ? { ...quiz, ...data } : quiz
-                  )
+                  contents: session.contents.filter(content => content.id !== contentId)
                 }))
               }))
             }))
@@ -1582,13 +2460,68 @@ function ContentEditTab({
         })
       } else {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'クイズの更新に失敗しました')
+        throw new Error(errorData.error || 'コンテンツの削除に失敗しました')
       }
     } catch (error) {
-      console.error('Quiz save error:', error)
+      console.error('Content delete error:', error)
       toast({
         title: "エラー",
-        description: error instanceof Error ? error.message : "クイズの更新に失敗しました",
+        description: error instanceof Error ? error.message : "コンテンツの削除に失敗しました",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // クイズ削除
+  const handleQuizDelete = async (quizId: string) => {
+    try {
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('認証が必要です')
+      }
+
+      const response = await fetch(`/api/admin/quizzes/${quizId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json' 
+        }
+      })
+
+      if (response.ok) {
+        toast({
+          title: "削除完了",
+          description: "クイズが正常に削除されました"
+        })
+        
+        // ローカル状態を更新
+        setCourseStructure(prev => {
+          if (!prev || !prev.genres) return prev
+          return {
+            ...prev,
+            genres: prev.genres.map(genre => ({
+              ...genre,
+              themes: genre.themes.map(theme => ({
+                ...theme,
+                sessions: theme.sessions.map(session => ({
+                  ...session,
+                  quizzes: session.quizzes.filter(quiz => quiz.id !== quizId)
+                }))
+              }))
+            }))
+          }
+        })
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'クイズの削除に失敗しました')
+      }
+    } catch (error) {
+      console.error('Quiz delete error:', error)
+      toast({
+        title: "エラー",
+        description: error instanceof Error ? error.message : "クイズの削除に失敗しました",
         variant: "destructive"
       })
     }
@@ -1629,7 +2562,25 @@ function ContentEditTab({
                     最初のジャンルを作成して、コースの学習コンテンツ構造を構築しましょう
                   </p>
                   <Button 
-                    onClick={() => setEditingGenre({ id: '', course_id: courseId, title: '', description: '', display_order: 1, estimated_days: 7, badge_data: null, themes: [] })}
+                    onClick={() => {
+                    const nextDisplayOrder = courseStructure?.genres?.length ? courseStructure.genres.length + 1 : 1
+                    setEditingGenre({ 
+                      id: '', 
+                      course_id: courseId, 
+                      title: '', 
+                      description: '', 
+                      display_order: nextDisplayOrder, 
+                      estimated_days: 7, 
+                      badge_data: {
+                        id: '',
+                        icon: '🏆',
+                        color: '#F59E0B',
+                        title: '',
+                        description: ''
+                      }, 
+                      themes: [] 
+                    })
+                  }}
                     className="flex items-center"
                   >
                     <BookOpen className="h-4 w-4 mr-2" />
@@ -1637,142 +2588,116 @@ function ContentEditTab({
                   </Button>
                 </div>
               ) : (
-                courseStructure.genres.map((genre) => (
-                <div key={genre.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold flex items-center">
-                      <BookOpen className="h-4 w-4 mr-2 text-blue-600" />
-                      {genre.title}
-                      {genre.badge_data && (
-                        <Award className="h-3 w-3 ml-2 text-amber-500" />
-                      )}
-                    </h3>
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => onAddTheme(genre.id)}
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleGenreDragEnd}
+                >
+                  <SortableContext
+                    items={courseStructure.genres.map(genre => genre.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {courseStructure.genres.map((genre) => (
+                      <SortableGenre 
+                        key={genre.id} 
+                        genre={genre} 
+                        onEdit={setEditingGenre} 
+                        onAddTheme={handleAddTheme}
+                        onDelete={(genreId) => handleDeleteGenre(genreId)}
                       >
-                        <FileText className="h-4 w-4 mr-1" />
-                        テーマ追加
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setEditingGenre(genre)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        編集
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3">{genre.description}</p>
-                  
-                  {/* テーマ一覧 */}
-                  <div className="space-y-3">
-                    {genre.themes.map((theme) => (
-                      <div key={theme.id} className="ml-4 border-l-2 border-blue-200 pl-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium flex items-center">
-                            <FileText className="h-4 w-4 mr-2 text-green-600" />
-                            {theme.title}
-                            {theme.reward_card_data && (
-                              <Gift className="h-3 w-3 ml-2 text-green-500" />
-                            )}
-                          </h4>
-                          <div className="flex items-center space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => onAddSession(theme.id)}
-                            >
-                              <HelpCircle className="h-4 w-4 mr-1" />
-                              セッション追加
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                setEditingTheme(theme)
-                                setEditingThemeGenreId(genre.id)
-                              }}
-                            >
-                              <Edit className="h-4 w-4 mr-1" />
-                              編集
-                            </Button>
-                          </div>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-2">{theme.description}</p>
-                        
-                        {/* セッション一覧 */}
-                        <div className="space-y-2">
-                          {theme.sessions.map((session) => (
-                            <div key={session.id} className="ml-4 bg-gray-50 rounded p-3">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium flex items-center">
-                                  <HelpCircle className="h-3 w-3 mr-1 text-purple-600" />
-                                  {session.title}
-                                </span>
-                                <div className="flex items-center space-x-1">
-                                  <span className="text-xs text-muted-foreground">
-                                    {session.contents.length}コンテンツ / {session.quizzes.length}クイズ
-                                  </span>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => setEditingSession(session)}
+                        {/* テーマ一覧 */}
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={(event) => handleThemeDragEnd(event, genre.id)}
+                        >
+                          <SortableContext
+                            items={genre.themes.map(theme => theme.id)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            <div className="space-y-3">
+                              {genre.themes.map((theme) => (
+                                <SortableTheme 
+                                  key={theme.id} 
+                                  theme={theme} 
+                                  onEdit={(theme, genreId) => {
+                                    setEditingTheme(theme)
+                                    setEditingThemeGenreId(genreId)
+                                  }}
+                                  onAddSession={handleAddSession}
+                                  onDelete={(themeId) => handleDeleteTheme(themeId)}
+                                >
+                                  {/* セッション一覧 */}
+                                  <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={(event) => handleSessionDragEnd(event, theme.id)}
                                   >
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                              
-                              {/* セッション詳細操作 */}
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">
-                                  タイプ: {
-                                    session.session_type === 'knowledge' ? '知識' :
-                                    session.session_type === 'practice' ? '実践' : 'ケーススタディ'
-                                  } | {session.estimated_minutes}分
-                                </span>
-                                <div className="flex items-center space-x-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleAddContent(session.id)}
-                                    className="h-6 px-2 text-xs"
-                                  >
-                                    <FileText className="h-3 w-3 mr-1" />
-                                    コンテンツ追加
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleAddQuiz(session.id)}
-                                    className="h-6 px-2 text-xs"
-                                  >
-                                    <HelpCircle className="h-3 w-3 mr-1" />
-                                    クイズ追加
-                                  </Button>
-                                </div>
-                              </div>
+                                    <SortableContext
+                                      items={theme.sessions.map(session => session.id)}
+                                      strategy={verticalListSortingStrategy}
+                                    >
+                                      <div className="space-y-2">
+                                        {theme.sessions.map((session) => (
+                                          <SortableSession
+                                            key={session.id}
+                                            session={session}
+                                            onEdit={setEditingSession}
+                                            onDelete={(sessionId) => handleDeleteSession(sessionId)}
+                                            handleAddContent={handleAddContent}
+                                            handleAddQuiz={handleAddQuiz}
+                                            onContentSave={handleContentSave}
+                                            onQuizSave={handleQuizSave}
+                                            onContentDelete={handleContentDelete}
+                                            onQuizDelete={handleQuizDelete}
+                                          />
+                                        ))}
+                                      </div>
+                                    </SortableContext>
+                                  </DndContext>
+                                  
+                                  {/* セッション追加ボタン（テーマ内・下部・中央） */}
+                                  <div className="mt-4 pt-3 border-t border-purple-200 text-center">
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => handleAddSession(theme.id)}
+                                      className="text-purple-600 border-purple-300 hover:bg-purple-50 font-medium"
+                                    >
+                                      <Plus className="h-4 w-4 mr-2" />
+                                      このテーマにセッション追加
+                                    </Button>
+                                  </div>
+                                </SortableTheme>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      </div>
+                          </SortableContext>
+                        </DndContext>
+                      </SortableGenre>
                     ))}
-                  </div>
-                </div>
-              )))}
+                  </SortableContext>
+                </DndContext>
+              )}
               
               {/* ジャンル追加ボタン */}
               <div className="mt-6 text-center">
                 <Button 
-                  onClick={() => setEditingGenre({ id: '', course_id: courseId, title: '', description: '', display_order: 1, estimated_days: 7, badge_data: null, themes: [] })}
+                  onClick={() => {
+                    const nextDisplayOrder = courseStructure?.genres?.length ? courseStructure.genres.length + 1 : 1
+                    setEditingGenre({ 
+                      id: '', 
+                      course_id: courseId, 
+                      title: '', 
+                      description: '', 
+                      display_order: nextDisplayOrder, 
+                      estimated_days: 7, 
+                      badge_data: null, 
+                      themes: [] 
+                    })
+                  }}
                   variant="outline"
-                  className="flex items-center"
+                  className="text-blue-600 border-blue-300 hover:bg-blue-50 font-medium"
                 >
-                  <BookOpen className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 mr-2" />
                   新しいジャンルを追加
                 </Button>
               </div>
@@ -1805,10 +2730,6 @@ function ContentEditTab({
         isOpen={!!editingSession}
         onClose={() => setEditingSession(null)}
         onSave={handleSessionSave}
-        onEditContent={setEditingContent}
-        onEditQuiz={setEditingQuiz}
-        onAddContent={handleAddContent}
-        onAddQuiz={handleAddQuiz}
       />
 
       <ContentEditModal

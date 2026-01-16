@@ -20,7 +20,7 @@ interface ThemeUpdateRequest {
 }
 
 // ID生成関数（既存パターンに合わせた英数記号）
-const generateThemeId = (title: string, _genre_id: string): string => {
+const _generateThemeId = (title: string, _genre_id: string): string => {
   const baseId = title
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '_')
@@ -104,30 +104,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // ID生成（重複チェック付き）
-    let themeId = generateThemeId(title, genre_id)
-    let counter = 1
-    const maxAttempts = 10
-
-    while (counter <= maxAttempts) {
-      const { data: existing } = await supabaseAdmin
-        .from('learning_themes')
-        .select('id')
-        .eq('id', themeId)
-        .single()
-
-      if (!existing) break
-
-      themeId = `${generateThemeId(title, genre_id)}_${counter}`
-      counter++
-    }
-
-    if (counter > maxAttempts) {
-      return NextResponse.json(
-        { error: 'Failed to generate unique theme ID' },
-        { status: 500 }
-      )
-    }
+    // ID生成ヘルパー関数を使用して適切なIDを生成
+    const { generateUniqueId } = await import('@/lib/id-generation-helper')
+    const themeId = await generateUniqueId('theme', title)
 
     // テーマ作成
     const themeData = {

@@ -28,7 +28,6 @@ import {
   Globe,
   FileUp,
   Trash2,
-  ArrowLeft,
   Cloud,
   Shield
 } from 'lucide-react'
@@ -691,29 +690,27 @@ export function SourceUploadStep({
         </CardContent>
       </Card>
 
-      {/* フッター */}
+      {/* ナビゲーション */}
       <div className="flex justify-between items-center">
         <Button
           variant="outline"
           onClick={onPrevious}
-          className="flex items-center gap-2"
         >
-          <ArrowLeft className="h-4 w-4" />
           前のステップ
         </Button>
 
         <div className="flex items-center gap-4">
-          <p className="text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground">
             {sources.length === 0 ? (
               "最低1つの参考資料をアップロードしてください"
             ) : (
               `${sources.length} 件の参考資料が準備完了`
             )}
-          </p>
+          </div>
           
           <Button 
             onClick={onNext}
-            disabled={sources.length === 0}
+            disabled={false}
             className="min-w-32"
           >
             次のステップ

@@ -12,8 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { coursePublisher } from '@/lib/ai-course-generation/course-publisher'
-import { convertToPublisherWorkflow, type CourseWizardWorkflow } from '@/lib/ai-course-generation/type-conversion'
+import { type CourseWizardWorkflow } from '@/lib/ai-course-generation/type-conversion'
 import { 
   Target, 
   ArrowLeft, 
@@ -27,33 +26,42 @@ import {
   Loader2
 } from 'lucide-react'
 
-// AIアウトラインの型定義（JSON解析用）
+// AIアウトラインの型定義（新形式対応）
 interface AIGenre {
-  id?: string
-  genreTitle: string
-  genreDescription: string
+  id: string
+  title: string
+  description: string
   suggested_category_id?: string
   suggested_subcategory_id?: string
+  estimatedDays?: number
+  display_order?: number
   themes: Array<{
-    themeTitle: string
-    themeDescription: string
+    id: string
+    title: string
+    description: string
+    estimatedMinutes: number
+    display_order: number
     sessions: Array<{
-      sessionTitle: string
-      sessionDescription: string
+      id: string
+      title: string
+      description?: string
+      session_type: string
       estimatedMinutes: number
+      display_order: number
     }>
   }>
 }
 
 interface AIParsedOutline {
-  courseTitle: string
-  courseDescription: string
-  genres: AIGenre[]
-  categoryMapping?: {
-    recommendedCategoryId: number
-    recommendedSubcategoryId?: number
-    reason: string
+  course: {
+    title: string
+    description: string
+    estimatedDays: number
+    difficulty: string
+    targetAudience: string
+    learningObjectives: string[]
   }
+  genres: AIGenre[]
 }
 
 // カテゴリマッピングの型定義
@@ -82,7 +90,7 @@ interface Subcategory {
   subcategory_id: string
   name: string
   description: string
-  category_id: string
+  parent_category_id: string  // APIから返される実際のフィールド名
   is_active: boolean
 }
 
@@ -91,6 +99,7 @@ interface CategoryMappingStepProps {
     id?: string
     aiOutlineResponse?: string
     sources: unknown[]
+    categoryMappings?: CategoryMapping[]  // 既存カテゴリマッピング追加
   }
   onChange?: (updates: { categoryMappings: CategoryMapping[] }) => void
   onNext?: () => void
@@ -116,12 +125,13 @@ export function CategoryMappingStep({
     try {
       const { ApiClient } = await import('@/lib/api-helpers')
       
-      // カテゴリのみ取得（現在サブカテゴリAPIは未実装のため）
+      // カテゴリ取得
       const categoriesResult = await ApiClient.get<{ categories: Category[] }>('/api/categories')
-      
       setCategories(categoriesResult.categories || [])
-      // サブカテゴリは現在空配列（将来実装予定）
-      setSubcategories([])
+      
+      // サブカテゴリ取得（アクティブのみ）
+      const subcategoriesResult = await ApiClient.get<{ subcategories: Subcategory[] }>('/api/subcategories?active_only=true')
+      setSubcategories(subcategoriesResult.subcategories || [])
       
     } catch (error) {
       console.error('❌ Category data load error:', error)
@@ -134,7 +144,7 @@ export function CategoryMappingStep({
   }
 
   // AIアウトライン解析・初期マッピング設定
-  const parseAIOutlineAndSetup = () => {
+  const parseAIOutlineAndSetup = async () => {
     if (!workflow.aiOutlineResponse) {
       toast({
         title: "アウトラインデータなし",
@@ -148,19 +158,21 @@ export function CategoryMappingStep({
       const parsedOutline: AIParsedOutline = JSON.parse(workflow.aiOutlineResponse)
       setAiOutline(parsedOutline)
 
-      // 各ジャンルに対してマッピング初期化
-      const initialMappings: CategoryMapping[] = parsedOutline.genres.map((genre, index) => ({
-        genreId: genre.id || `genre_${index}`,
-        genreTitle: genre.genreTitle,
-        selectedCategoryId: undefined,
-        selectedSubcategoryId: undefined,
-        aiRecommendedCategoryId: genre.suggested_category_id,
-        aiRecommendedSubcategoryId: genre.suggested_subcategory_id,
-        confidenceScore: 0.8, // デフォルト信頼度
-        manualOverride: false
-      }))
-
-      setCategoryMappings(initialMappings)
+      // 既存のcategoryMappingsがあれば復元、なければ初期化
+      if (workflow.categoryMappings && workflow.categoryMappings.length > 0) {
+        console.log('📋 [CategoryMapping] 既存のカテゴリマッピングを復元:', workflow.categoryMappings)
+        // 既存のマッピングが正しいgenreIdを持っているか確認
+        const validMappings = workflow.categoryMappings.filter(m => m.genreId)
+        if (validMappings.length === parsedOutline.genres.length) {
+          setCategoryMappings(workflow.categoryMappings)
+        } else {
+          // マッピングが不完全な場合は再初期化
+          console.warn('⚠️ [CategoryMapping] 既存マッピングが不完全なため再初期化')
+          await initializeMappings(parsedOutline)
+        }
+      } else {
+        await initializeMappings(parsedOutline)
+      }
       
     } catch (error) {
       console.error('❌ AI outline parse error:', error)
@@ -170,13 +182,80 @@ export function CategoryMappingStep({
         variant: "destructive"
       })
     }
+    
+    async function initializeMappings(outline: AIParsedOutline) {
+      console.log('🔄 [CategoryMapping] 新規カテゴリマッピングを初期化')
+      // クライアントサイドID生成ライブラリを使用
+      const { generateClientId } = await import('@/lib/id-generation-client')
+      
+      // 各ジャンルに対してマッピング初期化
+      const initialMappings: CategoryMapping[] = await Promise.all(
+        outline.genres.map(async (genre, index) => {
+          // genreIdはすでに存在するIDを優先使用
+          let genreId = genre.id
+          
+          // IDが存在しない場合のみ生成
+          if (!genreId) {
+            genreId = await generateClientId('genre', genre.title)
+          }
+          
+          // すでにユニークなIDがあるかチェック
+          const existingIds = outline.genres
+            .slice(0, index)
+            .map(g => g.id)
+            .filter(Boolean)
+          
+          // 重複している場合のみインデックスを追加
+          if (existingIds.includes(genreId)) {
+            genreId = `${genreId}_${index}`
+          }
+          
+          console.log(`📋 [CategoryMapping] Genre mapping初期化: "${genre.title}" -> ID: "${genreId}"`)
+          
+          return {
+            genreId,
+            genreTitle: genre.title,
+            selectedCategoryId: undefined,
+            selectedSubcategoryId: undefined,
+            aiRecommendedCategoryId: genre.suggested_category_id,
+            aiRecommendedSubcategoryId: genre.suggested_subcategory_id,
+            confidenceScore: 0.8, // デフォルト信頼度
+            manualOverride: false
+          }
+        })
+      )
+      
+      // IDの重複がないことを確認
+      const genreIds = initialMappings.map(m => m.genreId)
+      const uniqueIds = new Set(genreIds)
+      if (genreIds.length !== uniqueIds.size) {
+        console.error('❌ [CategoryMapping] 重複したgenreIdが検出されました:', genreIds)
+      }
+
+      setCategoryMappings(initialMappings)
+    }
   }
+
+  // categoryMappings変更時に親コンポーネントへ通知（useEffectで非同期に）
+  const [shouldNotifyParent, setShouldNotifyParent] = useState(false)
+
+  useEffect(() => {
+    if (shouldNotifyParent && categoryMappings.length > 0) {
+      console.log('📋 [CategoryMapping] 親コンポーネントに変更を通知')
+      onChange?.({ categoryMappings })
+      setShouldNotifyParent(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldNotifyParent, categoryMappings])
 
   // カテゴリ選択変更ハンドラ
   const handleCategoryChange = (genreId: string, categoryId: string) => {
-    setCategoryMappings(prev => 
-      prev.map(mapping => {
+    console.log(`📋 [CategoryMapping] カテゴリ変更: genreId="${genreId}", categoryId="${categoryId}"`)
+
+    setCategoryMappings(prev => {
+      const updated = prev.map(mapping => {
         if (mapping.genreId === genreId) {
+          console.log(`✅ [CategoryMapping] マッピング更新: "${mapping.genreTitle}" (${mapping.genreId}) -> カテゴリ: ${categoryId}`)
           return {
             ...mapping,
             selectedCategoryId: categoryId,
@@ -186,14 +265,28 @@ export function CategoryMappingStep({
         }
         return mapping
       })
-    )
+
+      console.log('📋 [CategoryMapping] 全マッピング状態:', updated.map(m => ({
+        genreId: m.genreId,
+        genreTitle: m.genreTitle,
+        selectedCategoryId: m.selectedCategoryId
+      })))
+
+      return updated
+    })
+
+    // 親コンポーネントへの通知をスケジュール
+    setShouldNotifyParent(true)
   }
 
   // サブカテゴリ選択変更ハンドラ
   const handleSubcategoryChange = (genreId: string, subcategoryId: string) => {
-    setCategoryMappings(prev => 
-      prev.map(mapping => {
+    console.log(`📋 [CategoryMapping] サブカテゴリ変更: genreId="${genreId}", subcategoryId="${subcategoryId}"`)
+
+    setCategoryMappings(prev => {
+      const updated = prev.map(mapping => {
         if (mapping.genreId === genreId) {
+          console.log(`✅ [CategoryMapping] サブカテゴリ更新: "${mapping.genreTitle}" (${mapping.genreId}) -> サブカテゴリ: ${subcategoryId}`)
           return {
             ...mapping,
             selectedSubcategoryId: subcategoryId,
@@ -202,29 +295,18 @@ export function CategoryMappingStep({
         }
         return mapping
       })
-    )
+
+      return updated
+    })
+
+    // 親コンポーネントへの通知をスケジュール
+    setShouldNotifyParent(true)
   }
 
-  // AI推奨カテゴリ適用
-  const applyAIRecommendation = (genreId: string) => {
-    setCategoryMappings(prev => 
-      prev.map(mapping => {
-        if (mapping.genreId === genreId) {
-          return {
-            ...mapping,
-            selectedCategoryId: mapping.aiRecommendedCategoryId,
-            selectedSubcategoryId: mapping.aiRecommendedSubcategoryId,
-            manualOverride: false
-          }
-        }
-        return mapping
-      })
-    )
-  }
 
   // 指定カテゴリのサブカテゴリ取得
   const getSubcategoriesForCategory = (categoryId: string) => {
-    return subcategories.filter(sub => sub.category_id === categoryId)
+    return subcategories.filter(sub => sub.parent_category_id === categoryId)
   }
 
   // カテゴリ名取得
@@ -262,34 +344,99 @@ export function CategoryMappingStep({
     setIsCreatingDraft(true)
 
     try {
-      // ワークフロー更新
+      // ワークフロー更新（親コンポーネントに通知）
       onChange?.({ categoryMappings })
 
-      // アウトライン承認済みの場合、draftコース作成  
       const wizardWorkflow = workflow as CourseWizardWorkflow
-      if (wizardWorkflow.outline_data?.approved) {
-        // 型変換: CourseWizard型 → CourseGenerationWorkflow型
-        const publishWorkflow = await convertToPublisherWorkflow({
-          ...wizardWorkflow,
-          categoryMappings: categoryMappings,
-          status: 'category_mapping_completed'
-        })
-        
-        const publishResult = await coursePublisher.publishFromOutline(publishWorkflow, {
-          status: 'draft',
-          generateIds: true
-        })
 
-        if (publishResult.success) {
+      // ワークフローIDがある場合は必ずカテゴリマッピングをDBに保存
+      if (wizardWorkflow.id) {
+        try {
+          const { ApiClient } = await import('@/lib/api-helpers')
+
+          console.log('🔍 [CategoryMapping] コース存在チェック開始...')
+          console.log('📋 [CategoryMapping] カテゴリマッピング:', categoryMappings)
+
+          // 1. まず既存コースをチェック
+          const existsResult = await ApiClient.get<{
+            exists: boolean;
+            course_id?: string;
+            course_status?: string;
+            check_method?: string;
+          }>(`/api/ai-course-generation/workflows/${wizardWorkflow.id}/check-course-exists`)
+
+          if (existsResult.exists && existsResult.course_id) {
+            // 既存コースが見つかった場合 - learning_genresテーブルを直接更新
+            console.log(`✅ [CategoryMapping] 既存コース発見: ${existsResult.course_id} (${existsResult.check_method})`)
+            console.log('📋 [CategoryMapping] learning_genresテーブル更新開始...')
+
+            // カテゴリマッピング更新専用APIを呼び出し
+            const updateResult = await ApiClient.post<{
+              success: boolean
+              updated_count?: number
+              error?: string
+            }>(`/api/ai-course-generation/workflows/${wizardWorkflow.id}/update-category-mappings`, {
+              course_id: existsResult.course_id,
+              categoryMappings: categoryMappings
+            })
+
+            if (updateResult.success) {
+              toast({
+                title: "カテゴリマッピング更新完了",
+                description: `${updateResult.updated_count || 0}件のジャンルカテゴリを更新しました`
+              })
+            } else {
+              console.error('[CategoryMapping] Category mapping update failed:', updateResult.error)
+              // フォールバック: publish-outlineを呼んでカテゴリマッピングを更新
+              console.log('📋 [CategoryMapping] フォールバック: publish-outline経由で更新...')
+              await ApiClient.post(`/api/ai-course-generation/workflows/${wizardWorkflow.id}/publish-outline`, {
+                status: 'coming_soon',
+                categoryMappings: categoryMappings
+              })
+              toast({
+                title: "カテゴリマッピング更新完了",
+                description: "カテゴリマッピングを更新しました"
+              })
+            }
+          } else if (wizardWorkflow.outline_data?.approved) {
+            // コースが存在しない場合 & アウトライン承認済み - 新規コース作成
+            console.log('📋 [CategoryMapping] 新規コース作成開始...')
+
+            const publishResult = await ApiClient.post<{
+              success: boolean
+              course_id?: string
+              error?: string
+            }>(`/api/ai-course-generation/workflows/${wizardWorkflow.id}/publish-outline`, {
+              status: 'coming_soon',
+              categoryMappings: categoryMappings
+            })
+
+            if (publishResult.success) {
+              toast({
+                title: "コース作成完了",
+                description: `新規コース「${publishResult.course_id || '新規コース'}」を作成しました`
+              })
+            } else {
+              console.error('[CategoryMapping] Course creation failed:', publishResult.error)
+              toast({
+                title: "カテゴリマッピング保存",
+                description: "カテゴリマッピングはワークフローに保存されました。コース作成は後で行われます。"
+              })
+            }
+          } else {
+            // コースが存在せず、アウトライン未承認 - ワークフローにのみ保存
+            console.log('📋 [CategoryMapping] ワークフローにカテゴリマッピングを保存（コース未作成）')
+            toast({
+              title: "カテゴリマッピング保存",
+              description: "カテゴリマッピングをワークフローに保存しました"
+            })
+          }
+        } catch (apiError) {
+          console.error('[CategoryMapping] API call failed:', apiError)
           toast({
-            title: "カテゴリマッピング完了",
-            description: `ドラフトコース「${publishResult.courseId}」を作成しました。次のステップに進んでください。`
-          })
-        } else {
-          console.error('[CategoryMapping] Draft course creation failed:', publishResult.error)
-          toast({
-            title: "カテゴリマッピング完了",
-            description: "学習分析カテゴリとの紐付けが完了しました（ドラフトコース作成はスキップされました）"
+            title: "カテゴリマッピング保存",
+            description: "カテゴリマッピングをワークフローに保存しました（一部エラーが発生しました）",
+            variant: "destructive"
           })
         }
       } else {
@@ -318,7 +465,7 @@ export function CategoryMappingStep({
     const initialize = async () => {
       setIsLoading(true)
       await loadCategoriesData()
-      parseAIOutlineAndSetup()
+      await parseAIOutlineAndSetup()
       setIsLoading(false)
     }
 
@@ -376,8 +523,8 @@ export function CategoryMappingStep({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <h3 className="font-semibold text-blue-900">{aiOutline.courseTitle}</h3>
-            <p className="text-sm text-blue-800">{aiOutline.courseDescription}</p>
+            <h3 className="font-semibold text-blue-900">{aiOutline.course.title}</h3>
+            <p className="text-sm text-blue-800">{aiOutline.course.description}</p>
             <div className="flex items-center gap-2 text-xs text-blue-600">
               <Layers className="h-3 w-3" />
               <span>{aiOutline.genres.length} ジャンル構成</span>
@@ -390,8 +537,8 @@ export function CategoryMappingStep({
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">ジャンル別カテゴリ設定</h3>
         
-        {categoryMappings.map((mapping) => (
-          <Card key={mapping.genreId} className="border-gray-200">
+        {categoryMappings.map((mapping, index) => (
+          <Card key={`${mapping.genreId}-${index}`} className="border-gray-200">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -407,35 +554,6 @@ export function CategoryMappingStep({
             </CardHeader>
             
             <CardContent className="space-y-4">
-              {/* AI推奨カテゴリ表示 */}
-              {mapping.aiRecommendedCategoryId && (
-                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Brain className="h-4 w-4 text-purple-600" />
-                    <span className="text-sm font-medium text-purple-800">AI推奨カテゴリ</span>
-                    <Badge variant="outline" className="text-xs">
-                      信頼度: {Math.round((mapping.confidenceScore || 0) * 100)}%
-                    </Badge>
-                  </div>
-                  
-                  <div className="text-sm text-purple-700 mb-2">
-                    {getCategoryName(mapping.aiRecommendedCategoryId)}
-                    {mapping.aiRecommendedSubcategoryId && 
-                      ` > ${getSubcategoryName(mapping.aiRecommendedSubcategoryId)}`
-                    }
-                  </div>
-                  
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => applyAIRecommendation(mapping.genreId)}
-                    className="text-xs"
-                  >
-                    この推奨を適用
-                  </Button>
-                </div>
-              )}
-              
               {/* カテゴリ選択 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

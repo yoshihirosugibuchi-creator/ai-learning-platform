@@ -91,8 +91,8 @@ export async function POST(
     const nextOrder = (maxOrderData?.display_order || 0) + 1
 
     // quiz_typeの検証
-    const validTypes = ['multiple_choice', 'true_false', 'fill_blank', 'short_answer']
-    const quizType = createData.quiz_type || 'multiple_choice'
+    const validTypes = ['single_choice', 'multiple_choice', 'true_false', 'fill_blank', 'short_answer']
+    const quizType = createData.quiz_type || 'single_choice'
     if (!validTypes.includes(quizType)) {
       return NextResponse.json(
         { error: '無効なクイズタイプです' },

@@ -30,8 +30,29 @@ import {
   ChevronLeft,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  GripVertical,
+  Trash2
 } from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import {
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
@@ -66,6 +87,156 @@ const defaultDifficultyConfig = {
 
 const difficultyColors = ['bg-blue-100 text-blue-800', 'bg-purple-100 text-purple-800', 'bg-orange-100 text-orange-800', 'bg-red-100 text-red-800', 'bg-green-100 text-green-800']
 
+// ソート可能な行コンポーネント
+function SortableTableRow({ 
+  course, 
+  statusConfig, 
+  difficultyConfig, 
+  onStatusChange, 
+  onDelete
+}: { 
+  course: Course
+  statusConfig: Record<string, { label: string; color: string; bgColor: string }>
+  difficultyConfig: Record<string, {label: string, color: string}>
+  onStatusChange: (courseId: string, newStatus: string) => void
+  onDelete: (courseId: string) => void
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: course.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <TableRow 
+      ref={setNodeRef} 
+      style={style}
+      className={isDragging ? 'bg-muted' : ''}
+    >
+      {/* ドラッグハンドル */}
+      <TableCell className="w-8">
+        <div 
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4 text-gray-400" />
+        </div>
+      </TableCell>
+      
+      {/* アイコン */}
+      <TableCell>
+        <div className="text-2xl">{course.icon}</div>
+      </TableCell>
+      
+      {/* タイトル・説明 */}
+      <TableCell>
+        <div>
+          <div className="font-medium">{course.title}</div>
+          <div className="text-sm text-muted-foreground line-clamp-2">
+            {course.description}
+          </div>
+        </div>
+      </TableCell>
+      
+      {/* ステータス */}
+      <TableCell>
+        <Badge className={statusConfig[course.status].color}>
+          {statusConfig[course.status].label}
+        </Badge>
+      </TableCell>
+      
+      {/* 表示順序（表示のみ） */}
+      <TableCell>
+        <div className="font-mono text-sm text-center">
+          {course.display_order}
+        </div>
+      </TableCell>
+      
+      {/* 難易度 */}
+      <TableCell>
+        <Badge className={difficultyConfig[course.difficulty]?.color || 'bg-gray-100 text-gray-800'}>
+          {difficultyConfig[course.difficulty]?.label || course.difficulty}
+        </Badge>
+      </TableCell>
+      
+      {/* 予想日数 */}
+      <TableCell className="text-center">
+        {course.estimated_days}日
+      </TableCell>
+      
+      {/* 更新日 */}
+      <TableCell>
+        <div className="text-xs text-muted-foreground">
+          {new Date(course.updated_at).toLocaleDateString('ja-JP')}
+        </div>
+      </TableCell>
+      
+      {/* アクション */}
+      <TableCell>
+        <div className="flex flex-col space-y-2">
+          {/* 上段: ステータス変更 */}
+          <div className="flex items-center space-x-2">
+            <Select 
+              value={course.status} 
+              onValueChange={(newStatus) => onStatusChange(course.id, newStatus)}
+            >
+              <SelectTrigger className="w-24 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">下書き</SelectItem>
+                <SelectItem value="coming_soon">準備中</SelectItem>
+                <SelectItem value="available">公開中</SelectItem>
+                <SelectItem value="archived">アーカイブ</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* 下段: 編集・プレビュー・削除ボタン */}
+          <div className="flex items-center space-x-1">
+            <Link href={`/admin/courses/${course.id}/edit`}>
+              <Button variant="outline" size="sm" className="h-8">
+                <Edit className="h-4 w-4 mr-1" />
+                編集
+              </Button>
+            </Link>
+            
+            <Link href={`/learning/${course.id}`} target="_blank">
+              <Button variant="outline" size="sm" className="h-8">
+                <Eye className="h-4 w-4 mr-1" />
+                表示
+              </Button>
+            </Link>
+            
+            {/* 削除ボタン：アクティブ以外のみ表示 */}
+            {course.status !== 'available' && (
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="h-8"
+                onClick={() => onDelete(course.id)}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                削除
+              </Button>
+            )}
+          </div>
+        </div>
+      </TableCell>
+    </TableRow>
+  )
+}
+
 export default function CoursesManagementPage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([])
@@ -81,6 +252,133 @@ export default function CoursesManagementPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   
   const { toast } = useToast()
+
+  // ドラッグアンドドロップ用センサー
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  // ドラッグエンド処理
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (!over || active.id === over.id) return
+
+    const oldIndex = filteredCourses.findIndex((course) => course.id === active.id)
+    const newIndex = filteredCourses.findIndex((course) => course.id === over.id)
+
+    if (oldIndex === -1 || newIndex === -1) return
+
+    // 楽観的更新
+    const reorderedCourses = arrayMove(filteredCourses, oldIndex, newIndex)
+    setFilteredCourses(reorderedCourses)
+
+    // display_orderを更新
+    const updatedCourses = reorderedCourses.map((course, index) => ({
+      ...course,
+      display_order: index + 1
+    }))
+
+    try {
+      // 🔐 CLAUDE.md準拠：認証ヘッダー追加
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('認証が必要です')
+      }
+
+      // APIで順序更新
+      const updatePromises = updatedCourses.map((course) =>
+        fetch(`/api/admin/courses/${course.id}/order`, {
+          method: 'PATCH',
+          headers: { 
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({ display_order: course.display_order })
+        })
+      )
+
+      await Promise.all(updatePromises)
+
+      // 元のcoursesリストも更新
+      setCourses(prev => {
+        const newCourses = [...prev]
+        updatedCourses.forEach(updatedCourse => {
+          const index = newCourses.findIndex(c => c.id === updatedCourse.id)
+          if (index !== -1) {
+            newCourses[index] = updatedCourse
+          }
+        })
+        return newCourses
+      })
+
+      toast({
+        title: '並び順を更新しました',
+        description: 'コースの表示順序が正常に更新されました。',
+      })
+    } catch (_error) {
+      // エラー時はロールバック
+      setFilteredCourses(filteredCourses)
+      toast({
+        title: '並び順の更新に失敗しました',
+        description: 'エラーが発生しました。再度お試しください。',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  // コース削除処理
+  const handleDeleteCourse = async (courseId: string) => {
+    const course = courses.find(c => c.id === courseId)
+    if (!course) return
+
+    if (!confirm(`コース「${course.title}」とその配下のすべてのデータ（ジャンル、テーマ、セッション、コンテンツ、クイズ）を削除しますか？この操作は取り消せません。`)) {
+      return
+    }
+
+    try {
+      // 🔐 CLAUDE.md準拠：認証ヘッダー追加
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('認証が必要です')
+      }
+
+      const response = await fetch(`/api/admin/courses/${courseId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json' 
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || '削除に失敗しました')
+      }
+
+      // リストから削除
+      setCourses(prev => prev.filter(c => c.id !== courseId))
+      setFilteredCourses(prev => prev.filter(c => c.id !== courseId))
+
+      toast({
+        title: 'コースを削除しました',
+        description: `「${course.title}」とその配下のデータを削除しました。`,
+      })
+    } catch (error) {
+      toast({
+        title: '削除に失敗しました',
+        description: error instanceof Error ? error.message : '不明なエラーが発生しました。',
+        variant: 'destructive'
+      })
+    }
+  }
 
   // スキルレベル取得
   const fetchSkillLevels = async () => {
@@ -189,43 +487,6 @@ export default function CoursesManagementPage() {
     }
   }
 
-  // 表示順変更
-  const changeDisplayOrder = async (courseId: string, newDisplayOrder: number) => {
-    try {
-      const { supabase } = await import('@/lib/supabase')
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session?.access_token) {
-        throw new Error('認証が必要です')
-      }
-
-      const response = await fetch(`/api/admin/courses/${courseId}`, {
-        method: 'PATCH',
-        headers: { 
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify({ display_order: newDisplayOrder })
-      })
-
-      if (response.ok) {
-        toast({
-          title: "表示順更新",
-          description: "コースの表示順が更新されました"
-        })
-        await fetchCourses() // データを再取得
-      } else {
-        throw new Error('表示順更新に失敗しました')
-      }
-    } catch (error) {
-      console.error('Display order change error:', error)
-      toast({
-        title: "エラー", 
-        description: "表示順更新に失敗しました",
-        variant: "destructive"
-      })
-    }
-  }
 
   // ソート機能
   const handleSort = (field: string) => {
@@ -407,172 +668,99 @@ export default function CoursesManagementPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">アイコン</TableHead>
-                    <TableHead 
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort('title')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>コース名</span>
-                        {sortField === 'title' && (
-                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                        )}
-                        {sortField !== 'title' && <ArrowUpDown className="h-4 w-4 text-gray-400" />}
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort('status')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>ステータス</span>
-                        {sortField === 'status' && (
-                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                        )}
-                        {sortField !== 'status' && <ArrowUpDown className="h-4 w-4 text-gray-400" />}
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="w-20 cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort('display_order')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>表示順</span>
-                        {sortField === 'display_order' && (
-                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                        )}
-                        {sortField !== 'display_order' && <ArrowUpDown className="h-4 w-4 text-gray-400" />}
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort('difficulty')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>難易度</span>
-                        {sortField === 'difficulty' && (
-                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                        )}
-                        {sortField !== 'difficulty' && <ArrowUpDown className="h-4 w-4 text-gray-400" />}
-                      </div>
-                    </TableHead>
-                    <TableHead className="w-24">予想日数</TableHead>
-                    <TableHead 
-                      className="w-32 cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort('updated_at')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>更新日</span>
-                        {sortField === 'updated_at' && (
-                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                        )}
-                        {sortField !== 'updated_at' && <ArrowUpDown className="h-4 w-4 text-gray-400" />}
-                      </div>
-                    </TableHead>
-                    <TableHead className="w-64">アクション</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCourses.map((course) => (
-                    <TableRow key={course.id}>
-                      <TableCell>
-                        <div className="text-2xl">{course.icon}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{course.title}</div>
-                          <div className="text-sm text-muted-foreground line-clamp-2">
-                            {course.description}
-                          </div>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-8">ドラッグ</TableHead>
+                      <TableHead className="w-12">アイコン</TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleSort('title')}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>コース名</span>
+                          {sortField === 'title' && (
+                            sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                          )}
+                          {sortField !== 'title' && <ArrowUpDown className="h-4 w-4 text-gray-400" />}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={statusConfig[course.status].color}>
-                          {statusConfig[course.status].label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-mono text-sm text-center">
-                          {course.display_order}
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleSort('status')}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>ステータス</span>
+                          {sortField === 'status' && (
+                            sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                          )}
+                          {sortField !== 'status' && <ArrowUpDown className="h-4 w-4 text-gray-400" />}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={difficultyConfig[course.difficulty].color}>
-                          {difficultyConfig[course.difficulty].label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{course.estimated_days}日</TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {new Date(course.updated_at).toLocaleDateString('ja-JP')}
+                      </TableHead>
+                      <TableHead 
+                        className="w-20 cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleSort('display_order')}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>表示順</span>
+                          {sortField === 'display_order' && (
+                            sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                          )}
+                          {sortField !== 'display_order' && <ArrowUpDown className="h-4 w-4 text-gray-400" />}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col space-y-2">
-                          {/* 上段: ステータス・表示順変更 */}
-                          <div className="flex items-center space-x-2">
-                            <Select 
-                              value={course.status} 
-                              onValueChange={(newStatus) => changeStatus(course.id, newStatus)}
-                            >
-                              <SelectTrigger className="w-24 h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="draft">下書き</SelectItem>
-                                <SelectItem value="coming_soon">準備中</SelectItem>
-                                <SelectItem value="available">公開中</SelectItem>
-                                <SelectItem value="archived">アーカイブ</SelectItem>
-                              </SelectContent>
-                            </Select>
-
-                            <Input
-                              type="number"
-                              defaultValue={course.display_order}
-                              onBlur={(e) => {
-                                const newValue = parseInt(e.target.value)
-                                if (newValue && newValue !== course.display_order) {
-                                  changeDisplayOrder(course.id, newValue)
-                                }
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  const newValue = parseInt(e.currentTarget.value)
-                                  if (newValue && newValue !== course.display_order) {
-                                    changeDisplayOrder(course.id, newValue)
-                                  }
-                                }
-                              }}
-                              className="w-16 h-8 text-xs font-mono text-center"
-                              min="1"
-                              max="999"
-                              title="表示順を変更してEnterキーまたはフォーカスを外してください"
-                            />
-                          </div>
-                          
-                          {/* 下段: 編集・プレビューボタン */}
-                          <div className="flex items-center space-x-1">
-                            <Link href={`/admin/courses/${course.id}/edit`}>
-                              <Button variant="outline" size="sm" className="h-8">
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                            </Link>
-
-                            <Link href={`/learning/${course.id}?preview=admin`} target="_blank">
-                              <Button variant="outline" size="sm" className="h-8">
-                                <Eye className="h-3 w-3" />
-                              </Button>
-                            </Link>
-                          </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleSort('difficulty')}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>難易度</span>
+                          {sortField === 'difficulty' && (
+                            sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                          )}
+                          {sortField !== 'difficulty' && <ArrowUpDown className="h-4 w-4 text-gray-400" />}
                         </div>
-                      </TableCell>
+                      </TableHead>
+                      <TableHead className="w-24">予想日数</TableHead>
+                      <TableHead 
+                        className="w-32 cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleSort('updated_at')}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>更新日</span>
+                          {sortField === 'updated_at' && (
+                            sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                          )}
+                          {sortField !== 'updated_at' && <ArrowUpDown className="h-4 w-4 text-gray-400" />}
+                        </div>
+                      </TableHead>
+                      <TableHead className="w-64">アクション</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <SortableContext
+                    items={filteredCourses.map(course => course.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <TableBody>
+                      {filteredCourses.map((course) => (
+                        <SortableTableRow
+                          key={course.id}
+                          course={course}
+                          statusConfig={statusConfig}
+                          difficultyConfig={difficultyConfig}
+                          onStatusChange={changeStatus}
+                          onDelete={handleDeleteCourse}
+                        />
+                      ))}
+                    </TableBody>
+                  </SortableContext>
+                </Table>
+              </DndContext>
             </div>
           )}
         </CardContent>

@@ -11,6 +11,7 @@ interface ToastInput {
   title: string
   description?: string
   variant?: 'default' | 'destructive'
+  duration?: number
 }
 
 export function useToast() {

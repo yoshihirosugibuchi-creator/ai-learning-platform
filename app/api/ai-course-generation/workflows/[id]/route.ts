@@ -52,6 +52,84 @@ export async function GET(request: NextRequest, context: RouteParams) {
 
     console.log(`✅ [Workflow] Found workflow: ${((workflow.course_basic_info as { title?: string }) || {}).title || workflow.title}`)
 
+    // published_course_idがある場合、DBのコース学習テーブルからデータ取得
+    // Step 4以降はoutline_dataではなくDBを正とする
+    let courseStructure: {
+      genres: Array<{
+        id: string
+        title: string
+        description: string
+        themes: Array<{
+          id: string
+          title: string
+          description: string
+          sessions: Array<{
+            id: string
+            title: string
+            session_type: string
+            estimated_minutes: number
+          }>
+        }>
+      }>
+    } | null = null
+
+    if (workflow.published_course_id) {
+      console.log(`📋 [Workflow] Fetching course structure from DB: ${workflow.published_course_id}`)
+
+      // ジャンル取得
+      const { data: genres } = await supabaseAdmin
+        .from('learning_genres')
+        .select('id, title, description, display_order')
+        .eq('course_id', workflow.published_course_id)
+        .order('display_order')
+
+      if (genres && genres.length > 0) {
+        const genresWithThemes = await Promise.all(
+          genres.map(async (genre) => {
+            // テーマ取得
+            const { data: themes } = await supabaseAdmin
+              .from('learning_themes')
+              .select('id, title, description, display_order')
+              .eq('genre_id', genre.id)
+              .order('display_order')
+
+            const themesWithSessions = await Promise.all(
+              (themes || []).map(async (theme) => {
+                // セッション取得
+                const { data: sessions } = await supabaseAdmin
+                  .from('learning_sessions')
+                  .select('id, title, session_type, estimated_minutes, display_order')
+                  .eq('theme_id', theme.id)
+                  .order('display_order')
+
+                return {
+                  id: theme.id,
+                  title: theme.title,
+                  description: theme.description || '',
+                  sessions: (sessions || []).map(s => ({
+                    id: s.id,
+                    title: s.title,
+                    session_type: s.session_type || 'knowledge',
+                    estimated_minutes: s.estimated_minutes || 15
+                  }))
+                }
+              })
+            )
+
+            return {
+              id: genre.id,
+              title: genre.title,
+              description: genre.description || '',
+              themes: themesWithSessions
+            }
+          })
+        )
+
+        courseStructure = { genres: genresWithThemes }
+        console.log(`✅ [Workflow] Course structure loaded: ${genres.length} genres`)
+      }
+    }
+
     // 設計書準拠の完全なデータ構造で返却
     const responseData = {
       id: workflow.id,
@@ -71,8 +149,29 @@ export async function GET(request: NextRequest, context: RouteParams) {
       // source_materials
       source_materials: workflow.source_materials || [],
       
-      // outline_data
-      outline_data: workflow.outline_data || null,
+      // outline_data（course_structureがある場合はDBのIDで上書き）
+      outline_data: courseStructure ? {
+        ...(workflow.outline_data as Record<string, unknown> || {}),
+        genres: courseStructure.genres.map(genre => ({
+          ...genre,
+          themes: genre.themes.map(theme => ({
+            ...theme,
+            sessions: theme.sessions.map(session => ({
+              id: session.id,
+              title: session.title,
+              description: '',
+              session_type: session.session_type as 'knowledge' | 'practice' | 'case_study',
+              estimatedMinutes: session.estimated_minutes,
+              display_order: 0
+            })),
+            estimatedMinutes: theme.sessions.reduce((sum, s) => sum + s.estimated_minutes, 0),
+            display_order: 0,
+            reward_card_data: {}
+          })),
+          estimatedDays: 1,
+          display_order: 0
+        }))
+      } : workflow.outline_data || null,
       
       // category_mappings  
       category_mappings: workflow.category_mappings || [],
@@ -101,7 +200,10 @@ export async function GET(request: NextRequest, context: RouteParams) {
       
       // 公開情報
       published_course_id: workflow.published_course_id,
-      
+
+      // DBのコース学習テーブルから取得した構造（Step 4以降はこちらを使用）
+      course_structure: courseStructure,
+
       // タイムスタンプ
       created_at: workflow.created_at,
       updated_at: workflow.updated_at,
@@ -111,7 +213,21 @@ export async function GET(request: NextRequest, context: RouteParams) {
       description: ((workflow.course_basic_info as { description?: string }) || {}).description || workflow.description || '',
       sources: workflow.source_materials || [],
       aiOutlineResponse: (workflow.outline_data as { ai_response_raw?: string } | null)?.ai_response_raw || null,
-      currentStep: parseInt(workflow.current_step || '0')
+      // DBのcurrent_stepをそのまま使用（最後に作業していたステップに戻る）
+      currentStep: parseInt(workflow.current_step || '0'),
+      
+      // Step1で使用するフィールド（course_basic_infoから抽出）
+      difficultyId: ((workflow.course_basic_info as { difficulty?: string }) || {}).difficulty || '',
+      estimatedDuration: ((workflow.course_basic_info as { estimated_duration?: string }) || {}).estimated_duration || '',
+      learningObjectives: ((workflow.course_basic_info as { learning_objectives?: string[] }) || {}).learning_objectives || [],
+      targetAudience: ((workflow.course_basic_info as { target_audience?: string }) || {}).target_audience || '',
+      courseCategory: ((workflow.course_basic_info as { course_category?: string }) || {}).course_category || '',
+      generationPreferences: ((workflow.course_basic_info as { generation_preferences?: Record<string, unknown> }) || {}).generation_preferences || workflow.generation_preferences || {
+        sessionLength: 15,
+        includeQuizzes: true,
+        interactivityLevel: 'medium',
+        contentStyle: 'formal'
+      }
     }
 
     return NextResponse.json({
@@ -150,13 +266,41 @@ export async function PUT(request: NextRequest, context: RouteParams) {
     // 新しい構造のフィールド（course_basic_info）
     if (body.course_basic_info !== undefined) {
       updateData.course_basic_info = body.course_basic_info
-    } else if (body.title !== undefined || body.description !== undefined) {
-      // レガシー互換性: title/description -> course_basic_info
-      const existingBasicInfo = (body.existingCourseBasicInfo as Record<string, unknown>) || {}
-      updateData.course_basic_info = {
-        ...existingBasicInfo,
-        title: body.title || existingBasicInfo.title || '',
-        description: body.description || existingBasicInfo.description || ''
+    } else {
+      // レガシー互換性およびStep1個別フィールドのマッピング
+      // 既存のワークフローデータを取得して、マージする必要がある
+      const { data: existingWorkflow } = await supabaseAdmin
+        .from('ai_course_workflows')
+        .select('course_basic_info')
+        .eq('id', workflowId)
+        .eq('user_id', userId)
+        .single()
+      
+      const existingBasicInfo = (existingWorkflow?.course_basic_info as Record<string, unknown>) || {}
+      const basicInfo: Record<string, unknown> = {
+        ...existingBasicInfo  // 既存データを維持
+      }
+      
+      // Step1から送られてくるフィールドをcourse_basic_infoに統合
+      if (body.title !== undefined) basicInfo.title = body.title
+      if (body.description !== undefined) basicInfo.description = body.description
+      if (body.difficultyId !== undefined) basicInfo.difficulty = body.difficultyId
+      if (body.estimatedDuration !== undefined) basicInfo.estimated_duration = body.estimatedDuration
+      if (body.learningObjectives !== undefined) basicInfo.learning_objectives = body.learningObjectives
+      if (body.targetAudience !== undefined) basicInfo.target_audience = body.targetAudience
+      if (body.courseCategory !== undefined) basicInfo.course_category = body.courseCategory
+      if (body.generationPreferences !== undefined) {
+        // 🔧 course_basic_info内とワークフロー直下の両方に保存
+        basicInfo.generation_preferences = body.generationPreferences
+        updateData.generation_preferences = body.generationPreferences
+      }
+      
+      // 既存データと異なる場合は保存
+      const hasChanges = Object.keys(basicInfo).some(key => 
+        JSON.stringify(basicInfo[key]) !== JSON.stringify(existingBasicInfo[key])
+      )
+      if (hasChanges || Object.keys(basicInfo).length > Object.keys(existingBasicInfo).length) {
+        updateData.course_basic_info = basicInfo
       }
     }
 
@@ -200,6 +344,9 @@ export async function PUT(request: NextRequest, context: RouteParams) {
     // generation_preferences
     if (body.generation_preferences !== undefined) {
       updateData.generation_preferences = body.generation_preferences
+    } else if (body.generationPreferences !== undefined) {
+      // レガシー互換性: generationPreferences -> generation_preferences
+      updateData.generation_preferences = body.generationPreferences
     }
 
     // ワークフロー制御フィールド
@@ -276,6 +423,7 @@ export async function PUT(request: NextRequest, context: RouteParams) {
       description: ((workflow.course_basic_info as { description?: string }) || {}).description || workflow.description || '',
       sources: workflow.source_materials || [],
       aiOutlineResponse: (workflow.outline_data as { ai_response_raw?: string } | null)?.ai_response_raw || null,
+      // DBのcurrent_stepをそのまま使用（最後に作業していたステップに戻る）
       currentStep: parseInt(workflow.current_step || '0')
     }
 
@@ -292,6 +440,9 @@ export async function PUT(request: NextRequest, context: RouteParams) {
     )
   }
 }
+
+// PATCHメソッドをPUTメソッドと同じロジックで処理
+export const PATCH = PUT
 
 export async function DELETE(request: NextRequest, context: RouteParams) {
   try {

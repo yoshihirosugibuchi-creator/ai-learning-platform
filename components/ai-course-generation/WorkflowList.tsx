@@ -6,10 +6,18 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { 
   FileText, 
   Calendar, 
@@ -19,6 +27,7 @@ import {
   Plus,
   RefreshCw
 } from 'lucide-react'
+import type { CourseWizardCategoryMapping } from '@/lib/ai-course-generation/type-conversion'
 
 interface SourceMaterial {
   id: string
@@ -47,7 +56,7 @@ export type WorkflowStatus =
   | 'content_approved' 
   | 'published'
 
-interface WorkflowItem {
+export interface WorkflowItem {
   id: string
   title: string
   description: string
@@ -57,6 +66,34 @@ interface WorkflowItem {
   currentStep: number
   created_at: string
   updated_at: string
+  // Step 1用の追加フィールド
+  difficultyId?: string
+  estimatedDuration?: string
+  learningObjectives?: string[]
+  targetAudience?: string
+  courseCategory?: string
+  generationPreferences?: {
+    sessionLength: number
+    includeQuizzes: boolean
+    interactivityLevel: 'low' | 'medium' | 'high'
+    contentStyle: 'formal' | 'casual' | 'technical'
+  }
+  // Step 4用（CourseWizardCategoryMapping形式）
+  categoryMappings?: CourseWizardCategoryMapping[]
+  // アウトライン・コンテンツデータ
+  outline_data?: {
+    course: object
+    genres: Array<object>
+    approved: boolean
+    generated_at?: string
+    ai_response_raw?: string
+  }
+  content_data?: {
+    session_contents: Array<object>
+    session_quizzes: Array<object>
+    approved: boolean
+    generated_at?: string
+  }
 }
 
 interface WorkflowListProps {
@@ -87,6 +124,36 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
         currentStep: number
         created_at: string
         updated_at: string
+        // Step 1用の追加フィールド
+        difficultyId?: string
+        estimatedDuration?: string
+        learningObjectives?: string[]
+        targetAudience?: string
+        courseCategory?: string
+        generationPreferences?: {
+          sessionLength: number
+          includeQuizzes: boolean
+          interactivityLevel: 'low' | 'medium' | 'high'
+          contentStyle: 'formal' | 'casual' | 'technical'
+        }
+        // Step 4用（APIはcategory_mappingsを返す）
+        category_mappings?: CourseWizardCategoryMapping[]
+        // 旧フォーマット互換
+        categoryMappings?: CourseWizardCategoryMapping[]
+        // アウトライン・コンテンツデータ
+        outline_data?: {
+          course: object
+          genres: Array<object>
+          approved: boolean
+          generated_at?: string
+          ai_response_raw?: string
+        }
+        content_data?: {
+          session_contents: Array<object>
+          session_quizzes: Array<object>
+          approved: boolean
+          generated_at?: string
+        }
       }
       
       const result = await ApiClient.get<{ workflows: APIWorkflowResponse[] }>('/api/ai-course-generation/workflows')
@@ -100,7 +167,18 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
         aiOutlineResponse: workflow.aiOutlineResponse,
         currentStep: workflow.currentStep,
         created_at: workflow.created_at,
-        updated_at: workflow.updated_at
+        updated_at: workflow.updated_at,
+        // 追加フィールドをマッピング
+        difficultyId: workflow.difficultyId,
+        estimatedDuration: workflow.estimatedDuration,
+        learningObjectives: workflow.learningObjectives,
+        targetAudience: workflow.targetAudience,
+        courseCategory: workflow.courseCategory,
+        generationPreferences: workflow.generationPreferences,
+        // APIはcategory_mappingsとして返すので、変換
+        categoryMappings: workflow.category_mappings || workflow.categoryMappings || [],
+        outline_data: workflow.outline_data,
+        content_data: workflow.content_data
       }))
       setWorkflows(workflows)
       
@@ -148,23 +226,23 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
 
   // ステータス表示
   const getStatusBadge = (status: WorkflowStatus, currentStep: number) => {
-    const statusMap: Record<WorkflowStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-      'draft': { label: '下書き', variant: 'outline' },
-      'source_analysis': { label: '資料分析中', variant: 'secondary' },
-      'outline_draft': { label: 'AI生成中', variant: 'default' },
-      'outline_approved': { label: 'アウトライン承認済み', variant: 'default' },
-      'content_draft': { label: 'コンテンツ生成中', variant: 'default' },
-      'content_approved': { label: 'コンテンツ承認済み', variant: 'default' },
-      'published': { label: '公開済み', variant: 'default' },
-      'manual_input_required': { label: '手動入力待ち', variant: 'secondary' }
+    const statusMap: Record<WorkflowStatus, { label: string; className: string }> = {
+      'draft': { label: '下書き', className: 'bg-gray-100 text-gray-800' },
+      'source_analysis': { label: '資料分析中', className: 'bg-blue-100 text-blue-800' },
+      'outline_draft': { label: 'AI生成中', className: 'bg-yellow-100 text-yellow-800' },
+      'outline_approved': { label: 'アウトライン承認済み', className: 'bg-green-100 text-green-800' },
+      'content_draft': { label: 'コンテンツ生成中', className: 'bg-purple-100 text-purple-800' },
+      'content_approved': { label: 'コンテンツ承認済み', className: 'bg-emerald-100 text-emerald-800' },
+      'published': { label: '公開済み', className: 'bg-green-100 text-green-800' },
+      'manual_input_required': { label: '手動入力待ち', className: 'bg-orange-100 text-orange-800' }
     }
 
-    const config = statusMap[status] || { label: '不明', variant: 'destructive' }
+    const config = statusMap[status] || { label: '不明', className: 'bg-red-100 text-red-800' }
     
     return (
-      <div className="flex items-center gap-2">
-        <Badge variant={config.variant}>{config.label}</Badge>
-        <span className="text-xs text-muted-foreground">ステップ {currentStep + 1}/6</span>
+      <div className="space-y-1">
+        <Badge className={config.className}>{config.label}</Badge>
+        <div className="text-xs text-muted-foreground">ステップ {Math.min(currentStep + 1, 8)}/8</div>
       </div>
     )
   }
@@ -222,69 +300,82 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {workflows.map((workflow) => (
-            <Card key={workflow.id} className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-base truncate">{workflow.title}</CardTitle>
-                    <CardDescription className="text-sm">
-                      {workflow.description || '説明なし'}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="space-y-3">
-                  {/* ステータス */}
-                  {getStatusBadge(workflow.status, workflow.currentStep)}
-                  
-                  {/* 統計情報 */}
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <FileText className="h-3 w-3" />
-                      <span>{Array.isArray(workflow.sources) ? workflow.sources.length : 0} 資料</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      <span>{new Date(workflow.updated_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-
-                  {/* アクション */}
-                  <div className="flex gap-2 pt-2">
-                    <Button 
-                      variant="default" 
-                      size="sm"
-                      onClick={() => onSelectWorkflow?.(workflow)}
-                      className="flex-1"
-                    >
-                      <Play className="h-3 w-3 mr-1" />
-                      続行
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDelete(workflow.id)
-                      }}
-                      disabled={isDeleting === workflow.id}
-                    >
-                      {isDeleting === workflow.id ? (
-                        <RefreshCw className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-3 w-3" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card className="border">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-gray-50">
+                  <TableHead className="font-semibold">コース名</TableHead>
+                  <TableHead className="font-semibold w-40">ステータス</TableHead>
+                  <TableHead className="font-semibold w-24 text-center">資料数</TableHead>
+                  <TableHead className="font-semibold w-32">更新日</TableHead>
+                  <TableHead className="font-semibold w-48 text-center">アクション</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {workflows.map((workflow) => (
+                  <TableRow key={workflow.id} className="hover:bg-gray-50">
+                    <TableCell className="py-4">
+                      <div>
+                        <div className="font-medium text-sm">{workflow.title}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          ID: {workflow.id}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {workflow.description || '説明なし'}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      {getStatusBadge(workflow.status, workflow.currentStep)}
+                    </TableCell>
+                    <TableCell className="py-4 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <FileText className="h-3 w-3 text-gray-500" />
+                        <span className="text-sm font-medium">{Array.isArray(workflow.sources) ? workflow.sources.length : 0}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3 text-gray-500" />
+                        <span className="text-sm">{new Date(workflow.updated_at).toLocaleDateString()}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <div className="flex gap-2 justify-center">
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={() => onSelectWorkflow?.(workflow)}
+                          className="text-xs"
+                        >
+                          <Play className="h-3 w-3 mr-1" />
+                          続行
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDelete(workflow.id)
+                          }}
+                          disabled={isDeleting === workflow.id}
+                          className="text-xs"
+                        >
+                          {isDeleting === workflow.id ? (
+                            <RefreshCw className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
       )}
 
       {/* 注意事項 */}

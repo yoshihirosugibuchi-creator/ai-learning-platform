@@ -251,21 +251,31 @@ export default function CourseDetailPage() {
                     <span>関連カテゴリー</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {categoryInfo.categories.map((cat, index) => (
-                      cat.mainCategory && (
-                        <Badge 
-                          key={index}
-                          variant="outline" 
-                          className="text-xs"
-                          style={{ 
-                            borderColor: cat.mainCategory.color,
-                            color: cat.mainCategory.color
-                          }}
-                        >
-                          {cat.mainCategory.icon} {cat.subcategory || cat.mainCategory.name}
-                        </Badge>
-                      )
-                    ))}
+                    {/* 重複を除去してユニークなカテゴリーのみ表示 */}
+                    {(() => {
+                      const seen = new Set<string>()
+                      return categoryInfo.categories
+                        .filter(cat => {
+                          if (!cat.mainCategory) return false
+                          const key = `${cat.mainCategory.id}-${cat.subcategory || ''}`
+                          if (seen.has(key)) return false
+                          seen.add(key)
+                          return true
+                        })
+                        .map((cat, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs"
+                            style={{
+                              borderColor: cat.mainCategory!.color,
+                              color: cat.mainCategory!.color
+                            }}
+                          >
+                            {cat.mainCategory!.icon} {cat.subcategory || cat.mainCategory!.name}
+                          </Badge>
+                        ))
+                    })()}
                   </div>
                 </div>
               )}

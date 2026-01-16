@@ -100,9 +100,34 @@ export interface QuestionWithWeight {
  * Generate all precomputed sets for a user
  * Called after quiz completion to prepare for next sessions
  */
+// 排他制御用のマップ（メモリ内）
+const userGenerationLocks = new Map<string, Promise<GenerationResult[]>>()
+
 export async function generateAllPrecomputedSets(
   context: QuizSetGenerationContext
 ): Promise<GenerationResult[]> {
+  const { userId } = context
+  
+  // 🔒 排他制御：同一ユーザーの同時実行を防ぐ
+  if (userGenerationLocks.has(userId)) {
+    console.log(`⏳ [Precompute Engine] Generation already in progress for user ${userId.substring(0, 8)}..., waiting...`)
+    return await userGenerationLocks.get(userId)!
+  }
+  
+  // 生成処理を開始
+  const generationPromise = performGeneration(context)
+  userGenerationLocks.set(userId, generationPromise)
+  
+  try {
+    const result = await generationPromise
+    return result
+  } finally {
+    // 完了後にロックを解除
+    userGenerationLocks.delete(userId)
+  }
+}
+
+async function performGeneration(context: QuizSetGenerationContext): Promise<GenerationResult[]> {
   console.log('🧠 [Precompute Engine] Starting generation for all quiz types...')
   console.log('🔧 [Precompute Engine] Context:', { 
     userId: context.userId?.substring(0, 8) + '...', 
@@ -110,6 +135,10 @@ export async function generateAllPrecomputedSets(
   })
   
   const { userId } = context
+  
+  // 🔍 既存セット数をチェック（削除前）
+  const existingCounts = await getExistingSetCounts(userId)
+  console.log('📊 [Precompute Engine] Current sets count:', existingCounts)
   
   // 仕様準拠：クイズ完了時に当該ユーザーの事前セットが存在する場合はすべて削除する
   console.log('🗑️ [Precompute Engine] Deleting all existing precomputed sets as per specification...')
@@ -1647,6 +1676,32 @@ interface SetGenerationResult {
  * Delete all precomputed sets for a user (specification compliance)
  * Called at the start of quiz completion to clear all existing sets before generating new ones
  */
+async function getExistingSetCounts(userId: string): Promise<Record<string, number>> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('precomputed_quiz_sets')
+      .select('quiz_type')
+      .eq('user_id', userId)
+      .gt('expires_at', new Date().toISOString())
+    
+    if (error) {
+      console.error('❌ [Count Check] Error counting existing sets:', error)
+      return {}
+    }
+    
+    const counts: Record<string, number> = {}
+    data?.forEach(set => {
+      const type = set.quiz_type
+      counts[type] = (counts[type] || 0) + 1
+    })
+    
+    return counts
+  } catch (error) {
+    console.error('❌ [Count Check] Failed to count existing sets:', error)
+    return {}
+  }
+}
+
 async function deleteAllUserPrecomputedSets(userId: string): Promise<void> {
   try {
     console.log(`🗑️ [Cleanup] Deleting all precomputed sets for user: ${userId.substring(0, 8)}...`)

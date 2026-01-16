@@ -58,7 +58,9 @@ export function useReviewQuickCheck(): UseReviewQuickCheckReturn {
       abortControllerRef.current.abort()
     }
 
-    abortControllerRef.current = new AbortController()
+    // 新しいAbortControllerを作成
+    const controller = new AbortController()
+    abortControllerRef.current = controller
 
     try {
       const { supabase } = await import('@/lib/supabase')
@@ -79,7 +81,7 @@ export function useReviewQuickCheck(): UseReviewQuickCheckReturn {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        signal: abortControllerRef.current.signal
+        signal: controller.signal
       })
 
       if (!response.ok) {

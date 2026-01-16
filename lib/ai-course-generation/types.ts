@@ -3,6 +3,46 @@
  * 完全なワークフロー型定義とデータ構造
  */
 
+// アウトラインデータの型定義
+export interface OutlineData {
+  course?: {
+    title: string
+    description?: string
+    estimatedDays?: number
+    difficulty?: string
+    targetAudience?: string
+    learningObjectives?: string[]
+  }
+  genres?: Array<{
+    id: string
+    title: string
+    themes: Array<{
+      id: string
+      title: string
+      sessions: Array<{
+        id: string
+        title: string
+      }>
+    }>
+  }>
+  approved?: boolean
+  review_notes?: string
+  generated_at?: string
+  ai_response_raw?: string
+  [key: string]: unknown
+}
+
+// コンテンツデータの型定義
+export interface ContentData {
+  approved?: boolean
+  review_notes?: string
+  generated_at?: string
+  session_contents?: unknown[]
+  session_quizzes?: unknown[]
+  reward_cards?: unknown[]
+  [key: string]: unknown
+}
+
 // ワークフローステータス（設計書準拠）
 export type WorkflowStatus = 
   | 'draft'                    // 下書き作成中
@@ -75,7 +115,7 @@ export interface SessionOutline {
   id: string
   title: string
   description?: string
-  session_type: 'content' | 'quiz' | 'exercise'
+  session_type: 'knowledge' | 'practice' | 'case_study'
   estimatedMinutes: number
   display_order: number
 }
@@ -105,7 +145,7 @@ export interface AISuggestion {
 export interface SessionContent {
   id: string
   session_id: string
-  content_type: 'text' | 'image' | 'video' | 'exercise'
+  content_type: 'text' | 'example' | 'key_points'
   content_data: Json
   display_order: number
 }
@@ -113,6 +153,7 @@ export interface SessionContent {
 export interface SessionQuiz {
   id: string
   session_id: string
+  quiz_type: 'single_choice'
   question: string
   options: string[]
   correct_answer: number
@@ -158,11 +199,13 @@ export interface CourseGenerationWorkflow {
   content_data?: {
     session_contents: SessionContent[]
     session_quizzes: SessionQuiz[]
-    reward_cards: Json[]
+    reward_cards?: Json[]
     completion_badge?: Json
     review_notes?: string
     approved: boolean
     generated_at?: string
+    ai_response_raw?: string
+    generated_sessions?: string[] // 生成済みセッションID一覧
   }
   
   // Step 5 公開時に設定（設計書 published_course_id）

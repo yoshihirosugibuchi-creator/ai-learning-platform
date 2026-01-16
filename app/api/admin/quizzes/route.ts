@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // quiz_type検証
-    const validQuizTypes = ['single_choice', 'multiple_choice']
+    // quiz_type検証（Phase1-3対応）
+    const validQuizTypes = ['single_choice', 'multiple_choice', 'true_false', 'sorting', 'fill_blank', 'essay']
     const finalQuizType = quiz_type || 'single_choice'
     if (!validQuizTypes.includes(finalQuizType)) {
       return NextResponse.json(
@@ -278,9 +278,9 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // quiz_type検証
+    // quiz_type検証（Phase1-3対応）
     if (quiz_type) {
-      const validQuizTypes = ['single_choice', 'multiple_choice']
+      const validQuizTypes = ['single_choice', 'multiple_choice', 'true_false', 'sorting', 'fill_blank', 'essay']
       if (!validQuizTypes.includes(quiz_type)) {
         return NextResponse.json(
           { error: `Invalid quiz_type. Must be one of: ${validQuizTypes.join(', ')}` },

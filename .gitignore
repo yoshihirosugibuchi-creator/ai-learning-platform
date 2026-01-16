@@ -44,3 +44,10 @@ next-env.d.ts
 backups/
 *_backup_*.ts
 *_backup_*.json
+
+# Claude Code settings (keep project settings, ignore local)
+.claude/settings.local.json
+
+# Git inspection directory (safety isolation)
+../git-inspection/
+git-inspection/
