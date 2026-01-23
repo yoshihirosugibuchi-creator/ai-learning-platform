@@ -12,10 +12,9 @@ import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { type CourseWizardWorkflow } from '@/lib/ai-course-generation/type-conversion'
-import { 
-  Target, 
-  ArrowLeft, 
+import {
+  Target,
+  ArrowLeft,
   ArrowRight,
   AlertCircle,
   CheckCircle2,
@@ -94,14 +93,43 @@ interface Subcategory {
   is_active: boolean
 }
 
+// コース構造の型定義
+interface CourseStructure {
+  genres: Array<{
+    id: string
+    title: string
+    description: string
+    themes: Array<{
+      id: string
+      title: string
+      description: string
+      sessions: Array<{
+        id: string
+        title: string
+        session_type: string
+        estimated_minutes: number
+      }>
+    }>
+  }>
+}
+
 interface CategoryMappingStepProps {
   workflow: {
     id?: string
     aiOutlineResponse?: string
     sources: unknown[]
-    categoryMappings?: CategoryMapping[]  // 既存カテゴリマッピング追加
+    categoryMappings?: CategoryMapping[]
+    published_course_id?: string  // コースデータ存在判定用
+    outline_data?: {
+      approved?: boolean
+    }
   }
-  onChange?: (updates: { categoryMappings: CategoryMapping[] }) => void
+  onChange?: (updates: {
+    categoryMappings: CategoryMapping[]
+    course_structure?: CourseStructure
+    published_course_id?: string
+    outline_data?: { approved?: boolean }
+  }) => void
   onNext?: () => void
   onPrevious?: () => void
 }
@@ -323,19 +351,32 @@ export function CategoryMappingStep({
     return subcategory?.name || '不明なサブカテゴリ'
   }
 
+  // コースデータが存在するかどうか
+  const hasCourseData = Boolean(workflow.published_course_id)
+
   // マッピング完了チェック
   const isMappingComplete = () => {
-    return categoryMappings.length > 0 && categoryMappings.every(mapping => 
+    return categoryMappings.length > 0 && categoryMappings.every(mapping =>
       mapping.selectedCategoryId
     )
   }
 
-  // 次のステップ実行
-  const handleNext = async () => {
+  // 承認して次のステップ実行（コースデータ生成）
+  const handleApprove = async () => {
     if (!isMappingComplete()) {
       toast({
         title: "マッピング未完了",
         description: "全てのジャンルにカテゴリを選択してください",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // コースデータが既に存在する場合は変更不可
+    if (hasCourseData) {
+      toast({
+        title: "変更できません",
+        description: "コースデータが既に作成されているため、カテゴリマッピングは変更できません",
         variant: "destructive"
       })
       return
@@ -347,112 +388,72 @@ export function CategoryMappingStep({
       // ワークフロー更新（親コンポーネントに通知）
       onChange?.({ categoryMappings })
 
-      const wizardWorkflow = workflow as CourseWizardWorkflow
-
-      // ワークフローIDがある場合は必ずカテゴリマッピングをDBに保存
-      if (wizardWorkflow.id) {
-        try {
-          const { ApiClient } = await import('@/lib/api-helpers')
-
-          console.log('🔍 [CategoryMapping] コース存在チェック開始...')
-          console.log('📋 [CategoryMapping] カテゴリマッピング:', categoryMappings)
-
-          // 1. まず既存コースをチェック
-          const existsResult = await ApiClient.get<{
-            exists: boolean;
-            course_id?: string;
-            course_status?: string;
-            check_method?: string;
-          }>(`/api/ai-course-generation/workflows/${wizardWorkflow.id}/check-course-exists`)
-
-          if (existsResult.exists && existsResult.course_id) {
-            // 既存コースが見つかった場合 - learning_genresテーブルを直接更新
-            console.log(`✅ [CategoryMapping] 既存コース発見: ${existsResult.course_id} (${existsResult.check_method})`)
-            console.log('📋 [CategoryMapping] learning_genresテーブル更新開始...')
-
-            // カテゴリマッピング更新専用APIを呼び出し
-            const updateResult = await ApiClient.post<{
-              success: boolean
-              updated_count?: number
-              error?: string
-            }>(`/api/ai-course-generation/workflows/${wizardWorkflow.id}/update-category-mappings`, {
-              course_id: existsResult.course_id,
-              categoryMappings: categoryMappings
-            })
-
-            if (updateResult.success) {
-              toast({
-                title: "カテゴリマッピング更新完了",
-                description: `${updateResult.updated_count || 0}件のジャンルカテゴリを更新しました`
-              })
-            } else {
-              console.error('[CategoryMapping] Category mapping update failed:', updateResult.error)
-              // フォールバック: publish-outlineを呼んでカテゴリマッピングを更新
-              console.log('📋 [CategoryMapping] フォールバック: publish-outline経由で更新...')
-              await ApiClient.post(`/api/ai-course-generation/workflows/${wizardWorkflow.id}/publish-outline`, {
-                status: 'coming_soon',
-                categoryMappings: categoryMappings
-              })
-              toast({
-                title: "カテゴリマッピング更新完了",
-                description: "カテゴリマッピングを更新しました"
-              })
-            }
-          } else if (wizardWorkflow.outline_data?.approved) {
-            // コースが存在しない場合 & アウトライン承認済み - 新規コース作成
-            console.log('📋 [CategoryMapping] 新規コース作成開始...')
-
-            const publishResult = await ApiClient.post<{
-              success: boolean
-              course_id?: string
-              error?: string
-            }>(`/api/ai-course-generation/workflows/${wizardWorkflow.id}/publish-outline`, {
-              status: 'coming_soon',
-              categoryMappings: categoryMappings
-            })
-
-            if (publishResult.success) {
-              toast({
-                title: "コース作成完了",
-                description: `新規コース「${publishResult.course_id || '新規コース'}」を作成しました`
-              })
-            } else {
-              console.error('[CategoryMapping] Course creation failed:', publishResult.error)
-              toast({
-                title: "カテゴリマッピング保存",
-                description: "カテゴリマッピングはワークフローに保存されました。コース作成は後で行われます。"
-              })
-            }
-          } else {
-            // コースが存在せず、アウトライン未承認 - ワークフローにのみ保存
-            console.log('📋 [CategoryMapping] ワークフローにカテゴリマッピングを保存（コース未作成）')
-            toast({
-              title: "カテゴリマッピング保存",
-              description: "カテゴリマッピングをワークフローに保存しました"
-            })
-          }
-        } catch (apiError) {
-          console.error('[CategoryMapping] API call failed:', apiError)
-          toast({
-            title: "カテゴリマッピング保存",
-            description: "カテゴリマッピングをワークフローに保存しました（一部エラーが発生しました）",
-            variant: "destructive"
-          })
-        }
-      } else {
+      if (!workflow.id) {
         toast({
-          title: "カテゴリマッピング完了",
-          description: "学習分析カテゴリとの紐付けが完了しました"
+          title: "エラー",
+          description: "ワークフローIDが見つかりません",
+          variant: "destructive"
+        })
+        return
+      }
+
+      const { ApiClient } = await import('@/lib/api-helpers')
+
+      console.log('📋 [CategoryMapping] コースデータ生成開始...')
+      console.log('📋 [CategoryMapping] カテゴリマッピング:', categoryMappings)
+
+      // publish-outline APIを呼んでコースデータを生成
+      const publishResult = await ApiClient.post<{
+        success: boolean
+        course_id?: string
+        error?: string
+      }>(`/api/ai-course-generation/workflows/${workflow.id}/publish-outline`, {
+        status: 'coming_soon',
+        categoryMappings: categoryMappings
+      })
+
+      if (!publishResult.success) {
+        throw new Error(publishResult.error || 'コース作成に失敗しました')
+      }
+
+      // コースデータ生成後、最新のワークフローを取得して親コンポーネントに通知
+      // これにより course_structure と published_course_id が更新される
+      console.log('📋 [CategoryMapping] ワークフロー再取得開始...')
+      const updatedWorkflow = await ApiClient.get<{
+        success: boolean
+        workflow: {
+          course_structure?: unknown
+          published_course_id?: string
+          outline_data?: { approved?: boolean }
+        }
+      }>(`/api/ai-course-generation/workflows/${workflow.id}`)
+
+      if (updatedWorkflow.success && updatedWorkflow.workflow) {
+        // 親コンポーネントに最新データを通知
+        onChange?.({
+          categoryMappings,
+          course_structure: updatedWorkflow.workflow.course_structure as CourseStructure | undefined,
+          published_course_id: updatedWorkflow.workflow.published_course_id,
+          outline_data: updatedWorkflow.workflow.outline_data
+        })
+        console.log('✅ [CategoryMapping] ワークフロー更新完了:', {
+          hasCourseStructure: !!updatedWorkflow.workflow.course_structure,
+          publishedCourseId: updatedWorkflow.workflow.published_course_id
         })
       }
+
+      toast({
+        title: "✅ コース作成完了",
+        description: `コースデータを生成しました（ID: ${publishResult.course_id}）`
+      })
 
       onNext?.()
 
     } catch (error) {
-      console.error('[CategoryMapping] Error in handleNext:', error)
+      console.error('[CategoryMapping] Error in handleApprove:', error)
       toast({
         title: "エラーが発生しました",
-        description: "カテゴリマッピング処理中にエラーが発生しました",
+        description: error instanceof Error ? error.message : "コースデータ生成中にエラーが発生しました",
         variant: "destructive"
       })
     } finally {
@@ -561,8 +562,9 @@ export function CategoryMappingStep({
                   <Select
                     value={mapping.selectedCategoryId || ''}
                     onValueChange={(value) => handleCategoryChange(mapping.genreId, value)}
+                    disabled={hasCourseData}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={hasCourseData ? 'opacity-50' : ''}>
                       <SelectValue placeholder="カテゴリを選択" />
                     </SelectTrigger>
                     <SelectContent>
@@ -574,7 +576,7 @@ export function CategoryMappingStep({
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label>
                     サブカテゴリ（任意）
@@ -582,8 +584,9 @@ export function CategoryMappingStep({
                   <Select
                     value={mapping.selectedSubcategoryId || ''}
                     onValueChange={(value) => handleSubcategoryChange(mapping.genreId, value)}
+                    disabled={hasCourseData || !mapping.selectedCategoryId}
                   >
-                    <SelectTrigger className={!mapping.selectedCategoryId ? 'opacity-50' : ''}>
+                    <SelectTrigger className={hasCourseData || !mapping.selectedCategoryId ? 'opacity-50' : ''}>
                       <SelectValue placeholder="サブカテゴリを選択" />
                     </SelectTrigger>
                     <SelectContent>
@@ -643,31 +646,49 @@ export function CategoryMappingStep({
         </Button>
 
         <div className="flex items-center gap-4">
-          <p className="text-sm text-muted-foreground">
-            {isMappingComplete() ? (
-              "✅ マッピング完了"
-            ) : (
-              `${categoryMappings.length - categoryMappings.filter(m => m.selectedCategoryId).length} 項目未設定`
-            )}
-          </p>
-          
-          <Button 
-            onClick={handleNext}
-            disabled={!isMappingComplete() || isCreatingDraft}
-            className="min-w-32 flex items-center gap-2"
-          >
-            {isCreatingDraft ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                ドラフト作成中...
-              </>
-            ) : (
-              <>
+          {hasCourseData ? (
+            <>
+              <Badge variant="secondary" className="text-xs">
+                コース作成済み（変更不可）
+              </Badge>
+              <Button
+                onClick={onNext}
+                className="min-w-32 flex items-center gap-2"
+              >
                 次のステップ
                 <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </Button>
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">
+                {isMappingComplete() ? (
+                  "✅ マッピング完了"
+                ) : (
+                  `${categoryMappings.length - categoryMappings.filter(m => m.selectedCategoryId).length} 項目未設定`
+                )}
+              </p>
+
+              <Button
+                onClick={handleApprove}
+                disabled={!isMappingComplete() || isCreatingDraft}
+                className="min-w-32 flex items-center gap-2 bg-green-600 hover:bg-green-700"
+              >
+                {isCreatingDraft ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    コース作成中...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    承認して次のステップ
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>

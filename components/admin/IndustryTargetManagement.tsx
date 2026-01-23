@@ -8,18 +8,20 @@ import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { SimpleSelect, SimpleSelectItem } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  type IndustryLevelTarget 
+import {
+  type IndustryLevelTarget
 } from '@/lib/industry-xp-analytics'
-import { industryCategories } from '@/lib/categories'
-import { 
-  Settings, 
-  Save, 
-  RefreshCw, 
-  AlertCircle, 
-  Target, 
+import { getCategories } from '@/lib/categories'
+import type { IndustryCategory } from '@/lib/types/category'
+import {
+  Settings,
+  Save,
+  RefreshCw,
+  AlertCircle,
+  Target,
   Building2,
-  TrendingUp
+  TrendingUp,
+  Loader2
 } from 'lucide-react'
 
 interface EditableTarget extends IndustryLevelTarget {
@@ -27,16 +29,38 @@ interface EditableTarget extends IndustryLevelTarget {
 }
 
 export default function IndustryTargetManagement() {
-  // 業界選択肢を取得
-  const availableIndustries = industryCategories.filter(cat => cat.isVisible !== false)
-  
-  const [selectedIndustry, setSelectedIndustry] = useState<string>(availableIndustries.length > 0 ? availableIndustries[0].id : '')
+  // DBから業界カテゴリーを動的取得
+  const [availableIndustries, setAvailableIndustries] = useState<IndustryCategory[]>([])
+  const [industriesLoading, setIndustriesLoading] = useState(true)
+
+  const [selectedIndustry, setSelectedIndustry] = useState<string>('')
   const [selectedLevel, setSelectedLevel] = useState<'basic' | 'intermediate' | 'advanced' | 'expert'>('basic')
   const [targets, setTargets] = useState<EditableTarget[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  // 業界カテゴリーを初期ロード
+  useEffect(() => {
+    const loadIndustries = async () => {
+      try {
+        const categories = await getCategories({ type: 'industry', activeOnly: true })
+        const industries = categories.filter(cat => cat.isVisible !== false) as IndustryCategory[]
+        setAvailableIndustries(industries)
+        // 初期選択
+        if (industries.length > 0) {
+          setSelectedIndustry(industries[0].id)
+        }
+      } catch (err) {
+        console.error('Failed to load industry categories:', err)
+        setError('業界カテゴリーの読み込みに失敗しました')
+      } finally {
+        setIndustriesLoading(false)
+      }
+    }
+    loadIndustries()
+  }, [])
 
   // データ読み込み
   const loadTargets = useCallback(async () => {
@@ -263,10 +287,24 @@ export default function IndustryTargetManagement() {
   // 統計情報
   const totalTargets = targets.length
   const changedCount = targets.filter(t => t.hasChanges).length
-  const averageTarget = targets.length > 0 
+  const averageTarget = targets.length > 0
     ? Math.round(targets.reduce((sum, t) => sum + t.target_xp, 0) / targets.length)
     : 0
   const totalTargetXP = targets.reduce((sum, t) => sum + t.target_xp, 0)
+
+  // 業界カテゴリーローディング中
+  if (industriesLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin text-blue-500" />
+            <p>業界カテゴリーを読み込んでいます...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

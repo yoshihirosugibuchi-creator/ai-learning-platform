@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import CategoryCard from './CategoryCard'
-import { mainCategories, industryCategories, skillLevels, getCategories, getSkillLevels } from '@/lib/categories'
+import { getCategories, getSkillLevels } from '@/lib/categories'
 import { MainCategory, IndustryCategory, SkillLevel, SkillLevelDefinition } from '@/lib/types/category'
 import { Question } from '@/lib/types'
 import { Search, Filter, Users, Building2, TrendingUp, BookOpen } from 'lucide-react'
@@ -47,37 +47,38 @@ export default function CategoryGrid({
   useEffect(() => {
     const loadData = async () => {
       console.log('🔄 CategoryGrid: Starting data load...')
-      
-      // Set a timeout to prevent infinite loading
+
+      // Set a timeout to prevent infinite loading (safety net)
       const timeoutId = setTimeout(() => {
-        console.warn('⚠️ CategoryGrid: Data loading timeout, using fallback')
-        setAllQuestions([])
-        setDbCategories([...mainCategories, ...industryCategories])
-        setDbSkillLevels(skillLevels)
+        console.warn('⚠️ CategoryGrid: Data loading timeout')
         setLoading(false)
-      }, 10000) // 10 seconds timeout
-      
+      }, 15000) // 15 seconds timeout as safety net
+
       try {
         console.log('📁 CategoryGrid: Loading categories...')
+        // getCategories() has internal fallback to JSON data
         const categories = await getCategories({ activeOnly: false }) // Show all categories including coming soon
         console.log('✅ CategoryGrid: Categories loaded:', categories.length)
-        
+
         console.log('🎯 CategoryGrid: Loading skill levels...')
-        const skillLevels = await getSkillLevels()
-        console.log('✅ CategoryGrid: Skill levels loaded:', skillLevels.length)
-        
+        // getSkillLevels() has internal fallback to JSON data
+        const loadedSkillLevels = await getSkillLevels()
+        console.log('✅ CategoryGrid: Skill levels loaded:', loadedSkillLevels.length)
+
         clearTimeout(timeoutId)
         setAllQuestions([]) // Questions not needed for category display
         setDbCategories(categories)
-        setDbSkillLevels(skillLevels)
+        setDbSkillLevels(loadedSkillLevels)
         console.log('✅ CategoryGrid: All data loaded successfully (questions skipped for performance)')
       } catch (error) {
         console.error('❌ CategoryGrid: Error loading data:', error)
         clearTimeout(timeoutId)
+        // getCategories()/getSkillLevels() should handle fallback internally
+        // If we still get an error, set empty arrays and let UI handle gracefully
         setAllQuestions([])
-        setDbCategories([...mainCategories, ...industryCategories]) // Fallback to static
-        setDbSkillLevels(skillLevels) // Fallback to static
-        console.log('🔧 CategoryGrid: Using fallback data')
+        setDbCategories([])
+        setDbSkillLevels([])
+        console.log('🔧 CategoryGrid: Error occurred, UI will show empty state')
       } finally {
         console.log('🏁 CategoryGrid: Setting loading to false')
         setLoading(false)
@@ -112,13 +113,13 @@ export default function CategoryGrid({
   const dbMainCategories = dbCategories.filter(cat => cat.type === 'main')
   const dbIndustryCategories = dbCategories.filter(cat => cat.type === 'industry')
   
-  const filteredMainCategories = useMemo(() => 
-    filterCategories(dbMainCategories.length > 0 ? dbMainCategories : mainCategories),
+  const filteredMainCategories = useMemo(() =>
+    filterCategories(dbMainCategories),
     [dbMainCategories, filterCategories]
   )
-  
-  const filteredIndustryCategories = useMemo(() => 
-    filterCategories(dbIndustryCategories.length > 0 ? dbIndustryCategories : industryCategories),
+
+  const filteredIndustryCategories = useMemo(() =>
+    filterCategories(dbIndustryCategories),
     [dbIndustryCategories, filterCategories]
   )
 
@@ -215,7 +216,7 @@ export default function CategoryGrid({
                   >
                     すべて
                   </Button>
-                  {(dbSkillLevels.length > 0 ? dbSkillLevels : skillLevels).map((level) => (
+                  {dbSkillLevels.map((level) => (
                     <Button
                       key={level.id}
                       variant={selectedSkillLevel === level.id ? 'default' : 'outline'}

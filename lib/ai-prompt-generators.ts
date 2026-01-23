@@ -7,6 +7,8 @@ interface PromptData {
   categoryType: string
   subcategoryName: string
   subcategoryId: string
+  subcategoryDescription?: string  // サブカテゴリーの詳細説明（任意）
+  customInstructions?: string      // ユーザー入力のカスタム指示（任意）
   difficultyName: string
   difficultyId: string
   count: number
@@ -52,7 +54,7 @@ ${problemLines.join('\n')}${existingCount > maxDisplay ? `\n...他${existingCoun
 function getDifficultyDescription(difficultyName: string): string {
   const descriptions: Record<string, string> = {
     'basic': '初級(basic) - 学生・新入社員レベル: 10-25秒 - 基本概念・用語・定義',
-    'intermediate': '中級(intermediate) - 入社2-3年目レベル: 25-40秒 - 実践的理解・応用問題', 
+    'intermediate': '中級(intermediate) - 入社2-3年目レベル: 25-40秒 - 実践的理解・応用問題',
     'advanced': '上級(advanced) - ベテラン社員レベル: 40-70秒 - 深い理解・複雑な問題解決',
     'expert': 'エキスパート(expert) - 専門家レベル: 50-90秒 - 最新技術・高度な実装・アーキテクチャ設計',
     // 旧形式との互換性（「基礎」→「初級」に統一）
@@ -62,6 +64,90 @@ function getDifficultyDescription(difficultyName: string): string {
     'エキスパート': 'エキスパート(expert) - 専門家レベル: 50-90秒 - 最新技術・高度な実装・アーキテクチャ設計'
   }
   return descriptions[difficultyName] || `${difficultyName}レベル`
+}
+
+/**
+ * カテゴリー別の難易度補足説明を取得
+ * AI基礎カテゴリーの場合は資格試験レベルを参照した説明を追加
+ */
+function getCategorySpecificDifficultyGuidance(categoryId: string, difficultyName: string): string {
+  // AI基礎カテゴリー専用のガイダンス
+  if (categoryId === 'ai_fundamentals') {
+    const aiGuidance: Record<string, string> = {
+      'basic': `【AI検定相当レベル】
+・AIの基本概念・用語の正確な理解（機械学習、深層学習、ニューラルネットワーク等）
+・AIの歴史的発展と主要な技術の概要
+・AIの社会的影響と倫理的配慮の基礎知識
+・AI活用の基本的なユースケースと事例理解`,
+      'intermediate': `【G検定相当レベル】
+・ディープラーニングの手法と応用領域の実践的理解
+・機械学習モデルの評価・選択・チューニングの知識
+・AIプロジェクトの計画・推進に必要な知識
+・AI関連の法規制・ガイドラインの理解`,
+      'advanced': `【G検定発展レベル】
+・最新のAI技術トレンド（生成AI、LLM等）の深い理解
+・AI導入における技術的・組織的課題の解決策
+・AIシステムの設計・アーキテクチャの判断
+・AI倫理・ガバナンスの実践的適用`,
+      'expert': `【AI専門家レベル】
+・最先端AI研究・技術の深い理解と応用
+・大規模AIシステムの設計・最適化
+・AI戦略立案とビジネス変革の推進
+・AI規制・標準化動向の専門的知識`,
+      // 日本語形式
+      '初級': `【AI検定相当レベル】
+・AIの基本概念・用語の正確な理解
+・AI技術の概要と社会的影響の基礎知識`,
+      '中級': `【G検定相当レベル】
+・ディープラーニングの手法と応用の実践的理解
+・AIプロジェクト推進に必要な知識`,
+      '上級': `【G検定発展レベル】
+・最新AI技術の深い理解と応用
+・AI導入課題の解決策`,
+      'エキスパート': `【AI専門家レベル】
+・最先端AI研究・技術の深い理解
+・大規模AIシステムの設計・最適化`
+    }
+    return aiGuidance[difficultyName] || ''
+  }
+
+  // その他のカテゴリーは空文字（既存の汎用説明を使用）
+  return ''
+}
+
+/**
+ * サブカテゴリー説明文を生成
+ */
+function generateSubcategoryContext(subcategoryName: string, subcategoryDescription?: string): string {
+  if (!subcategoryDescription) {
+    return ''
+  }
+  return `
+<subcategory_context>
+【${subcategoryName}の学習範囲】
+${subcategoryDescription}
+この分野の重要概念・実践スキルを問う問題を作成してください。
+</subcategory_context>
+`
+}
+
+/**
+ * カスタム指示コンテキストを生成
+ */
+function generateCustomInstructionsContext(customInstructions?: string): string {
+  if (!customInstructions || customInstructions.trim() === '') {
+    return ''
+  }
+  return `
+<custom_instructions>
+【追加の出題指示】
+以下の指示に従って問題を作成してください：
+
+${customInstructions}
+
+上記の指示を優先しつつ、品質要件も満たしてください。
+</custom_instructions>
+`
 }
 
 /**
@@ -126,8 +212,17 @@ function getDifficultyFocus(difficultyName: string): string {
  */
 export function generateClaudePrompt(data: PromptData): string {
   // 既存問題コンテキストの最適化処理
-  const optimizedExistingContext = data.existingCount > 0 ? 
+  const optimizedExistingContext = data.existingCount > 0 ?
     generateOptimizedExistingContext(data.existingContext, data.existingCount) : ''
+
+  // サブカテゴリー説明コンテキスト
+  const subcategoryContext = generateSubcategoryContext(data.subcategoryName, data.subcategoryDescription)
+
+  // カテゴリー別の難易度ガイダンス（AI基礎等の特殊カテゴリー用）
+  const categoryDifficultyGuidance = getCategorySpecificDifficultyGuidance(data.categoryId, data.difficultyName)
+
+  // ユーザー入力のカスタム指示
+  const customInstructionsContext = generateCustomInstructionsContext(data.customInstructions)
 
   return `<task>
 ${data.categoryName}の${data.subcategoryName}分野で、${data.difficultyName}レベルのクイズ問題を${data.count}問生成してください。
@@ -141,9 +236,14 @@ ${data.duplicateWarning}
 ・難易度: ${getDifficultyDescription(data.difficultyName)}
 ・問題数: ${data.count}問
 </target_scope>
-
+${subcategoryContext}
+${customInstructionsContext}
 ${optimizedExistingContext}
-
+${categoryDifficultyGuidance ? `
+<category_specific_guidance>
+${categoryDifficultyGuidance}
+</category_specific_guidance>
+` : ''}
 <question_guidelines>
 ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyName)}
 </question_guidelines>
@@ -201,8 +301,21 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
  * ChatGPT向け最適化プロンプト（情報整理・最適化版）
  */
 export function generateChatGPTPrompt(data: PromptData): string {
-  const optimizedExistingContext = data.existingCount > 0 ? 
+  const optimizedExistingContext = data.existingCount > 0 ?
     generateOptimizedExistingContext(data.existingContext, data.existingCount) : ''
+
+  // サブカテゴリー説明
+  const subcategoryDesc = data.subcategoryDescription
+    ? `\n- **サブカテゴリー説明**: ${data.subcategoryDescription}`
+    : ''
+
+  // カテゴリー別の難易度ガイダンス
+  const categoryDifficultyGuidance = getCategorySpecificDifficultyGuidance(data.categoryId, data.difficultyName)
+
+  // ユーザー入力のカスタム指示
+  const customInstructionsSection = data.customInstructions
+    ? `\n## 追加の出題指示\n以下の指示に従って問題を作成してください：\n\n${data.customInstructions}\n`
+    : ''
 
   return `# ${data.categoryName}の${data.subcategoryName}分野クイズ問題生成
 ${data.difficultyName}レベルで${data.count}問作成。JSON形式で出力してください。
@@ -210,12 +323,15 @@ ${data.duplicateWarning}
 
 ## 生成条件
 - **カテゴリー**: ${data.categoryName}（${data.categoryType === 'main' ? 'ビジネススキル' : '業界専門スキル'}）
-- **サブカテゴリー**: ${data.subcategoryName}
+- **サブカテゴリー**: ${data.subcategoryName}${subcategoryDesc}
 - **難易度**: ${getDifficultyDescription(data.difficultyName)}
 - **問題数**: ${data.count}問
-
+${customInstructionsSection}
 ${optimizedExistingContext}
-
+${categoryDifficultyGuidance ? `
+## カテゴリー別難易度ガイダンス
+${categoryDifficultyGuidance}
+` : ''}
 ## 問題作成ガイドライン
 ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyName)}
 
@@ -273,8 +389,21 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
  * Gemini向け最適化プロンプト（情報整理・最適化版）
  */
 export function generateGeminiPrompt(data: PromptData): string {
-  const optimizedExistingContext = data.existingCount > 0 ? 
+  const optimizedExistingContext = data.existingCount > 0 ?
     generateOptimizedExistingContext(data.existingContext, data.existingCount) : ''
+
+  // サブカテゴリー説明
+  const subcategoryDesc = data.subcategoryDescription
+    ? `\n・サブカテゴリー説明: ${data.subcategoryDescription}`
+    : ''
+
+  // カテゴリー別の難易度ガイダンス
+  const categoryDifficultyGuidance = getCategorySpecificDifficultyGuidance(data.categoryId, data.difficultyName)
+
+  // ユーザー入力のカスタム指示
+  const customInstructionsSection = data.customInstructions
+    ? `\n**追加指示**\n${data.customInstructions}\n`
+    : ''
 
   return `## ${data.categoryName}/${data.subcategoryName}クイズ生成
 ${data.difficultyName}レベル・${data.count}問・JSON出力
@@ -282,11 +411,14 @@ ${data.duplicateWarning}
 
 **生成設定**
 ・カテゴリー: ${data.categoryName}（${data.categoryType === 'main' ? 'ビジネス' : '業界専門'}）
-・サブカテゴリー: ${data.subcategoryName}
+・サブカテゴリー: ${data.subcategoryName}${subcategoryDesc}
 ・難易度: ${getDifficultyDescription(data.difficultyName)}
-
+${customInstructionsSection}
 ${optimizedExistingContext}
-
+${categoryDifficultyGuidance ? `
+**カテゴリー別ガイダンス**
+${categoryDifficultyGuidance}
+` : ''}
 **作成指針**
 ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyName)}
 

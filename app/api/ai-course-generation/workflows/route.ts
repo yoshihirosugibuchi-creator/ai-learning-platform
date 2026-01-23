@@ -48,6 +48,27 @@ export async function GET(request: NextRequest) {
 
     console.log(`✅ [Workflows] Found ${workflows?.length || 0} workflows`)
 
+    // 公開済みコースのステータスを取得するため、published_course_idを収集
+    const publishedCourseIds = (workflows || [])
+      .filter(w => w.published_course_id)
+      .map(w => w.published_course_id as string)
+
+    // コースステータスを一括取得
+    let courseStatusMap: Record<string, string> = {}
+    if (publishedCourseIds.length > 0) {
+      const { data: courses } = await supabaseAdmin
+        .from('learning_courses')
+        .select('id, status')
+        .in('id', publishedCourseIds)
+
+      if (courses) {
+        courseStatusMap = courses.reduce((acc, course) => {
+          acc[course.id] = course.status
+          return acc
+        }, {} as Record<string, string>)
+      }
+    }
+
     // 設計書準拠のデータ構造にマッピング
     const mappedWorkflows = workflows?.map(workflow => ({
       id: workflow.id,
@@ -64,6 +85,12 @@ export async function GET(request: NextRequest) {
       created_at: workflow.created_at,
       updated_at: workflow.updated_at,
 
+      // 公開済みコース情報
+      published_course_id: workflow.published_course_id || null,
+      courseStatus: workflow.published_course_id
+        ? courseStatusMap[workflow.published_course_id] || null
+        : null,
+
       // 下位互換用のレガシーフィールド
       title: ((workflow.course_basic_info as { title?: string }) || {}).title || workflow.title || '',
       description: ((workflow.course_basic_info as { description?: string }) || {}).description || workflow.description || '',
@@ -71,7 +98,7 @@ export async function GET(request: NextRequest) {
       aiOutlineResponse: (workflow.outline_data as { ai_response_raw?: string } | null)?.ai_response_raw || null,
       // DBのcurrent_stepをそのまま使用（最後に作業していたステップに戻る）
       currentStep: parseInt(workflow.current_step || '0'),
-      
+
       // 🔧 Step1で必要なフィールドを追加（course_basic_infoから抽出）
       difficultyId: ((workflow.course_basic_info as { difficulty?: string }) || {}).difficulty || '',
       estimatedDuration: ((workflow.course_basic_info as { estimated_duration?: string }) || {}).estimated_duration || '',

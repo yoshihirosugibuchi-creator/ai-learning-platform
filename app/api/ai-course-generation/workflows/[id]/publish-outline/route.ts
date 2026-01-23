@@ -105,7 +105,8 @@ export async function POST(
 
     console.log(`📋 [PublishOutline] Using category mappings from: ${requestCategoryMappings ? 'request body' : 'database'}, count: ${effectiveCategoryMappings.length}`)
 
-    // アウトライン承認フラグ確認（型安全）
+    // アウトラインデータ取得（型安全）
+    // 注: 新フローではカテゴリマッピング完了時点で承認とみなすため、approved フラグのチェックは行わない
     const outlineData = (() => {
       if (typeof workflow.outline_data === 'object' && workflow.outline_data !== null) {
         return workflow.outline_data as unknown as OutlineData
@@ -113,9 +114,9 @@ export async function POST(
       return null
     })()
 
-    if (!outlineData?.approved) {
+    if (!outlineData) {
       return NextResponse.json(
-        { error: 'アウトラインが承認されていません' },
+        { error: 'アウトラインデータが見つかりません' },
         { status: 400 }
       )
     }

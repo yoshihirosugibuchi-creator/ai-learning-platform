@@ -90,6 +90,8 @@ export interface CourseWizardWorkflow {
       }>
     }>
   }
+  // 公開済みコースID（コースデータ存在判定用）
+  published_course_id?: string
 }
 
 export interface CourseWizardCategoryMapping {

@@ -458,14 +458,173 @@ export async function DELETE(request: NextRequest, context: RouteParams) {
     const workflowId = params.id
     console.log(`📋 [Workflow] Deleting workflow: ${workflowId} for user: ${userId}`)
 
-    const { error } = await supabaseAdmin
+    // まずワークフローを取得して published_course_id を確認
+    const { data: workflow, error: fetchError } = await supabaseAdmin
+      .from('ai_course_workflows')
+      .select('id, published_course_id')
+      .eq('id', workflowId)
+      .eq('user_id', userId)
+      .single()
+
+    if (fetchError) {
+      console.error('❌ [Workflow] Fetch error:', fetchError)
+      if (fetchError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: 'ワークフローが見つかりません' },
+          { status: 404 }
+        )
+      }
+      return NextResponse.json(
+        { error: 'ワークフローの取得に失敗しました' },
+        { status: 500 }
+      )
+    }
+
+    // 公開済みコースがある場合、コースのステータスを確認
+    if (workflow.published_course_id) {
+      // .single()を使わず、配列で取得してエラーを回避
+      const { data: courses, error: courseError } = await supabaseAdmin
+        .from('learning_courses')
+        .select('id, status')
+        .eq('id', workflow.published_course_id)
+
+      if (courseError) {
+        console.error('❌ [Workflow] Error fetching course:', courseError)
+      }
+
+      const course = courses && courses.length > 0 ? courses[0] : null
+
+      // coming_soon または available のコースは削除不可
+      // これらはコース学習メンテナンスで管理する
+      if (course && (course.status === 'coming_soon' || course.status === 'available')) {
+        console.log(`⛔ [Workflow] Cannot delete: course is ${course.status}`)
+        return NextResponse.json(
+          {
+            error: `公開済みコース（${course.status === 'coming_soon' ? '公開準備中' : '公開中'}）は削除できません。コース学習メンテナンスから管理してください。`,
+            courseStatus: course.status
+          },
+          { status: 400 }
+        )
+      }
+
+      // draft状態のコース、またはコースが存在しない場合は関連データを削除可能
+      console.log(`📋 [Workflow] Deleting related course data: ${workflow.published_course_id} (course exists: ${!!course})`)
+
+      // 1. learning_sessions を削除（theme_id経由）
+      // まずジャンルIDを取得
+      const { data: genres } = await supabaseAdmin
+        .from('learning_genres')
+        .select('id')
+        .eq('course_id', workflow.published_course_id)
+
+      if (genres && genres.length > 0) {
+        const genreIds = genres.map(g => g.id)
+
+        // テーマIDを取得
+        const { data: themes } = await supabaseAdmin
+          .from('learning_themes')
+          .select('id')
+          .in('genre_id', genreIds)
+
+        if (themes && themes.length > 0) {
+          const themeIds = themes.map(t => t.id)
+
+          // セッションIDを取得
+          const { data: sessions } = await supabaseAdmin
+            .from('learning_sessions')
+            .select('id')
+            .in('theme_id', themeIds)
+
+          if (sessions && sessions.length > 0) {
+            const sessionIds = sessions.map(s => s.id)
+
+            // session_contents を削除
+            const { error: contentsError } = await supabaseAdmin
+              .from('session_contents')
+              .delete()
+              .in('session_id', sessionIds)
+
+            if (contentsError) {
+              console.error('❌ [Workflow] Error deleting session_contents:', contentsError)
+            } else {
+              console.log(`✅ [Workflow] Deleted session_contents for sessions: ${sessionIds.length}`)
+            }
+
+            // session_quizzes を削除
+            const { error: quizzesError } = await supabaseAdmin
+              .from('session_quizzes')
+              .delete()
+              .in('session_id', sessionIds)
+
+            if (quizzesError) {
+              console.error('❌ [Workflow] Error deleting session_quizzes:', quizzesError)
+            } else {
+              console.log(`✅ [Workflow] Deleted session_quizzes for sessions: ${sessionIds.length}`)
+            }
+
+            // ⚠️ course_session_completions は削除しない（ユーザートランザクションデータ）
+          }
+
+          // learning_sessions を削除
+          const { error: sessionsError } = await supabaseAdmin
+            .from('learning_sessions')
+            .delete()
+            .in('theme_id', themeIds)
+
+          if (sessionsError) {
+            console.error('❌ [Workflow] Error deleting sessions:', sessionsError)
+          } else {
+            console.log(`✅ [Workflow] Deleted sessions for themes: ${themeIds.length}`)
+          }
+        }
+
+        // 2. learning_themes を削除
+        const { error: themesError } = await supabaseAdmin
+          .from('learning_themes')
+          .delete()
+          .in('genre_id', genreIds)
+
+        if (themesError) {
+          console.error('❌ [Workflow] Error deleting themes:', themesError)
+        } else {
+          console.log(`✅ [Workflow] Deleted themes for genres: ${genreIds.length}`)
+        }
+
+        // 3. learning_genres を削除
+        const { error: genresError } = await supabaseAdmin
+          .from('learning_genres')
+          .delete()
+          .eq('course_id', workflow.published_course_id)
+
+        if (genresError) {
+          console.error('❌ [Workflow] Error deleting genres:', genresError)
+        } else {
+          console.log(`✅ [Workflow] Deleted genres for course: ${workflow.published_course_id}`)
+        }
+      }
+
+      // 4. learning_courses を削除
+      const { error: deleteCourseError } = await supabaseAdmin
+        .from('learning_courses')
+        .delete()
+        .eq('id', workflow.published_course_id)
+
+      if (deleteCourseError) {
+        console.error('❌ [Workflow] Error deleting course:', deleteCourseError)
+      } else {
+        console.log(`✅ [Workflow] Deleted course: ${workflow.published_course_id}`)
+      }
+    }
+
+    // 5. ワークフローを削除
+    const { error: deleteError } = await supabaseAdmin
       .from('ai_course_workflows')
       .delete()
       .eq('id', workflowId)
       .eq('user_id', userId)
 
-    if (error) {
-      console.error('❌ [Workflow] Delete error:', error)
+    if (deleteError) {
+      console.error('❌ [Workflow] Delete error:', deleteError)
       return NextResponse.json(
         { error: 'ワークフローの削除に失敗しました' },
         { status: 500 }
@@ -476,7 +635,7 @@ export async function DELETE(request: NextRequest, context: RouteParams) {
 
     return NextResponse.json({
       success: true,
-      message: 'ワークフローが削除されました'
+      message: 'ワークフローと関連データが削除されました'
     })
 
   } catch (error) {

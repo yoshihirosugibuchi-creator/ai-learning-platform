@@ -124,11 +124,11 @@ interface ContentGenerationStepProps {
   onPrevious: () => void
 }
 
-export function ContentGenerationStep({ 
-  workflow, 
-  onChange, 
-  onNext, 
-  onPrevious 
+export function ContentGenerationStep({
+  workflow,
+  onChange,
+  onNext,
+  onPrevious
 }: ContentGenerationStepProps) {
   const { toast } = useToast()
   const [isGenerating, setIsGenerating] = useState(false)
@@ -356,36 +356,30 @@ export function ContentGenerationStep({
   // プロンプト生成
   const handleGeneratePrompt = async () => {
     const { genre, theme, session } = getSelectedItems()
-    
+
     // ワークフローIDの検証
     if (!workflow.id || workflow.id.startsWith('temp_')) {
-      toast({ 
-        title: "エラー", 
-        description: "ワークフローを先に保存してください", 
-        variant: "destructive" 
+      toast({
+        title: "エラー",
+        description: "ワークフローを先に保存してください",
+        variant: "destructive"
       })
       return
     }
-    
-    // アウトラインデータの検証
-    if (!workflow.outline_data?.approved) {
-      toast({ 
-        title: "エラー", 
-        description: "アウトラインが承認されていません", 
-        variant: "destructive" 
+
+    // コース構造またはアウトラインデータの検証
+    const hasCourseStructure = workflow.course_structure?.genres && workflow.course_structure.genres.length > 0
+    const hasOutlineGenres = workflow.outline_data?.genres && workflow.outline_data.genres.length > 0
+
+    if (!hasCourseStructure && !hasOutlineGenres) {
+      toast({
+        title: "エラー",
+        description: "コース構造データが存在しません。カテゴリマッピングを完了してください。",
+        variant: "destructive"
       })
       return
     }
-    
-    if (!workflow.outline_data?.genres || workflow.outline_data.genres.length === 0) {
-      toast({ 
-        title: "エラー", 
-        description: "アウトラインデータが存在しません", 
-        variant: "destructive" 
-      })
-      return
-    }
-    
+
     if (generationMode === 'session' && !session) {
       toast({ title: "エラー", description: "セッションを選択してください", variant: "destructive" })
       return
@@ -468,21 +462,15 @@ export function ContentGenerationStep({
 
   // AIレスポンス処理
   const handleProcessResponse = async () => {
-    console.log('🔘 [handleProcessResponse] ボタンクリック - 開始')
-    console.log('🔘 [handleProcessResponse] aiResponse長さ:', aiResponse.length)
-    console.log('🔘 [handleProcessResponse] promptContext:', promptContext)
-
     if (!aiResponse.trim()) {
-      console.log('❌ [handleProcessResponse] エラー: AIレスポンスが空')
-      toast({ title: "❌ エラー", description: "AIレスポンスを入力してください", variant: "destructive" })
+      toast({ title: "エラー", description: "AIレスポンスを入力してください", variant: "destructive" })
       return
     }
 
     // プロンプト生成時のコンテキストを使用（現在の選択状態ではなく）
     if (!promptContext) {
-      console.log('❌ [handleProcessResponse] エラー: promptContextがnull')
       toast({
-        title: "❌ エラー",
+        title: "エラー",
         description: "プロンプトを先に生成してください。セッションを選択してプロンプト生成を実行してください。",
         variant: "destructive"
       })
@@ -493,18 +481,13 @@ export function ContentGenerationStep({
     // プロンプト生成時に保存されたコンテキストを使用
     const { genreId, themeId, sessionId, sessionTitle, mode } = promptContext
 
-    console.log('📋 [handleProcessResponse] 保存されたコンテキストを使用:', {
-      genreId, themeId, sessionId, sessionTitle, mode
-    })
-
     try {
       // AIレスポンスのJSON検証
       try {
         JSON.parse(aiResponse)
       } catch (_parseError) {
-        console.error('❌ [handleProcessResponse] JSONパースエラー:', _parseError)
         toast({
-          title: "❌ JSON形式エラー",
+          title: "JSON形式エラー",
           description: "AIレスポンスの形式が不正です。有効なJSONを入力してください。",
           variant: "destructive"
         })
@@ -546,26 +529,17 @@ export function ContentGenerationStep({
         body.genre_id = genreId
       }
 
-      console.log('🚀 [ContentGenerationStep] API呼び出し開始:', {
-        url: `/api/ai-course-generation/workflows/${workflow.id}/generate-content?${params}`,
-        mode: generationMode,
-        workflowId: workflow.id
-      })
-
       const response = await fetch(`/api/ai-course-generation/workflows/${workflow.id}/generate-content?${params}`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authSession.access_token}`
         },
         body: JSON.stringify(body)
       })
 
-      console.log('📡 [ContentGenerationStep] API応答:', response.status, response.statusText)
-
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('❌ [ContentGenerationStep] API失敗:', errorText)
         let errorData
         try {
           errorData = JSON.parse(errorText)
@@ -576,7 +550,6 @@ export function ContentGenerationStep({
       }
 
       const data = await response.json()
-      console.log('✅ [ContentGenerationStep] API成功:', data)
       
       if (data.success) {
         // content_dataを更新（プロンプトコンテキストを使用）

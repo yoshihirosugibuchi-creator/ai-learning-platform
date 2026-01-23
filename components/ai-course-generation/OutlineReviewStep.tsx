@@ -14,19 +14,16 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
-import { type CourseWizardWorkflow } from '@/lib/ai-course-generation/type-conversion'
 // Note: skill-levels-helper functions are server-side only
-import { 
-  CheckCircle2, 
-  Edit, 
-  Save, 
+import {
+  Edit,
+  Save,
   AlertCircle,
   BookOpen,
   Clock,
   Target,
   Users,
   Star,
-  Loader2,
   ArrowLeft,
   ArrowRight
 } from 'lucide-react'
@@ -83,6 +80,7 @@ interface OutlineReviewStepProps {
       ai_response_raw?: string
     }
     status?: string
+    published_course_id?: string  // コースデータ存在判定用
   }
   onChange: (updates: Record<string, unknown>) => void
   onNext: () => void
@@ -115,7 +113,6 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
   const [isEditing, setIsEditing] = useState(false)
   const [editedOutline, setEditedOutline] = useState<CourseOutline | null>(null)
   const [editedGenres, setEditedGenres] = useState<GenreOutline[]>([])
-  const [isCreatingDraft, setIsCreatingDraft] = useState(false)
   const [_validSkillLevels, setValidSkillLevels] = useState<string[]>(['basic', 'intermediate', 'advanced', 'expert'])
   
   // アウトライン解析（AI生成されたJSONから構造化）
@@ -278,109 +275,34 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
     })
   }
 
-  // アウトライン承認
-  const handleApprove = async () => {
+  // コースデータが存在するかどうか
+  const hasCourseData = Boolean(workflow.published_course_id)
+
+  // 次のステップへ進む
+  const handleNext = () => {
     if (!parsedOutline) return
 
-    setIsCreatingDraft(true)
-
-    try {
-      // 1. ワークフロー更新（承認状態）
-      const updatedWorkflow = {
-        ...workflow,
-        outline_data: {
-          course: editedOutline || parsedOutline.course,
-          genres: parsedOutline.genres,
-          approved: true,
-          generated_at: workflow.outline_data?.generated_at || new Date().toISOString(),
-          ai_response_raw: workflow.aiOutlineResponse
-        },
-        status: 'outline_approved'
-      }
-
-      onChange(updatedWorkflow)
-
-      // 2. サーバー側でlearning_coursesテーブル投入（APIコール）
-      const wizardWorkflow = workflow as CourseWizardWorkflow
-      
-      // ワークフローIDが存在し、カテゴリマッピングが完了している場合のみAPI呼び出し
-      if (wizardWorkflow.id && wizardWorkflow.categoryMappings && wizardWorkflow.categoryMappings.length > 0) {
-        console.log('📋 [OutlineReview] Calling publish outline API...')
-        
-        // 認証ヘッダー取得
-        const { supabase } = await import('@/lib/supabase')
-        const { data: { session } } = await supabase.auth.getSession()
-        
-        if (!session?.access_token) {
-          throw new Error('認証が必要です')
-        }
-
-        // 新しいAPIエンドポイント呼び出し
-        const response = await fetch(`/api/ai-course-generation/workflows/${wizardWorkflow.id}/publish-outline`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({
-            status: 'draft',
-            skipExistingCheck: false
-          })
-        })
-
-        const result = await response.json()
-
-        if (!response.ok) {
-          throw new Error(result.error || 'アウトライン公開APIエラー')
-        }
-
-        if (result.success) {
-          // 最新のワークフローデータを再取得してstateを更新
-          const workflowResponse = await fetch(`/api/ai-course-generation/workflows/${wizardWorkflow.id}`, {
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`
-            }
-          })
-
-          if (workflowResponse.ok) {
-            const workflowData = await workflowResponse.json()
-            if (workflowData.workflow?.outline_data) {
-              // 更新されたoutline_data（DB IDに置換済み）で親コンポーネントを更新
-              onChange({
-                outline_data: workflowData.workflow.outline_data,
-                published_course_id: result.course_id
-              })
-              console.log('✅ [OutlineReview] outline_data updated with DB IDs')
-            }
-          }
-
-          toast({
-            title: "✅ アウトライン承認・コース作成完了",
-            description: `ドラフトコース「${result.course_id}」を learning_courses テーブルに作成しました。`
-          })
-        } else {
-          throw new Error(result.error || 'コース作成に失敗しました')
-        }
-      } else {
-        // カテゴリマッピング未完了の場合
-        toast({
-          title: "アウトライン承認完了", 
-          description: "アウトラインが承認されました。カテゴリマッピング完了後にドラフトコースが作成されます。"
-        })
-      }
-      
-      onNext()
-
-    } catch (error) {
-      console.error('[OutlineReview] Approval error:', error)
-      toast({
-        title: "エラーが発生しました",
-        description: "アウトライン承認中にエラーが発生しました",
-        variant: "destructive"
-      })
-    } finally {
-      setIsCreatingDraft(false)
+    // ワークフロー更新（アウトライン確定状態）
+    const updatedWorkflow = {
+      ...workflow,
+      outline_data: {
+        course: editedOutline || parsedOutline.course,
+        genres: editedGenres.length > 0 ? editedGenres : parsedOutline.genres,
+        approved: true,
+        generated_at: workflow.outline_data?.generated_at || new Date().toISOString(),
+        ai_response_raw: workflow.aiOutlineResponse
+      },
+      status: 'outline_approved'
     }
+
+    onChange(updatedWorkflow)
+
+    toast({
+      title: "アウトライン確定",
+      description: "次のステップでカテゴリマッピングを行い、コースデータを生成します。"
+    })
+
+    onNext()
   }
 
 
@@ -478,14 +400,20 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
               <Badge className={getDifficultyInfo(course.difficulty).color}>
                 {getDifficultyInfo(course.difficulty).label}
               </Badge>
-              <Button
-                size="sm"
-                variant={isEditing ? "secondary" : "outline"}
-                onClick={() => setIsEditing(!isEditing)}
-              >
-                <Edit className="h-4 w-4 mr-1" />
-                {isEditing ? 'プレビュー' : '編集'}
-              </Button>
+              {hasCourseData ? (
+                <Badge variant="secondary" className="text-xs">
+                  コース作成済み（編集不可）
+                </Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  variant={isEditing ? "secondary" : "outline"}
+                  onClick={() => setIsEditing(!isEditing)}
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  {isEditing ? 'プレビュー' : '編集'}
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -527,18 +455,13 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
                 id="edit-objectives"
                 value={course.learningObjectives.join('\n')}
                 onChange={(e) => setEditedOutline(prev => prev ? {
-                  ...prev, 
+                  ...prev,
                   learningObjectives: e.target.value.split('\n').filter(obj => obj.trim())
                 } : null)}
                 rows={4}
                 placeholder="各行に1つずつ学習目標を入力してください"
               />
             </div>
-            
-            <Button onClick={handleSaveEdits} className="flex items-center gap-2">
-              <Save className="h-4 w-4" />
-              編集保存
-            </Button>
           </CardContent>
         ) : (
           <CardContent>
@@ -711,46 +634,52 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
 
       {/* アクションボタン */}
       <div className="flex justify-between items-center">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={onPrevious}
           className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
           前のステップ
         </Button>
-        
+
         <div className="flex gap-3">
           {isEditing && (
-            <Button 
-              onClick={handleSaveEdits}
-              variant="secondary"
+            <>
+              <Button
+                onClick={() => {
+                  // キャンセル: 編集内容を破棄して元に戻す
+                  if (parsedOutline) {
+                    setEditedOutline(parsedOutline.course)
+                    setEditedGenres(parsedOutline.genres)
+                  }
+                  setIsEditing(false)
+                }}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                キャンセル
+              </Button>
+              <Button
+                onClick={handleSaveEdits}
+                variant="secondary"
+                className="flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                編集を保存
+              </Button>
+            </>
+          )}
+
+          {!isEditing && (
+            <Button
+              onClick={handleNext}
               className="flex items-center gap-2"
             >
-              <Save className="h-4 w-4" />
-              編集を保存
+              次のステップ
+              <ArrowRight className="h-4 w-4" />
             </Button>
           )}
-          
-          
-          <Button 
-            onClick={handleApprove}
-            disabled={isCreatingDraft}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-          >
-            {isCreatingDraft ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                ドラフトコース作成中...
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="h-4 w-4" />
-                承認して次のステップ
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </Button>
         </div>
       </div>
     </div>

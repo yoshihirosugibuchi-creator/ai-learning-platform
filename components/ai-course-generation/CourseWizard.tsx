@@ -223,75 +223,65 @@ export function CourseWizard({
 
   // 次のステップに進む
   const handleNextStep = async () => {
-    const currentStepInfo = WIZARD_STEPS[workflow.currentStep]
-    
-    // ステップ固有の検証
-    if (workflow.currentStep === 0 && (!workflow.title.trim() || !workflow.description.trim() || !workflow.difficultyId || !workflow.learningObjectives?.length)) {
+    // setWorkflowのコールバック形式を使用して、常に最新の状態を参照
+    setWorkflow(prev => {
+      const currentStepInfo = WIZARD_STEPS[prev.currentStep]
+
+      // ステップ固有の検証
+      if (prev.currentStep === 0 && (!prev.title.trim() || !prev.description.trim() || !prev.difficultyId || !prev.learningObjectives?.length)) {
+        toast({
+          title: "必要な情報が入力されていません",
+          description: "コースタイトル、概要、難易度、学習目標を設定してください",
+          variant: "destructive"
+        })
+        return prev
+      }
+
+      if (prev.currentStep === 2 && !prev.aiOutlineResponse) {
+        toast({
+          title: "AIレスポンスが必要です",
+          description: "Claude Web Interfaceからのレスポンスを入力してください",
+          variant: "destructive"
+        })
+        return prev
+      }
+
+      if (prev.currentStep === 3 && (!prev.aiOutlineResponse)) {
+        toast({
+          title: "アウトラインレビューが必要です",
+          description: "アウトラインの承認が完了していません",
+          variant: "destructive"
+        })
+        return prev
+      }
+
+      if (prev.currentStep === 4 && (!prev.categoryMappings || prev.categoryMappings.length === 0 || !prev.categoryMappings.every((m: CourseWizardCategoryMapping) => m.selectedCategoryId))) {
+        toast({
+          title: "カテゴリマッピングが必要です",
+          description: "全てのジャンルにカテゴリを設定してください",
+          variant: "destructive"
+        })
+        return prev
+      }
+
+      // ワークフロー更新（最新のprevを使用してcourse_structure等を保持）
+      const updatedWorkflow = {
+        ...prev,
+        currentStep: Math.min(prev.currentStep + 1, WIZARD_STEPS.length - 1),
+        status: WIZARD_STEPS[prev.currentStep + 1]?.status || prev.status
+      }
+
+      // 自動保存（非同期で実行）
+      if (onSave && prev.id) {
+        handleSave(updatedWorkflow)
+      }
+
       toast({
-        title: "必要な情報が入力されていません",
-        description: "コースタイトル、概要、難易度、学習目標を設定してください",
-        variant: "destructive"
+        title: "ステップ完了",
+        description: `${currentStepInfo.title}が完了しました`,
       })
-      return
-    }
 
-    // Step 2: 参考資料は任意のためチェックを削除
-    // if (workflow.currentStep === 1 && workflow.sources.length === 0) {
-    //   toast({
-    //     title: "参考資料が必要です",
-    //     description: "最低1つの参考資料をアップロードしてください",
-    //     variant: "destructive"
-    //   })
-    //   return
-    // }
-
-    if (workflow.currentStep === 2 && !workflow.aiOutlineResponse) {
-      toast({
-        title: "AIレスポンスが必要です",
-        description: "Claude Web Interfaceからのレスポンスを入力してください",
-        variant: "destructive"
-      })
-      return
-    }
-
-    if (workflow.currentStep === 3 && (!workflow.aiOutlineResponse)) {
-      toast({
-        title: "アウトラインレビューが必要です",
-        description: "アウトラインの承認が完了していません",
-        variant: "destructive"
-      })
-      return
-    }
-
-    if (workflow.currentStep === 4 && (!workflow.categoryMappings || workflow.categoryMappings.length === 0 || !workflow.categoryMappings.every((m: CourseWizardCategoryMapping) => m.selectedCategoryId))) {
-      toast({
-        title: "カテゴリマッピングが必要です",
-        description: "全てのジャンルにカテゴリを設定してください",
-        variant: "destructive"
-      })
-      return
-    }
-
-    // Step 6 (ContentReviewStep) の検証はContentReviewStep内のhandleApproveで行うためスキップ
-    // handleApproveで承認処理完了後にonNext()が呼ばれるので、ここでの検証は不要
-
-    // ワークフロー更新
-    const updatedWorkflow = {
-      ...workflow,
-      currentStep: Math.min(workflow.currentStep + 1, WIZARD_STEPS.length - 1),
-      status: WIZARD_STEPS[workflow.currentStep + 1]?.status || workflow.status
-    }
-
-    setWorkflow(updatedWorkflow)
-
-    // 自動保存
-    if (onSave) {
-      await handleSave(updatedWorkflow)
-    }
-
-    toast({
-      title: "ステップ完了",
-      description: `${currentStepInfo.title}が完了しました`,
+      return updatedWorkflow
     })
   }
 
@@ -604,18 +594,28 @@ export function CourseWizard({
     }
   }
 
-  // カテゴリマッピング変更ハンドラ
-  const handleCategoryMappingChange = useCallback((updates: { categoryMappings: CourseWizardCategoryMapping[] }) => {
+  // カテゴリマッピング変更ハンドラ（コースデータ生成後の拡張プロパティも受け取る）
+  const handleCategoryMappingChange = useCallback((updates: {
+    categoryMappings: CourseWizardCategoryMapping[]
+    course_structure?: CourseWizardWorkflow['course_structure']
+    published_course_id?: string
+    outline_data?: CourseWizardWorkflow['outline_data']
+  }) => {
     console.log('📥 [CourseWizard] カテゴリマッピング受信:', {
       mappingsCount: updates.categoryMappings?.length,
-      mappings: updates.categoryMappings
+      hasCourseStructure: !!updates.course_structure,
+      publishedCourseId: updates.published_course_id
     })
 
     // 同期的に更新（onNextが呼ばれる前に確実に反映させるため）
     setWorkflow(prev => {
       const updatedWorkflow = {
         ...prev,
-        categoryMappings: updates.categoryMappings
+        categoryMappings: updates.categoryMappings,
+        // コースデータ生成後の拡張プロパティを反映
+        ...(updates.course_structure && { course_structure: updates.course_structure }),
+        ...(updates.published_course_id && { published_course_id: updates.published_course_id }),
+        ...(updates.outline_data && { outline_data: updates.outline_data })
       }
 
       // データベースに保存（非同期で実行）
@@ -752,7 +752,8 @@ export function CourseWizard({
             generated_at?: string
             ai_response_raw?: string
           } : undefined,
-          status: workflow.status
+          status: workflow.status,
+          published_course_id: workflow.published_course_id
         }
         return (
           <OutlineReviewStep 
@@ -785,6 +786,10 @@ export function CourseWizard({
         const contentWorkflow = {
           id: workflow.id || `temp_${Date.now()}`,
           title: workflow.title,
+          // DBからの構造（Step 4以降で設定される）
+          course_structure: workflow.course_structure,
+          // コンテンツ生成済みセッション情報
+          content_data: workflow.content_data,
           outline_data: {
             approved: workflow.outline_data?.approved || true,
             genres: (workflow.outline_data?.genres || []).map(genre => {

@@ -94,6 +94,9 @@ export interface WorkflowItem {
     approved: boolean
     generated_at?: string
   }
+  // 公開済みコース情報
+  published_course_id?: string | null
+  courseStatus?: 'draft' | 'coming_soon' | 'available' | null
 }
 
 interface WorkflowListProps {
@@ -154,6 +157,9 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
           approved: boolean
           generated_at?: string
         }
+        // 公開済みコース情報
+        published_course_id?: string | null
+        courseStatus?: 'draft' | 'coming_soon' | 'available' | null
       }
       
       const result = await ApiClient.get<{ workflows: APIWorkflowResponse[] }>('/api/ai-course-generation/workflows')
@@ -178,7 +184,10 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
         // APIはcategory_mappingsとして返すので、変換
         categoryMappings: workflow.category_mappings || workflow.categoryMappings || [],
         outline_data: workflow.outline_data,
-        content_data: workflow.content_data
+        content_data: workflow.content_data,
+        // 公開済みコース情報
+        published_course_id: workflow.published_course_id,
+        courseStatus: workflow.courseStatus
       }))
       setWorkflows(workflows)
       
@@ -213,12 +222,23 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
       })
       
     } catch (error) {
-      console.error('❌ Delete workflow error:', error)
-      toast({
-        title: "削除エラー",
-        description: error instanceof Error ? error.message : 'ワークフローの削除に失敗しました',
-        variant: "destructive"
-      })
+      const errorMessage = error instanceof Error ? error.message : 'ワークフローの削除に失敗しました'
+
+      // 公開済みコースの削除不可は期待されるエラーなので警告表示のみ
+      if (errorMessage.includes('公開済みコース')) {
+        toast({
+          title: "削除できません",
+          description: errorMessage,
+        })
+      } else {
+        // 予期しないエラーはコンソールに出力
+        console.error('❌ Delete workflow error:', error)
+        toast({
+          title: "削除エラー",
+          description: errorMessage,
+          variant: "destructive"
+        })
+      }
     } finally {
       setIsDeleting(null)
     }
@@ -238,13 +258,29 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
     }
 
     const config = statusMap[status] || { label: '不明', className: 'bg-red-100 text-red-800' }
-    
+
     return (
       <div className="space-y-1">
         <Badge className={config.className}>{config.label}</Badge>
         <div className="text-xs text-muted-foreground">ステップ {Math.min(currentStep + 1, 8)}/8</div>
       </div>
     )
+  }
+
+  // コース公開状態バッジ
+  const getCourseStatusBadge = (courseStatus: string | null | undefined) => {
+    if (!courseStatus) return null
+
+    const statusMap: Record<string, { label: string; className: string }> = {
+      'coming_soon': { label: '公開準備中', className: 'bg-orange-100 text-orange-800' },
+      'available': { label: '公開中', className: 'bg-blue-100 text-blue-800' },
+      'draft': { label: 'ドラフト', className: 'bg-gray-100 text-gray-600' }
+    }
+
+    const config = statusMap[courseStatus]
+    if (!config) return null
+
+    return <Badge className={`${config.className} text-[10px]`}>{config.label}</Badge>
   }
 
   // 初期読み込み
@@ -327,7 +363,10 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
                       </div>
                     </TableCell>
                     <TableCell className="py-4">
-                      {getStatusBadge(workflow.status, workflow.currentStep)}
+                      <div className="space-y-1">
+                        {getStatusBadge(workflow.status, workflow.currentStep)}
+                        {getCourseStatusBadge(workflow.courseStatus)}
+                      </div>
                     </TableCell>
                     <TableCell className="py-4 text-center">
                       <div className="flex items-center justify-center gap-1">
@@ -352,22 +391,35 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
                           <Play className="h-3 w-3 mr-1" />
                           続行
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDelete(workflow.id)
-                          }}
-                          disabled={isDeleting === workflow.id}
-                          className="text-xs"
-                        >
-                          {isDeleting === workflow.id ? (
-                            <RefreshCw className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3 w-3" />
-                          )}
-                        </Button>
+                        {/* 公開済み（coming_soon/available）は削除不可 */}
+                        {workflow.courseStatus === 'coming_soon' || workflow.courseStatus === 'available' ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled
+                            className="text-xs cursor-not-allowed"
+                            title="公開済みコースはコース学習メンテナンスから管理してください"
+                          >
+                            <Trash2 className="h-3 w-3 text-gray-400" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDelete(workflow.id)
+                            }}
+                            disabled={isDeleting === workflow.id}
+                            className="text-xs"
+                          >
+                            {isDeleting === workflow.id ? (
+                              <RefreshCw className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3 w-3" />
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -390,6 +442,7 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
                 <li>いつでも前のステップに戻って編集できます</li>
                 <li>削除されたワークフローは復元できません</li>
                 <li>完成したコースは学習システムに自動統合されます</li>
+                <li><strong>公開準備中・公開中のコース</strong>は「コース学習メンテナンス」から管理してください</li>
               </ul>
             </div>
           </div>

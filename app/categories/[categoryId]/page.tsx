@@ -8,22 +8,23 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
-import { 
-  mainCategories, 
-  industryCategories, 
-  getSubcategoriesByParent,
+import {
+  getCategoryById,
+  getSubcategories,
   skillLevels
 } from '@/lib/categories'
+import type { MainCategory, IndustryCategory, Subcategory } from '@/lib/types/category'
 import { Question } from '@/lib/types'
 import { getAllQuestions } from '@/lib/questions'
 import { useUserContext } from '@/contexts/UserContext'
 import { getUserCardCollection } from '@/lib/storage'
-import { 
-  BookOpen, 
+import {
+  BookOpen,
   Target,
   Users,
   CheckCircle,
-  Play
+  Play,
+  Loader2
 } from 'lucide-react'
 
 export default function CategoryDetailPage() {
@@ -32,28 +33,57 @@ export default function CategoryDetailPage() {
   const { user } = useUserContext()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [questions, setQuestions] = useState<Question[]>([])
-  const [, setLoading] = useState(true)
+  const [category, setCategory] = useState<MainCategory | IndustryCategory | null>(null)
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null)
 
   const categoryId = params.categoryId as string
-  const category = [...mainCategories, ...industryCategories]
-    .find(cat => cat.id === categoryId)
 
-  // Load questions data
+  // Load category, subcategories, and questions data in parallel
   useEffect(() => {
     const loadData = async () => {
+      setLoading(true)
       try {
-        const questionsData = await getAllQuestions()
+        // 並列取得でパフォーマンス向上（キャッシュ機構あり: 5分間）
+        const [categoryData, subcategoriesData, questionsData] = await Promise.all([
+          getCategoryById(categoryId),
+          getSubcategories(categoryId),
+          getAllQuestions()
+        ])
+
+        setCategory(categoryData || null)
+        setSubcategories(subcategoriesData)
         setQuestions(questionsData)
       } catch (error) {
-        console.error('Failed to load questions:', error)
+        console.error('Failed to load data:', error)
       } finally {
         setLoading(false)
       }
     }
-    loadData()
-  }, [])
-  
+
+    if (categoryId) {
+      loadData()
+    }
+  }, [categoryId])
+
+  // ローディング中の表示
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)} />
+        <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+        <main className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">読み込み中...</span>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // カテゴリーが見つからない場合
   if (!category) {
     return (
       <div className="min-h-screen bg-background">
@@ -69,7 +99,8 @@ export default function CategoryDetailPage() {
     )
   }
 
-  const subcategories = getSubcategoriesByParent(categoryId)
+  // サブカテゴリー名の配列を取得（学習目標表示用）
+  const subcategoryNames = subcategories.map(sub => sub.name)
 
   // Calculate real stats based on actual data
   // カテゴリーIDでマッチング（メインのマッチング条件）
@@ -212,7 +243,7 @@ export default function CategoryDetailPage() {
                       このカテゴリーでは以下のスキルを体系的に身に付けることができます：
                     </p>
                     <ul className="space-y-2">
-                      {category.subcategories.slice(0, 4).map((subcat, index) => (
+                      {subcategoryNames.slice(0, 4).map((subcat, index) => (
                         <li key={index} className="flex items-center space-x-2">
                           <CheckCircle className="h-4 w-4 text-green-500" />
                           <span className="text-sm">{subcat}</span>

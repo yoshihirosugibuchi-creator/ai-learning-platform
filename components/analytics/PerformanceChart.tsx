@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -18,6 +18,8 @@ import { Line, Doughnut, Radar } from 'react-chartjs-2'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { QuizResult } from '@/lib/storage'
 import { getCategoryDisplayName, mapToMainCategoryId } from '@/lib/category-mapping'
+import { getCategories } from '@/lib/categories'
+import type { MainCategory, IndustryCategory } from '@/lib/types/category'
 
 ChartJS.register(
   CategoryScale,
@@ -37,26 +39,46 @@ interface PerformanceChartProps {
 }
 
 export default function PerformanceChart({ quizResults }: PerformanceChartProps) {
+  // DBからメインカテゴリーを動的取得
+  const [mainCategoryIds, setMainCategoryIds] = useState<string[]>([])
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false)
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categories = await getCategories({ type: 'main', activeOnly: true })
+        const ids = categories.map((cat: MainCategory | IndustryCategory) => cat.id)
+        setMainCategoryIds(ids)
+      } catch (error) {
+        console.error('Failed to load categories:', error)
+        // フォールバック: 空配列のまま（データなしとして表示）
+      } finally {
+        setCategoriesLoaded(true)
+      }
+    }
+    loadCategories()
+  }, [])
+
   const chartData = useMemo(() => {
-    if (quizResults.length === 0) return null
+    if (quizResults.length === 0 || !categoriesLoaded || mainCategoryIds.length === 0) return null
 
     // Sort by timestamp
-    const sortedResults = [...quizResults].sort((a, b) => 
+    const sortedResults = [...quizResults].sort((a, b) =>
       new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     )
 
     // Performance over time data
     const performanceData = {
-      labels: sortedResults.map(result => 
-        new Date(result.timestamp).toLocaleDateString('ja-JP', { 
-          month: 'short', 
-          day: 'numeric' 
+      labels: sortedResults.map(result =>
+        new Date(result.timestamp).toLocaleDateString('ja-JP', {
+          month: 'short',
+          day: 'numeric'
         })
       ),
       datasets: [
         {
           label: '正答率 (%)',
-          data: sortedResults.map(result => 
+          data: sortedResults.map(result =>
             Math.round((result.correctAnswers / result.totalQuestions) * 100)
           ),
           borderColor: 'rgb(59, 130, 246)',
@@ -67,19 +89,8 @@ export default function PerformanceChart({ quizResults }: PerformanceChartProps)
       ],
     }
 
-    // Category performance data for radar chart - 正しい10カテゴリー
-    const mainCategories = [
-      'communication_presentation',
-      'logical_thinking_problem_solving',
-      'strategy_management', 
-      'finance',
-      'marketing_sales',
-      'leadership_hr',
-      'ai_digital_utilization',
-      'project_operations',
-      'business_process_analysis',
-      'risk_crisis_management'
-    ]
+    // Category performance data for radar chart - DBから動的取得したカテゴリーを使用
+    const mainCategories = mainCategoryIds
 
     // Map all category data to main categories
     const categoryStats = quizResults.reduce((acc, result) => {
@@ -156,7 +167,22 @@ export default function PerformanceChart({ quizResults }: PerformanceChartProps)
       category: categoryData,
       difficulty: difficultyData,
     }
-  }, [quizResults])
+  }, [quizResults, categoriesLoaded, mainCategoryIds])
+
+  // ローディング中
+  if (!categoriesLoaded) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="lg:col-span-2">
+          <CardContent className="flex items-center justify-center py-12">
+            <div className="text-center text-muted-foreground">
+              <p>読み込み中...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   if (!chartData) {
     return (

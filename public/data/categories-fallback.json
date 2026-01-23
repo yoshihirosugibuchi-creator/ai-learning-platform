@@ -407,7 +407,24 @@
       "updated_at": "2025-09-21T11:58:08.407837+00:00",
       "created_by": null,
       "updated_by": null
+    },
+    {
+      "id": "f9b3d76b-b113-4bb9-8397-75ae5de23297",
+      "category_id": "ai_fundamentals",
+      "name": "AI基礎",
+      "description": "AI検定・G検定対応。人工知能の基礎概念から機械学習、ディープラーニング、生成AI、AI倫理まで体系的に学習",
+      "type": "main",
+      "icon": "🤖",
+      "color": "#8B5CF6",
+      "display_order": 11,
+      "is_active": true,
+      "is_visible": true,
+      "activation_date": null,
+      "created_at": "2026-01-21T07:24:36.066439+00:00",
+      "updated_at": "2026-01-21T07:24:36.066439+00:00",
+      "created_by": null,
+      "updated_by": null
     }
   ],
-  "generatedAt": "2025-11-05T14:46:55.374Z"
+  "generatedAt": "2026-01-21T07:29:56.906Z"
 }

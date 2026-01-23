@@ -150,6 +150,7 @@ export default function QuizGeneratorPage() {
   const [filterRecommendation, setFilterRecommendation] = useState<string>('')
   const [selectedAiModel, setSelectedAiModel] = useState<string>('claude') // Step 1用
   const [actualUsedAiModel, setActualUsedAiModel] = useState<string>('claude') // Step 3用（実際に使用したAI）
+  const [customInstructions, setCustomInstructions] = useState<string>('') // カスタム指示（サブカテゴリー詳細指定用）
 
   // 認証付きFetch関数（CLAUDE.md準拠）
   const directAuthenticatedFetch = useCallback(async (url: string, options: RequestInit = {}) => {
@@ -403,6 +404,9 @@ export default function QuizGeneratorPage() {
       duplicateWarning = `\n✅ この${subcategoryName}カテゴリーは新規分野です。基礎から応用まで体系的な問題作成が可能です。`
     }
     
+    // サブカテゴリー説明を取得（存在する場合）
+    const subcategoryDescription = selectedSubcategoryData?.description || ''
+
     // AI別プロンプト最適化機能を使用
     const promptData = {
       categoryName,
@@ -410,6 +414,8 @@ export default function QuizGeneratorPage() {
       categoryType,
       subcategoryName,
       subcategoryId,
+      subcategoryDescription, // サブカテゴリーの詳細説明を追加
+      customInstructions: customInstructions.trim(), // ユーザー入力のカスタム指示
       difficultyName,
       difficultyId,
       count,
@@ -871,6 +877,27 @@ export default function QuizGeneratorPage() {
                 />
               </div>
             </div>
+
+            {/* カスタム指示入力欄 */}
+            <div className="mt-4">
+              <label className="text-sm font-medium mb-2 block">
+                詳細指示（任意）
+                <span className="text-xs text-muted-foreground ml-2">
+                  サブカテゴリー内の特定トピック・出題範囲・難易度調整などを指定できます
+                </span>
+              </label>
+              <textarea
+                value={customInstructions}
+                onChange={(e) => setCustomInstructions(e.target.value)}
+                placeholder="例：&#10;・機械学習の中でも特に「教師あり学習」と「教師なし学習」の違いに焦点を当てた問題&#10;・実務での活用シナリオを含む応用問題を中心に&#10;・AI検定の出題傾向に沿った基礎概念の確認問題"
+                className="w-full px-3 py-2 border rounded-md text-sm min-h-[100px] resize-y"
+                disabled={loading}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                入力した内容はAIへのプロンプトに反映されます。空欄の場合はサブカテゴリーの標準的な範囲で出題されます。
+              </p>
+            </div>
+
             <div className="flex gap-3 mt-4">
               <Button 
                 onClick={generatePrompt}
