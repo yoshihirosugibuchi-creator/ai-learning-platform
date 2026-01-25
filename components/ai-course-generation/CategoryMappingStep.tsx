@@ -129,6 +129,7 @@ interface CategoryMappingStepProps {
     course_structure?: CourseStructure
     published_course_id?: string
     outline_data?: { approved?: boolean }
+    shouldAdvanceStep?: boolean
   }) => void
   onNext?: () => void
   onPrevious?: () => void
@@ -147,7 +148,6 @@ export function CategoryMappingStep({
   const [aiOutline, setAiOutline] = useState<AIParsedOutline | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isCreatingDraft, setIsCreatingDraft] = useState(false)
-  const [courseCreated, setCourseCreated] = useState(Boolean(workflow.published_course_id)) // ローカル重複防止フラグ
 
   // カテゴリ・サブカテゴリデータ読み込み
   const loadCategoriesData = async () => {
@@ -373,8 +373,8 @@ export function CategoryMappingStep({
       return
     }
 
-    // コースデータが既に存在する場合は変更不可（DBまたはローカルフラグ）
-    if (hasCourseData || courseCreated) {
+    // コースデータが既に存在する場合は変更不可
+    if (hasCourseData) {
       toast({
         title: "変更できません",
         description: "コースデータが既に作成されているため、カテゴリマッピングは変更できません",
@@ -391,9 +391,6 @@ export function CategoryMappingStep({
     setIsCreatingDraft(true)
 
     try {
-      // ワークフロー更新（親コンポーネントに通知）
-      onChange?.({ categoryMappings })
-
       if (!workflow.id) {
         toast({
           title: "エラー",
@@ -435,12 +432,14 @@ export function CategoryMappingStep({
       }>(`/api/ai-course-generation/workflows/${workflow.id}`)
 
       if (updatedWorkflow.success && updatedWorkflow.workflow) {
-        // 親コンポーネントに最新データを通知
+        // 親コンポーネントに最新データを通知し、ステップ遷移も同時に行う
+        // 注意: shouldAdvanceStep=trueで親がcurrentStepを同じsetWorkflow内で更新
         onChange?.({
           categoryMappings,
           course_structure: updatedWorkflow.workflow.course_structure as CourseStructure | undefined,
           published_course_id: updatedWorkflow.workflow.published_course_id,
-          outline_data: updatedWorkflow.workflow.outline_data
+          outline_data: updatedWorkflow.workflow.outline_data,
+          shouldAdvanceStep: true
         })
         console.log('✅ [CategoryMapping] ワークフロー更新完了:', {
           hasCourseStructure: !!updatedWorkflow.workflow.course_structure,
@@ -448,16 +447,10 @@ export function CategoryMappingStep({
         })
       }
 
-      // 成功時にローカルフラグを立てる（重複防止）
-      setCourseCreated(true)
-
       toast({
         title: "✅ コース作成完了",
         description: `コースデータを生成しました（ID: ${publishResult.course_id}）`
       })
-
-      // 次のステップへ遷移
-      onNext?.()
 
     } catch (error) {
       console.error('[CategoryMapping] Error in handleApprove:', error)
@@ -681,7 +674,7 @@ export function CategoryMappingStep({
 
               <Button
                 onClick={handleApprove}
-                disabled={!isMappingComplete() || isCreatingDraft || courseCreated}
+                disabled={!isMappingComplete() || isCreatingDraft || hasCourseData}
                 className="min-w-32 flex items-center gap-2 bg-green-600 hover:bg-green-700"
               >
                 {isCreatingDraft ? (

@@ -589,27 +589,37 @@ export function CourseWizard({
   }
 
   // カテゴリマッピング変更ハンドラ（コースデータ生成後の拡張プロパティも受け取る）
+  // shouldAdvanceStep: trueの場合、同じsetWorkflow内でステップ遷移も行う（状態競合防止）
   const handleCategoryMappingChange = useCallback((updates: {
     categoryMappings: CourseWizardCategoryMapping[]
     course_structure?: CourseWizardWorkflow['course_structure']
     published_course_id?: string
     outline_data?: CourseWizardWorkflow['outline_data']
+    shouldAdvanceStep?: boolean
   }) => {
     console.log('📥 [CourseWizard] カテゴリマッピング受信:', {
       mappingsCount: updates.categoryMappings?.length,
       hasCourseStructure: !!updates.course_structure,
-      publishedCourseId: updates.published_course_id
+      publishedCourseId: updates.published_course_id,
+      shouldAdvanceStep: updates.shouldAdvanceStep
     })
 
-    // 同期的に更新（onNextが呼ばれる前に確実に反映させるため）
+    // 同一のsetWorkflow内で全ての状態更新を行う（競合防止）
     setWorkflow(prev => {
+      const nextStep = updates.shouldAdvanceStep
+        ? Math.min(prev.currentStep + 1, WIZARD_STEPS.length - 1)
+        : prev.currentStep
+
       const updatedWorkflow = {
         ...prev,
         categoryMappings: updates.categoryMappings,
         // コースデータ生成後の拡張プロパティを反映
         ...(updates.course_structure && { course_structure: updates.course_structure }),
         ...(updates.published_course_id && { published_course_id: updates.published_course_id }),
-        ...(updates.outline_data && { outline_data: updates.outline_data })
+        ...(updates.outline_data && { outline_data: updates.outline_data }),
+        // ステップ遷移も同時に行う
+        currentStep: nextStep,
+        ...(updates.shouldAdvanceStep && { status: WIZARD_STEPS[nextStep]?.status || prev.status })
       }
 
       // データベースに保存（非同期で実行）
@@ -617,9 +627,18 @@ export function CourseWizard({
         handleSave(updatedWorkflow)
       }
 
+      // ステップ遷移時はトースト表示
+      if (updates.shouldAdvanceStep) {
+        const currentStepInfo = WIZARD_STEPS[prev.currentStep]
+        toast({
+          title: "ステップ完了",
+          description: `${currentStepInfo.title}が完了しました`,
+        })
+      }
+
       return updatedWorkflow
     })
-  }, [handleSave])
+  }, [handleSave, toast])
 
 
   // 現在のステップコンポーネントをレンダリング
