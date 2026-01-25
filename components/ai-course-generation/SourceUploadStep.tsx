@@ -7,6 +7,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
+import { upload } from '@vercel/blob/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,13 +18,13 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
-import { 
-  Upload, 
-  FileText, 
-  Link, 
-  Type, 
-  Check, 
-  Loader2, 
+import {
+  Upload as UploadIcon,
+  FileText,
+  Link,
+  Type,
+  Check,
+  Loader2,
   AlertCircle,
   Globe,
   FileUp,
@@ -134,52 +135,106 @@ export function SourceUploadStep({
     setBlobWarningAccepted(false)
   }
 
-  // PDF ファイル処理（Blob Storage対応）
+  // PDF ファイル処理（クライアントサイド直接アップロード対応）
   const processPDFFile = async (file: File, useBlobStorage = false) => {
     console.log('📄 Processing file:', file.name, file.type, file.size, 'Blob:', useBlobStorage)
     setIsUploading(true)
     setUploadProgress(0)
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('title', file.name.replace('.pdf', ''))
-      formData.append('useBlobStorage', useBlobStorage.toString())
-      if (useBlobStorage) {
-        formData.append('workflowId', workflowId || '')
-      }
-
-      // 認証ヘッダー取得
       const authHeaders = await getAuthHeaders()
 
-      const response = await fetch('/api/ai-course-generation/upload-sources', {
-        method: 'POST',
-        headers: {
-          ...authHeaders,
-        },
-        body: formData,
-      })
+      // Blob Storageが有効かつ4.5MB以上の場合はクライアントサイド直接アップロードを使用
+      const useClientUpload = useBlobStorage || file.size > 4.5 * 1024 * 1024
 
-      setUploadProgress(50)
+      if (useClientUpload) {
+        // クライアントサイド直接アップロード
+        console.log('📦 Using client-side direct upload to Blob Storage')
+        setUploadProgress(10)
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'アップロードに失敗しました')
+        // 1. Blobに直接アップロード
+        const blob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/ai-course-generation/blob-upload',
+          clientPayload: JSON.stringify({
+            workflowId: workflowId || ''
+          })
+        })
+
+        console.log('✅ Blob upload complete:', blob.url)
+        setUploadProgress(50)
+
+        // 2. Blob URLからテキスト抽出
+        const processResponse = await fetch('/api/ai-course-generation/process-blob', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders,
+          },
+          body: JSON.stringify({
+            blobUrl: blob.url,
+            title: file.name.replace('.pdf', ''),
+            fileName: file.name,
+            fileSize: file.size
+          })
+        })
+
+        setUploadProgress(80)
+
+        if (!processResponse.ok) {
+          const error = await processResponse.json()
+          throw new Error(error.error || 'テキスト抽出に失敗しました')
+        }
+
+        const result = await processResponse.json()
+        setUploadProgress(100)
+
+        const newSource = result.source as SourceMaterial
+        const updatedSources = [...sources, newSource]
+        setSources(updatedSources)
+        onSourcesChange?.(updatedSources)
+
+        toast({
+          title: "PDFアップロード完了",
+          description: `${newSource.title} (${result.stats.wordCount?.toLocaleString()} 単語) - Blob保存済み`,
+        })
+
+      } else {
+        // 従来方式（4.5MB以下のファイル）
+        console.log('📤 Using traditional server upload')
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('title', file.name.replace('.pdf', ''))
+        formData.append('useBlobStorage', 'false')
+
+        const response = await fetch('/api/ai-course-generation/upload-sources', {
+          method: 'POST',
+          headers: {
+            ...authHeaders,
+          },
+          body: formData,
+        })
+
+        setUploadProgress(50)
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'アップロードに失敗しました')
+        }
+
+        const result = await response.json()
+        setUploadProgress(100)
+
+        const newSource = result.source as SourceMaterial
+        const updatedSources = [...sources, newSource]
+        setSources(updatedSources)
+        onSourcesChange?.(updatedSources)
+
+        toast({
+          title: "PDFアップロード完了",
+          description: `${newSource.title} (${result.stats.wordCount?.toLocaleString()} 単語)`,
+        })
       }
-
-      const result = await response.json()
-      setUploadProgress(100)
-
-      const newSource = result.source as SourceMaterial
-      const updatedSources = [...sources, newSource]
-      setSources(updatedSources)
-      onSourcesChange?.(updatedSources)
-
-      const blobInfo = newSource.blobStorage ? ' (Blob保存済み)' : ''
-      toast({
-        title: "PDFアップロード完了",
-        description: `${newSource.title} (${result.stats.wordCount?.toLocaleString()} 単語)${blobInfo}`,
-      })
 
     } catch (error) {
       console.error('❌ Upload error:', error)
@@ -440,7 +495,7 @@ export function SourceUploadStep({
                     `}
                   >
                     <input {...getInputProps()} />
-                    <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <UploadIcon className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                     
                     {isDragActive ? (
                       <p className="text-blue-600">PDFファイルをここにドロップ</p>
