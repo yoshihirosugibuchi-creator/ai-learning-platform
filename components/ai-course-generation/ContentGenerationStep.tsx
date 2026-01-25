@@ -117,6 +117,8 @@ interface ContentGenerationStepProps {
       generated_sessions?: string[]
       [key: string]: unknown
     }
+    // AIレスポンス（フォールバック用）
+    aiOutlineResponse?: string
     [key: string]: unknown
   }
   onChange: (updates: Record<string, unknown>) => void
@@ -205,7 +207,7 @@ export function ContentGenerationStep({
   }, [workflow.id])
 
   // 階層構造データの生成（generatedContentsも考慮）
-  // course_structure（DBからの構造）を優先使用
+  // course_structure（DBからの構造）を優先使用、ただしaiOutlineResponseの方がジャンル数が多い場合はそちらを使用
   const hierarchicalData = useMemo(() => {
     const genresMap = new Map<string, GenreData>()
     const generatedSessionIds = workflow.content_data?.generated_sessions || []
@@ -215,8 +217,46 @@ export function ContentGenerationStep({
     const allCompletedSessionIds = [...new Set([...generatedSessionIds, ...generatedContentSessionIds])]
 
     // course_structure（DBから取得）を優先使用
-    const sourceGenres = workflow.course_structure?.genres || workflow.outline_data?.genres
-    const isFromDB = !!workflow.course_structure?.genres
+    let sourceGenres = workflow.course_structure?.genres || workflow.outline_data?.genres
+    let isFromDB = !!workflow.course_structure?.genres
+    let dataSource = isFromDB ? 'DB' : (workflow.outline_data?.genres ? 'outline_data' : 'none')
+
+    // aiOutlineResponseからより多くのジャンルがある場合はそちらを使用
+    if (workflow.aiOutlineResponse) {
+      try {
+        const parsed = JSON.parse(workflow.aiOutlineResponse)
+        if (parsed.genres && Array.isArray(parsed.genres)) {
+          const aiGenreCount = parsed.genres.length
+          const currentGenreCount = sourceGenres?.length || 0
+
+          console.log(`📊 [ContentGenerationStep] データ比較 - 現在: ${currentGenreCount}ジャンル (${dataSource}), aiOutlineResponse: ${aiGenreCount}ジャンル`)
+
+          if (aiGenreCount > currentGenreCount) {
+            console.log('📋 [ContentGenerationStep] aiOutlineResponseを使用（ジャンル数がより多い）')
+            sourceGenres = parsed.genres.map((g: { id: string; title: string; description?: string; themes?: Array<{ id: string; title: string; description?: string; estimatedMinutes?: number; sessions?: Array<{ id: string; title: string; description?: string; session_type?: string; estimatedMinutes?: number }> }> }) => ({
+              id: g.id,
+              title: g.title,
+              description: g.description || '',
+              themes: (g.themes || []).map((t: { id: string; title: string; description?: string; estimatedMinutes?: number; sessions?: Array<{ id: string; title: string; description?: string; session_type?: string; estimatedMinutes?: number }> }) => ({
+                id: t.id,
+                title: t.title,
+                description: t.description || '',
+                sessions: (t.sessions || []).map((s: { id: string; title: string; description?: string; session_type?: string; estimatedMinutes?: number }) => ({
+                  id: s.id,
+                  title: s.title,
+                  session_type: s.session_type || 'knowledge',
+                  estimated_minutes: s.estimatedMinutes || 15
+                }))
+              }))
+            }))
+            isFromDB = false
+            dataSource = 'aiOutlineResponse'
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ [ContentGenerationStep] aiOutlineResponse parse failed:', e)
+      }
+    }
 
     if (isFromDB) {
       console.log('📋 [ContentGenerationStep] Using course_structure from DB')

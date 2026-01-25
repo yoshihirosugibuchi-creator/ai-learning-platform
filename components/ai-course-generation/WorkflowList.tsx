@@ -97,6 +97,8 @@ export interface WorkflowItem {
   // 公開済みコース情報
   published_course_id?: string | null
   courseStatus?: 'draft' | 'coming_soon' | 'available' | null
+  // コース構造データ
+  course_structure?: unknown
 }
 
 interface WorkflowListProps {
@@ -160,8 +162,10 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
         // 公開済みコース情報
         published_course_id?: string | null
         courseStatus?: 'draft' | 'coming_soon' | 'available' | null
+        // コース構造データ
+        course_structure?: unknown
       }
-      
+
       const result = await ApiClient.get<{ workflows: APIWorkflowResponse[] }>('/api/ai-course-generation/workflows')
       
       const workflows = (result.workflows || []).map((workflow) => ({
@@ -187,7 +191,9 @@ export function WorkflowList({ onSelectWorkflow, onNewWorkflow }: WorkflowListPr
         content_data: workflow.content_data,
         // 公開済みコース情報
         published_course_id: workflow.published_course_id,
-        courseStatus: workflow.courseStatus
+        courseStatus: workflow.courseStatus,
+        // コース構造データ
+        course_structure: workflow.course_structure
       }))
       setWorkflows(workflows)
       

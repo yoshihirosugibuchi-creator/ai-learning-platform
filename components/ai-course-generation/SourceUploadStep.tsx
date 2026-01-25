@@ -73,17 +73,22 @@ interface SourceUploadStepProps {
   onSourcesChange?: (sources: SourceMaterial[]) => void
   onNext?: () => void
   onPrevious?: () => void
+  published_course_id?: string  // コースデータ存在判定用
 }
 
-export function SourceUploadStep({ 
+export function SourceUploadStep({
   workflowId,
   initialSources = [],
   onSourcesChange,
   onNext,
-  onPrevious 
+  onPrevious,
+  published_course_id
 }: SourceUploadStepProps) {
   const { toast } = useToast()
   const [sources, setSources] = useState<SourceMaterial[]>(initialSources)
+
+  // コースデータが存在するかどうか（編集制限用）
+  const hasCourseData = Boolean(published_course_id)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   
@@ -312,7 +317,7 @@ export function SourceUploadStep({
       if (fileRejections.length > 0) {
         console.log('❌ Rejected files:', fileRejections)
         toast({
-          title: "ファイル形式エラー", 
+          title: "ファイル形式エラー",
           description: "PDFファイルを選択してください",
           variant: "destructive"
         })
@@ -322,7 +327,7 @@ export function SourceUploadStep({
       'application/pdf': ['.pdf']
     },
     multiple: false,
-    disabled: isUploading
+    disabled: isUploading || hasCourseData
   })
 
   // URL から内容取得
@@ -470,6 +475,21 @@ export function SourceUploadStep({
         </p>
       </div>
 
+      {/* コースデータ作成済み警告 */}
+      {hasCourseData && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-amber-800">
+              <AlertCircle className="h-5 w-5" />
+              <span className="font-medium">コースデータ作成済み（編集不可）</span>
+            </div>
+            <p className="text-sm text-amber-700 mt-1">
+              コースデータが既に生成されているため、参考資料の追加・削除はできません。
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* アップロードタブ */}
       <Tabs defaultValue="pdf" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -505,9 +525,13 @@ export function SourceUploadStep({
                   {/* ドラッグ&ドロップエリア */}
                   <div
                     {...getRootProps()}
-                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
-                      ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
-                    `}
+                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                      hasCourseData
+                        ? 'opacity-50 cursor-not-allowed border-gray-300'
+                        : isDragActive
+                          ? 'border-blue-500 bg-blue-50 cursor-pointer'
+                          : 'border-gray-300 hover:border-gray-400 cursor-pointer'
+                    }`}
                   >
                     <input {...getInputProps()} />
                     <UploadIcon className="h-12 w-12 mx-auto mb-4 text-gray-400" />
@@ -525,14 +549,14 @@ export function SourceUploadStep({
                   {/* ファイル選択ボタン */}
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-3">または</p>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       onClick={() => {
                         console.log('🔘 File select button clicked')
                         open()
                       }}
-                      disabled={isUploading}
+                      disabled={isUploading || hasCourseData}
                     >
                       <FileUp className="h-4 w-4 mr-2" />
                       ファイルを選択
@@ -572,7 +596,8 @@ export function SourceUploadStep({
                   placeholder="https://example.com/article"
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  disabled={isProcessingUrl}
+                  disabled={isProcessingUrl || hasCourseData}
+                  className={hasCourseData ? 'opacity-50' : ''}
                 />
               </div>
               <div>
@@ -582,12 +607,13 @@ export function SourceUploadStep({
                   placeholder="自動で取得されます"
                   value={urlTitle}
                   onChange={(e) => setUrlTitle(e.target.value)}
-                  disabled={isProcessingUrl}
+                  disabled={isProcessingUrl || hasCourseData}
+                  className={hasCourseData ? 'opacity-50' : ''}
                 />
               </div>
-              <Button 
+              <Button
                 onClick={handleUrlSubmit}
-                disabled={!urlInput.trim() || isProcessingUrl}
+                disabled={!urlInput.trim() || isProcessingUrl || hasCourseData}
                 className="w-full"
               >
                 {isProcessingUrl && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -617,7 +643,8 @@ export function SourceUploadStep({
                   placeholder="参考資料のタイトル"
                   value={textTitle}
                   onChange={(e) => setTextTitle(e.target.value)}
-                  disabled={isProcessingText}
+                  disabled={isProcessingText || hasCourseData}
+                  className={hasCourseData ? 'opacity-50' : ''}
                 />
               </div>
               <div>
@@ -627,16 +654,16 @@ export function SourceUploadStep({
                   placeholder="学習内容や参考情報をここに入力してください..."
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
-                  className="min-h-32"
-                  disabled={isProcessingText}
+                  className={`min-h-32 ${hasCourseData ? 'opacity-50' : ''}`}
+                  disabled={isProcessingText || hasCourseData}
                 />
                 <p className="text-sm text-muted-foreground mt-1">
                   {textInput.length} 文字 (最低10文字必要)
                 </p>
               </div>
-              <Button 
+              <Button
                 onClick={handleTextSubmit}
-                disabled={textInput.trim().length < 10 || isProcessingText}
+                disabled={textInput.trim().length < 10 || isProcessingText || hasCourseData}
                 className="w-full"
               >
                 {isProcessingText && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -727,14 +754,16 @@ export function SourceUploadStep({
                     </div>
                   </div>
                   
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeSource(source.id)}
-                    className="ml-2 text-red-500 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {!hasCourseData && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeSource(source.id)}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>

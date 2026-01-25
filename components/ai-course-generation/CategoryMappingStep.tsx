@@ -355,6 +355,10 @@ export function CategoryMappingStep({
   // コースデータが存在するかどうか
   const hasCourseData = Boolean(workflow.published_course_id)
 
+  // デバッグ: published_course_id の確認
+  console.log('🔍 [CategoryMappingStep] workflow.published_course_id:', workflow.published_course_id)
+  console.log('🔍 [CategoryMappingStep] hasCourseData:', hasCourseData)
+
   // マッピング完了チェック
   const isMappingComplete = () => {
     return categoryMappings.length > 0 && categoryMappings.every(mapping =>

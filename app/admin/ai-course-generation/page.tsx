@@ -105,6 +105,9 @@ interface CourseWorkflow {
     approved?: boolean
     [key: string]: unknown
   }
+  // コースデータ存在判定用（編集制限に必要）
+  published_course_id?: string
+  course_structure?: unknown
   [key: string]: unknown
 }
 
@@ -142,6 +145,7 @@ export default function AdminAICourseGenerationPage() {
   }
 
   const handleSelectWorkflow = (workflowItem: WorkflowItem) => {
+    console.log('🔍 [Page] handleSelectWorkflow - workflowItem.published_course_id:', workflowItem.published_course_id)
     const workflow: CourseWorkflow = {
       id: workflowItem.id,
       title: workflowItem.title,
@@ -162,7 +166,10 @@ export default function AdminAICourseGenerationPage() {
       // categoryMappingsはそのまま使用
       categoryMappings: workflowItem.categoryMappings,
       outline_data: workflowItem.outline_data as OutlineData | undefined,
-      content_data: workflowItem.content_data as ContentData | undefined
+      content_data: workflowItem.content_data as ContentData | undefined,
+      // コースデータ存在判定用（編集制限に必要）
+      published_course_id: workflowItem.published_course_id || undefined,
+      course_structure: workflowItem.course_structure
     }
     setSelectedWorkflow(workflow)
     setShowWizard(true)

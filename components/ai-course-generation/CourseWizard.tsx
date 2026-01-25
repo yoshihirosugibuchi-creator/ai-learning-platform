@@ -145,6 +145,10 @@ export function CourseWizard({
     currentStep: initialWorkflow?.currentStep ?? 0
   })
 
+  // デバッグ: published_course_id の確認
+  console.log('🔍 [CourseWizard] initialWorkflow.published_course_id:', initialWorkflow?.published_course_id)
+  console.log('🔍 [CourseWizard] workflow.published_course_id:', workflow.published_course_id)
+
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [_autoSaveEnabled, _setAutoSaveEnabled] = useState(true)
@@ -661,7 +665,8 @@ export function CourseWizard({
           learningObjectives: workflow.learningObjectives,
           estimatedDuration: workflow.estimatedDuration,
           courseCategory: workflow.courseCategory,
-          generationPreferences: workflow.generationPreferences
+          generationPreferences: workflow.generationPreferences,
+          published_course_id: workflow.published_course_id // 編集制限用
         }
         
 
@@ -687,12 +692,13 @@ export function CourseWizard({
       
       case 1:
         return (
-          <SourceUploadStep 
+          <SourceUploadStep
             workflowId={workflow.id}
             initialSources={workflow.sources}
             onSourcesChange={handleSourcesChange}
             onNext={handleNextStep}
             onPrevious={handlePreviousStep}
+            published_course_id={workflow.published_course_id}
           />
         )
       
@@ -854,11 +860,13 @@ export function CourseWizard({
               }
             })
           },
-          category_mappings: workflow.categoryMappings || []
+          category_mappings: workflow.categoryMappings || [],
+          // aiOutlineResponseも渡す（フォールバック用）
+          aiOutlineResponse: workflow.aiOutlineResponse
         }
         return (
-          <ContentGenerationStep 
-            workflow={contentWorkflow} 
+          <ContentGenerationStep
+            workflow={contentWorkflow}
             onChange={(updates) => setWorkflow(prev => ({ ...prev, ...updates }))}
             onNext={handleNextStep}
             onPrevious={handlePreviousStep}

@@ -143,9 +143,43 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
   // AI生成レスポンスからアウトライン解析
   useEffect(() => {
     const parseOutline = async () => {
-      // 既存のoutline_dataを優先して使用（編集済みデータ）
-      if (workflow.outline_data && workflow.outline_data.course && workflow.outline_data.genres) {
-        console.log('📋 [OutlineReview] 既存のoutline_dataを使用')
+      // まずaiOutlineResponseを解析して完全なデータを取得
+      let parsedFromAI: { course: CourseOutline; genres: GenreOutline[] } | null = null
+
+      if (workflow.aiOutlineResponse) {
+        try {
+          console.log('🔄 [OutlineReview] AIレスポンスを解析')
+          const parsed = JSON.parse(workflow.aiOutlineResponse)
+
+          if (parsed.course && parsed.genres) {
+            // difficulty検証・修正（フォールバック対応）
+            if (parsed.course.difficulty) {
+              const validDifficulties = ['basic', 'intermediate', 'advanced', 'expert']
+              if (!validDifficulties.includes(parsed.course.difficulty)) {
+                console.log(`🔧 [OutlineReview] Difficulty corrected: ${parsed.course.difficulty} -> basic`)
+                parsed.course.difficulty = 'basic'
+              }
+            } else {
+              parsed.course.difficulty = 'basic'
+            }
+            parsedFromAI = parsed
+            console.log(`📋 [OutlineReview] AIレスポンスから ${parsed.genres.length} ジャンル取得`)
+          }
+        } catch (error) {
+          console.error('❌ AI outline parsing error:', error)
+        }
+      }
+
+      // outline_dataが存在し、より多い or 同等のジャンル数がある場合は使用
+      const outlineDataGenreCount = workflow.outline_data?.genres?.length || 0
+      const aiResponseGenreCount = parsedFromAI?.genres?.length || 0
+
+      console.log(`📊 [OutlineReview] データ比較 - outline_data: ${outlineDataGenreCount}ジャンル, aiOutlineResponse: ${aiResponseGenreCount}ジャンル`)
+
+      if (workflow.outline_data?.course && workflow.outline_data?.genres &&
+          outlineDataGenreCount >= aiResponseGenreCount) {
+        // outline_dataを優先使用（編集済みデータ）
+        console.log('📋 [OutlineReview] 既存のoutline_dataを使用（ジャンル数が同等以上）')
         setParsedOutline({
           course: workflow.outline_data.course,
           genres: workflow.outline_data.genres
@@ -153,46 +187,19 @@ export function OutlineReviewStep({ workflow, onChange, onNext, onPrevious }: Ou
         setEditedOutline(workflow.outline_data.course)
         setEditedGenres(workflow.outline_data.genres)
         setParseError(null)
-        return
-      }
-      
-      // outline_dataがない場合はaiOutlineResponseから解析
-      if (workflow.aiOutlineResponse) {
-        try {
-          console.log('🔄 [OutlineReview] AIレスポンスを解析')
-          // JSON解析を試行
-          const parsed = JSON.parse(workflow.aiOutlineResponse)
-          
-          // 最低限の構造チェック
-          if (!parsed.course || !parsed.genres) {
-            throw new Error('Invalid outline structure')
-          }
-          
-          // difficulty検証・修正（フォールバック対応）
-          if (parsed.course && parsed.course.difficulty) {
-            const validDifficulties = ['basic', 'intermediate', 'advanced', 'expert']
-            if (!validDifficulties.includes(parsed.course.difficulty)) {
-              console.log(`🔧 [OutlineReview] Difficulty corrected: ${parsed.course.difficulty} -> basic`)
-              parsed.course.difficulty = 'basic'
-            }
-          } else {
-            // difficulty未設定の場合はbasicをデフォルト
-            parsed.course.difficulty = 'basic'
-          }
-          
-          setParsedOutline(parsed)
-          setEditedOutline(parsed.course)
-          setEditedGenres(parsed.genres)
-          setParseError(null)
-          
-        } catch (error) {
-          console.error('❌ Outline parsing error:', error)
-          setParseError('AI生成レスポンスの解析に失敗しました。JSON形式が正しくない可能性があります。')
-          setParsedOutline(null)
-        }
+      } else if (parsedFromAI) {
+        // aiOutlineResponseの方がジャンル数が多い場合はそちらを使用
+        console.log('📋 [OutlineReview] AIレスポンスを使用（ジャンル数がより多い）')
+        setParsedOutline(parsedFromAI)
+        setEditedOutline(parsedFromAI.course)
+        setEditedGenres(parsedFromAI.genres)
+        setParseError(null)
+      } else if (!parsedFromAI && !workflow.outline_data) {
+        setParseError('AI生成レスポンスの解析に失敗しました。JSON形式が正しくない可能性があります。')
+        setParsedOutline(null)
       }
     }
-    
+
     parseOutline()
   }, [workflow.aiOutlineResponse, workflow.outline_data])
 

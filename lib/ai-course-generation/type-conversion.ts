@@ -283,7 +283,9 @@ export function convertToWizardWorkflow(courseWorkflow: {
     categoryMappings: courseWorkflow.categoryMappings as CourseWizardCategoryMapping[] | undefined,
     outline_data: courseWorkflow.outline_data as CourseWizardWorkflow['outline_data'],
     content_data: courseWorkflow.content_data as CourseWizardWorkflow['content_data'],
-    aiOutlineResponse: courseWorkflow.aiOutlineResponse as string | undefined
+    aiOutlineResponse: courseWorkflow.aiOutlineResponse as string | undefined,
+    course_structure: courseWorkflow.course_structure as CourseWizardWorkflow['course_structure'],
+    published_course_id: courseWorkflow.published_course_id as string | undefined
   }
 }
 
@@ -307,6 +309,8 @@ export function convertFromWizardWorkflow(wizardWorkflow: CourseWizardWorkflow):
     categoryMappings: wizardWorkflow.categoryMappings,
     outline_data: wizardWorkflow.outline_data,
     content_data: wizardWorkflow.content_data,
-    aiOutlineResponse: wizardWorkflow.aiOutlineResponse
+    aiOutlineResponse: wizardWorkflow.aiOutlineResponse,
+    course_structure: wizardWorkflow.course_structure,
+    published_course_id: wizardWorkflow.published_course_id
   }
 }

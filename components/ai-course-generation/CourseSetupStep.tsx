@@ -58,6 +58,7 @@ interface CourseSetupWorkflow {
     interactivityLevel: 'low' | 'medium' | 'high'
     contentStyle: 'formal' | 'casual' | 'technical'
   }
+  published_course_id?: string  // コースデータ存在判定用
 }
 
 interface CourseSetupStepProps {
@@ -90,6 +91,9 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
   const [skillLevels, setSkillLevels] = useState<SkillLevel[]>([])
   const [isLoadingSkillLevels, setIsLoadingSkillLevels] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+
+  // コースデータが存在するかどうか（編集制限用）
+  const hasCourseData = Boolean(workflow.published_course_id)
 
   // スキルレベル取得
   useEffect(() => {
@@ -232,6 +236,21 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
         </p>
       </div>
 
+      {/* コースデータ作成済み警告 */}
+      {hasCourseData && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-amber-800">
+              <Target className="h-5 w-5" />
+              <span className="font-medium">コースデータ作成済み（編集不可）</span>
+            </div>
+            <p className="text-sm text-amber-700 mt-1">
+              コースデータが既に生成されているため、基本情報の編集はできません。
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 基本情報 */}
       <Card>
         <CardHeader>
@@ -251,10 +270,11 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
               placeholder="例: 金融基礎完全マスター講座"
               value={workflow.title}
               onChange={(e) => updateWorkflow({ title: e.target.value })}
-              className="mt-1"
+              className={`mt-1 ${hasCourseData ? 'opacity-50' : ''}`}
+              disabled={hasCourseData}
             />
           </div>
-          
+
           <div>
             <Label htmlFor="courseDescription">コース概要 *</Label>
             <Textarea
@@ -262,7 +282,8 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
               placeholder="このコースで学べる内容や対象者について説明してください（2-3文程度）"
               value={workflow.description}
               onChange={(e) => updateWorkflow({ description: e.target.value })}
-              className="mt-1 min-h-20"
+              className={`mt-1 min-h-20 ${hasCourseData ? 'opacity-50' : ''}`}
+              disabled={hasCourseData}
             />
           </div>
 
@@ -273,7 +294,8 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
               placeholder="例: 金融業界初心者、投資を始めたい方"
               value={workflow.targetAudience || ''}
               onChange={(e) => updateWorkflow({ targetAudience: e.target.value })}
-              className="mt-1"
+              className={`mt-1 ${hasCourseData ? 'opacity-50' : ''}`}
+              disabled={hasCourseData}
             />
           </div>
         </CardContent>
@@ -304,8 +326,13 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
                     <button
                       key={skillLevel.id}
                       type="button"
-                      onClick={() => updateWorkflow({ difficultyId: skillLevel.id })}
-                      className={`p-3 text-left border rounded-lg transition-colors hover:bg-muted/50 ${
+                      onClick={() => !hasCourseData && updateWorkflow({ difficultyId: skillLevel.id })}
+                      disabled={hasCourseData}
+                      className={`p-3 text-left border rounded-lg transition-colors ${
+                        hasCourseData
+                          ? 'opacity-50 cursor-not-allowed'
+                          : 'hover:bg-muted/50'
+                      } ${
                         workflow.difficultyId === skillLevel.id
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
                           : 'border-border'
@@ -330,7 +357,8 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
               id="estimatedDuration"
               value={workflow.estimatedDuration || ''}
               onChange={(e) => updateWorkflow({ estimatedDuration: e.target.value })}
-              className="mt-1 w-full p-2 border border-border rounded-md"
+              className={`mt-1 w-full p-2 border border-border rounded-md ${hasCourseData ? 'opacity-50' : ''}`}
+              disabled={hasCourseData}
             >
               <option value="">選択してください</option>
               {DURATION_OPTIONS.map((option, index) => (
@@ -363,16 +391,18 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
               value={learningObjective}
               onChange={(e) => setLearningObjective(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && !hasCourseData) {
                   e.preventDefault()
                   addLearningObjective()
                 }
               }}
+              className={hasCourseData ? 'opacity-50' : ''}
+              disabled={hasCourseData}
             />
-            <Button 
+            <Button
               type="button"
               onClick={addLearningObjective}
-              disabled={!learningObjective.trim()}
+              disabled={!learningObjective.trim() || hasCourseData}
               size="sm"
             >
               <Plus className="h-4 w-4" />
@@ -386,14 +416,16 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
                 <div key={index} className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                   <Lightbulb className="h-4 w-4 text-yellow-600 flex-shrink-0" />
                   <span className="flex-1 text-sm">{objective}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeLearningObjective(index)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
+                  {!hasCourseData && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeLearningObjective(index)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -421,21 +453,23 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
                 min="5"
                 max="60"
                 value={workflow.generationPreferences?.sessionLength || 15}
-                onChange={(e) => updateGenerationPreferences({ 
-                  sessionLength: parseInt(e.target.value) || 15 
+                onChange={(e) => updateGenerationPreferences({
+                  sessionLength: parseInt(e.target.value) || 15
                 })}
-                className="mt-1"
+                className={`mt-1 ${hasCourseData ? 'opacity-50' : ''}`}
+                disabled={hasCourseData}
               />
             </div>
-            
+
             <div>
               <Label>コンテンツスタイル</Label>
               <select
                 value={workflow.generationPreferences?.contentStyle || 'formal'}
-                onChange={(e) => updateGenerationPreferences({ 
+                onChange={(e) => updateGenerationPreferences({
                   contentStyle: e.target.value as 'formal' | 'casual' | 'technical'
                 })}
-                className="mt-1 w-full p-2 border border-border rounded-md"
+                className={`mt-1 w-full p-2 border border-border rounded-md ${hasCourseData ? 'opacity-50' : ''}`}
+                disabled={hasCourseData}
               >
                 <option key="content-formal" value="formal">フォーマル</option>
                 <option key="content-casual" value="casual">カジュアル</option>
@@ -447,10 +481,11 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
               <Label>相互作用レベル</Label>
               <select
                 value={workflow.generationPreferences?.interactivityLevel || 'medium'}
-                onChange={(e) => updateGenerationPreferences({ 
+                onChange={(e) => updateGenerationPreferences({
                   interactivityLevel: e.target.value as 'low' | 'medium' | 'high'
                 })}
-                className="mt-1 w-full p-2 border border-border rounded-md"
+                className={`mt-1 w-full p-2 border border-border rounded-md ${hasCourseData ? 'opacity-50' : ''}`}
+                disabled={hasCourseData}
               >
                 <option key="interactive-low" value="low">低（テキスト中心）</option>
                 <option key="interactive-medium" value="medium">中（図表・例題含む）</option>
@@ -463,13 +498,14 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
           </div>
 
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2">
+            <label className={`flex items-center gap-2 ${hasCourseData ? 'opacity-50' : ''}`}>
               <input
                 type="checkbox"
                 checked={workflow.generationPreferences?.includeQuizzes ?? true}
-                onChange={(e) => updateGenerationPreferences({ 
-                  includeQuizzes: e.target.checked 
+                onChange={(e) => updateGenerationPreferences({
+                  includeQuizzes: e.target.checked
                 })}
+                disabled={hasCourseData}
               />
               <span className="text-sm">理解度確認クイズを含める</span>
             </label>
@@ -488,21 +524,23 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
         </div>
         
         <div className="flex gap-3">
-          <Button 
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving || !workflow.title.trim()}
-            className="min-w-32"
-          >
-            {isSaving ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 border-t-transparent mr-2" />
-                保存中...
-              </>
-            ) : (
-              '下書き保存'
-            )}
-          </Button>
+          {!hasCourseData && (
+            <Button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving || !workflow.title.trim()}
+              className="min-w-32"
+            >
+              {isSaving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 border-t-transparent mr-2" />
+                  保存中...
+                </>
+              ) : (
+                '下書き保存'
+              )}
+            </Button>
+          )}
           
           <Button 
             type="button"

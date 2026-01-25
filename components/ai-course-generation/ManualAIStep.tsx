@@ -58,6 +58,7 @@ interface CourseGenerationWorkflow {
     interactivityLevel: 'low' | 'medium' | 'high'
     contentStyle: 'formal' | 'casual' | 'technical'
   }
+  published_course_id?: string  // コースデータ存在判定用
 }
 
 interface ManualAIStepProps {
@@ -69,8 +70,8 @@ interface ManualAIStepProps {
   onSave?: () => Promise<void>  // 保存コールバック追加
 }
 
-export function ManualAIStep({ 
-  sources, 
+export function ManualAIStep({
+  sources,
   workflow,
   onAIResponse,
   onNext,
@@ -79,6 +80,9 @@ export function ManualAIStep({
 }: ManualAIStepProps) {
   const { toast } = useToast()
   const [aiResponse, setAiResponse] = useState('')
+
+  // コースデータが存在するかどうか（編集制限用）
+  const hasCourseData = Boolean(workflow?.published_course_id)
   const [isProcessing, setIsProcessing] = useState(false)
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('')
   const [showPrompt, setShowPrompt] = useState(false)
@@ -362,7 +366,7 @@ ${combinedContent}
           AI統合基盤（手動モード）
         </h2>
         <p className="text-muted-foreground">
-          {hasExistingOutline 
+          {hasExistingOutline
             ? 'アウトラインが既に生成されています。再生成または次のステップへ進んでください。'
             : 'Claude Web Interfaceを使用してコースアウトラインを生成します'}
         </p>
@@ -373,6 +377,21 @@ ${combinedContent}
           </Badge>
         )}
       </div>
+
+      {/* コースデータ作成済み警告 */}
+      {hasCourseData && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-amber-800">
+              <AlertCircle className="h-5 w-5" />
+              <span className="font-medium">コースデータ作成済み（編集不可）</span>
+            </div>
+            <p className="text-sm text-amber-700 mt-1">
+              コースデータが既に生成されているため、AIアウトラインの変更はできません。
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* コース情報・参考資料サマリー */}
       {workflow && (
@@ -571,19 +590,21 @@ ${combinedContent}
                   setIsCleared(true)
                 }
               }}
-              className="min-h-[200px] font-mono text-sm resize-y pr-12"
-              disabled={isProcessing}
+              className={`min-h-[200px] font-mono text-sm resize-y pr-12 ${hasCourseData ? 'opacity-50' : ''}`}
+              disabled={isProcessing || hasCourseData}
             />
-            <Button
-              onClick={handleClearResponse}
-              size="sm"
-              variant="ghost"
-              className="absolute top-2 right-2 h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
-              title="レスポンスをクリア"
-              disabled={!aiResponse.trim()}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            {!hasCourseData && (
+              <Button
+                onClick={handleClearResponse}
+                size="sm"
+                variant="ghost"
+                className="absolute top-2 right-2 h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
+                title="レスポンスをクリア"
+                disabled={!aiResponse.trim()}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
           
           <div className="flex items-center justify-between">
@@ -593,8 +614,8 @@ ${combinedContent}
             </div>
             
             <div className="flex gap-2">
-              {aiResponse.trim() && (
-                <Button 
+              {aiResponse.trim() && !hasCourseData && (
+                <Button
                   onClick={handleClearResponse}
                   variant="outline"
                   className="flex items-center gap-2"
@@ -603,34 +624,26 @@ ${combinedContent}
                   クリア
                 </Button>
               )}
-              {hasExistingOutline && (
-                <Button 
-                  onClick={handleSkipToNext}
-                  variant="outline"
+              {!hasCourseData && (
+                <Button
+                  onClick={handleResponseSubmit}
+                  disabled={!aiResponse.trim() || isProcessing}
                   className="flex items-center gap-2"
                 >
-                  <CheckCircle2 className="h-4 w-4" />
-                  生成せずに次のステップへ
+                  {isProcessing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      処理中...
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardCopy className="h-4 w-4" />
+                      {hasExistingOutline ? '再生成して次へ' : 'レスポンスを保存して次へ'}
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
                 </Button>
               )}
-              <Button 
-                onClick={handleResponseSubmit}
-                disabled={!aiResponse.trim() || isProcessing}
-                className="flex items-center gap-2"
-              >
-                {isProcessing ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    処理中...
-                  </>
-                ) : (
-                  <>
-                    <ClipboardCopy className="h-4 w-4" />
-                    {hasExistingOutline ? '再生成して次へ' : 'レスポンスを保存して次へ'}
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </Button>
             </div>
           </div>
         </CardContent>
@@ -664,9 +677,22 @@ ${combinedContent}
           <ArrowLeft className="h-4 w-4" />
           前のステップ
         </Button>
-        
-        <div className="text-sm text-muted-foreground">
-          Claude Web Interfaceで生成したJSONレスポンスを上記に貼り付けしてください
+
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            {hasExistingOutline
+              ? 'アウトラインが準備完了'
+              : 'Claude Web Interfaceで生成したJSONレスポンスを貼り付けしてください'}
+          </div>
+          {(hasExistingOutline || hasCourseData) && (
+            <Button
+              onClick={handleSkipToNext}
+              className="flex items-center gap-2"
+            >
+              次のステップ
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
     </div>
