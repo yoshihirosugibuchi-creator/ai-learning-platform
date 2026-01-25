@@ -10,26 +10,13 @@ let PDFParseClass: typeof import('pdf-parse').PDFParse | null = null
 async function loadPDFParser(): Promise<typeof import('pdf-parse').PDFParse | null> {
   if (typeof window === 'undefined' && !PDFParseClass) {
     try {
-      // PDF.js workerパス設定（Next.js/Turbopack対応）
-      if (typeof globalThis !== 'undefined') {
-        // PDFJSライブラリが利用可能な場合のworker設定
-        try {
-          const { getDocument: _getDocument, GlobalWorkerOptions } = await import('pdfjs-dist')
-          GlobalWorkerOptions.workerSrc = new URL(
-            'pdfjs-dist/build/pdf.worker.min.mjs',
-            import.meta.url
-          ).toString()
-        } catch (workerError) {
-          console.warn('PDF.js worker setup failed:', workerError)
-        }
-      }
-
-      // pdf-parse 2.4.5はESMモジュール - PDFParseクラスを使用
+      // pdf-parse 2.x はESMモジュール - PDFParseクラスを使用
+      // pdf-parseは内部で独自のPDF.jsを使用するため、pdfjs-distの設定は不要
       const { PDFParse } = await import('pdf-parse')
       PDFParseClass = PDFParse
-      console.log('PDF parser loaded successfully, PDFParse class:', typeof PDFParseClass)
+      console.log('PDF parser loaded successfully')
     } catch (error) {
-      console.warn('PDF parser not available:', error)
+      console.error('PDF parser not available:', error)
       return null
     }
   }
