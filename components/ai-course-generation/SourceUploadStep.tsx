@@ -7,7 +7,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { upload } from '@vercel/blob/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -34,6 +33,7 @@ import {
 } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
+import { parsePDFInBrowser, estimateWordCount, detectLanguage } from '@/lib/ai-course-generation/browser-pdf-parser'
 
 // 参考資料の型定義（Blob Storage対応）
 interface SourceMaterial {
@@ -135,73 +135,88 @@ export function SourceUploadStep({
     setBlobWarningAccepted(false)
   }
 
-  // PDF ファイル処理（クライアントサイド直接アップロード対応）
-  const processPDFFile = async (file: File, useBlobStorage = false) => {
-    console.log('📄 Processing file:', file.name, file.type, file.size, 'Blob:', useBlobStorage)
+  // PDF ファイル処理（ブラウザ内解析対応）
+  const processPDFFile = async (file: File, _useBlobStorage = false) => {
+    console.log('📄 Processing file:', file.name, file.type, file.size)
     setIsUploading(true)
     setUploadProgress(0)
 
     try {
       const authHeaders = await getAuthHeaders()
 
-      // Blob Storageが有効かつ4.5MB以上の場合はクライアントサイド直接アップロードを使用
-      const useClientUpload = useBlobStorage || file.size > 4.5 * 1024 * 1024
+      // 4.5MB以上の場合はブラウザ内でPDF解析
+      const VERCEL_LIMIT = 4.5 * 1024 * 1024
+      const useBrowserParsing = file.size > VERCEL_LIMIT
 
-      if (useClientUpload) {
-        // クライアントサイド直接アップロード
-        console.log('📦 Using client-side direct upload to Blob Storage')
+      if (useBrowserParsing) {
+        // ブラウザ内PDF解析（大きなファイル用）
+        console.log('📖 Using browser-side PDF parsing (file > 4.5MB)')
         setUploadProgress(10)
 
-        // 1. Blobに直接アップロード
-        const blob = await upload(file.name, file, {
-          access: 'public',
-          handleUploadUrl: '/api/ai-course-generation/blob-upload',
-          clientPayload: JSON.stringify({
-            workflowId: workflowId || ''
-          })
-        })
-
-        console.log('✅ Blob upload complete:', blob.url)
+        // 1. ブラウザ内でPDFからテキスト抽出
+        const parseResult = await parsePDFInBrowser(file)
         setUploadProgress(50)
 
-        // 2. Blob URLからテキスト抽出
-        const processResponse = await fetch('/api/ai-course-generation/process-blob', {
+        if (!parseResult.success) {
+          throw new Error(parseResult.error || 'PDF解析に失敗しました')
+        }
+
+        // 2. 抽出したテキストをAPIに送信
+        const response = await fetch('/api/ai-course-generation/upload-sources', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             ...authHeaders,
           },
           body: JSON.stringify({
-            blobUrl: blob.url,
+            type: 'text',
+            content: parseResult.text,
             title: file.name.replace('.pdf', ''),
-            fileName: file.name,
-            fileSize: file.size
+            metadata: {
+              originalType: 'pdf',
+              originalFileName: file.name,
+              originalFileSize: file.size,
+              pageCount: parseResult.pageCount,
+              parsedInBrowser: true
+            }
           })
         })
 
         setUploadProgress(80)
 
-        if (!processResponse.ok) {
-          const error = await processResponse.json()
-          throw new Error(error.error || 'テキスト抽出に失敗しました')
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'テキスト送信に失敗しました')
         }
 
-        const result = await processResponse.json()
+        const result = await response.json()
         setUploadProgress(100)
 
-        const newSource = result.source as SourceMaterial
+        // SourceMaterialの型を調整（PDFとして表示）
+        const newSource = {
+          ...result.source,
+          type: 'pdf' as const,
+          fileSize: file.size,
+          metadata: {
+            ...result.source.metadata,
+            pageCount: parseResult.pageCount,
+            wordCount: estimateWordCount(parseResult.text),
+            language: detectLanguage(parseResult.text)
+          }
+        } as SourceMaterial
+
         const updatedSources = [...sources, newSource]
         setSources(updatedSources)
         onSourcesChange?.(updatedSources)
 
         toast({
           title: "PDFアップロード完了",
-          description: `${newSource.title} (${result.stats.wordCount?.toLocaleString()} 単語) - Blob保存済み`,
+          description: `${newSource.title} (${newSource.metadata?.wordCount?.toLocaleString()} 単語, ${parseResult.pageCount}ページ)`,
         })
 
       } else {
         // 従来方式（4.5MB以下のファイル）
-        console.log('📤 Using traditional server upload')
+        console.log('📤 Using traditional server upload (file <= 4.5MB)')
         const formData = new FormData()
         formData.append('file', file)
         formData.append('title', file.name.replace('.pdf', ''))
