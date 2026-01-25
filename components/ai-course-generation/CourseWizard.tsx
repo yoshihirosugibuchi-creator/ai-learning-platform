@@ -255,14 +255,8 @@ export function CourseWizard({
         return prev
       }
 
-      if (prev.currentStep === 4 && (!prev.categoryMappings || prev.categoryMappings.length === 0 || !prev.categoryMappings.every((m: CourseWizardCategoryMapping) => m.selectedCategoryId))) {
-        toast({
-          title: "カテゴリマッピングが必要です",
-          description: "全てのジャンルにカテゴリを設定してください",
-          variant: "destructive"
-        })
-        return prev
-      }
+      // ステップ4（カテゴリマッピング）の検証はCategoryMappingStepで実行済み
+      // React状態更新のタイミング問題を回避するため、ここでの重複検証をスキップ
 
       // ワークフロー更新（最新のprevを使用してcourse_structure等を保持）
       const updatedWorkflow = {
