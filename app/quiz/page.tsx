@@ -12,6 +12,7 @@ import { Question } from '@/lib/types'
 import { getAllQuestions } from '@/lib/questions'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { getUserQuizSettings, isDefaultSettings } from '@/lib/user-quiz-settings'
+import { initializeSubcategoryCache } from '@/lib/subcategory-cache'
 
 export default function QuizPage() {
   const searchParams = useSearchParams()
@@ -36,6 +37,11 @@ export default function QuizPage() {
       router.push('/login')
     }
   }, [authLoading, user, router])
+
+  // サブカテゴリーキャッシュの初期化（表示名をDBから取得）
+  useEffect(() => {
+    initializeSubcategoryCache().catch(console.error)
+  }, [])
 
   // パラメータチェック - レンダリング中の副作用を防ぐためuseEffectで実行
   useEffect(() => {

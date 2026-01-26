@@ -410,12 +410,13 @@ export function CategoryMappingStep({
       console.log('📋 [CategoryMapping] カテゴリマッピング:', categoryMappings)
 
       // publish-outline APIを呼んでコースデータを生成
+      // 注意: この時点ではdraftステータス。coming_soonは最終ステップ（Step 7）で設定
       const publishResult = await ApiClient.post<{
         success: boolean
         course_id?: string
         error?: string
       }>(`/api/ai-course-generation/workflows/${workflow.id}/publish-outline`, {
-        status: 'coming_soon',
+        status: 'draft',
         categoryMappings: categoryMappings
       })
 

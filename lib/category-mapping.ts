@@ -1,8 +1,11 @@
 /**
  * Category mapping utilities
- * Auto-generated from database on 2025-09-24T13:12:03.706Z
- * DO NOT EDIT MANUALLY - Run 'npm run generate:category-mapping' to update
+ *
+ * サブカテゴリー名はDBから動的に取得されます（subcategory-cache.ts経由）
+ * ハードコードはフォールバック用として保持
  */
+
+import { getSubcategoryNameFromCache, isSubcategoryCacheInitialized } from './subcategory-cache'
 
 export const categoryDisplayNames: Record<string, string> = {
   'consulting_industry': 'コンサルティング業界',
@@ -32,6 +35,7 @@ export const categoryDisplayNames: Record<string, string> = {
 }
 
 export const subcategoryDisplayNames: Record<string, string> = {
+  'ai_overview': 'AI概論',
   'ai_ml_utilization': 'AI・機械学習活用',
   'data_driven_management': 'データドリブン経営',
   'dx_strategy_transformation': 'DX戦略・デジタル変革',
@@ -188,8 +192,18 @@ export function getCategoryDisplayName(categoryId: string): string {
 
 /**
  * Convert subcategory to display name
+ * キャッシュ（DBから取得）を優先し、なければハードコードをフォールバック
  */
 export function getSubcategoryDisplayName(subcategory: string): string {
+  // キャッシュが初期化されていればキャッシュから取得
+  if (isSubcategoryCacheInitialized()) {
+    const cachedName = getSubcategoryNameFromCache(subcategory)
+    if (cachedName) {
+      return cachedName
+    }
+  }
+
+  // フォールバック: ハードコードされたマッピング
   return subcategoryDisplayNames[subcategory] || subcategory
 }
 

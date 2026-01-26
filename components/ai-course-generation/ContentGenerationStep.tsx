@@ -148,7 +148,8 @@ export function ContentGenerationStep({
   const [isClaudeClicked, setIsClaudeClicked] = useState(false)
   
   // 生成単位と選択状態
-  const [generationMode, setGenerationMode] = useState<'genre' | 'theme' | 'session'>('session')
+  // 初期選択はテーマ単位のプロンプトを推奨
+  const [generationMode, setGenerationMode] = useState<'genre' | 'theme' | 'session'>('theme')
   const [selectedGenreId, setSelectedGenreId] = useState<string>('')
   const [selectedThemeId, setSelectedThemeId] = useState<string>('')
   const [selectedSessionId, setSelectedSessionId] = useState<string>('')
@@ -164,6 +165,11 @@ export function ContentGenerationStep({
     quizzes: Array<{ id: string; question: string; options: unknown; correct_answer: number; explanation: string; display_order: number }>
   }>>({})
   const [isLoadingContents, setIsLoadingContents] = useState(false)
+
+  // コンテンツ確認タブ用の折りたたみ状態
+  const [reviewExpandedGenres, setReviewExpandedGenres] = useState<Set<string>>(new Set())
+  const [reviewExpandedThemes, setReviewExpandedThemes] = useState<Set<string>>(new Set())
+  const [reviewExpandedSessions, setReviewExpandedSessions] = useState<Set<string>>(new Set())
 
   // コンポーネント初期化時に最新のワークフローデータを取得
   useEffect(() => {
@@ -211,8 +217,11 @@ export function ContentGenerationStep({
   const hierarchicalData = useMemo(() => {
     const genresMap = new Map<string, GenreData>()
     const generatedSessionIds = workflow.content_data?.generated_sessions || []
-    // generatedContentsのキー（セッションID）も完了とみなす
-    const generatedContentSessionIds = Object.keys(generatedContents)
+    // generatedContentsから実際にコンテンツまたはクイズがあるセッションのみを完了とみなす
+    // 空のエントリは完了として扱わない
+    const generatedContentSessionIds = Object.entries(generatedContents)
+      .filter(([, data]) => (data.contents?.length > 0 || data.quizzes?.length > 0))
+      .map(([sessionId]) => sessionId)
     // 両方をマージして重複除去
     const allCompletedSessionIds = [...new Set([...generatedSessionIds, ...generatedContentSessionIds])]
 
@@ -329,6 +338,7 @@ export function ContentGenerationStep({
   }, [workflow, generatedContents])
 
   // 初期選択の設定（IDが変更された場合も再初期化）
+  // コンテンツが未生成の最初のジャンル/テーマのみを展開
   useEffect(() => {
     if (hierarchicalData.length === 0) return
 
@@ -344,26 +354,40 @@ export function ContentGenerationStep({
     const needsReinit = !selectedGenreId || !genreExists
 
     if (needsReinit) {
-      const firstGenre = hierarchicalData[0]
-      setSelectedGenreId(firstGenre.id)
-      setExpandedGenres(new Set([firstGenre.id]))
-      console.log(`📋 [ContentGenerationStep] Genre ID updated: ${firstGenre.id}`)
+      // 未完了セッションがある最初のジャンルを探す
+      const firstIncompleteGenre = hierarchicalData.find(g => g.completedCount < g.totalCount) || hierarchicalData[0]
+      setSelectedGenreId(firstIncompleteGenre.id)
 
-      if (firstGenre.themes.length > 0) {
-        const firstTheme = firstGenre.themes[0]
-        setSelectedThemeId(firstTheme.id)
-        setExpandedThemes(new Set([firstTheme.id]))
-        console.log(`📋 [ContentGenerationStep] Theme ID updated: ${firstTheme.id}`)
+      // 未完了のジャンルのみ展開（全完了の場合は全て折りたたみ）
+      if (firstIncompleteGenre.completedCount < firstIncompleteGenre.totalCount) {
+        setExpandedGenres(new Set([firstIncompleteGenre.id]))
+      } else {
+        setExpandedGenres(new Set()) // 全て折りたたむ
+      }
+      console.log(`📋 [ContentGenerationStep] Genre ID updated: ${firstIncompleteGenre.id}`)
 
-        if (firstTheme.sessions.length > 0) {
-          const firstIncompleteSession = firstTheme.sessions.find(s => !s.completed) || firstTheme.sessions[0]
+      if (firstIncompleteGenre.themes.length > 0) {
+        // 未完了セッションがある最初のテーマを探す
+        const firstIncompleteTheme = firstIncompleteGenre.themes.find(t => t.completedCount < t.totalCount) || firstIncompleteGenre.themes[0]
+        setSelectedThemeId(firstIncompleteTheme.id)
+
+        // 未完了のテーマのみ展開
+        if (firstIncompleteTheme.completedCount < firstIncompleteTheme.totalCount) {
+          setExpandedThemes(new Set([firstIncompleteTheme.id]))
+        } else {
+          setExpandedThemes(new Set()) // 全て折りたたむ
+        }
+        console.log(`📋 [ContentGenerationStep] Theme ID updated: ${firstIncompleteTheme.id}`)
+
+        if (firstIncompleteTheme.sessions.length > 0) {
+          const firstIncompleteSession = firstIncompleteTheme.sessions.find(s => !s.completed) || firstIncompleteTheme.sessions[0]
           setSelectedSessionId(firstIncompleteSession.id)
           console.log(`📋 [ContentGenerationStep] Session ID updated: ${firstIncompleteSession.id}`)
         }
       }
     } else if (!themeExists && selectedGenre) {
       // ジャンルは有効だがテーマIDが無効な場合
-      const firstTheme = selectedGenre.themes[0]
+      const firstTheme = selectedGenre.themes.find(t => t.completedCount < t.totalCount) || selectedGenre.themes[0]
       if (firstTheme) {
         setSelectedThemeId(firstTheme.id)
         setExpandedThemes(prev => new Set([...prev, firstTheme.id]))
@@ -749,6 +773,59 @@ export function ContentGenerationStep({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
+
+  // レビュータブの折りたたみ初期状態設定（初回のみ全てオープン）
+  const [reviewInitialized, setReviewInitialized] = useState(false)
+  useEffect(() => {
+    if (activeTab === 'review' && !reviewInitialized && hierarchicalData.length > 0) {
+      // 初期状態は全て展開
+      const allGenreIds = hierarchicalData.map(g => g.id)
+      const allThemeIds = hierarchicalData.flatMap(g => g.themes.map(t => t.id))
+      const allSessionIds = hierarchicalData.flatMap(g => g.themes.flatMap(t => t.sessions.filter(s => s.completed).map(s => s.id)))
+
+      setReviewExpandedGenres(new Set(allGenreIds))
+      setReviewExpandedThemes(new Set(allThemeIds))
+      setReviewExpandedSessions(new Set(allSessionIds))
+      setReviewInitialized(true)
+    }
+  }, [activeTab, hierarchicalData, reviewInitialized])
+
+  // コンテンツ確認タブの折りたたみ制御
+  const toggleReviewGenreExpansion = (genreId: string) => {
+    setReviewExpandedGenres(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(genreId)) {
+        newSet.delete(genreId)
+      } else {
+        newSet.add(genreId)
+      }
+      return newSet
+    })
+  }
+
+  const toggleReviewThemeExpansion = (themeId: string) => {
+    setReviewExpandedThemes(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(themeId)) {
+        newSet.delete(themeId)
+      } else {
+        newSet.add(themeId)
+      }
+      return newSet
+    })
+  }
+
+  const toggleReviewSessionExpansion = (sessionId: string) => {
+    setReviewExpandedSessions(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(sessionId)) {
+        newSet.delete(sessionId)
+      } else {
+        newSet.add(sessionId)
+      }
+      return newSet
+    })
+  }
 
   // 展開/折りたたみ制御
   const toggleGenreExpansion = (genreId: string) => {
@@ -1255,123 +1332,152 @@ export function ContentGenerationStep({
                   </AlertDescription>
                 </Alert>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {hierarchicalData.map(genre => (
-                    <div key={genre.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <div key={genre.id} className="border rounded-lg">
+                      {/* ジャンルヘッダー（クリックで折りたたみ） */}
+                      <div
+                        className="p-4 hover:bg-gray-50 cursor-pointer flex items-center justify-between"
+                        onClick={() => toggleReviewGenreExpansion(genre.id)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <button onClick={(e) => { e.stopPropagation(); toggleReviewGenreExpansion(genre.id) }}>
+                            {reviewExpandedGenres.has(genre.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                          </button>
                           <Package className="h-5 w-5 text-purple-600" />
-                          {genre.title}
-                        </h3>
+                          <h3 className="text-lg font-semibold">{genre.title}</h3>
+                        </div>
                         <Badge variant="outline">
                           {genre.completedCount}/{genre.totalCount} セッション完了
                         </Badge>
                       </div>
-                      
-                      {genre.themes.map(theme => (
-                        <div key={theme.id} className="ml-4 mb-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-md font-medium flex items-center gap-2">
-                              <BookOpen className="h-4 w-4 text-blue-600" />
-                              {theme.title}
-                            </h4>
-                            <Badge variant="outline" className="text-xs">
-                              {theme.completedCount}/{theme.totalCount}
-                            </Badge>
-                          </div>
-                          
-                          <div className="grid gap-3 ml-6">
-                            {theme.sessions.filter(session => session.completed || generatedContents[session.id]).map(session => {
-                              const sessionContent = generatedContents[session.id]
-                              const hasContent = sessionContent && (sessionContent.contents?.length > 0 || sessionContent.quizzes?.length > 0)
-                              return (
-                                <div key={session.id} className="border rounded-lg p-3 bg-green-50">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <h5 className="font-medium flex items-center gap-2">
-                                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                      {session.title}
-                                    </h5>
-                                    <div className="flex gap-2">
-                                      <Badge variant="secondary" className="text-xs">
-                                        {session.session_type === 'knowledge' ? '知識' :
-                                         session.session_type === 'practice' ? '実践' : 'ケース'}
-                                      </Badge>
-                                      <Badge variant="outline" className="text-xs">
-                                        {session.estimatedMinutes}分
-                                      </Badge>
-                                    </div>
-                                  </div>
 
-                                  <div className="text-sm text-gray-600 space-y-1">
-                                    <div className="flex justify-between">
-                                      <span>生成状況:</span>
-                                      <span className="text-green-600">{hasContent ? '✅ 完了' : '⏳ 処理中'}</span>
-                                    </div>
-                                    {hasContent && (
-                                      <div className="flex justify-between">
-                                        <span>コンテンツ: {sessionContent.contents?.length || 0}個 / クイズ: {sessionContent.quizzes?.length || 0}個</span>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* コンテンツ詳細 */}
-                                  {hasContent && sessionContent.contents && sessionContent.contents.length > 0 && (
-                                    <div className="mt-3 border-t pt-3 space-y-3">
-                                      <h6 className="font-medium text-sm flex items-center gap-1">
-                                        <BookOpen className="h-3 w-3" />
-                                        コンテンツ
-                                      </h6>
-                                      {sessionContent.contents.map((content, idx: number) => (
-                                        <div key={idx} className="bg-white border rounded p-3 text-sm">
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <Badge variant="outline" className="text-xs">
-                                              {content.content_type === 'text' ? 'テキスト' :
-                                               content.content_type === 'example' ? '事例' : 'ポイント'}
-                                            </Badge>
-                                            <span className="font-medium">{content.title || 'タイトルなし'}</span>
-                                          </div>
-                                          <p className="text-gray-700 whitespace-pre-wrap text-xs max-h-32 overflow-y-auto">
-                                            {content.content || 'コンテンツなし'}
-                                          </p>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-
-                                  {/* クイズ詳細 */}
-                                  {hasContent && sessionContent.quizzes && sessionContent.quizzes.length > 0 && (
-                                    <div className="mt-3 border-t pt-3 space-y-3">
-                                      <h6 className="font-medium text-sm flex items-center gap-1">
-                                        <HelpCircle className="h-3 w-3" />
-                                        クイズ
-                                      </h6>
-                                      {sessionContent.quizzes.map((quiz, idx: number) => (
-                                        <div key={idx} className="bg-white border rounded p-3 text-sm">
-                                          <p className="font-medium mb-2">{quiz.question || '問題なし'}</p>
-                                          <div className="space-y-1 mb-2">
-                                            {(Array.isArray(quiz.options) ? quiz.options : []).map((opt, optIdx: number) => (
-                                              <div key={optIdx} className={`text-xs px-2 py-1 rounded ${
-                                                optIdx === quiz.correct_answer
-                                                  ? 'bg-green-100 text-green-800 font-medium'
-                                                  : 'bg-gray-50'
-                                              }`}>
-                                                {optIdx + 1}. {opt}
-                                              </div>
-                                            ))}
-                                          </div>
-                                          <p className="text-xs text-gray-600">
-                                            <strong>解説:</strong> {quiz.explanation || '解説なし'}
-                                          </p>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
+                      {/* ジャンル内コンテンツ */}
+                      {reviewExpandedGenres.has(genre.id) && (
+                        <div className="px-4 pb-4">
+                          {genre.themes.map(theme => (
+                            <div key={theme.id} className="ml-4 mb-2 border rounded-lg">
+                              {/* テーマヘッダー（クリックで折りたたみ） */}
+                              <div
+                                className="p-3 hover:bg-gray-50 cursor-pointer flex items-center justify-between"
+                                onClick={() => toggleReviewThemeExpansion(theme.id)}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <button onClick={(e) => { e.stopPropagation(); toggleReviewThemeExpansion(theme.id) }}>
+                                    {reviewExpandedThemes.has(theme.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                  </button>
+                                  <BookOpen className="h-4 w-4 text-blue-600" />
+                                  <h4 className="text-md font-medium">{theme.title}</h4>
                                 </div>
-                              )
-                            })}
-                          </div>
+                                <Badge variant="outline" className="text-xs">
+                                  {theme.completedCount}/{theme.totalCount}
+                                </Badge>
+                              </div>
+
+                              {/* テーマ内コンテンツ */}
+                              {reviewExpandedThemes.has(theme.id) && (
+                                <div className="px-3 pb-3">
+                                  <div className="grid gap-2 ml-6">
+                                    {theme.sessions.filter(session => session.completed || generatedContents[session.id]).map(session => {
+                                      const sessionContent = generatedContents[session.id]
+                                      const hasContent = sessionContent && (sessionContent.contents?.length > 0 || sessionContent.quizzes?.length > 0)
+                                      const isSessionExpanded = reviewExpandedSessions.has(session.id)
+
+                                      return (
+                                        <div key={session.id} className="border rounded-lg bg-green-50">
+                                          {/* セッションヘッダー（クリックで詳細表示切り替え） */}
+                                          <div
+                                            className="p-3 cursor-pointer hover:bg-green-100 flex items-center justify-between"
+                                            onClick={() => toggleReviewSessionExpansion(session.id)}
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              <button onClick={(e) => { e.stopPropagation(); toggleReviewSessionExpansion(session.id) }}>
+                                                {isSessionExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                              </button>
+                                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                              <h5 className="font-medium">{session.title}</h5>
+                                            </div>
+                                            <div className="flex gap-2 items-center">
+                                              <span className="text-xs text-gray-600">
+                                                {hasContent ? `${sessionContent.contents?.length || 0}コンテンツ / ${sessionContent.quizzes?.length || 0}クイズ` : '⏳ 処理中'}
+                                              </span>
+                                              <Badge variant="secondary" className="text-xs">
+                                                {session.session_type === 'knowledge' ? '知識' :
+                                                 session.session_type === 'practice' ? '実践' : 'ケース'}
+                                              </Badge>
+                                              <Badge variant="outline" className="text-xs">
+                                                {session.estimatedMinutes}分
+                                              </Badge>
+                                            </div>
+                                          </div>
+
+                                          {/* セッション詳細（展開時のみ表示） */}
+                                          {isSessionExpanded && hasContent && (
+                                            <div className="px-3 pb-3 border-t">
+                                              {/* コンテンツ詳細 */}
+                                              {sessionContent.contents && sessionContent.contents.length > 0 && (
+                                                <div className="mt-3 space-y-3">
+                                                  <h6 className="font-medium text-sm flex items-center gap-1">
+                                                    <BookOpen className="h-3 w-3" />
+                                                    コンテンツ
+                                                  </h6>
+                                                  {sessionContent.contents.map((content, idx: number) => (
+                                                    <div key={idx} className="bg-white border rounded p-3 text-sm">
+                                                      <div className="flex items-center gap-2 mb-2">
+                                                        <Badge variant="outline" className="text-xs">
+                                                          {content.content_type === 'text' ? 'テキスト' :
+                                                           content.content_type === 'example' ? '事例' : 'ポイント'}
+                                                        </Badge>
+                                                        <span className="font-medium">{content.title || 'タイトルなし'}</span>
+                                                      </div>
+                                                      <p className="text-gray-700 whitespace-pre-wrap text-xs max-h-32 overflow-y-auto">
+                                                        {content.content || 'コンテンツなし'}
+                                                      </p>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              )}
+
+                                              {/* クイズ詳細 */}
+                                              {sessionContent.quizzes && sessionContent.quizzes.length > 0 && (
+                                                <div className="mt-3 space-y-3">
+                                                  <h6 className="font-medium text-sm flex items-center gap-1">
+                                                    <HelpCircle className="h-3 w-3" />
+                                                    クイズ
+                                                  </h6>
+                                                  {sessionContent.quizzes.map((quiz, idx: number) => (
+                                                    <div key={idx} className="bg-white border rounded p-3 text-sm">
+                                                      <p className="font-medium mb-2">{quiz.question || '問題なし'}</p>
+                                                      <div className="space-y-1 mb-2">
+                                                        {(Array.isArray(quiz.options) ? quiz.options : []).map((opt, optIdx: number) => (
+                                                          <div key={optIdx} className={`text-xs px-2 py-1 rounded ${
+                                                            optIdx === quiz.correct_answer
+                                                              ? 'bg-green-100 text-green-800 font-medium'
+                                                              : 'bg-gray-50'
+                                                          }`}>
+                                                            {optIdx + 1}. {opt}
+                                                          </div>
+                                                        ))}
+                                                      </div>
+                                                      <p className="text-xs text-gray-600">
+                                                        <strong>解説:</strong> {quiz.explanation || '解説なし'}
+                                                      </p>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
                   ))}
                 </div>
