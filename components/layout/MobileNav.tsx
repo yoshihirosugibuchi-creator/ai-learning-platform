@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Home, User, Bookmark, Bell, X, BookOpen, GraduationCap, LogOut, Settings, Shield } from 'lucide-react'
+import { Home, User, Bookmark, Bell, X, BookOpen, GraduationCap, LogOut, Settings, Shield, Briefcase, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUserContext } from '@/contexts/UserContext'
 import { useUserRole } from '@/hooks/useUserRole'
@@ -53,6 +53,18 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
             <Link href="/categories" prefetch={true}>
               <BookOpen className="h-4 w-4 mr-2" />
               カテゴリー
+            </Link>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start" onClick={onClose} asChild>
+            <Link href="/case-study" prefetch={true}>
+              <Briefcase className="h-4 w-4 mr-2" />
+              ケーススタディ
+            </Link>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start" onClick={onClose} asChild>
+            <Link href="/quiz-packs" prefetch={true}>
+              <Package className="h-4 w-4 mr-2" />
+              クイズ
             </Link>
           </Button>
           <Button variant="ghost" className="w-full justify-start" onClick={onClose} asChild>

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Brain, Menu, ArrowLeft, User, Bookmark, Bell, Flame, Zap, Home, BookOpen, GraduationCap, LogOut, Settings, Shield, Trophy, Sparkles, RefreshCw } from 'lucide-react'
+import { Brain, Menu, ArrowLeft, User, Bookmark, Bell, Flame, Zap, Home, BookOpen, GraduationCap, LogOut, Settings, Shield, Trophy, Sparkles, RefreshCw, Briefcase, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -163,7 +163,21 @@ export default function Header({
                     <span className="hidden md:inline ml-1">カテゴリー</span>
                   </Link>
                 </Button>
-                
+
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/case-study" prefetch={true}>
+                    <Briefcase className="h-4 w-4" />
+                    <span className="hidden md:inline ml-1">ケーススタディ</span>
+                  </Link>
+                </Button>
+
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/quiz-packs" prefetch={true}>
+                    <Package className="h-4 w-4" />
+                    <span className="hidden md:inline ml-1">クイズ</span>
+                  </Link>
+                </Button>
+
                 <Button variant="ghost" size="sm" asChild>
                   <Link href="/profile" prefetch={true}>
                     <User className="h-4 w-4" />
