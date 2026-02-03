@@ -39,8 +39,8 @@ type PatternType = 'accuracy_focused' | 'efficiency_focused'
 interface QuizSessionData {
   id: string
   user_id: string
-  category_id?: string
-  difficulty?: string
+  category_id?: string | null
+  difficulty?: string | null
   xp_earned?: number
   created_at: string | null
   quiz_answers?: {
@@ -145,14 +145,15 @@ export default function LearningPatternComparison({
     if (error) throw error
 
     // ユーザーパターン分析
-    const userPattern = analyzeUserPattern((sessions || []).filter((s: QuizSessionData) => s.created_at !== null))
-    
+    const filteredSessions = (sessions || []).filter(s => s.created_at !== null) as QuizSessionData[]
+    const userPattern = analyzeUserPattern(filteredSessions)
+
     // ベンチマークパターン生成
     const accuracyBenchmark = generateAccuracyFocusedBenchmark()
     const efficiencyBenchmark = generateEfficiencyFocusedBenchmark()
-    
+
     // パターンシフト傾向分析
-    const patternShift = analyzePatternShift((sessions || []).filter((s: QuizSessionData) => s.created_at !== null))
+    const patternShift = analyzePatternShift(filteredSessions)
     
     // 最適バランススコア計算
     const optimalBalance = calculateOptimalBalance(userPattern)
