@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
@@ -16,8 +16,10 @@ export default function CaseStudyResultPage({
 }) {
   const { sessionId } = use(params)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const { user, loading: authLoading } = useAuth()
+  const fromHome = searchParams.get('from') === 'home'
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [resultData, setResultData] = useState<{
@@ -78,7 +80,7 @@ export default function CaseStudyResultPage({
               title: '結果の取得に失敗しました',
               variant: 'destructive'
             })
-            router.push('/case-study')
+            router.push(fromHome ? '/' : '/case-study')
           }
         } else if (response.status === 400) {
           // セッションがまだ完了していない
@@ -92,7 +94,7 @@ export default function CaseStudyResultPage({
             title: 'セッションが見つかりません',
             variant: 'destructive'
           })
-          router.push('/case-study')
+          router.push(fromHome ? '/' : '/case-study')
         }
       } catch (error) {
         console.error('Failed to fetch result:', error)
@@ -100,7 +102,7 @@ export default function CaseStudyResultPage({
           title: '結果の取得に失敗しました',
           variant: 'destructive'
         })
-        router.push('/case-study')
+        router.push(fromHome ? '/' : '/case-study')
       } finally {
         setLoading(false)
       }
@@ -140,6 +142,7 @@ export default function CaseStudyResultPage({
           scoringResult={resultData.scoring_result as Parameters<typeof CaseStudyResult>[0]['scoringResult']}
           stepsWithDetails={resultData.steps_with_details as Parameters<typeof CaseStudyResult>[0]['stepsWithDetails']}
           rubricAxes={resultData.rubric_axes as Parameters<typeof CaseStudyResult>[0]['rubricAxes']}
+          fromHome={fromHome}
         />
       </main>
     </div>

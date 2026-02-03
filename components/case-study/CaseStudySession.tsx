@@ -41,6 +41,7 @@ interface CaseStudySessionProps {
   initialStep: number
   token: string
   initialResponses?: StepResponse[]
+  fromHome?: boolean
 }
 
 export default function CaseStudySession({
@@ -49,7 +50,8 @@ export default function CaseStudySession({
   steps,
   initialStep,
   token,
-  initialResponses
+  initialResponses,
+  fromHome = false
 }: CaseStudySessionProps) {
   const router = useRouter()
   const { toast } = useToast()
@@ -82,6 +84,17 @@ export default function CaseStudySession({
   })
 
   const [activeStepDraft, setActiveStepDraft] = useState<{ selectedChoices: string[], reasoningText: string, hintUsed: boolean } | null>(null)
+
+  // 初期表示時：既存回答があれば復元
+  useEffect(() => {
+    const existingAnswer = submittedAnswers[currentStepIndex]
+    if (existingAnswer) {
+      setSelectedChoices(existingAnswer.selectedChoices)
+      setReasoningText(existingAnswer.reasoningText)
+      setHintUsed(existingAnswer.hintUsed)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // 初回マウント時のみ
 
   const currentStep = steps[currentStepIndex]
   const progress = ((activeStepIndex + 1) / steps.length) * 100
@@ -210,6 +223,14 @@ export default function CaseStudySession({
         }))
 
         if (data.is_update) {
+          // 最終ステップの更新の場合は完了処理へ
+          if (data.is_last_step) {
+            toast({
+              title: '回答を更新しました'
+            })
+            await handleComplete()
+            return
+          }
           // 過去ステップの回答更新完了 → アクティブステップへ戻る
           toast({
             title: '回答を更新しました'
@@ -272,7 +293,7 @@ export default function CaseStudySession({
           title: 'ケーススタディ完了!',
           description: `スコア: ${data.scoring_result.score_percentage}%`
         })
-        router.push(`/case-study/result/${sessionId}`)
+        router.push(`/case-study/result/${sessionId}${fromHome ? '?from=home' : ''}`)
         return
       }
 
@@ -303,7 +324,7 @@ export default function CaseStudySession({
       title: '一時中断しました',
       description: '後から続きを再開できます'
     })
-    router.push('/case-study')
+    router.push(fromHome ? '/' : '/case-study')
   }
 
   const handleNavigateStep = (targetIndex: number) => {

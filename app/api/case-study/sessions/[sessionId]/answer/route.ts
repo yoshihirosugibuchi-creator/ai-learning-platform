@@ -206,12 +206,16 @@ export async function POST(
         .from('case_study_thinking_logs')
         .insert(updateLogData)
 
-      console.log(`📝 Answer updated: session=${sessionId}, step=${step_number}`)
+      // 最終ステップかどうかを判定
+      const totalSteps = session.case_study_problems?.step_count || 5
+      const isLastStep = step_number >= totalSteps
+
+      console.log(`📝 Answer updated: session=${sessionId}, step=${step_number}, isLast=${isLastStep}`)
 
       return NextResponse.json({
         success: true,
         is_update: true,
-        is_last_step: false
+        is_last_step: isLastStep
       } as CaseStudyAnswerResponse)
     }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import CaseStudySession from '@/components/case-study/CaseStudySession'
 import { useAuth } from '@/components/auth/AuthProvider'
@@ -15,8 +15,10 @@ export default function CaseStudySessionPage({
 }) {
   const { sessionId } = use(params)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const { user, loading: authLoading } = useAuth()
+  const fromHome = searchParams.get('from') === 'home'
   const [loading, setLoading] = useState(true)
   const [token, setToken] = useState<string | null>(null)
   const [problem, setProblem] = useState<CaseStudyProblemRow | null>(null)
@@ -60,7 +62,7 @@ export default function CaseStudySessionPage({
             title: errorData.error || 'セッションが見つかりません',
             variant: 'destructive'
           })
-          router.push('/case-study')
+          router.push(fromHome ? '/' : '/case-study')
           return
         }
 
@@ -71,7 +73,7 @@ export default function CaseStudySessionPage({
             title: data.error || 'セッションの読み込みに失敗しました',
             variant: 'destructive'
           })
-          router.push('/case-study')
+          router.push(fromHome ? '/' : '/case-study')
           return
         }
 
@@ -92,7 +94,7 @@ export default function CaseStudySessionPage({
           title: 'セッションの読み込みに失敗しました',
           variant: 'destructive'
         })
-        router.push('/case-study')
+        router.push(fromHome ? '/' : '/case-study')
       } finally {
         setLoading(false)
       }
@@ -130,6 +132,7 @@ export default function CaseStudySessionPage({
           initialStep={currentStep}
           token={token}
           initialResponses={existingResponses}
+          fromHome={fromHome}
         />
       </main>
     </div>

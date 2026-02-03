@@ -32,6 +32,7 @@ function QuizPackPlayContent() {
 
   const packId = searchParams.get('pack')
   const sessionParam = searchParams.get('session')
+  const fromHome = searchParams.get('from') === 'home'
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -125,7 +126,7 @@ function QuizPackPlayContent() {
   }
 
   const handleExit = () => {
-    router.push('/quiz-packs')
+    router.push(fromHome ? '/' : '/quiz-packs')
   }
 
   if (authLoading) {

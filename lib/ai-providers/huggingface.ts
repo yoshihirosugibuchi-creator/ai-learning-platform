@@ -1,7 +1,7 @@
 /**
  * HuggingFace AI プロバイダー実装
  *
- * Llama 3.1-8B-Instruct を OpenAI互換APIで呼び出し
+ * Qwen2.5-72B-Instruct を OpenAI互換APIで呼び出し
  */
 
 import type { AIProvider, AIScoringRequest, AIScoringResponse, AIScoringStepResult } from './types'
@@ -31,14 +31,13 @@ export class HuggingFaceProvider implements AIProvider {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'meta-llama/Llama-3.1-8B-Instruct:fastest',
+        model: 'Qwen/Qwen2.5-72B-Instruct',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
         max_tokens: 2000,
         temperature: 0.2,
-        response_format: { type: 'json_object' },
       }),
     })
 

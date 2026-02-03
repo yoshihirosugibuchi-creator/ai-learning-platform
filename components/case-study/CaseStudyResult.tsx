@@ -66,6 +66,7 @@ interface CaseStudyResultProps {
   scoringResult: CaseStudyScoringResult
   stepsWithDetails: StepDetail[]
   rubricAxes: RubricAxis[]
+  fromHome?: boolean
 }
 
 const skillAxisLabels: Record<CaseStudySkillAxis, string> = {
@@ -86,7 +87,8 @@ export default function CaseStudyResult({
   problem,
   scoringResult,
   stepsWithDetails,
-  rubricAxes
+  rubricAxes,
+  fromHome = false
 }: CaseStudyResultProps) {
   const router = useRouter()
   const [expandedSteps, setExpandedSteps] = useState<string[]>([])
@@ -307,25 +309,35 @@ export default function CaseStudyResult({
 
       {/* アクションボタン */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={() => router.push('/case-study/history')}
-        >
-          <History className="h-4 w-4 mr-2" />
-          履歴に戻る
-        </Button>
+        {fromHome ? (
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => router.push('/')}
+          >
+            <Home className="h-4 w-4 mr-2" />
+            ホームに戻る
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => router.push('/case-study/history')}
+          >
+            <History className="h-4 w-4 mr-2" />
+            履歴に戻る
+          </Button>
+        )}
         <Button
           variant="outline"
           className="flex-1"
           onClick={() => router.push('/case-study')}
         >
-          <Home className="h-4 w-4 mr-2" />
           一覧に戻る
         </Button>
         <Button
           className="flex-1"
-          onClick={() => router.push(`/case-study/${problem.id}`)}
+          onClick={() => router.push(`/case-study/${problem.id}${fromHome ? '?from=home' : ''}`)}
         >
           <RotateCcw className="h-4 w-4 mr-2" />
           再挑戦する

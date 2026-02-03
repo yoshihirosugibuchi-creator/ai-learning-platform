@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
@@ -68,8 +68,10 @@ export default function CaseStudyDetailPage({
 }) {
   const { problemId } = use(params)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const { user, loading: authLoading } = useAuth()
+  const fromHome = searchParams.get('from') === 'home'
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
@@ -141,7 +143,7 @@ export default function CaseStudyDetailPage({
     try {
       // 進行中のセッションがあれば再開
       if (userHistory?.in_progress_session_id) {
-        router.push(`/case-study/session/${userHistory.in_progress_session_id}`)
+        router.push(`/case-study/session/${userHistory.in_progress_session_id}${fromHome ? '?from=home' : ''}`)
         return
       }
 
@@ -158,7 +160,7 @@ export default function CaseStudyDetailPage({
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          router.push(`/case-study/session/${data.session_id}`)
+          router.push(`/case-study/session/${data.session_id}${fromHome ? '?from=home' : ''}`)
         }
       } else {
         toast({
@@ -204,15 +206,25 @@ export default function CaseStudyDetailPage({
 
       <main className="container mx-auto px-4 py-6">
         {/* 戻るボタン */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push('/case-study')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          一覧に戻る
-        </Button>
+        <div className="flex items-center gap-2 mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push(fromHome ? '/' : '/case-study')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            {fromHome ? 'ホームに戻る' : '一覧に戻る'}
+          </Button>
+          {fromHome && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/case-study')}
+            >
+              ケーススタディ一覧
+            </Button>
+          )}
+        </div>
 
         {/* メインカード */}
         <Card className="mb-6">

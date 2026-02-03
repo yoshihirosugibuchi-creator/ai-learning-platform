@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -29,7 +29,9 @@ interface SessionCompletion {
 export default function CourseDetailPage() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
+  const fromHome = searchParams.get('from') === 'home'
   const [course, setCourse] = useState<LearningCourse | null>(null)
   const [loading, setLoading] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -156,8 +158,8 @@ export default function CourseDetailPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">コースが見つかりません</h1>
-          <Button onClick={() => router.push('/learning')}>
-            学習コンテンツ一覧に戻る
+          <Button onClick={() => router.push(fromHome ? '/' : '/learning')}>
+            {fromHome ? 'ホームに戻る' : '学習コンテンツ一覧に戻る'}
           </Button>
         </div>
       </div>
@@ -194,14 +196,25 @@ export default function CourseDetailPage() {
               </Button>
             </div>
           ) : (
-            <Button 
-              variant="ghost" 
-              onClick={() => router.push('/learning')}
-              className="flex items-center space-x-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>学習コンテンツ一覧</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => router.push(fromHome ? '/' : '/learning')}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>{fromHome ? 'ホームに戻る' : '学習コンテンツ一覧'}</span>
+              </Button>
+              {fromHome && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push('/learning')}
+                >
+                  コース一覧を見る
+                </Button>
+              )}
+            </div>
           )}
 
           {/* Course Header */}

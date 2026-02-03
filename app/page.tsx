@@ -26,6 +26,7 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import { useReviewQuickCheck } from '@/hooks/useReviewQuickCheck'
 import ChallengeSettingsModal from '@/components/dashboard/ChallengeSettingsModal'
 import { supabase } from '@/lib/supabase'
+import { useToast } from '@/hooks/use-toast'
 
 interface ChallengeSelection {
   content_id: string
@@ -41,6 +42,7 @@ interface ChallengeSelections {
 
 export default function Home() {
   const router = useRouter()
+  const { toast } = useToast()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user, loading } = useAuth()
   const { reviewStatus, isLoading: reviewLoading } = useReviewQuickCheck()
@@ -50,6 +52,41 @@ export default function Home() {
     quiz_pack: null,
     case_study: null
   })
+  const [startingQuizPack, setStartingQuizPack] = useState(false)
+
+  // クイズパックを直接開始
+  const startQuizPack = useCallback(async (packId: string) => {
+    if (!user) return
+
+    setStartingQuizPack(true)
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+
+      if (!token) {
+        toast({ title: '認証エラー', variant: 'destructive' })
+        return
+      }
+
+      const response = await fetch(`/api/quiz-packs/${packId}/start`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.session_id) {
+        router.push(`/quiz-packs/play?pack=${packId}&session=${data.session_id}&from=home`)
+      } else {
+        toast({ title: data.error || 'クイズの開始に失敗しました', variant: 'destructive' })
+      }
+    } catch (error) {
+      console.error('Failed to start quiz pack:', error)
+      toast({ title: 'クイズの開始に失敗しました', variant: 'destructive' })
+    } finally {
+      setStartingQuizPack(false)
+    }
+  }, [user, router, toast])
 
   // 選ばれし課題の選択を取得
   const fetchChallengeSelections = useCallback(async () => {
@@ -187,7 +224,7 @@ export default function Home() {
                           </h3>
                         </div>
                         {challengeSelections.course ? (
-                          <Link href={`/learning?course_id=${challengeSelections.course.content_id}`} prefetch={true}>
+                          <Link href={`/learning/${challengeSelections.course.content_id}?from=home`} prefetch={true}>
                             <Button size="sm" variant="outline" className="h-8 text-xs border-emerald-300 hover:bg-emerald-100">
                               学習
                             </Button>
@@ -214,11 +251,15 @@ export default function Home() {
                           </h3>
                         </div>
                         {challengeSelections.quiz_pack ? (
-                          <Link href={`/quiz-packs/${challengeSelections.quiz_pack.content_id}`} prefetch={true}>
-                            <Button size="sm" variant="outline" className="h-8 text-xs border-sky-300 hover:bg-sky-100">
-                              挑戦
-                            </Button>
-                          </Link>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs border-sky-300 hover:bg-sky-100"
+                            onClick={() => startQuizPack(challengeSelections.quiz_pack!.content_id)}
+                            disabled={startingQuizPack}
+                          >
+                            {startingQuizPack ? <Loader2 className="h-3 w-3 animate-spin" /> : '挑戦'}
+                          </Button>
                         ) : (
                           <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setChallengeSettingsOpen(true)}>
                             選択
@@ -241,7 +282,7 @@ export default function Home() {
                           </h3>
                         </div>
                         {challengeSelections.case_study ? (
-                          <Link href={`/case-study/${challengeSelections.case_study.content_id}`} prefetch={true}>
+                          <Link href={`/case-study/${challengeSelections.case_study.content_id}?from=home`} prefetch={true}>
                             <Button size="sm" variant="outline" className="h-8 text-xs border-violet-300 hover:bg-violet-100">
                               取組
                             </Button>
@@ -271,7 +312,7 @@ export default function Home() {
                           </h3>
                         </div>
                         {challengeSelections.course ? (
-                          <Link href={`/learning?course_id=${challengeSelections.course.content_id}`} prefetch={true} className="w-full">
+                          <Link href={`/learning/${challengeSelections.course.content_id}?from=home`} prefetch={true} className="w-full">
                             <Button size="sm" variant="outline" className="w-full border-emerald-300 hover:bg-emerald-100">
                               学習開始
                             </Button>
@@ -298,11 +339,15 @@ export default function Home() {
                           </h3>
                         </div>
                         {challengeSelections.quiz_pack ? (
-                          <Link href={`/quiz-packs/${challengeSelections.quiz_pack.content_id}`} prefetch={true} className="w-full">
-                            <Button size="sm" variant="outline" className="w-full border-sky-300 hover:bg-sky-100">
-                              挑戦する
-                            </Button>
-                          </Link>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full border-sky-300 hover:bg-sky-100"
+                            onClick={() => startQuizPack(challengeSelections.quiz_pack!.content_id)}
+                            disabled={startingQuizPack}
+                          >
+                            {startingQuizPack ? <Loader2 className="h-4 w-4 animate-spin" /> : '挑戦する'}
+                          </Button>
                         ) : (
                           <Button size="sm" variant="outline" className="w-full" onClick={() => setChallengeSettingsOpen(true)}>
                             選択する
@@ -325,7 +370,7 @@ export default function Home() {
                           </h3>
                         </div>
                         {challengeSelections.case_study ? (
-                          <Link href={`/case-study/${challengeSelections.case_study.content_id}`} prefetch={true} className="w-full">
+                          <Link href={`/case-study/${challengeSelections.case_study.content_id}?from=home`} prefetch={true} className="w-full">
                             <Button size="sm" variant="outline" className="w-full border-violet-300 hover:bg-violet-100">
                               取り組む
                             </Button>
