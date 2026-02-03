@@ -194,6 +194,7 @@ export async function POST(request: NextRequest) {
       id: q.id,
       category: q.category_id,
       subcategory: q.subcategory_id || '',
+      subcategory_id: q.subcategory_id || '',
       category_name: categoryNameMap.get(q.category_id) || q.category_id,
       subcategory_name: q.subcategory_id ? (subcategoryNameMap.get(q.subcategory_id) || q.subcategory_id) : '',
       difficulty: q.difficulty || 'basic',
