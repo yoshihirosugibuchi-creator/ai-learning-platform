@@ -1,8 +1,8 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { 
-  FileText, 
+import {
+  FileText,
   Settings,
   Sliders,
   Target,
@@ -15,7 +15,10 @@ import {
   Upload,
   ClipboardCheck,
   BarChart3,
-  BookOpen
+  BookOpen,
+  Briefcase,
+  Database,
+  Package
 } from 'lucide-react'
 import Link from 'next/link'
 import { useUserRole } from '@/hooks/useUserRole'
@@ -174,6 +177,23 @@ export default function AdminPage() {
             </Card>
           </Link>
 
+          <Link href="/admin/quiz-packs">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Package className="h-5 w-5 text-orange-600" />
+                  <span>クイズパック管理</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  カテゴリー・難易度を条件設定した<br/>
+                  クイズパックの作成・管理
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link href="/admin/ai-course-generation">
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
               <CardHeader>
@@ -203,6 +223,40 @@ export default function AdminPage() {
                 <p className="text-sm text-muted-foreground">
                   学習コースの管理・公開状態の<br/>
                   変更・編集を行います
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/case-study">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Briefcase className="h-5 w-5 text-teal-600" />
+                  <span>ケーススタディ管理</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  ケーススタディ問題の作成・<br/>
+                  管理・ルーブリック設定
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/case-study/masters">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Database className="h-5 w-5 text-cyan-600" />
+                  <span>ケーススタディマスタ</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  オプション・ルーブリック軸の<br/>
+                  マスタデータ管理
                 </p>
               </CardContent>
             </Card>

@@ -1,290 +1,466 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Play, BookOpen, Brain, Settings, RefreshCw, Target, Loader2 } from 'lucide-react'
+import {
+  Play,
+  BookOpen,
+  Brain,
+  Settings,
+  RefreshCw,
+  Loader2,
+  Sun,
+  Award,
+  Briefcase,
+  Package,
+  Dumbbell
+} from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import { useAuth } from '@/components/auth/AuthProvider'
-import { getAppStats } from '@/lib/stats'
 import { useReviewQuickCheck } from '@/hooks/useReviewQuickCheck'
+import ChallengeSettingsModal from '@/components/dashboard/ChallengeSettingsModal'
+import { supabase } from '@/lib/supabase'
+
+interface ChallengeSelection {
+  content_id: string
+  content_name: string | null
+  selected_by: string
+}
+
+interface ChallengeSelections {
+  course: ChallengeSelection | null
+  quiz_pack: ChallengeSelection | null
+  case_study: ChallengeSelection | null
+}
 
 export default function Home() {
   const router = useRouter()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user, loading } = useAuth()
-  const [stats, setStats] = useState({ totalQuestions: 115, totalCategories: 12, totalSubcategories: 50, questionsFromData: 0 })
   const { reviewStatus, isLoading: reviewLoading } = useReviewQuickCheck()
+  const [challengeSettingsOpen, setChallengeSettingsOpen] = useState(false)
+  const [challengeSelections, setChallengeSelections] = useState<ChallengeSelections>({
+    course: null,
+    quiz_pack: null,
+    case_study: null
+  })
+
+  // 選ばれし課題の選択を取得
+  const fetchChallengeSelections = useCallback(async () => {
+    if (!user) return
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+
+      if (!token) return
+
+      const response = await fetch('/api/challenge-selections', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.selections) {
+          setChallengeSelections(data.selections)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch challenge selections:', error)
+    }
+  }, [user])
 
   useEffect(() => {
-    // ローディング中は何もしない
     if (loading) return
-    
-    // ユーザーが存在しない場合はログインページにリダイレクト
     if (!user) {
       router.push('/login')
       return
     }
-    
-    // Supabaseユーザーは認証済みなので、オンボーディングはスキップ
-    // TODO: 後でSupabaseにユーザープロファイル情報を追加
-    
-    // それ以外の場合はこのページを表示（正常なログイン済みユーザー）
+    fetchChallengeSelections()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, loading, router])
-
-  // 統計データを取得
-  useEffect(() => {
-    async function loadStats() {
-      const appStats = await getAppStats()
-      setStats(appStats)
-    }
-    loadStats()
-  }, [])
-  
-  // 復習統計データは useReviewQuickCheck フックで自動取得
 
   return (
     <>
       {loading && <LoadingScreen />}
-      
+
       <div className="min-h-screen bg-background">
-        <Header 
+        <Header
           onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)}
         />
-        
-        <MobileNav 
+
+        <MobileNav
           isOpen={mobileNavOpen}
           onClose={() => setMobileNavOpen(false)}
         />
 
-        <main className="container mx-auto px-4 py-6">
-          <div className="text-center py-12">
-            <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold mb-4">
-              AI Learning Enterprise
-            </h1>
-            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-8">
-              AIパーソナライズ学習プラットフォーム
-            </p>
-            
-            {!user ? (
-              <div className="space-y-4">
-                <p className="text-muted-foreground">
-                  AIがあなたの学習スタイルに合わせてカスタマイズした学習体験を提供します
-                </p>
-                <div className="space-x-4">
-                  <Button>
-                    無料で始める
-                  </Button>
-                  <Button variant="outline">
-                    ログイン
-                  </Button>
-                </div>
+        <main className="container mx-auto px-4 py-4">
+          {!user ? (
+            <div className="text-center py-12">
+              <h1 className="text-xl font-bold mb-4">AI Learning Enterprise</h1>
+              <p className="text-muted-foreground mb-8">
+                AIパーソナライズ学習プラットフォーム
+              </p>
+              <div className="space-x-4">
+                <Button>無料で始める</Button>
+                <Button variant="outline">ログイン</Button>
               </div>
-            ) : (
-              <div className="space-y-8">
-                <p className="text-muted-foreground">
-                  学習を続けましょう！AIがあなたの学習進度に合わせて最適な問題を提供します。
-                </p>
-                
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all">
-                    <CardHeader className="text-center">
-                      <div className="mx-auto mb-2 p-3 bg-primary/10 rounded-full w-fit">
-                        <Brain className="h-6 w-6 text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-6 max-w-4xl mx-auto">
+              {/* ページタイトル */}
+              <div className="text-center">
+                <h1 className="text-lg font-bold text-foreground">
+                  マイセレクションダッシュボード
+                </h1>
+              </div>
+
+              {/* ===== 日々の努力 ===== */}
+              <section>
+                <div className="flex items-center gap-2 mb-2">
+                  <Sun className="h-4 w-4 text-yellow-500" />
+                  <h2 className="text-sm font-semibold text-muted-foreground">日々の努力</h2>
+                </div>
+
+                <Card className="border-2 border-yellow-200 bg-gradient-to-r from-yellow-50 to-orange-50">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2 bg-yellow-100 rounded-lg shrink-0">
+                          <Brain className="h-5 w-5 text-yellow-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-sm">今日のチャレンジ</h3>
+                          <p className="text-xs text-muted-foreground">
+                            ビジネスAIクイズで知識の幅を広げよう
+                          </p>
+                        </div>
                       </div>
-                      <CardTitle>ビジネスAIパーソナライズクイズ</CardTitle>
-                      <CardDescription>
-                        学習レベルや弱点を考慮したAI出題
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
                       <Link href="/quiz?mode=business-ai" prefetch={true}>
-                        <Button className="w-full">
-                          <Play className="h-4 w-4 mr-2" />
-                          クイズ開始
+                        <Button size="sm" className="shrink-0 bg-yellow-600 hover:bg-yellow-700">
+                          <Play className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">クイズ</span>開始
                         </Button>
                       </Link>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              </section>
 
-                  <Card className="border-2 border-blue-200 hover:border-blue-400 transition-all">
-                    <CardHeader className="text-center">
-                      <div className="mx-auto mb-2 p-3 bg-blue-100 rounded-full w-fit">
-                        <Settings className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <CardTitle>セルフパーソナライズクイズ</CardTitle>
-                      <CardDescription>
-                        お好みのカテゴリーと学習レベルを自由設定
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <Link href="/quiz?mode=self-personalized" prefetch={true}>
-                        <Button className="w-full">
-                          <Play className="h-4 w-4 mr-2" />
-                          クイズ開始
-                        </Button>
-                      </Link>
-                      <Link href="/categories" prefetch={true}>
-                        <Button variant="outline" className="w-full">
-                          特定カテゴリーで挑戦
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
+              {/* ===== 選ばれし課題 ===== */}
+              <section>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Award className="h-4 w-4 text-purple-500" />
+                    <h2 className="text-sm font-semibold text-muted-foreground">選ばれし課題</h2>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs text-purple-600 hover:bg-purple-100"
+                    onClick={() => setChallengeSettingsOpen(true)}
+                  >
+                    <Settings className="h-3 w-3 mr-1" />
+                    設定
+                  </Button>
+                </div>
 
-                  {/* 統合復習AIクイズ */}
-                  <Card className={`border-2 transition-all relative ${
-                    (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) 
-                      ? 'border-orange-200 bg-orange-50 hover:border-orange-400' 
-                      : 'border-purple-200 hover:border-purple-400'
-                  }`}>
-                    {/* 復習必要な場合のみバッジ表示 - 右上に配置 */}
-                    {(reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) && (
-                      <Badge variant="destructive" className="absolute top-3 right-3 bg-orange-500 text-xs z-10 flex items-center space-x-1">
-                        <span>{reviewStatus.totalQuestions > 99 ? '99+' : reviewStatus.totalQuestions}</span>
-                      </Badge>
-                    )}
-                    
-                    {/* 生成中インジケーター */}
-                    {reviewStatus?.isGenerating && (
-                      <Badge variant="secondary" className="absolute top-3 right-3 bg-blue-500 text-white text-xs z-10 flex items-center space-x-1">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        <span>生成中</span>
-                      </Badge>
-                    )}
-                    
-                    <CardHeader className="text-center">
-                      <div className={`mx-auto mb-2 p-3 rounded-full w-fit ${
-                        (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) ? 'bg-orange-100' : 'bg-purple-100'
-                      }`}>
-                        <RefreshCw className={`h-6 w-6 ${
-                          (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) ? 'text-orange-600' : 'text-purple-600'
-                        } ${reviewLoading ? 'animate-spin' : ''}`} />
-                      </div>
-                      <CardTitle>復習推奨AIクイズ</CardTitle>
-                      <CardDescription>
-                        {reviewStatus?.isGenerating 
-                          ? '復習問題を準備中です...'
-                          : (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0)
-                            ? `${reviewStatus.displayText}の復習が推奨されています`
-                            : '復習が必要な問題が見つかったら通知します'
-                        }
-                      </CardDescription>
-                    </CardHeader>
-                    
-                    <CardContent className="space-y-3">
-                      {/* 生成中またはローディング中の表示 */}
-                      {(reviewLoading || reviewStatus?.isGenerating) ? (
-                        <div className="text-xs text-blue-600 bg-blue-50 p-3 rounded-lg">
-                          <div className="flex items-center space-x-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>{reviewStatus?.isGenerating ? '復習問題を生成中' : '復習状態を確認中'}</span>
-                          </div>
-                          <div className="mt-1 text-blue-500">
-                            少々お待ちください...
-                          </div>
+                {/* モバイル: リスト形式 / PC: カード形式 */}
+                <div className="space-y-2 md:hidden">
+                  {/* モバイル用リスト */}
+                  <Card className="border border-emerald-200 bg-emerald-50/50 hover:border-emerald-300 transition-colors">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-emerald-100 rounded-lg shrink-0">
+                          <BookOpen className="h-4 w-4 text-emerald-600" />
                         </div>
-                      ) : (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) ? (
-                        <>
-                          {/* 復習統計情報 */}
-                          <div className="text-xs text-orange-700 bg-orange-50 p-3 rounded-lg">
-                            <div className="flex items-center justify-between">
-                              <span className="flex items-center">
-                                <Target className="h-3 w-3 mr-1" />
-                                復習問題準備完了
-                              </span>
-                              <span className="font-medium">{reviewStatus.displayText}</span>
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-lg">
-                          <div className="flex items-center space-x-2">
-                            <RefreshCw className="h-4 w-4 text-gray-400" />
-                            <span>現在復習対象の問題はありません</span>
-                          </div>
-                          <div className="mt-1 text-gray-500">
-                            クイズを解いて学習を進めると、復習推奨問題が表示されます
-                          </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-muted-foreground">コース</p>
+                          <h3 className="font-semibold text-sm truncate">
+                            {challengeSelections.course?.content_name || '未選択'}
+                          </h3>
                         </div>
-                      )}
-                      
-                      {(reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) && !reviewStatus.isGenerating ? (
-                        <Link href="/quiz?mode=review" prefetch={true}>
-                          <Button className="w-full bg-orange-600 hover:bg-orange-700">
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            復習開始
+                        {challengeSelections.course ? (
+                          <Link href={`/learning?course_id=${challengeSelections.course.content_id}`} prefetch={true}>
+                            <Button size="sm" variant="outline" className="h-8 text-xs border-emerald-300 hover:bg-emerald-100">
+                              学習
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setChallengeSettingsOpen(true)}>
+                            選択
                           </Button>
-                        </Link>
-                      ) : (
-                        <Button 
-                          disabled 
-                          className="w-full bg-gray-400 cursor-not-allowed"
-                        >
-                          <RefreshCw className="h-4 w-4 mr-2" />
-                          {reviewStatus?.isGenerating || reviewLoading 
-                            ? '準備中...' 
-                            : '復習が必要になるまでお待ちください'
-                          }
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card className="hover:shadow-lg transition-shadow">
-                    <CardHeader className="text-center">
-                      <div className="mx-auto mb-2 p-3 bg-green-100 rounded-full w-fit">
-                        <BookOpen className="h-6 w-6 text-green-600" />
+                        )}
                       </div>
-                      <CardTitle>コース学習</CardTitle>
-                      <CardDescription>
-                        教材ベースのステップバイステップ学習
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Link 
-                        href="/learning" 
-                        prefetch={true}
-                        onClick={() => console.log('🔗 Home: Navigating to /learning')}
-                      >
-                        <Button variant="outline" className="w-full">
-                          <BookOpen className="h-4 w-4 mr-2" />
-                          学習を開始
-                        </Button>
-                      </Link>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-sky-200 bg-sky-50/50 hover:border-sky-300 transition-colors">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-sky-100 rounded-lg shrink-0">
+                          <Package className="h-4 w-4 text-sky-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-muted-foreground">クイズパック</p>
+                          <h3 className="font-semibold text-sm truncate">
+                            {challengeSelections.quiz_pack?.content_name || '未選択'}
+                          </h3>
+                        </div>
+                        {challengeSelections.quiz_pack ? (
+                          <Link href={`/quiz-packs/${challengeSelections.quiz_pack.content_id}`} prefetch={true}>
+                            <Button size="sm" variant="outline" className="h-8 text-xs border-sky-300 hover:bg-sky-100">
+                              挑戦
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setChallengeSettingsOpen(true)}>
+                            選択
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-violet-200 bg-violet-50/50 hover:border-violet-300 transition-colors">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-violet-100 rounded-lg shrink-0">
+                          <Briefcase className="h-4 w-4 text-violet-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-muted-foreground">ケーススタディ</p>
+                          <h3 className="font-semibold text-sm truncate">
+                            {challengeSelections.case_study?.content_name || '未選択'}
+                          </h3>
+                        </div>
+                        {challengeSelections.case_study ? (
+                          <Link href={`/case-study/${challengeSelections.case_study.content_id}`} prefetch={true}>
+                            <Button size="sm" variant="outline" className="h-8 text-xs border-violet-300 hover:bg-violet-100">
+                              取組
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setChallengeSettingsOpen(true)}>
+                            選択
+                          </Button>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
 
+                {/* PC用カード */}
+                <div className="hidden md:grid md:grid-cols-3 gap-3">
+                  <Card className="border border-emerald-200 bg-emerald-50/50 hover:border-emerald-300 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex flex-col items-center text-center gap-3">
+                        <div className="p-3 bg-emerald-100 rounded-lg">
+                          <BookOpen className="h-5 w-5 text-emerald-600" />
+                        </div>
+                        <div className="min-w-0 w-full">
+                          <p className="text-xs text-muted-foreground">コース</p>
+                          <h3 className="font-semibold text-sm truncate">
+                            {challengeSelections.course?.content_name || '未選択'}
+                          </h3>
+                        </div>
+                        {challengeSelections.course ? (
+                          <Link href={`/learning?course_id=${challengeSelections.course.content_id}`} prefetch={true} className="w-full">
+                            <Button size="sm" variant="outline" className="w-full border-emerald-300 hover:bg-emerald-100">
+                              学習開始
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button size="sm" variant="outline" className="w-full" onClick={() => setChallengeSettingsOpen(true)}>
+                            選択する
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-6 border-t">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-1">{stats.totalQuestions}</div>
-                    <div className="text-sm text-muted-foreground">問題数</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600 mb-1">{stats.totalCategories}</div>
-                    <div className="text-sm text-muted-foreground">カテゴリ</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600 mb-1">{stats.totalSubcategories}</div>
-                    <div className="text-sm text-muted-foreground">サブカテゴリ</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-yellow-600 mb-1">AI</div>
-                    <div className="text-sm text-muted-foreground">パーソナライズ</div>
-                  </div>
+                  <Card className="border border-sky-200 bg-sky-50/50 hover:border-sky-300 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex flex-col items-center text-center gap-3">
+                        <div className="p-3 bg-sky-100 rounded-lg">
+                          <Package className="h-5 w-5 text-sky-600" />
+                        </div>
+                        <div className="min-w-0 w-full">
+                          <p className="text-xs text-muted-foreground">クイズパック</p>
+                          <h3 className="font-semibold text-sm truncate">
+                            {challengeSelections.quiz_pack?.content_name || '未選択'}
+                          </h3>
+                        </div>
+                        {challengeSelections.quiz_pack ? (
+                          <Link href={`/quiz-packs/${challengeSelections.quiz_pack.content_id}`} prefetch={true} className="w-full">
+                            <Button size="sm" variant="outline" className="w-full border-sky-300 hover:bg-sky-100">
+                              挑戦する
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button size="sm" variant="outline" className="w-full" onClick={() => setChallengeSettingsOpen(true)}>
+                            選択する
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-violet-200 bg-violet-50/50 hover:border-violet-300 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex flex-col items-center text-center gap-3">
+                        <div className="p-3 bg-violet-100 rounded-lg">
+                          <Briefcase className="h-5 w-5 text-violet-600" />
+                        </div>
+                        <div className="min-w-0 w-full">
+                          <p className="text-xs text-muted-foreground">ケーススタディ</p>
+                          <h3 className="font-semibold text-sm truncate">
+                            {challengeSelections.case_study?.content_name || '未選択'}
+                          </h3>
+                        </div>
+                        {challengeSelections.case_study ? (
+                          <Link href={`/case-study/${challengeSelections.case_study.content_id}`} prefetch={true} className="w-full">
+                            <Button size="sm" variant="outline" className="w-full border-violet-300 hover:bg-violet-100">
+                              取り組む
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button size="sm" variant="outline" className="w-full" onClick={() => setChallengeSettingsOpen(true)}>
+                            選択する
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
-            )}
-          </div>
+              </section>
+
+              {/* ===== 自己鍛錬 ===== */}
+              <section>
+                <div className="flex items-center gap-2 mb-2">
+                  <Dumbbell className="h-4 w-4 text-indigo-500" />
+                  <h2 className="text-sm font-semibold text-muted-foreground">自己鍛錬</h2>
+                </div>
+
+                <div className="space-y-2 md:space-y-0 md:grid md:grid-cols-2 md:gap-3">
+                  {/* セルフパーソナライズクイズ */}
+                  <Card className="border-2 border-yellow-200 bg-gradient-to-r from-yellow-50 to-amber-50 hover:border-yellow-300 transition-colors">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-yellow-100 rounded-lg shrink-0">
+                          <Settings className="h-4 w-4 text-yellow-600" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-sm">セルフパーソナライズクイズ</h3>
+                          <p className="text-xs text-muted-foreground">
+                            好みのカテゴリー・レベルで挑戦
+                          </p>
+                          <Link href="/categories" prefetch={true} className="text-[10px] text-yellow-700 hover:underline">
+                            特定カテゴリーで挑戦 →
+                          </Link>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Link href="/profile#quiz-settings" prefetch={true}>
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-yellow-600 hover:bg-yellow-100">
+                              <Settings className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Link href="/quiz?mode=self-personalized" prefetch={true}>
+                            <Button size="sm" className="h-8 text-xs bg-yellow-600 hover:bg-yellow-700">
+                              開始
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* 復習クイズ */}
+                  <Card className={`border-2 transition-colors relative ${
+                    (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0)
+                      ? 'border-orange-300 bg-gradient-to-r from-orange-50 to-red-50'
+                      : 'border-gray-200 bg-gray-50/50 hover:border-gray-300'
+                  }`}>
+                    {/* 復習バッジ */}
+                    {(reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 bg-orange-500 text-[10px] h-5 min-w-5 px-1.5 flex items-center justify-center"
+                      >
+                        {reviewStatus.totalQuestions > 99 ? '99+' : reviewStatus.totalQuestions}
+                      </Badge>
+                    )}
+
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg shrink-0 ${
+                          (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0)
+                            ? 'bg-orange-100'
+                            : 'bg-gray-100'
+                        }`}>
+                          <RefreshCw className={`h-4 w-4 ${
+                            (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0)
+                              ? 'text-orange-600'
+                              : 'text-gray-400'
+                          } ${reviewLoading ? 'animate-spin' : ''}`} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-sm">復習クイズ</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {reviewLoading || reviewStatus?.isGenerating
+                              ? '確認中...'
+                              : (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0)
+                                ? reviewStatus.displayText
+                                : '復習対象なし'
+                            }
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Link href="/profile#review-settings" prefetch={true}>
+                            <Button size="sm" variant="ghost" className={`h-8 w-8 p-0 ${
+                              (reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0)
+                                ? 'text-orange-600 hover:bg-orange-100'
+                                : 'text-gray-400 hover:bg-gray-100'
+                            }`}>
+                              <Settings className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          {(reviewStatus?.hasReviewQuestions && reviewStatus.totalQuestions > 0) && !reviewStatus.isGenerating ? (
+                            <Link href="/quiz?mode=review" prefetch={true}>
+                              <Button size="sm" className="h-8 text-xs bg-orange-600 hover:bg-orange-700">
+                                開始
+                              </Button>
+                            </Link>
+                          ) : (
+                            <Button size="sm" variant="outline" className="h-8 text-xs" disabled>
+                              {reviewLoading || reviewStatus?.isGenerating ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : '—'}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </section>
+            </div>
+          )}
         </main>
+
+        {/* 選ばれし課題設定モーダル */}
+        <ChallengeSettingsModal
+          isOpen={challengeSettingsOpen}
+          onClose={() => setChallengeSettingsOpen(false)}
+          onSave={fetchChallengeSelections}
+          currentSelections={challengeSelections}
+        />
       </div>
     </>
   )

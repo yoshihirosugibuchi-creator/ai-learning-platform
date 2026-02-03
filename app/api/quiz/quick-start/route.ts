@@ -108,9 +108,12 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ [Quick Start] Questions selected: ${result.questions.length}`)
 
+    // 日本語名を付与（全クイズタイプ共通）
+    const questionsWithNames = await addCategorySubcategoryNames(result.questions)
+
     return NextResponse.json({
       success: true,
-      questions: result.questions,
+      questions: questionsWithNames,
       metadata: {
         selection_method: result.method,
         user_status: !lastActivity ? 'new' : (daysSinceLastActivity <= 3 ? 'active' : 'returning'),
@@ -796,3 +799,47 @@ async function getUserAskedQuestions(userId: string): Promise<{
 // =================================================================
 // 📝 Note: 事前セット生成はクイズ完了時（XP保存API）に統一されました
 // Quick Start APIでの生成は重複を防ぐため削除済み
+
+// =================================================================
+// Helper: Add Category/Subcategory Display Names
+// =================================================================
+async function addCategorySubcategoryNames(questions: Question[]): Promise<Question[]> {
+  if (questions.length === 0) return questions
+
+  // ユニークなカテゴリー・サブカテゴリーIDを取得
+  const uniqueSubcategoryIds = [...new Set(questions.map(q => q.subcategory).filter(Boolean))]
+  const uniqueCategoryIds = [...new Set(questions.map(q => q.category).filter(Boolean))]
+
+  // サブカテゴリー名を取得
+  const subcategoryNameMap = new Map<string, string>()
+  if (uniqueSubcategoryIds.length > 0) {
+    const { data: subcategories } = await supabaseAdmin
+      .from('subcategories')
+      .select('subcategory_id, name')
+      .in('subcategory_id', uniqueSubcategoryIds)
+
+    subcategories?.forEach(sc => {
+      subcategoryNameMap.set(sc.subcategory_id, sc.name)
+    })
+  }
+
+  // カテゴリー名を取得
+  const categoryNameMap = new Map<string, string>()
+  if (uniqueCategoryIds.length > 0) {
+    const { data: categories } = await supabaseAdmin
+      .from('categories')
+      .select('category_id, name')
+      .in('category_id', uniqueCategoryIds)
+
+    categories?.forEach(cat => {
+      categoryNameMap.set(cat.category_id, cat.name)
+    })
+  }
+
+  // 日本語名を付与
+  return questions.map(q => ({
+    ...q,
+    category_name: categoryNameMap.get(q.category) || q.category,
+    subcategory_name: subcategoryNameMap.get(q.subcategory) || q.subcategory
+  }))
+}

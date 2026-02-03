@@ -8,7 +8,6 @@ import { Progress } from '@/components/ui/progress'
 import { Clock, CheckCircle, XCircle, Lightbulb, Star } from 'lucide-react'
 import { Question } from '@/lib/types'
 import { getDifficultyDisplayName } from '@/lib/categories'
-import { getSubcategoryDisplayName } from '@/lib/category-mapping'
 
 // 難易度に応じたバッジのバリアントを取得
 function getDifficultyBadgeVariant(difficulty: string): "default" | "secondary" | "destructive" | "outline" {
@@ -302,7 +301,7 @@ export default function QuizCard({
         
         <div className="flex justify-center space-x-2">
           <Badge variant="outline" className="text-xs">
-            {getSubcategoryDisplayName(question.subcategory)}
+            {question.subcategory_name || question.subcategory}
           </Badge>
         </div>
       </CardHeader>

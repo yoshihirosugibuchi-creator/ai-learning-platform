@@ -704,7 +704,7 @@ export default function ProfilePage() {
             </Card>
 
             {/* セルフパーソナライズクイズ設定 */}
-            <Card className="border-blue-200 bg-blue-50/50">
+            <Card id="quiz-settings" className="border-blue-200 bg-blue-50/50 scroll-mt-20">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Settings className="h-5 w-5" />
@@ -728,7 +728,7 @@ export default function ProfilePage() {
             </Card>
 
             {/* 復習通知設定 */}
-            <Card className="border-orange-200 bg-orange-50/50">
+            <Card id="review-settings" className="border-orange-200 bg-orange-50/50 scroll-mt-20">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Bell className="h-5 w-5" />

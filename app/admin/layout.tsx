@@ -58,6 +58,8 @@ export default function AdminLayout({
                   {pathname.includes('industry-targets') && '業界目標管理'}
                   {pathname.includes('wisdom-cards') && '格言カード管理'}
                   {pathname.includes('batch-analytics') && '日次分析バッチ管理'}
+                  {pathname.includes('case-study/masters') && 'ケーススタディマスタ管理'}
+                  {pathname.includes('case-study') && !pathname.includes('masters') && 'ケーススタディ管理'}
                 </span>
               </div>
             </div>

@@ -389,29 +389,21 @@ async function generateSelfPersonalizedSet(
     industrySubcategories: quizSettings.industrySubcategories || []
   }
 
-  // Calculate settings hash for change detection
-  const settingsHash = calculateSettingsHash(settings)
-
-  // Check if existing sets match current settings
-  let existingSets: Array<{ id: string; user_settings_hash: string | null }> = []
+  // Check if valid existing sets are available
   if (!forceRegenerate) {
     const { data: existingSetsData } = await supabaseAdmin
       .from('precomputed_quiz_sets')
-      .select('id, user_settings_hash')
+      .select('id')
       .eq('user_id', userId)
       .eq('quiz_type', 'self-personalized')
       .is('used_at', null)
       .gt('expires_at', new Date().toISOString())
       .limit(1)
 
-    existingSets = existingSetsData || []
-
-    if (existingSets?.[0]?.user_settings_hash === settingsHash) {
-      console.log('ℹ️ [Self-Personalized] Settings unchanged, skipping generation')
-      return { skipped: true, reason: 'Settings unchanged' }
+    if (existingSetsData && existingSetsData.length > 0) {
+      console.log('ℹ️ [Self-Personalized] Valid sets exist, skipping generation')
+      return { skipped: true, reason: 'Valid sets exist' }
     }
-
-    // Note: Settings changed - will delete old sets AFTER successful generation
   }
 
   // Get questions matching user's selected categories
@@ -467,7 +459,6 @@ async function generateSelfPersonalizedSet(
       questionSets.push({
         question_ids: selectedQuestions.map(q => q.id),
         analysis_data: {
-          settings_hash: settingsHash,
           selected_categories: selectedCategories,
           learning_level: settings.learningLevel,
           basic_categories_count: settings.basicCategories.length,
@@ -486,7 +477,6 @@ async function generateSelfPersonalizedSet(
       questionSets.push({
         question_ids: selectedQuestions.map(q => q.id),
         analysis_data: {
-          settings_hash: settingsHash,
           selected_categories: selectedCategories,
           learning_level: settings.learningLevel,
           basic_categories_count: settings.basicCategories.length,
@@ -512,7 +502,6 @@ async function generateSelfPersonalizedSet(
       quiz_type: 'self-personalized' as const,
       question_ids: set.question_ids,
       analysis_data: set.analysis_data,
-      user_settings_hash: settingsHash,
       expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString()
     })))
 
@@ -520,28 +509,10 @@ async function generateSelfPersonalizedSet(
     throw new Error(`Failed to save self-personalized sets: ${saveError.message}`)
   }
 
-  // Clean up old sets AFTER successful generation (if settings changed)
-  if (existingSets && existingSets.length > 0 && existingSets[0]?.user_settings_hash !== settingsHash) {
-    try {
-      // Delete old sets with different settings hash
-      await supabaseAdmin
-        .from('precomputed_quiz_sets')
-        .delete()
-        .eq('user_id', userId)
-        .eq('quiz_type', 'self-personalized')
-        .neq('user_settings_hash', settingsHash)
-      
-      console.log('🧹 [Self-Personalized] Cleaned up old sets after regeneration')
-    } catch (cleanupError) {
-      console.warn('⚠️ [Self-Personalized] Cleanup failed (non-critical):', cleanupError)
-    }
-  }
-
   console.log(`✅ [Self-Personalized] Generated ${questionSets.length} sets successfully`)
   return {
     generated: true,
     sets_count: questionSets.length,
-    settings_hash: settingsHash,
     categories_count: selectedCategories.length
   }
 }
@@ -710,19 +681,6 @@ async function generateReviewSet(
 // =================================================================
 // Helper Functions
 // =================================================================
-
-function calculateSettingsHash(settings: Record<string, unknown>): string {
-  const keySettings = {
-    basic_categories: settings.basic_categories || [],
-    industry_categories: settings.industry_categories || [],
-    industry_subcategories: settings.industry_subcategories || [],
-    learning_goals: settings.learning_goals,
-    difficulty_preference: settings.difficulty_preference,
-    learning_pace: settings.learning_pace
-  }
-  
-  return Buffer.from(JSON.stringify(keySettings)).toString('base64').slice(0, 20)
-}
 
 interface QuestionForSelection {
   id: number

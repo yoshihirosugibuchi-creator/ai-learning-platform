@@ -535,6 +535,10 @@ export default function QuizSession({
       // 🚀 FIXED: Review mode uses pre-loaded questions from page.tsx
       console.log('📚 [Review Quiz] Using pre-loaded questions from page.tsx, count:', questions.length)
       return questions
+    } else if (quizType === 'pack') {
+      // 🎯 Pack mode uses pre-loaded questions from play page
+      console.log('📦 [Pack Quiz] Using pre-loaded questions from play page, count:', questions.length)
+      return questions
     } else {
       // Business-AI, Self-Personalized use quick-start API
       return await handlePrecomputedQuizOptimized(quizType, session.access_token)

@@ -1,15 +1,21 @@
 /**
  * Category Quiz Initialization API
- * 
+ *
  * Purpose: Server-side category quiz initialization with smart selection
  * Method: POST /api/quiz/category-init
  * Authentication: Required (Bearer token)
- * 
+ *
+ * 問題選択優先度:
+ * 1. 未出題問題 (70%目標)
+ * 2. 過去出題で7日以上経過した問題 (忘却曲線対応)
+ * 3. 直近7日に回答した問題 (最後の手段)
+ *
  * Replaces client-side smart-random-selection to prevent SUPABASE_SERVICE_ROLE_KEY errors
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { getUserAskedQuestions, selectQuestionsWithPriority } from '@/lib/quiz-question-history'
 import type { Question } from '@/lib/types'
 
 interface CategoryQuizInitRequest {
@@ -135,15 +141,61 @@ export async function POST(request: NextRequest) {
 
     console.log(`📋 [Category Quiz API] Found ${questionsData.length} questions, selecting ${questionCount}...`)
 
-    // 5. Simple random selection (fallback approach)
-    const shuffledQuestions = [...questionsData].sort(() => Math.random() - 0.5)
-    const selectedQuestions = shuffledQuestions.slice(0, questionCount)
+    // 5. ユーザーの過去回答履歴を取得（優先度選択用）
+    const questionHistory = await getUserAskedQuestions(user.id)
 
-    // 6. Convert to Question format
+    console.log('📊 [Category Quiz API] Question history:', {
+      recentCount: questionHistory.recentQuestions.size,
+      totalCount: questionHistory.totalQuestions.size
+    })
+
+    // 6. 優先度に基づいて問題を選択
+    // 1. 未出題問題 (70%目標)
+    // 2. 過去出題で7日以上経過した問題 (忘却曲線対応)
+    // 3. 直近7日に回答した問題 (最後の手段)
+    const selectedQuestions = selectQuestionsWithPriority(
+      questionsData,
+      questionHistory,
+      questionCount
+    )
+
+    // 7. サブカテゴリー・カテゴリーの日本語名を取得
+    const uniqueSubcategoryIds = [...new Set(selectedQuestions.map(q => q.subcategory_id).filter((id): id is string => Boolean(id)))]
+    const uniqueCategoryIds = [...new Set(selectedQuestions.map(q => q.category_id).filter((id): id is string => Boolean(id)))]
+
+    // サブカテゴリー名を取得
+    const subcategoryNameMap = new Map<string, string>()
+    if (uniqueSubcategoryIds.length > 0) {
+      const { data: subcategories } = await supabaseAdmin
+        .from('subcategories')
+        .select('subcategory_id, name')
+        .in('subcategory_id', uniqueSubcategoryIds)
+
+      subcategories?.forEach(sc => {
+        subcategoryNameMap.set(sc.subcategory_id, sc.name)
+      })
+    }
+
+    // カテゴリー名を取得
+    const categoryNameMap = new Map<string, string>()
+    if (uniqueCategoryIds.length > 0) {
+      const { data: categories } = await supabaseAdmin
+        .from('categories')
+        .select('category_id, name')
+        .in('category_id', uniqueCategoryIds)
+
+      categories?.forEach(cat => {
+        categoryNameMap.set(cat.category_id, cat.name)
+      })
+    }
+
+    // 8. Convert to Question format with display names
     const questions: Question[] = selectedQuestions.map(q => ({
       id: q.id,
       category: q.category_id,
       subcategory: q.subcategory_id || '',
+      category_name: categoryNameMap.get(q.category_id) || q.category_id,
+      subcategory_name: q.subcategory_id ? (subcategoryNameMap.get(q.subcategory_id) || q.subcategory_id) : '',
       difficulty: q.difficulty || 'basic',
       question: q.question,
       options: [q.option1, q.option2, q.option3, q.option4],
@@ -158,17 +210,25 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ [Category Quiz API] Completed: ${questions.length} questions selected in ${duration.toFixed(1)}ms`)
 
-    // 7. Return success response
+    // 9. Return success response
+    // 選択統計を計算
+    const neverAskedCount = questions.filter(q => q.id && !questionHistory.totalQuestions.has(q.id)).length
+    const oldCount = questions.filter(q => q.id && questionHistory.totalQuestions.has(q.id) && !questionHistory.recentQuestions.has(q.id)).length
+    const recentCount = questions.filter(q => q.id && questionHistory.recentQuestions.has(q.id)).length
+
     return NextResponse.json({
       success: true,
       questions,
       metadata: {
-        method: 'simple_random',
+        method: 'priority_based',
         performance_ms: Math.round(duration),
         selection_metadata: {
           total_available: questionsData.length,
           selected_count: questions.length,
-          selection_method: 'server_side_random'
+          selection_method: 'server_side_priority',
+          never_asked: neverAskedCount,
+          old_questions: oldCount,
+          recent_questions: recentCount
         }
       }
     })

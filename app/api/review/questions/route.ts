@@ -113,11 +113,43 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Question型に変換
+    // サブカテゴリー・カテゴリーの日本語名を取得
+    const uniqueSubcategoryIds = [...new Set(questions.map(q => q.subcategory_id).filter((id): id is string => Boolean(id)))]
+    const uniqueCategoryIds = [...new Set(questions.map(q => q.category_id).filter((id): id is string => Boolean(id)))]
+
+    // サブカテゴリー名を取得
+    const subcategoryNameMap = new Map<string, string>()
+    if (uniqueSubcategoryIds.length > 0) {
+      const { data: subcategories } = await supabaseAdmin
+        .from('subcategories')
+        .select('subcategory_id, name')
+        .in('subcategory_id', uniqueSubcategoryIds)
+
+      subcategories?.forEach(sc => {
+        subcategoryNameMap.set(sc.subcategory_id, sc.name)
+      })
+    }
+
+    // カテゴリー名を取得
+    const categoryNameMap = new Map<string, string>()
+    if (uniqueCategoryIds.length > 0) {
+      const { data: categories } = await supabaseAdmin
+        .from('categories')
+        .select('category_id, name')
+        .in('category_id', uniqueCategoryIds)
+
+      categories?.forEach(cat => {
+        categoryNameMap.set(cat.category_id, cat.name)
+      })
+    }
+
+    // Question型に変換（日本語名を含む）
     const reviewQuestions: Question[] = questions.slice(0, count).map(q => ({
       id: q.id,
       category: q.category_id,
       subcategory: q.subcategory_id || '',
+      category_name: categoryNameMap.get(q.category_id) || q.category_id,
+      subcategory_name: q.subcategory_id ? (subcategoryNameMap.get(q.subcategory_id) || q.subcategory_id) : '',
       difficulty: q.difficulty || 'intermediate',
       question: q.question,
       options: [q.option1, q.option2, q.option3, q.option4],

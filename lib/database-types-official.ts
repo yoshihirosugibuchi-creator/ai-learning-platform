@@ -164,6 +164,551 @@ export type Database = {
         }
         Relationships: []
       }
+      case_study_course_links: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          display_after_session: number | null
+          id: string
+          problem_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          display_after_session?: number | null
+          id?: string
+          problem_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          display_after_session?: number | null
+          id?: string
+          problem_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_study_course_links_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "case_study_problem_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_study_course_links_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "case_study_problems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_study_generation_logs: {
+        Row: {
+          ai_model: string | null
+          ai_response_text: string | null
+          business_phase_code: string | null
+          category_id: string | null
+          created_at: string | null
+          created_by: string | null
+          current_step: number | null
+          custom_prompt: string | null
+          difficulty: string | null
+          draft_title: string | null
+          generated_prompt: string | null
+          id: string
+          industry_id: string | null
+          info_clarity_code: string | null
+          job_role_code: string | null
+          parsed_data: Json | null
+          problem_id: string | null
+          question_type: string | null
+          scenario_type_code: string | null
+          status: string | null
+          step_count: number | null
+          subcategory_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_model?: string | null
+          ai_response_text?: string | null
+          business_phase_code?: string | null
+          category_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_step?: number | null
+          custom_prompt?: string | null
+          difficulty?: string | null
+          draft_title?: string | null
+          generated_prompt?: string | null
+          id?: string
+          industry_id?: string | null
+          info_clarity_code?: string | null
+          job_role_code?: string | null
+          parsed_data?: Json | null
+          problem_id?: string | null
+          question_type?: string | null
+          scenario_type_code?: string | null
+          status?: string | null
+          step_count?: number | null
+          subcategory_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_model?: string | null
+          ai_response_text?: string | null
+          business_phase_code?: string | null
+          category_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_step?: number | null
+          custom_prompt?: string | null
+          difficulty?: string | null
+          draft_title?: string | null
+          generated_prompt?: string | null
+          id?: string
+          industry_id?: string | null
+          info_clarity_code?: string | null
+          job_role_code?: string | null
+          parsed_data?: Json | null
+          problem_id?: string | null
+          question_type?: string | null
+          scenario_type_code?: string | null
+          status?: string | null
+          step_count?: number | null
+          subcategory_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_study_generation_logs_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "case_study_problem_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_study_generation_logs_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "case_study_problems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_study_options: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          is_extended: boolean | null
+          name: string
+          name_en: string | null
+          option_type: string
+          target_skills: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_extended?: boolean | null
+          name: string
+          name_en?: string | null
+          option_type: string
+          target_skills?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_extended?: boolean | null
+          name?: string
+          name_en?: string | null
+          option_type?: string
+          target_skills?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      case_study_problems: {
+        Row: {
+          case_text: string
+          created_at: string | null
+          created_by: string | null
+          custom_base_xp_per_step: number | null
+          difficulty: string
+          estimated_minutes: number | null
+          featured_date: string | null
+          generation_model: string | null
+          generation_parameters: Json | null
+          generation_prompt: string | null
+          id: string
+          industry: string | null
+          is_ai_generated: boolean | null
+          primary_category_id: string
+          primary_subcategory_id: string
+          scenario_type: string | null
+          scoring_ai_provider: string | null
+          status: string
+          step_count: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          case_text: string
+          created_at?: string | null
+          created_by?: string | null
+          custom_base_xp_per_step?: number | null
+          difficulty?: string
+          estimated_minutes?: number | null
+          featured_date?: string | null
+          generation_model?: string | null
+          generation_parameters?: Json | null
+          generation_prompt?: string | null
+          id?: string
+          industry?: string | null
+          is_ai_generated?: boolean | null
+          primary_category_id: string
+          primary_subcategory_id: string
+          scenario_type?: string | null
+          scoring_ai_provider?: string | null
+          status?: string
+          step_count?: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          case_text?: string
+          created_at?: string | null
+          created_by?: string | null
+          custom_base_xp_per_step?: number | null
+          difficulty?: string
+          estimated_minutes?: number | null
+          featured_date?: string | null
+          generation_model?: string | null
+          generation_parameters?: Json | null
+          generation_prompt?: string | null
+          id?: string
+          industry?: string | null
+          is_ai_generated?: boolean | null
+          primary_category_id?: string
+          primary_subcategory_id?: string
+          scenario_type?: string | null
+          scoring_ai_provider?: string | null
+          status?: string
+          step_count?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      case_study_rubric_axes: {
+        Row: {
+          axis_code: string
+          axis_name: string
+          created_at: string | null
+          definition: string
+          display_order: number
+          evaluation_points: string[] | null
+          id: string
+          is_active: boolean | null
+          rubric_group_code: string
+          rubric_group_name: string
+          score_anchors: Json
+          updated_at: string | null
+        }
+        Insert: {
+          axis_code: string
+          axis_name: string
+          created_at?: string | null
+          definition: string
+          display_order: number
+          evaluation_points?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          rubric_group_code: string
+          rubric_group_name: string
+          score_anchors: Json
+          updated_at?: string | null
+        }
+        Update: {
+          axis_code?: string
+          axis_name?: string
+          created_at?: string | null
+          definition?: string
+          display_order?: number
+          evaluation_points?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          rubric_group_code?: string
+          rubric_group_name?: string
+          score_anchors?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      case_study_sessions: {
+        Row: {
+          bonus_details: Json | null
+          completed_at: string | null
+          created_at: string | null
+          current_step: number | null
+          hint_count: number | null
+          id: string
+          is_retry: boolean | null
+          max_possible_score: number | null
+          problem_id: string
+          score_percentage: number | null
+          scoring_result: Json | null
+          skp_earned: number | null
+          started_at: string | null
+          status: string
+          total_score: number | null
+          total_time_seconds: number | null
+          updated_at: string | null
+          user_id: string
+          xp_earned: number | null
+        }
+        Insert: {
+          bonus_details?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          hint_count?: number | null
+          id?: string
+          is_retry?: boolean | null
+          max_possible_score?: number | null
+          problem_id: string
+          score_percentage?: number | null
+          scoring_result?: Json | null
+          skp_earned?: number | null
+          started_at?: string | null
+          status?: string
+          total_score?: number | null
+          total_time_seconds?: number | null
+          updated_at?: string | null
+          user_id: string
+          xp_earned?: number | null
+        }
+        Update: {
+          bonus_details?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          hint_count?: number | null
+          id?: string
+          is_retry?: boolean | null
+          max_possible_score?: number | null
+          problem_id?: string
+          score_percentage?: number | null
+          scoring_result?: Json | null
+          skp_earned?: number | null
+          started_at?: string | null
+          status?: string
+          total_score?: number | null
+          total_time_seconds?: number | null
+          updated_at?: string | null
+          user_id?: string
+          xp_earned?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_study_sessions_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "case_study_problem_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_study_sessions_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "case_study_problems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_study_step_details: {
+        Row: {
+          created_at: string | null
+          id: string
+          quiz_answer_id: string
+          reasoning_text: string | null
+          selected_choices: Json | null
+          session_id: string
+          step_answered_at: string | null
+          step_id: string
+          step_number: number
+          step_scoring: Json | null
+          step_started_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          quiz_answer_id: string
+          reasoning_text?: string | null
+          selected_choices?: Json | null
+          session_id: string
+          step_answered_at?: string | null
+          step_id: string
+          step_number: number
+          step_scoring?: Json | null
+          step_started_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          quiz_answer_id?: string
+          reasoning_text?: string | null
+          selected_choices?: Json | null
+          session_id?: string
+          step_answered_at?: string | null
+          step_id?: string
+          step_number?: number
+          step_scoring?: Json | null
+          step_started_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_study_step_details_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "case_study_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_study_step_details_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "case_study_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_study_steps: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          description: string
+          display_order: number | null
+          hint: string | null
+          id: string
+          max_score: number | null
+          model_answer: Json
+          options: Json | null
+          problem_id: string
+          question_type: string
+          step_name: string
+          step_number: number
+          subcategory_id: string
+          target_skills: Json
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          description: string
+          display_order?: number | null
+          hint?: string | null
+          id?: string
+          max_score?: number | null
+          model_answer: Json
+          options?: Json | null
+          problem_id: string
+          question_type: string
+          step_name: string
+          step_number: number
+          subcategory_id: string
+          target_skills: Json
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          description?: string
+          display_order?: number | null
+          hint?: string | null
+          id?: string
+          max_score?: number | null
+          model_answer?: Json
+          options?: Json | null
+          problem_id?: string
+          question_type?: string
+          step_name?: string
+          step_number?: number
+          subcategory_id?: string
+          target_skills?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_study_steps_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "case_study_problem_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_study_steps_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "case_study_problems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_study_thinking_logs: {
+        Row: {
+          action_data: Json | null
+          action_type: string
+          choices_at_action: Json | null
+          id: string
+          reasoning_length_at_action: number | null
+          session_id: string
+          step_number: number
+          time_since_step_start_ms: number | null
+          timestamp: string | null
+        }
+        Insert: {
+          action_data?: Json | null
+          action_type: string
+          choices_at_action?: Json | null
+          id?: string
+          reasoning_length_at_action?: number | null
+          session_id: string
+          step_number: number
+          time_since_step_start_ms?: number | null
+          timestamp?: string | null
+        }
+        Update: {
+          action_data?: Json | null
+          action_type?: string
+          choices_at_action?: Json | null
+          id?: string
+          reasoning_length_at_action?: number | null
+          session_id?: string
+          step_number?: number
+          time_since_step_start_ms?: number | null
+          timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_study_thinking_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "case_study_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           activation_date: string | null
@@ -425,6 +970,9 @@ export type Database = {
       daily_xp_records: {
         Row: {
           bonus_xp_earned: number
+          case_study_sessions: number | null
+          case_study_time_seconds: number | null
+          case_study_xp_earned: number | null
           course_sessions: number
           course_time_seconds: number | null
           course_xp_earned: number
@@ -444,6 +992,9 @@ export type Database = {
         }
         Insert: {
           bonus_xp_earned?: number
+          case_study_sessions?: number | null
+          case_study_time_seconds?: number | null
+          case_study_xp_earned?: number | null
           course_sessions?: number
           course_time_seconds?: number | null
           course_xp_earned?: number
@@ -463,6 +1014,9 @@ export type Database = {
         }
         Update: {
           bonus_xp_earned?: number
+          case_study_sessions?: number | null
+          case_study_time_seconds?: number | null
+          case_study_xp_earned?: number | null
           course_sessions?: number
           course_time_seconds?: number | null
           course_xp_earned?: number
@@ -957,7 +1511,6 @@ export type Database = {
           quiz_type: Database["public"]["Enums"]["quiz_type_enum"]
           used_at: string | null
           user_id: string
-          user_settings_hash: string | null
           version: number | null
         }
         Insert: {
@@ -971,7 +1524,6 @@ export type Database = {
           quiz_type: Database["public"]["Enums"]["quiz_type_enum"]
           used_at?: string | null
           user_id: string
-          user_settings_hash?: string | null
           version?: number | null
         }
         Update: {
@@ -985,7 +1537,6 @@ export type Database = {
           quiz_type?: Database["public"]["Enums"]["quiz_type_enum"]
           used_at?: string | null
           user_id?: string
-          user_settings_hash?: string | null
           version?: number | null
         }
         Relationships: []
@@ -1081,6 +1632,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      quiz_packs: {
+        Row: {
+          average_score: number | null
+          categories: Json
+          color_theme: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          difficulties: Json
+          display_order: number
+          icon_emoji: string | null
+          id: string
+          is_published: boolean
+          name: string
+          question_count: number
+          subcategories: Json | null
+          total_attempts: number
+          updated_at: string
+        }
+        Insert: {
+          average_score?: number | null
+          categories?: Json
+          color_theme?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulties?: Json
+          display_order?: number
+          icon_emoji?: string | null
+          id?: string
+          is_published?: boolean
+          name: string
+          question_count?: number
+          subcategories?: Json | null
+          total_attempts?: number
+          updated_at?: string
+        }
+        Update: {
+          average_score?: number | null
+          categories?: Json
+          color_theme?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulties?: Json
+          display_order?: number
+          icon_emoji?: string | null
+          id?: string
+          is_published?: boolean
+          name?: string
+          question_count?: number
+          subcategories?: Json | null
+          total_attempts?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       quiz_questions: {
         Row: {
@@ -1371,14 +1979,19 @@ export type Database = {
         Row: {
           accuracy_rate: number
           bonus_xp: number
+          category_id: string | null
           correct_answers: number
           created_at: string | null
+          current_question_index: number | null
           duration_seconds: number | null
           id: string
+          pack_id: string | null
+          question_ids: Json | null
           quiz_type: string
           session_end_time: string | null
           session_start_time: string
           status: string
+          subcategory_id: string | null
           total_questions: number
           total_xp: number
           updated_at: string | null
@@ -1388,14 +2001,19 @@ export type Database = {
         Insert: {
           accuracy_rate?: number
           bonus_xp?: number
+          category_id?: string | null
           correct_answers?: number
           created_at?: string | null
+          current_question_index?: number | null
           duration_seconds?: number | null
           id?: string
+          pack_id?: string | null
+          question_ids?: Json | null
           quiz_type?: string
           session_end_time?: string | null
           session_start_time?: string
           status?: string
+          subcategory_id?: string | null
           total_questions?: number
           total_xp?: number
           updated_at?: string | null
@@ -1405,21 +2023,34 @@ export type Database = {
         Update: {
           accuracy_rate?: number
           bonus_xp?: number
+          category_id?: string | null
           correct_answers?: number
           created_at?: string | null
+          current_question_index?: number | null
           duration_seconds?: number | null
           id?: string
+          pack_id?: string | null
+          question_ids?: Json | null
           quiz_type?: string
           session_end_time?: string | null
           session_start_time?: string
           status?: string
+          subcategory_id?: string | null
           total_questions?: number
           total_xp?: number
           updated_at?: string | null
           user_id?: string
           wisdom_cards_awarded?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quiz_sessions_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_packs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       review_settings: {
         Row: {
@@ -2099,6 +2730,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_challenge_selections: {
+        Row: {
+          content_id: string
+          content_name: string | null
+          created_at: string | null
+          id: string
+          selected_by: string | null
+          slot_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          content_name?: string | null
+          created_at?: string | null
+          id?: string
+          selected_by?: string | null
+          slot_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          content_name?: string | null
+          created_at?: string | null
+          id?: string
+          selected_by?: string | null
+          slot_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_knowledge_collection_v2: {
         Row: {
           created_at: string | null
@@ -2343,6 +3007,10 @@ export type Database = {
           badges_total: number
           bonus_skp: number
           bonus_xp: number
+          case_study_average_score: number | null
+          case_study_sessions_completed: number | null
+          case_study_skp: number | null
+          case_study_xp: number | null
           course_completed: number | null
           course_learning_time_seconds: number | null
           course_sessions_completed: number
@@ -2374,6 +3042,10 @@ export type Database = {
           badges_total?: number
           bonus_skp?: number
           bonus_xp?: number
+          case_study_average_score?: number | null
+          case_study_sessions_completed?: number | null
+          case_study_skp?: number | null
+          case_study_xp?: number | null
           course_completed?: number | null
           course_learning_time_seconds?: number | null
           course_sessions_completed?: number
@@ -2405,6 +3077,10 @@ export type Database = {
           badges_total?: number
           bonus_skp?: number
           bonus_xp?: number
+          case_study_average_score?: number | null
+          case_study_sessions_completed?: number | null
+          case_study_skp?: number | null
+          case_study_xp?: number | null
           course_completed?: number | null
           course_learning_time_seconds?: number | null
           course_sessions_completed?: number
@@ -2680,6 +3356,22 @@ export type Database = {
           updated_at: string | null
           user_email: string | null
           user_id: string | null
+        }
+        Relationships: []
+      }
+      case_study_problem_stats: {
+        Row: {
+          avg_score: number | null
+          avg_time_seconds: number | null
+          completed_sessions: number | null
+          completion_rate: number | null
+          difficulty: string | null
+          id: string | null
+          primary_category_id: string | null
+          status: string | null
+          title: string | null
+          total_sessions: number | null
+          unique_users: number | null
         }
         Relationships: []
       }
@@ -3096,6 +3788,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      update_quiz_pack_stats: {
+        Args: { p_pack_id: string }
+        Returns: undefined
+      }
       update_quiz_session_stats: {
         Args: { p_session_id: string; p_user_id: string }
         Returns: undefined
@@ -3339,3 +4035,19 @@ export type UserQuestionUsageUpdate = Database['public']['Tables']['user_questio
 export type QuizAnswer = Database['public']['Tables']['quiz_answers']['Row']
 export type QuizAnswerInsert = Database['public']['Tables']['quiz_answers']['Insert']
 export type QuizAnswerUpdate = Database['public']['Tables']['quiz_answers']['Update']
+// ケーススタディ学習機能の型エイリアス (Added 2026-01-26)
+export type CaseStudyProblem = Database['public']['Tables']['case_study_problems']['Row']
+export type CaseStudyProblemInsert = Database['public']['Tables']['case_study_problems']['Insert']
+export type CaseStudyProblemUpdate = Database['public']['Tables']['case_study_problems']['Update']
+export type CaseStudyStep = Database['public']['Tables']['case_study_steps']['Row']
+export type CaseStudyStepInsert = Database['public']['Tables']['case_study_steps']['Insert']
+export type CaseStudyStepUpdate = Database['public']['Tables']['case_study_steps']['Update']
+export type CaseStudySession = Database['public']['Tables']['case_study_sessions']['Row']
+export type CaseStudySessionInsert = Database['public']['Tables']['case_study_sessions']['Insert']
+export type CaseStudySessionUpdate = Database['public']['Tables']['case_study_sessions']['Update']
+export type CaseStudyStepDetail = Database['public']['Tables']['case_study_step_details']['Row']
+export type CaseStudyStepDetailInsert = Database['public']['Tables']['case_study_step_details']['Insert']
+export type CaseStudyStepDetailUpdate = Database['public']['Tables']['case_study_step_details']['Update']
+export type CaseStudyThinkingLog = Database['public']['Tables']['case_study_thinking_logs']['Row']
+export type CaseStudyThinkingLogInsert = Database['public']['Tables']['case_study_thinking_logs']['Insert']
+export type CaseStudyThinkingLogUpdate = Database['public']['Tables']['case_study_thinking_logs']['Update']

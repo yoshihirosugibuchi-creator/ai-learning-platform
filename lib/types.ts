@@ -97,6 +97,9 @@ export interface Question {
   category: QuizMainCategory | string // string for flexibility with legacy data
   subcategory: QuizSubcategory | string // string for flexibility with legacy data
   subcategory_id?: string // サブカテゴリーの英数字ID（XP計算用）
+  // 日本語表示名（DBから取得、ハードコード不要に）
+  category_name?: string // カテゴリー日本語名
+  subcategory_name?: string // サブカテゴリー日本語名
   question: string
   options: string[]
   correct: number
