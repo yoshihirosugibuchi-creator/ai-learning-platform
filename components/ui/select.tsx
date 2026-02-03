@@ -109,20 +109,25 @@ const SelectSeparator = React.forwardRef<
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
 // For the analytics page, let's create a simple implementation using native select
-const SimpleSelect = ({ 
-  value, 
-  onValueChange, 
-  children, 
-  className 
+const SimpleSelect = ({
+  value,
+  onValueChange,
+  children,
+  className
 }: {
   value: string
   onValueChange: (value: string) => void
   children: React.ReactNode
   className?: string
 }) => {
+  // 子要素から value プロパティを持つものを抽出（本番ビルドでも動作するように修正）
   const options = React.Children.toArray(children).filter(
-    child => React.isValidElement(child) && child.type === SimpleSelectItem
-  ) as React.ReactElement<{ value: string; children: React.ReactNode }>[]
+    (child): child is React.ReactElement<{ value: string; children: React.ReactNode }> =>
+      React.isValidElement(child) &&
+      child.props !== null &&
+      typeof child.props === 'object' &&
+      'value' in child.props
+  )
 
   return (
     <select
