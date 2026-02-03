@@ -17,7 +17,10 @@ import {
   Award,
   Briefcase,
   Package,
-  Dumbbell
+  Dumbbell,
+  HelpCircle,
+  GraduationCap,
+  FileText
 } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
@@ -40,6 +43,13 @@ interface ChallengeSelections {
   case_study: ChallengeSelection | null
 }
 
+interface ContentCounts {
+  quiz_questions: number
+  course_themes: number
+  course_sessions: number
+  case_study_problems: number
+}
+
 export default function Home() {
   const router = useRouter()
   const { toast } = useToast()
@@ -53,6 +63,22 @@ export default function Home() {
     case_study: null
   })
   const [startingQuizPack, setStartingQuizPack] = useState(false)
+  const [contentCounts, setContentCounts] = useState<ContentCounts | null>(null)
+
+  // コンテンツ統計を取得
+  const fetchContentCounts = useCallback(async () => {
+    try {
+      const response = await fetch('/api/stats/content-counts')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setContentCounts(data.stats)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch content counts:', error)
+    }
+  }, [])
 
   // クイズパックを直接開始
   const startQuizPack = useCallback(async (packId: string) => {
@@ -120,6 +146,7 @@ export default function Home() {
       return
     }
     fetchChallengeSelections()
+    fetchContentCounts()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, loading, router])
 
@@ -495,6 +522,35 @@ export default function Home() {
                   </Card>
                 </div>
               </section>
+
+              {/* ===== コンテンツ統計 ===== */}
+              {contentCounts && (
+                <section className="pt-4 border-t border-border/50">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="flex items-center justify-center gap-2 py-2 px-3 bg-blue-50 rounded-lg">
+                      <HelpCircle className="h-4 w-4 text-blue-500" />
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">クイズ</p>
+                        <p className="font-bold text-sm text-blue-700">{contentCounts.quiz_questions.toLocaleString()}問</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-center gap-2 py-2 px-3 bg-emerald-50 rounded-lg">
+                      <GraduationCap className="h-4 w-4 text-emerald-500" />
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">コース</p>
+                        <p className="font-bold text-sm text-emerald-700">{contentCounts.course_sessions.toLocaleString()}問</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-center gap-2 py-2 px-3 bg-violet-50 rounded-lg">
+                      <FileText className="h-4 w-4 text-violet-500" />
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">ケーススタディ</p>
+                        <p className="font-bold text-sm text-violet-700">{contentCounts.case_study_problems.toLocaleString()}問</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
             </div>
           )}
         </main>
