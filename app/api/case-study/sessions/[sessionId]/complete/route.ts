@@ -492,8 +492,13 @@ export async function POST(
       }
 
       // quiz_answers の earned_xp を更新
+      // Note: ケーススタディはquiz_session_id=NULLなので、
+      //       case_study_step_details.quiz_answer_idを使用
       const xpPerStep = Math.round(xp / stepCount)
       for (let i = 0; i < stepCount; i++) {
+        const stepDetail = stepDetails?.find(d => d.step_number === i + 1)
+        if (!stepDetail?.quiz_answer_id) continue
+
         const stepScore = scoringResult.step_scores[i]
         const isCorrect = stepScore && (stepScore.score / stepScore.max) >= 0.6
 
@@ -505,8 +510,20 @@ export async function POST(
             review_needed: !isCorrect,
             review_reason: !isCorrect ? 'low_score' : null
           })
-          .eq('quiz_session_id', sessionId)
-          .eq('question_id', steps[i].id)
+          .eq('id', stepDetail.quiz_answer_id)
+      }
+
+      // skp_transactions に記録
+      if (skp > 0) {
+        await supabaseAdmin
+          .from('skp_transactions')
+          .insert({
+            user_id: user.id,
+            amount: skp,
+            type: 'earned',
+            source: `case_study_${sessionId}`,
+            description: `ケーススタディ完了 (スコア: ${scorePercentage}%)`
+          })
       }
     }
 
