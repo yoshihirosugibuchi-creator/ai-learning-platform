@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // GET: ユーザー一覧を取得（アプリケーション独自のusersテーブルベース）
 export async function GET(request: Request) {
@@ -13,10 +13,10 @@ export async function GET(request: Request) {
     }
 
     const token = authHeader.replace('Bearer ', '')
-    
-    // Supabaseクライアントでセッション確認
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token)
-    
+
+    // Supabaseクライアントでセッション確認（supabaseAdminで認証確認）
+    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token)
+
     if (authError || !authUser) {
       console.error('❌ Auth error:', authError)
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
@@ -24,8 +24,8 @@ export async function GET(request: Request) {
 
     console.log('✅ Authenticated user:', { id: authUser.id, email: authUser.email })
 
-    // 現在のユーザーの権限をusersテーブルから取得
-    const { data: currentUser, error: currentUserError } = await supabase
+    // 現在のユーザーの権限をusersテーブルから取得（RLSバイパス）
+    const { data: currentUser, error: currentUserError } = await supabaseAdmin
       .from('users')
       .select('role')
       .eq('id', authUser.id)
@@ -40,15 +40,15 @@ export async function GET(request: Request) {
 
     // 管理者権限チェック
     if (!currentUser.role || !['admin', 'system_admin'].includes(currentUser.role)) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'このページにアクセスする権限がありません',
         code: 'INSUFFICIENT_PERMISSIONS',
         user_role: currentUser.role
       }, { status: 403 })
     }
 
-    // usersテーブルからユーザー一覧を取得
-    const { data: users, error: usersError } = await supabase
+    // usersテーブルからユーザー一覧を取得（RLSバイパスで全ユーザー取得）
+    const { data: users, error: usersError } = await supabaseAdmin
       .from('users')
       .select('id, email, name, role, last_active, created_at')
       .order('created_at', { ascending: false })
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
     // XP統計も含めて取得
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
-        const { data: xpStats } = await supabase
+        const { data: xpStats } = await supabaseAdmin
           .from('user_xp_stats_v2')
           .select('total_xp, total_skp')
           .eq('user_id', user.id)

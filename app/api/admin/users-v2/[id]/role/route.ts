@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // PUT: ユーザーの権限を更新（アプリケーション独自のusersテーブルベース）
 export async function PUT(
@@ -12,7 +12,7 @@ export async function PUT(
 
     const body = await request.json()
     const { role } = body
-    
+
     // 認証ヘッダーからトークン取得
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
@@ -20,17 +20,17 @@ export async function PUT(
     }
 
     const token = authHeader.replace('Bearer ', '')
-    
-    // Supabaseクライアントでセッション確認
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token)
-    
+
+    // Supabaseクライアントでセッション確認（supabaseAdminで認証確認）
+    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token)
+
     if (authError || !authUser) {
       console.error('❌ Auth error:', authError)
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // 現在のユーザーの権限をusersテーブルから取得
-    const { data: currentUser, error: currentUserError } = await supabase
+    // 現在のユーザーの権限をusersテーブルから取得（RLSバイパス）
+    const { data: currentUser, error: currentUserError } = await supabaseAdmin
       .from('users')
       .select('role')
       .eq('id', authUser.id)
@@ -80,8 +80,8 @@ export async function PUT(
       )
     }
 
-    // usersテーブルでユーザーの権限を更新
-    const { data: updatedUser, error: updateError } = await supabase
+    // usersテーブルでユーザーの権限を更新（RLSバイパス）
+    const { data: updatedUser, error: updateError } = await supabaseAdmin
       .from('users')
       .update({ role })
       .eq('id', resolvedParams.id)
@@ -94,7 +94,7 @@ export async function PUT(
 
     // システムアラートに記録（オプション）
     try {
-      await supabase.from('system_alerts').insert({
+      await supabaseAdmin.from('system_alerts').insert({
         title: 'User Role Changed',
         alert_type: 'user_role_changed',
         message: `User role changed: ${resolvedParams.id} -> ${role}`,
