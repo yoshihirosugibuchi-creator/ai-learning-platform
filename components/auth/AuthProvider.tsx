@@ -289,6 +289,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
+    // タブがアクティブになった時にセッションをリフレッシュ（タブ切り替え対策）
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        console.log('👁️ Tab became visible, checking session...')
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession()
+
+          if (error || !session) {
+            console.warn('⚠️ No valid session on tab focus')
+            return
+          }
+
+          const now = Math.floor(Date.now() / 1000)
+          const expiresAt = session.expires_at || 0
+          const timeUntilExpiry = expiresAt - now
+
+          // 5分以内に期限切れになる場合、または既に期限切れの場合はリフレッシュ
+          if (timeUntilExpiry < 300) {
+            console.log('🔄 Session expiring soon or expired, refreshing on tab focus...')
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+
+            if (refreshError || !refreshData.session) {
+              console.error('❌ Session refresh failed on tab focus:', refreshError)
+              // リフレッシュ失敗時はログアウトしてログインページへ
+              await supabase.auth.signOut()
+              setUser(null)
+              setProfile(null)
+              window.location.href = '/login'
+            } else {
+              console.log('✅ Session refreshed successfully on tab focus')
+              setUser(refreshData.session.user)
+            }
+          } else {
+            console.log('✅ Session still valid, expires in', Math.round(timeUntilExpiry / 60), 'minutes')
+          }
+        } catch (err) {
+          console.error('❌ Error checking session on tab focus:', err)
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     // 定期的なセッション健全性チェック（20分毎、負荷軽減・プロフィール保持）
     const sessionHealthCheck = setInterval(async () => {
       try {
@@ -341,6 +384,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe()
       clearTimeout(loadingTimeout)
       clearInterval(sessionHealthCheck)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [lastLoadedUserId]) // eslint-disable-line react-hooks/exhaustive-deps
   // profile を依存関係から除外して無限ループを防ぐ

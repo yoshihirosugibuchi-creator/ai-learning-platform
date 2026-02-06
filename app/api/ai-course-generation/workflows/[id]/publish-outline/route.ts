@@ -246,6 +246,36 @@ export async function POST(
       })
     }
 
+    // 重複コース作成防止: 同じタイトルのコースが既に存在するかチェック
+    const courseTitle = outlineData.course?.title || workflow.title || 'AI生成コース'
+    const { data: existingCourse } = await supabaseAdmin
+      .from('learning_courses')
+      .select('id, title')
+      .eq('title', courseTitle)
+      .maybeSingle()
+
+    if (existingCourse) {
+      console.log(`⚠️ [PublishOutline] Course already exists with title "${courseTitle}": ${existingCourse.id}`)
+
+      // ワークフローのpublished_course_idを更新（不整合修正）
+      await supabaseAdmin
+        .from('ai_course_workflows')
+        .update({
+          published_course_id: existingCourse.id,
+          status: 'outline_approved',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', workflowId)
+        .eq('user_id', userId)
+
+      return NextResponse.json({
+        success: true,
+        message: 'コースは既に作成されています',
+        course_id: existingCourse.id,
+        already_exists: true
+      })
+    }
+
     console.log(`📋 [PublishOutline] Workflow validated, publishing course...`)
 
     // 型安全なJSON変換ヘルパー
