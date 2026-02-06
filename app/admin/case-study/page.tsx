@@ -742,7 +742,7 @@ export default function CaseStudyAdminPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="huggingface">HuggingFace (Llama 3.1)</SelectItem>
+                      <SelectItem value="huggingface">HuggingFace (Qwen2.5-72B)</SelectItem>
                       <SelectItem value="openai" disabled>OpenAI (準備中)</SelectItem>
                       <SelectItem value="anthropic" disabled>Claude (準備中)</SelectItem>
                       <SelectItem value="gemini" disabled>Gemini (準備中)</SelectItem>
@@ -762,7 +762,7 @@ export default function CaseStudyAdminPage() {
                         </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {provider.name === 'huggingface' && 'Llama 3.1-8B (OpenAI互換API)'}
+                        {provider.name === 'huggingface' && 'Qwen2.5-72B-Instruct (OpenAI互換API)'}
                         {provider.name === 'openai' && 'GPT-4 / GPT-3.5'}
                         {provider.name === 'anthropic' && 'Claude 3.5 Sonnet'}
                         {provider.name === 'gemini' && 'Gemini 1.5 Pro'}
