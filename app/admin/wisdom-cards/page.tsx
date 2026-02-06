@@ -9,6 +9,12 @@ import { SimpleSelect, SimpleSelectItem } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, Edit, Trash2, Save, X, Palette, Database } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { WisdomCardMaster } from '@/lib/database-types-official'
 import { getCategoryDisplayName, getRarityConfig, getSubcategoryDisplayName } from '@/lib/cards'
 import WisdomCard from '@/components/cards/WisdomCard'
@@ -454,11 +460,11 @@ export default function WisdomCardAdminPage() {
         </CardContent>
       </Card>
 
-      {/* 編集フォーム */}
-      {editingCard && (
-        <Card className="border-2 border-purple-200">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+      {/* 編集フォーム（モーダル） */}
+      <Dialog open={!!editingCard} onOpenChange={(open) => !open && cancelEditing()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
               <span>{isCreating ? '新規カード作成' : 'カード編集'}</span>
               <div className="flex gap-2">
                 <Button onClick={handleSaveCard} size="sm" className="bg-green-600 hover:bg-green-700">
@@ -470,9 +476,9 @@ export default function WisdomCardAdminPage() {
                   キャンセル
                 </Button>
               </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </DialogTitle>
+          </DialogHeader>
+          {editingCard && (
             <Tabs defaultValue="basic" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic">基本情報</TabsTrigger>
@@ -686,10 +692,11 @@ export default function WisdomCardAdminPage() {
                   {previewCard ? (
                     <div className="flex justify-center">
                       <div className="w-80">
-                        <WisdomCard 
+                        <WisdomCard
                           card={previewCard}
                           showDetails={false}
                           className="transform-none hover:scale-100"
+                          subcategories={subcategories}
                         />
                       </div>
                     </div>
@@ -720,9 +727,9 @@ export default function WisdomCardAdminPage() {
                 </div>
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* カード一覧 */}
       <Card>

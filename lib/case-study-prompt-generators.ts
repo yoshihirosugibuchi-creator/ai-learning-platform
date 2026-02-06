@@ -5,10 +5,25 @@
  *
  * v2: 職種、フェーズ、情報明確さレベル、good_examples、common_mistakes追加
  * v3: question_type対応（multiple_choice, descriptive, hybrid）
+ * v4: question_type をDB値に統一（single, multiple, text, hybrid）
+ *     - single: 単一選択のみ（1つだけ選択）
+ *     - multiple: 複数選択のみ（1〜4つ選択可能、記述なし）
+ *     - text: 記述式のみ（選択肢なし）
+ *     - hybrid: 複数選択＋記述（1〜4つ選択可能＋理由記述）
  */
 
-// 問題形式タイプ
-export type QuestionType = 'multiple_choice' | 'descriptive' | 'hybrid'
+// 問題形式タイプ（DB値に統一）
+export type QuestionType = 'single' | 'multiple' | 'text' | 'hybrid'
+
+// 旧UI値からDB値への変換マップ（後方互換性用）
+export const questionTypeToDbValue: Record<string, QuestionType> = {
+  'multiple_choice': 'multiple',
+  'descriptive': 'text',
+  'hybrid': 'hybrid',
+  'single': 'single',
+  'multiple': 'multiple',
+  'text': 'text',
+}
 
 export interface PromptGeneratorParams {
   // 基本設定
@@ -105,9 +120,18 @@ const DEFAULT_RUBRIC_AXES = `
 
 // 問題形式の説明（UIで使用するためエクスポート）
 export const questionTypeDescriptions: Record<QuestionType, string> = {
-  multiple_choice: '選択式のみ',
-  descriptive: '記述式のみ',
-  hybrid: '選択式＋記述の複合形式',
+  single: '単一選択のみ',
+  multiple: '複数選択のみ',
+  text: '記述式のみ',
+  hybrid: '複数選択＋記述',
+}
+
+// 問題形式の詳細説明（UI補足用）
+export const questionTypeDetails: Record<QuestionType, string> = {
+  single: '4択から1つだけ選ぶ形式（記述なし）',
+  multiple: '4択から1〜4つ選べる形式（記述なし）',
+  text: '選択肢なし、記述のみで回答する形式',
+  hybrid: '4択から1〜4つ選んだ上で理由を記述する形式',
 }
 
 // 問題形式別のステップJSONスキーマ例を生成（Claude用）
@@ -121,7 +145,8 @@ function buildStepJsonExampleClaude(questionType: QuestionType, params: PromptGe
       "question_type": "${questionType}",`
 
   switch (questionType) {
-    case 'multiple_choice':
+    case 'single':
+      // 単一選択のみ：4択から1つだけ選ぶ（記述なし）
       return `${baseStep}
       "options": [
         {"id": "1a", "text": "選択肢テキスト", "is_correct": true, "partial_score": 4},
@@ -142,7 +167,7 @@ function buildStepJsonExampleClaude(questionType: QuestionType, params: PromptGe
         "common_mistakes": ["選択肢1bを選ぶ（△△を見落としている）", "選択肢1cを選ぶ（××を誤解している）"],
         "scoring_anchors": {
           "1": "1点：不正解選択肢を選択",
-          "3": "3点：部分的に正しい選択",
+          "3": "3点：部分的に正しい選択肢を選択",
           "5": "5点：正解選択肢を選択"
         }
       },
@@ -151,7 +176,41 @@ function buildStepJsonExampleClaude(questionType: QuestionType, params: PromptGe
       "max_score": 20
     }`
 
-    case 'descriptive':
+    case 'multiple':
+      // 複数選択のみ：4択から1〜4つ選べる（記述なし）
+      return `${baseStep}
+      "options": [
+        {"id": "1a", "text": "選択肢テキスト", "is_correct": true, "partial_score": 4},
+        {"id": "1b", "text": "選択肢テキスト", "is_correct": true, "partial_score": 3},
+        {"id": "1c", "text": "選択肢テキスト", "is_correct": false, "partial_score": 0},
+        {"id": "1d", "text": "選択肢テキスト", "is_correct": false, "partial_score": 0}
+      ],
+      "model_answer": {
+        "ideal_choices": ["1a", "1b"],
+        "choice_explanations": {
+          "1a": "【正解】この選択肢が正解の理由：○○という観点から最も適切なアプローチである。",
+          "1b": "【正解】この選択肢も正解の理由：□□の視点を含んでおり有用。",
+          "1c": "【不正解】この選択肢が不適切な理由：前提となる××が誤っている。",
+          "1d": "【不正解】この選択肢が不適切な理由：□□の観点が不足している。"
+        },
+        "essential_points": [],
+        "good_examples": [],
+        "common_mistakes": ["1aのみを選び1bを見落とす", "1cを選ぶ（××を誤解している）"],
+        "scoring_anchors": {
+          "1": "1点：正解選択肢を1つも選ばず、不正解のみ選択",
+          "2": "2点：正解選択肢を1つ選んだが、不正解も含む",
+          "3": "3点：正解選択肢を1つ選び、不正解は選ばず",
+          "4": "4点：正解選択肢を全て選んだが、不正解も1つ含む",
+          "5": "5点：正解選択肢を全て選び、不正解は選ばず"
+        }
+      },
+      "hint": "ヒント文（50-100文字）",
+      "target_skills": ["problem_setting", "structuring_logic"],
+      "max_score": 20
+    }`
+
+    case 'text':
+      // 記述式のみ：選択肢なし、記述のみで回答
       return `${baseStep}
       "options": [],
       "model_answer": {
@@ -182,6 +241,7 @@ function buildStepJsonExampleClaude(questionType: QuestionType, params: PromptGe
 
     case 'hybrid':
     default:
+      // 複数選択＋記述：4択から1〜4つ選び、さらに理由を記述
       return `${baseStep}
       "options": [
         {"id": "1a", "text": "選択肢テキスト", "is_correct": true, "partial_score": 4},
@@ -201,11 +261,11 @@ function buildStepJsonExampleClaude(questionType: QuestionType, params: PromptGe
         "good_examples": ["優秀回答例（100-150文字）：○○という観点から△△を分析し、□□という結論を導いている。特に××の視点が優れている。"],
         "common_mistakes": ["表層的な現象のみに着目し本質を見落とす", "因果関係を逆に捉える"],
         "scoring_anchors": {
-          "1": "1点の基準：課題の認識が曖昧または的外れ",
-          "2": "2点の基準：表層的な現象のみに着目",
-          "3": "3点の基準：課題を認識しているが本質への掘り下げが不足",
-          "4": "4点の基準：本質的課題を概ね特定し適切な問いを設定",
-          "5": "5点の基準：本質的課題を正確に特定し独自の視点で問題を再定義"
+          "1": "1点の基準：選択・記述ともに的外れ",
+          "2": "2点の基準：選択は部分的に正しいが、記述が表層的",
+          "3": "3点の基準：選択は概ね正しいが、記述の論理性や深さが不足",
+          "4": "4点の基準：選択が正しく、記述も論理的で根拠がある",
+          "5": "5点の基準：選択が完璧で、記述に独自の視点と深い考察がある"
         }
       },
       "hint": "ヒント文（50-100文字、直接答えを示さず思考の方向性を示唆）",
@@ -218,24 +278,42 @@ function buildStepJsonExampleClaude(questionType: QuestionType, params: PromptGe
 // 問題形式別の要件テキストを生成
 function buildQuestionTypeRequirements(questionType: QuestionType): string {
   switch (questionType) {
-    case 'multiple_choice':
+    case 'single':
       return `【各ステップの要件】
-- question_type: "multiple_choice"（選択式のみ）
+- question_type: "single"（単一選択のみ - 4択から1つだけ選ぶ、記述なし）
 - options: 4択（id, text, is_correct, partial_score付き）
-  - 正解選択肢は1-2個、不正解は2-3個
-  - partial_scoreは0-4の整数（正解=4、部分点=1-3、不正解=0）
+  - 正解選択肢は1つのみ、不正解は3つ
+  - partial_scoreは0-4の整数（正解=4、不正解=0）
 - model_answer: 以下の全フィールドを含むこと
-  - ideal_choices: 正解選択肢のID配列
+  - ideal_choices: 正解選択肢のID配列（1つのみ）
   - choice_explanations: 各選択肢の解説（なぜ正解/不正解なのか）★必須
-    - 形式: {"1a": "この選択肢が正解の理由...", "1b": "...", ...}
+    - 形式: {"1a": "【正解】この選択肢が正解の理由...", "1b": "【不正解】...", ...}
     - 全選択肢（正解・不正解両方）に解説を付けること
-  - good_examples: 不要（空配列[]で可）
+  - essential_points: 空配列[]（記述なしのため不要）
+  - good_examples: 空配列[]（記述なしのため不要）
   - common_mistakes: よくある選択ミスのパターン（2-3個）★必須
-  - scoring_anchors: 選択肢の組み合わせによる採点基準`
+  - scoring_anchors: 選択結果による採点基準`
 
-    case 'descriptive':
+    case 'multiple':
       return `【各ステップの要件】
-- question_type: "descriptive"（記述式のみ）
+- question_type: "multiple"（複数選択のみ - 4択から1〜4つ選べる、記述なし）
+- options: 4択（id, text, is_correct, partial_score付き）
+  - 正解選択肢は1-3個、不正解は1-3個
+  - partial_scoreは0-4の整数（最重要=4、重要=3、部分点=1-2、不正解=0）
+  - 学習者は1つ以上を選択可能（全て選んでも可）
+- model_answer: 以下の全フィールドを含むこと
+  - ideal_choices: 正解選択肢のID配列（複数可）
+  - choice_explanations: 各選択肢の解説（なぜ正解/不正解なのか）★必須
+    - 形式: {"1a": "【正解】この選択肢が正解の理由...", "1b": "【不正解】...", ...}
+    - 全選択肢（正解・不正解両方）に解説を付けること
+  - essential_points: 空配列[]（記述なしのため不要）
+  - good_examples: 空配列[]（記述なしのため不要）
+  - common_mistakes: よくある選択ミスのパターン（2-3個）★必須
+  - scoring_anchors: 選択の組み合わせによる採点基準（正解を全て選び不正解を選ばない=満点）`
+
+    case 'text':
+      return `【各ステップの要件】
+- question_type: "text"（記述式のみ - 選択肢なし）
 - options: 空配列[]（選択肢なし）
 - model_answer: 以下の全フィールドを含むこと
   - ideal_choices: 空配列[]（選択肢なし）
@@ -248,19 +326,20 @@ function buildQuestionTypeRequirements(questionType: QuestionType): string {
     case 'hybrid':
     default:
       return `【各ステップの要件】
-- question_type: "hybrid"（選択肢＋記述の複合形式）
+- question_type: "hybrid"（複数選択＋記述 - 4択から1〜4つ選び、さらに理由を記述）
 - options: 4択（id, text, is_correct, partial_score付き）
-  - 正解選択肢は2-3個、不正解は0-1個
+  - 正解選択肢は1-3個、不正解は1-3個
   - partial_scoreは0-4の整数
+  - 学習者は1つ以上を選択可能（全て選んでも可）
 - model_answer: 以下の全フィールドを含むこと
   - ideal_choices: 理想的な選択肢の組み合わせ
   - choice_explanations: 各選択肢の解説（なぜ正解/不正解なのか）★必須
-    - 形式: {"1a": "この選択肢が正解の理由...", "1b": "...", ...}
+    - 形式: {"1a": "【正解】この選択肢が正解の理由...", "1b": "【不正解】...", ...}
     - 全選択肢（正解・不正解両方）に解説を付けること
-  - essential_points: 記述で含めるべき必須キーワード/概念（3-5個）
+  - essential_points: 記述で含めるべき必須キーワード/概念（3-5個）★必須
   - good_examples: 優秀回答例（100-150文字、1-2パターン）★必須
   - common_mistakes: よくある間違いパターン（2-3個）★必須
-  - scoring_anchors: 1-5点の採点基準`
+  - scoring_anchors: 1-5点の採点基準（選択と記述の両方を評価）`
   }
 }
 
@@ -339,8 +418,10 @@ ${common}
 
 【生成のポイント】
 - ケーステキストは具体的な企業名（架空）、数値データ、状況説明を含む臨場感のあるものに
-${questionType !== 'descriptive' ? '- 各ステップの選択肢は、学習者が「考えさせられる」内容に\n- choice_explanationsは全選択肢に対して「なぜ正解/不正解なのか」を明確に説明' : ''}
-${questionType !== 'multiple_choice' ? '- good_examplesは具体的で模範となる回答例を記述\n- essential_pointsは記述回答で含めるべき重要なキーワードや概念を列挙' : ''}
+${questionType !== 'text' ? '- 各ステップの選択肢は、学習者が「考えさせられる」内容に\n- choice_explanationsは全選択肢に対して「なぜ正解/不正解なのか」を明確に説明' : ''}
+${questionType === 'text' || questionType === 'hybrid' ? '- good_examplesは具体的で模範となる回答例を記述\n- essential_pointsは記述回答で含めるべき重要なキーワードや概念を列挙' : ''}
+${questionType === 'single' ? '- 単一選択：正解は1つのみ、学習者は1つだけ選択可能' : ''}
+${questionType === 'multiple' || questionType === 'hybrid' ? '- 複数選択：学習者は1〜4つの選択肢を選べる（正解が複数あってもよい）' : ''}
 - common_mistakesは学習者が陥りやすい思考パターンを具体的に記述
 - 各ステップのtarget_skillsはステップの目的に合わせて選択`
 }
@@ -382,10 +463,12 @@ ${common}
 
 **注意事項:**
 - ケーステキストには具体的な企業名（架空）・数値・状況を含めてください
-${questionType !== 'descriptive' ? `- 選択肢は「考えさせる」ものにしてください
+${questionType !== 'text' ? `- 選択肢は「考えさせる」ものにしてください
 - **choice_explanations**は全選択肢になぜ正解/不正解かの解説を必ず含めてください` : ''}
-${questionType !== 'multiple_choice' ? `- **good_examples**は具体的な優秀回答例を必ず含めてください
+${questionType === 'text' || questionType === 'hybrid' ? `- **good_examples**は具体的な優秀回答例を必ず含めてください
 - **essential_points**は記述で含めるべきキーワードを必ず含めてください` : ''}
+${questionType === 'single' ? '- 単一選択：正解は1つのみ、学習者は1つだけ選択可能' : ''}
+${questionType === 'multiple' || questionType === 'hybrid' ? '- 複数選択：学習者は1〜4つの選択肢を選べる' : ''}
 - **common_mistakes**はよくある間違いパターンを必ず含めてください
 - scoring_anchorsは1-5点の段階的な基準にしてください
 - JSON以外のテキストは出力しないでください`
@@ -401,19 +484,34 @@ export function generateGeminiPrompt(params: PromptGeneratorParams): string {
   let requiredFields: string
 
   switch (questionType) {
-    case 'multiple_choice':
+    case 'single':
+      // 単一選択のみ
       modelAnswerSchema = `"model_answer": {
-      "ideal_choices": string[],
+      "ideal_choices": string[] (1つのみ),
       "choice_explanations": {[optionId: string]: string},
       "essential_points": [],
       "good_examples": [],
       "common_mistakes": string[],
       "scoring_anchors": {"1": string, "3": string, "5": string}
     }`
-      requiredFields = 'choice_explanations、common_mistakesは必須です。'
+      requiredFields = 'choice_explanations、common_mistakesは必須です。正解は1つのみ。'
       break
 
-    case 'descriptive':
+    case 'multiple':
+      // 複数選択のみ
+      modelAnswerSchema = `"model_answer": {
+      "ideal_choices": string[] (1-3個),
+      "choice_explanations": {[optionId: string]: string},
+      "essential_points": [],
+      "good_examples": [],
+      "common_mistakes": string[],
+      "scoring_anchors": {"1": string, "2": string, "3": string, "4": string, "5": string}
+    }`
+      requiredFields = 'choice_explanations、common_mistakesは必須です。学習者は1〜4つ選択可能。'
+      break
+
+    case 'text':
+      // 記述式のみ
       modelAnswerSchema = `"model_answer": {
       "ideal_choices": [],
       "choice_explanations": {},
@@ -427,18 +525,19 @@ export function generateGeminiPrompt(params: PromptGeneratorParams): string {
 
     case 'hybrid':
     default:
+      // 複数選択＋記述
       modelAnswerSchema = `"model_answer": {
-      "ideal_choices": string[],
+      "ideal_choices": string[] (1-3個),
       "choice_explanations": {[optionId: string]: string},
       "essential_points": string[] (3-5個),
       "good_examples": string[] (100-150文字),
       "common_mistakes": string[],
       "scoring_anchors": {"1": string, "2": string, "3": string, "4": string, "5": string}
     }`
-      requiredFields = 'choice_explanations、essential_points、good_examples、common_mistakesは必須です。'
+      requiredFields = 'choice_explanations、essential_points、good_examples、common_mistakesは必須です。学習者は1〜4つ選択可能。'
   }
 
-  const optionsSchema = questionType === 'descriptive'
+  const optionsSchema = questionType === 'text'
     ? '"options": [],'
     : '"options": [{"id": string, "text": string, "is_correct": boolean, "partial_score": 0-4}],'
 

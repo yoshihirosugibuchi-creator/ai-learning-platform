@@ -142,9 +142,46 @@ export async function GET(request: NextRequest) {
 
     const { count } = await countQuery
 
+    // 業界カテゴリー名を取得
+    type ProblemData = { id: string; title: string; difficulty: string; industry: string | null; estimated_minutes: number; step_count: number }
+    const industryIds = [...new Set(
+      sessions
+        ?.map(s => {
+          // Supabase join may return array or single object
+          const problems = s.case_study_problems
+          const problem = Array.isArray(problems) ? problems[0] as ProblemData : problems as ProblemData
+          return problem?.industry
+        })
+        .filter((id): id is string => id !== null && id !== undefined) || []
+    )]
+
+    let industryMap = new Map<string, string>()
+    if (industryIds.length > 0) {
+      const { data: industryCategories } = await supabaseAdmin
+        .from('categories')
+        .select('category_id, name')
+        .in('category_id', industryIds)
+        .eq('type', 'industry')
+      industryMap = new Map(industryCategories?.map(c => [c.category_id, c.name]) || [])
+    }
+
+    // セッションに業界名を追加
+    const sessionsWithIndustryNames = sessions?.map(session => {
+      // Supabase join may return array or single object
+      const problems = session.case_study_problems
+      const problem = Array.isArray(problems) ? problems[0] as ProblemData : problems as ProblemData
+      return {
+        ...session,
+        case_study_problems: problem ? {
+          ...problem,
+          industry_name: problem.industry ? industryMap.get(problem.industry) || problem.industry : null
+        } : null
+      }
+    }) || []
+
     return NextResponse.json({
       success: true,
-      sessions: sessions || [],
+      sessions: sessionsWithIndustryNames,
       pagination: {
         total: count || 0,
         limit,

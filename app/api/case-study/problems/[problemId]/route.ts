@@ -134,10 +134,25 @@ export async function GET(
       .eq('id', problemId)
       .single()
 
+    // 業界カテゴリー名を取得
+    let industryName = problem.industry
+    if (problem.industry) {
+      const { data: industryCategory } = await supabaseAdmin
+        .from('categories')
+        .select('name')
+        .eq('category_id', problem.industry)
+        .eq('type', 'industry')
+        .single()
+      if (industryCategory) {
+        industryName = industryCategory.name
+      }
+    }
+
     return NextResponse.json({
       success: true,
       problem: {
         ...problem,
+        industry_name: industryName,
         // ケース本文は概要のみ（500文字まで）
         case_text_preview: problem.case_text.substring(0, 500) + (problem.case_text.length > 500 ? '...' : '')
       },

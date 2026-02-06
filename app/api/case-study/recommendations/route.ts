@@ -219,6 +219,16 @@ export async function GET(request: Request) {
       })
     }
 
+    // 業界カテゴリー名を取得
+    const industryIds = [...new Set(problems.map(p => p.industry).filter(Boolean))]
+    const { data: industryCategories } = await supabaseAdmin
+      .from('categories')
+      .select('category_id, name')
+      .in('category_id', industryIds)
+      .eq('type', 'industry')
+
+    const industryMap = new Map(industryCategories?.map(c => [c.category_id, c.name]) || [])
+
     // レコメンドスコアを計算してソート
     const scoredProblems = problems.map(problem => {
       const { score, reason } = calculateRecommendationScore(
@@ -238,6 +248,7 @@ export async function GET(request: Request) {
 
       return {
         ...problem,
+        industry_name: problem.industry ? industryMap.get(problem.industry) || problem.industry : null,
         recommendation_score: score,
         recommendation_reason: reason,
         user_completed: completedProblemIds.includes(problem.id),

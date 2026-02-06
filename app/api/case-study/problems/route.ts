@@ -145,6 +145,16 @@ export async function GET(request: Request) {
       .select('*')
       .in('id', problemIds)
 
+    // 業界カテゴリー名を取得
+    const industryIds = [...new Set(problems?.map(p => p.industry).filter(Boolean) || [])]
+    const { data: industryCategories } = await supabaseAdmin
+      .from('categories')
+      .select('category_id, name')
+      .in('category_id', industryIds)
+      .eq('type', 'industry')
+
+    const industryMap = new Map(industryCategories?.map(c => [c.category_id, c.name]) || [])
+
     // 結果を結合
     const problemsWithStats = problems?.map(problem => {
       const userSession = userSessions?.find(s => s.problem_id === problem.id)
@@ -152,6 +162,8 @@ export async function GET(request: Request) {
 
       return {
         ...problem,
+        // 業界名（日本語）
+        industry_name: problem.industry ? industryMap.get(problem.industry) || problem.industry : null,
         // ユーザーの履歴
         user_completed: !!userSession,
         user_best_score: userSession?.score_percentage || null,

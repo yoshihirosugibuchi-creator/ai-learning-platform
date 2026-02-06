@@ -153,10 +153,25 @@ export async function GET(request: Request) {
       .eq('id', dailyChallenge.id)
       .single()
 
+    // 業界カテゴリー名を取得
+    let industryName = dailyChallenge.industry
+    if (dailyChallenge.industry) {
+      const { data: industryCategory } = await supabaseAdmin
+        .from('categories')
+        .select('name')
+        .eq('category_id', dailyChallenge.industry)
+        .eq('type', 'industry')
+        .single()
+      if (industryCategory) {
+        industryName = industryCategory.name
+      }
+    }
+
     return NextResponse.json({
       success: true,
       daily_challenge: {
         ...dailyChallenge,
+        industry_name: industryName,
         is_admin_featured: !!featuredProblem,
         user_completed: !!userSession,
         user_score: userSession?.score_percentage || null,

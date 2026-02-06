@@ -19,7 +19,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { ChevronDown, ChevronUp, ChevronLeft, Lightbulb, CheckCircle, AlertCircle } from 'lucide-react'
+import { ChevronDown, ChevronUp, ChevronLeft, Lightbulb, CheckCircle, AlertCircle, Brain } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import type {
   CaseStudyProblemRow,
@@ -367,6 +367,47 @@ export default function CaseStudySession({
 
   if (!currentStep) {
     return <div>ステップ情報が見つかりません</div>
+  }
+
+  // AI採点中：思考アニメーション表示
+  if (retrying) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
+        <div className="text-center space-y-6 p-8">
+          {/* 思考アニメーション */}
+          <div className="relative mx-auto w-24 h-24">
+            {/* 外側の回転リング */}
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin" />
+            {/* 中央の脳アイコン */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Brain className="h-10 w-10 text-primary animate-pulse" />
+            </div>
+          </div>
+
+          {/* テキスト */}
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">
+              AIがあなたの回答を分析中...
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              回答内容を評価し、フィードバックを生成しています
+            </p>
+          </div>
+
+          {/* ドットアニメーション */}
+          <div className="flex justify-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            しばらくお待ちください（通常10〜30秒程度）
+          </p>
+        </div>
+      </div>
+    )
   }
 
   // AI採点エラー時：リトライUI表示

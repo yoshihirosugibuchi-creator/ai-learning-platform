@@ -711,8 +711,9 @@ export default function CaseStudyGeneratePage() {
           const allCategories = data.categories.filter(
             (cat: Category) => cat.is_active !== false
           )
-          // メインカテゴリーと業界カテゴリーを分離
-          setCategories(allCategories.filter((c: Category) => c.type === 'main'))
+          // カテゴリー: メイン＋業界両方から選択可能
+          // 業界: 業界カテゴリーのみ
+          setCategories(allCategories) // main + industry 両方
           setIndustryCategories(allCategories.filter((c: Category) => c.type === 'industry'))
 
           // デフォルト設定
@@ -955,8 +956,8 @@ export default function CaseStudyGeneratePage() {
         if (!step.step_name) throw new Error(`steps[${i}].step_name が必要です`)
         if (!step.description) throw new Error(`steps[${i}].description が必要です`)
 
-        // 選択肢のバリデーション（記述式以外）
-        if (stepQuestionType !== 'descriptive') {
+        // 選択肢のバリデーション（記述式以外 = single, multiple, hybrid）
+        if (stepQuestionType !== 'text') {
           if (!step.options || step.options.length < 2) {
             throw new Error(`steps[${i}].options は2つ以上必要です（問題形式: ${stepQuestionType}）`)
           }
@@ -971,14 +972,14 @@ export default function CaseStudyGeneratePage() {
         }
 
         // 記述式・ハイブリッドの場合はessential_pointsが必要
-        if (stepQuestionType !== 'multiple_choice') {
+        if (stepQuestionType === 'text' || stepQuestionType === 'hybrid') {
           if (!step.model_answer.essential_points || step.model_answer.essential_points.length === 0) {
             throw new Error(`steps[${i}].model_answer.essential_points が必要です（問題形式: ${stepQuestionType}）`)
           }
         }
 
-        // 選択式・ハイブリッドの場合はchoice_explanationsが必要
-        if (stepQuestionType !== 'descriptive') {
+        // 選択式・ハイブリッドの場合はchoice_explanationsが必要（single, multiple, hybrid）
+        if (stepQuestionType !== 'text') {
           if (!step.model_answer.choice_explanations || Object.keys(step.model_answer.choice_explanations).length === 0) {
             console.warn(`steps[${i}].model_answer.choice_explanations がありません（推奨）`)
           }
@@ -1011,13 +1012,12 @@ export default function CaseStudyGeneratePage() {
     setImporting(true)
     try {
       const authHeaders = await getAuthHeaders()
-      const industryObj = industryCategories.find(c => c.category_id === params.industryId)
 
       const importData = {
         ...parsedData,
         primary_category_id: params.categoryId || 'logical_thinking_problem_solving',
-        primary_subcategory_id: params.subcategoryId || 'structured_thinking',
-        industry: industryObj?.name || (parsedData as Record<string, unknown>).industry || null,
+        primary_subcategory_id: params.subcategoryId || 'structured_thinking_mece',
+        industry: params.industryId || null,
         difficulty: (parsedData as Record<string, unknown>).difficulty || params.difficulty || 'intermediate',
         generation_model: params.aiModel,
         generation_prompt: generatedPrompt.substring(0, 2000),
@@ -1357,9 +1357,10 @@ export default function CaseStudyGeneratePage() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {params.questionType === 'multiple_choice' && '選択肢のみで回答する形式'}
-                    {params.questionType === 'descriptive' && '記述のみで回答する形式（選択肢なし）'}
-                    {params.questionType === 'hybrid' && '選択肢を選んだ上で理由を記述する形式'}
+                    {params.questionType === 'single' && '4択から1つだけ選ぶ形式（記述なし）'}
+                    {params.questionType === 'multiple' && '4択から1〜4つ選べる形式（記述なし）'}
+                    {params.questionType === 'text' && '選択肢なし、記述のみで回答する形式'}
+                    {params.questionType === 'hybrid' && '4択から1〜4つ選んだ上で理由を記述する形式'}
                   </p>
                 </div>
 

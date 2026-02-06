@@ -68,6 +68,10 @@ export default function CollectionPage() {
   })
   const [wisdomDataLoading, setWisdomDataLoading] = useState(true)
 
+  // サブカテゴリーマスターデータ（subcategory_id → 日本語名の変換用）
+  const [subcategories, setSubcategories] = useState<Array<{subcategory_id: string, name: string}>>([])
+
+
   // 古いnewKnowledgeCards関連の状態は削除（knowledgeCollectionDataに統合）
 
   // ナレッジカードコレクション表示用の型定義
@@ -104,7 +108,17 @@ export default function CollectionPage() {
       const loadWisdomCards = async () => {
         try {
           setWisdomDataLoading(true)
-          
+
+          // サブカテゴリーマスターを取得（英語ID→日本語名変換用）
+          const { data: subcategoryData } = await supabase
+            .from('subcategories')
+            .select('subcategory_id, name')
+
+          if (subcategoryData) {
+            setSubcategories(subcategoryData)
+            console.log(`🏷️ [Collection] Loaded ${subcategoryData.length} subcategories for display name lookup`)
+          }
+
           // 最初に基本データを取得
           const [collection, stats] = await Promise.all([
             getUserWisdomCards(user.id),
@@ -644,10 +658,11 @@ export default function CollectionPage() {
               <TabsContent value="all">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredWisdomCards.map(card => (
-                    <WisdomCard 
-                      key={card.id} 
+                    <WisdomCard
+                      key={card.id}
                       card={card as WisdomCardType & { obtained?: boolean; count?: number }}
                       showDetails={true}
+                      subcategories={subcategories}
                     />
                   ))}
                 </div>
@@ -656,10 +671,11 @@ export default function CollectionPage() {
               <TabsContent value="obtained">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {obtainedWisdomCards.map(card => (
-                    <WisdomCard 
-                      key={card.id} 
+                    <WisdomCard
+                      key={card.id}
                       card={card as WisdomCardType & { obtained?: boolean; count?: number }}
                       showDetails={true}
+                      subcategories={subcategories}
                     />
                   ))}
                 </div>
@@ -675,10 +691,11 @@ export default function CollectionPage() {
               <TabsContent value="locked">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {lockedWisdomCards.map(card => (
-                    <WisdomCard 
-                      key={card.id} 
+                    <WisdomCard
+                      key={card.id}
                       card={card as WisdomCardType & { obtained?: boolean; count?: number }}
                       showDetails={false}
+                      subcategories={subcategories}
                     />
                   ))}
                 </div>

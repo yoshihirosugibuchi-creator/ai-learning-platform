@@ -7,6 +7,9 @@ import type { CaseStudySkillAxis } from '@/lib/types/case-study'
 /** サポートするAIプロバイダー名 */
 export type AIProviderName = 'huggingface' | 'openai' | 'anthropic' | 'gemini'
 
+/** 問題形式タイプ */
+export type QuestionType = 'single' | 'multiple' | 'ordering' | 'text' | 'hybrid'
+
 /** 採点リクエスト */
 export interface AIScoringRequest {
   /** ケースの本文 */
@@ -16,6 +19,8 @@ export interface AIScoringRequest {
     stepNumber: number
     stepName: string
     description: string
+    /** 問題形式: single=単一選択, multiple=複数選択, text=記述のみ, hybrid=選択+記述 */
+    questionType: QuestionType
     options: unknown
     modelAnswer: unknown
     targetSkills: string[]

@@ -243,6 +243,22 @@ export default function QuizSession({
   // ヒント使用状態管理
   const [hintUsageMap, setHintUsageMap] = useState<Record<string, number>>({})
 
+  // サブカテゴリーマスターデータ（格言カード表示用）
+  const [subcategories, setSubcategories] = useState<Array<{subcategory_id: string, name: string}>>([])
+
+  // サブカテゴリーマスターを取得（格言カード表示用）
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      const { data } = await supabase
+        .from('subcategories')
+        .select('subcategory_id, name')
+      if (data) {
+        setSubcategories(data)
+      }
+    }
+    fetchSubcategories()
+  }, [])
+
   // 🔧 チャレンジクイズDB更新機能を一時的に無効化（フリーズ問題解決のため）
   // useEffect(() => {
   //   if (isFinished && challengeQuizUpdateData && !category) {
@@ -1342,9 +1358,10 @@ export default function QuizSession({
               </div>
               <div className="flex justify-center">
                 <div className="w-64">
-                  <WisdomCard 
-                    card={{...results.rewardedCard, obtained: true, count: results.cardCount}} 
+                  <WisdomCard
+                    card={{...results.rewardedCard, obtained: true, count: results.cardCount}}
                     showDetails={false}
+                    subcategories={subcategories}
                   />
                 </div>
               </div>

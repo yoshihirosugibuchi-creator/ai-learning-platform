@@ -4,14 +4,18 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Type definitions for fallback JSON structure
 interface WisdomCardFallbackData {
-  wisdom_cards: WisdomCardMaster[]
-  metadata: {
-    version: string
-    total_cards: number
-    last_updated: string
-    source: string
-    rarity_distribution: Record<string, number>
-    categories: string[]
+  // Support both 'wisdom_cards' and 'cards' keys for backward compatibility
+  wisdom_cards?: WisdomCardMaster[]
+  cards?: WisdomCardMaster[]
+  metadata?: {
+    version?: string
+    total_cards?: number
+    last_updated?: string
+    source?: string
+    rarity_distribution?: Record<string, number>
+    categories?: string[]
+    generatedAt?: string
+    stats?: Record<string, unknown>
   }
 }
 
@@ -58,15 +62,17 @@ async function getWisdomCardsFromJSON(): Promise<WisdomCardMaster[]> {
   try {
     console.log('📁 Loading wisdom cards from JSON fallback...')
     const response = await fetch('/data/wisdom-cards-fallback.json')
-    
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
-    
+
     const data: WisdomCardFallbackData = await response.json()
-    console.log(`✅ Successfully loaded ${data.wisdom_cards.length} cards from JSON fallback`)
-    
-    return data.wisdom_cards
+    // Support both 'wisdom_cards' and 'cards' keys
+    const cards = data.wisdom_cards || data.cards || []
+    console.log(`✅ Successfully loaded ${cards.length} cards from JSON fallback`)
+
+    return cards
   } catch (error) {
     console.error('❌ Error loading wisdom cards from JSON:', error)
     throw error

@@ -57,7 +57,17 @@ export class HuggingFaceProvider implements AIProvider {
   }
 
   private parseResponse(rawText: string, request: AIScoringRequest): AIScoringResponse {
-    const parsed = JSON.parse(rawText.trim())
+    // マークダウンコードブロックを除去（```json ... ``` 形式に対応）
+    let jsonText = rawText.trim()
+    if (jsonText.startsWith('```')) {
+      // ```json または ``` で始まる場合、最初の行と最後の ``` を除去
+      const lines = jsonText.split('\n')
+      const startIndex = lines[0].startsWith('```') ? 1 : 0
+      const endIndex = lines[lines.length - 1] === '```' ? lines.length - 1 : lines.length
+      jsonText = lines.slice(startIndex, endIndex).join('\n').trim()
+    }
+
+    const parsed = JSON.parse(jsonText)
 
     if (!parsed.step_scores || !parsed.skill_scores) {
       throw new Error('Invalid scoring structure from HuggingFace')

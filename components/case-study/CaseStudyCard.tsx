@@ -13,6 +13,7 @@ interface CaseStudyCardProps {
     primary_category_id: string
     difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert'
     industry?: string | null
+    industry_name?: string | null
     estimated_minutes: number
     step_count: number
     user_completed?: boolean
@@ -47,8 +48,8 @@ export default function CaseStudyCard({ problem, showRecommendation = false }: C
           <Badge variant="secondary" className={difficulty.color}>
             {difficulty.label}
           </Badge>
-          {problem.industry && (
-            <Badge variant="outline">{problem.industry}</Badge>
+          {(problem.industry_name || problem.industry) && (
+            <Badge variant="outline">{problem.industry_name || problem.industry}</Badge>
           )}
         </div>
 

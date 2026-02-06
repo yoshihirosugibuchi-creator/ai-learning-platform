@@ -95,6 +95,7 @@ async function performAIScoring(
     step_number: number
     step_name: string
     description: string
+    question_type: string
     options: unknown
     model_answer: unknown
     target_skills: string[]
@@ -134,6 +135,7 @@ async function performAIScoring(
         stepNumber: s.step_number,
         stepName: s.step_name,
         description: s.description,
+        questionType: (s.question_type as 'single' | 'multiple' | 'ordering' | 'text' | 'hybrid') || 'hybrid',
         options: s.options,
         modelAnswer: s.model_answer,
         targetSkills: s.target_skills || [],

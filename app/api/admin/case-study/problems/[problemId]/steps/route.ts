@@ -170,7 +170,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       step_name: body.step_name.trim(),
       description: body.description.trim(),
       category_id: body.category_id || 'logical_thinking_problem_solving',
-      subcategory_id: body.subcategory_id || 'structured_thinking',
+      subcategory_id: body.subcategory_id || 'structured_thinking_mece',
       question_type: questionType,
       options: body.options || null,
       model_answer: body.model_answer,

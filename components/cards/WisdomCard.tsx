@@ -13,18 +13,21 @@ interface WisdomCardProps {
   className?: string
   onClick?: () => void
   showDetails?: boolean
+  subcategories?: Array<{subcategory_id: string, name: string}>
 }
 
-export default function WisdomCard({ 
-  card, 
-  className, 
-  onClick, 
-  showDetails = false 
+export default function WisdomCard({
+  card,
+  className,
+  onClick,
+  showDetails = false,
+  subcategories
 }: WisdomCardProps) {
   const [isFlipped, setIsFlipped] = useState(false)
   const rarityConfig = getRarityConfig(card.rarity)
   const categoryDisplayName = getCategoryDisplayName(card.categoryId)
-  const subcategoryDisplayName = card.subcategoryId ? getSubcategoryDisplayName(card.subcategoryId) : ''
+  // サブカテゴリー名の取得：DBから取得したsubcategoriesを使用（フォールバックあり）
+  const subcategoryDisplayName = card.subcategoryId ? getSubcategoryDisplayName(card.subcategoryId, subcategories) : ''
   const categoryIcon = getCategoryIcon(categoryDisplayName)
 
   // 統一ビジュアルシステム

@@ -86,6 +86,7 @@ interface Step {
 interface Category {
   category_id: string
   name: string
+  type?: string
 }
 
 interface Subcategory {
@@ -163,6 +164,7 @@ export default function CaseStudyProblemDetailPage() {
 
   // ステップ編集用state
   const [categories, setCategories] = useState<Category[]>([])
+  const [industryCategories, setIndustryCategories] = useState<Category[]>([])
   const [stepEditorOpen, setStepEditorOpen] = useState(false)
   const [editingStep, setEditingStep] = useState<Step | null>(null)
   const [newStepNumber, setNewStepNumber] = useState(1)
@@ -227,7 +229,11 @@ export default function CaseStudyProblemDetailPage() {
       const res = await fetch('/api/categories')
       const data = await res.json()
       if (data.categories) {
-        setCategories(data.categories.filter((c: Category & { is_active?: boolean }) => c.is_active !== false))
+        const activeCategories = data.categories.filter((c: Category & { is_active?: boolean; type?: string }) => c.is_active !== false)
+        // カテゴリー: main + industry 両方から選択可能
+        setCategories(activeCategories)
+        // 業界: industryタイプのみ
+        setIndustryCategories(activeCategories.filter((c: Category & { type?: string }) => c.type === 'industry'))
       }
     } catch (error) {
       console.error('Categories fetch error:', error)
@@ -683,13 +689,25 @@ export default function CaseStudyProblemDetailPage() {
                 <div>
                   <Label>業界</Label>
                   {editMode ? (
-                    <Input
+                    <Select
                       value={formData.industry}
-                      onChange={(e) => setFormData(prev => ({ ...prev, industry: e.target.value }))}
-                      placeholder="例: IT, 金融, 製造"
-                    />
+                      onValueChange={(v) => setFormData(prev => ({ ...prev, industry: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="業界を選択" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {industryCategories.map((cat) => (
+                          <SelectItem key={cat.category_id} value={cat.category_id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   ) : (
-                    <p className="text-sm mt-1">{problem?.industry || '-'}</p>
+                    <p className="text-sm mt-1">
+                      {industryCategories.find(c => c.category_id === problem?.industry)?.name || problem?.industry || '-'}
+                    </p>
                   )}
                 </div>
                 <div>

@@ -51,6 +51,7 @@ interface HistorySession {
     title: string
     difficulty: CaseStudyDifficulty
     industry: string | null
+    industry_name?: string | null
     estimated_minutes: number
     step_count: number
   }
@@ -301,8 +302,8 @@ export default function CaseStudyHistoryPage() {
                               {formatTime(session.total_time_seconds)}
                             </span>
                           )}
-                          {problem.industry && (
-                            <span>{problem.industry}</span>
+                          {(problem.industry_name || problem.industry) && (
+                            <span>{problem.industry_name || problem.industry}</span>
                           )}
                         </div>
 
