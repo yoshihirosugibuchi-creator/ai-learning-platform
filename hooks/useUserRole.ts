@@ -59,9 +59,30 @@ export function useUserRole() {
             resolve({ data: { session: null } })
           }, 5000)
         )
-        
-        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise])
-        
+
+        let { data: { session } } = await Promise.race([sessionPromise, timeoutPromise])
+
+        // セッションが期限切れまたは期限切れ間近の場合はリフレッシュを試行
+        if (session?.expires_at) {
+          const now = Math.floor(Date.now() / 1000)
+          const timeUntilExpiry = session.expires_at - now
+
+          if (timeUntilExpiry < 60) { // 1分以内に期限切れ
+            console.log('🔄 Session expiring soon, refreshing before API call...')
+            try {
+              const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+              if (!refreshError && refreshData.session) {
+                session = refreshData.session
+                console.log('✅ Session refreshed successfully in useUserRole')
+              } else {
+                console.warn('⚠️ Session refresh failed:', refreshError?.message)
+              }
+            } catch (refreshErr) {
+              console.warn('⚠️ Session refresh error:', refreshErr)
+            }
+          }
+        }
+
         if (!session?.access_token) {
           console.debug('No session token available, user not authenticated')
           setUserRole(null)
@@ -70,17 +91,36 @@ export function useUserRole() {
           return
         }
 
-        const response = await fetch('/api/auth/user', {
+        let response = await fetch('/api/auth/user', {
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json'
           }
         })
 
+        // 401エラーの場合、セッションリフレッシュしてリトライ
+        if (response.status === 401) {
+          console.log('🔄 Got 401, attempting session refresh and retry...')
+          try {
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+            if (!refreshError && refreshData.session) {
+              console.log('✅ Session refreshed, retrying API call...')
+              response = await fetch('/api/auth/user', {
+                headers: {
+                  'Authorization': `Bearer ${refreshData.session.access_token}`,
+                  'Content-Type': 'application/json'
+                }
+              })
+            }
+          } catch (refreshErr) {
+            console.warn('⚠️ Session refresh failed on 401:', refreshErr)
+          }
+        }
+
         if (!response.ok) {
-          // 401エラー（認証失敗）の場合は静かに処理
+          // 401エラー（リトライ後も失敗）の場合は静かに処理
           if (response.status === 401) {
-            console.debug('User not authenticated, skipping role fetch')
+            console.debug('User not authenticated after retry, skipping role fetch')
             setUserRole(null)
             setLoading(false)
             cachedUserRole = null

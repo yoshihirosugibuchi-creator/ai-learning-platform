@@ -180,11 +180,12 @@ export async function POST(
           })) || []
         }
 
-        // ワークフローのoutline_dataを更新
+        // ワークフローのoutline_dataとcurrent_stepを更新
         const { error: updateError } = await supabaseAdmin
           .from('ai_course_workflows')
           .update({
             outline_data: JSON.parse(JSON.stringify(syncedOutlineData)),
+            current_step: '5',  // 次のステップへ進める（文字列型）
             updated_at: new Date().toISOString()
           })
           .eq('id', workflowId)
@@ -257,12 +258,13 @@ export async function POST(
     if (existingCourse) {
       console.log(`⚠️ [PublishOutline] Course already exists with title "${courseTitle}": ${existingCourse.id}`)
 
-      // ワークフローのpublished_course_idを更新（不整合修正）
+      // ワークフローのpublished_course_idとcurrent_stepを更新（不整合修正）
       await supabaseAdmin
         .from('ai_course_workflows')
         .update({
           published_course_id: existingCourse.id,
           status: 'outline_approved',
+          current_step: '5',  // 次のステップへ進める（文字列型）
           updated_at: new Date().toISOString()
         })
         .eq('id', workflowId)
@@ -461,7 +463,7 @@ export async function POST(
       console.log('📋 [PublishOutline] Updated first session ID:', firstGenre?.themes?.[0]?.sessions?.[0]?.id)
     }
 
-    // ワークフローのステータス、published_course_id、更新されたoutline_dataを更新
+    // ワークフローのステータス、published_course_id、current_step、更新されたoutline_dataを更新
     const { error: updateError } = await supabaseAdmin
       .from('ai_course_workflows')
       .update({
@@ -469,6 +471,7 @@ export async function POST(
         // JSON型に変換
         outline_data: JSON.parse(JSON.stringify(updatedOutlineData)),
         status: 'outline_approved',
+        current_step: '5',  // 次のステップへ進める（文字列型）
         updated_at: new Date().toISOString()
       })
       .eq('id', workflowId)
