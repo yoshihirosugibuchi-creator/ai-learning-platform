@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUserRole } from '@/hooks/useUserRole'
 
@@ -20,26 +20,59 @@ export default function PermissionGuard({
   redirectTo = '/'
 }: PermissionGuardProps) {
   const router = useRouter()
-  const { userRole, loading, error } = useUserRole()
+  const { userRole, loading, error, retry: retryUserRole } = useUserRole()
+  const [retryCount, setRetryCount] = useState(0)
+  const [showError, setShowError] = useState(false)
+
+  // エラー表示を遅延させる（一時的なエラーを無視）
+  useEffect(() => {
+    if (error || (!loading && !userRole)) {
+      // 3秒待ってからエラー表示（その間にリフレッシュが完了する可能性あり）
+      const timer = setTimeout(() => {
+        if (retryCount < 2) {
+          setRetryCount(prev => prev + 1)
+          // リトライをトリガー（ページをリロードせずに状態を更新）
+          console.log('🔄 PermissionGuard: Retrying permission check...', retryCount + 1)
+          retryUserRole()
+        } else {
+          setShowError(true)
+        }
+      }, 2000)
+      return () => clearTimeout(timer)
+    } else {
+      setShowError(false)
+      setRetryCount(0)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error, loading, userRole, retryCount])
+
+  const handleRetry = useCallback(() => {
+    setRetryCount(0)
+    setShowError(false)
+    // まずuseUserRoleのリトライを試行
+    retryUserRole()
+  }, [retryUserRole])
 
   // Show loading state while checking permissions
-  if (loading) {
+  if (loading || (!showError && !userRole && retryCount < 2)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">権限を確認中...</p>
+          <p className="text-muted-foreground">
+            {retryCount > 0 ? '再確認中...' : '権限を確認中...'}
+          </p>
         </div>
       </div>
     )
   }
 
-  // Handle errors
-  if (error || !userRole) {
+  // Handle errors (only after retries exhausted)
+  if (showError || (!loading && !userRole)) {
     if (fallback) {
       return <>{fallback}</>
     }
-    
+
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">
@@ -47,15 +80,28 @@ export default function PermissionGuard({
           <p className="text-muted-foreground">
             ユーザー情報を取得できませんでした。
           </p>
-          <button 
-            onClick={() => router.push(redirectTo)}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          >
-            ホームに戻る
-          </button>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={handleRetry}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              再試行
+            </button>
+            <button
+              onClick={() => router.push(redirectTo)}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              ホームに戻る
+            </button>
+          </div>
         </div>
       </div>
     )
+  }
+
+  // この時点でuserRoleはnullではないことが保証されている
+  if (!userRole) {
+    return null
   }
 
   // Check specific role requirement

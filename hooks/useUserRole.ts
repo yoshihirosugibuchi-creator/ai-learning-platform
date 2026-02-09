@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
 
@@ -20,13 +20,59 @@ export interface UserRoleData {
 // キャッシュ用のグローバル変数
 let cachedUserRole: UserRoleData | null = null
 let cacheExpiry: number = 0
-const CACHE_DURATION = 10 * 60 * 1000 // 10分間キャッシュ（延長でAPI呼び出し削減）
+const CACHE_DURATION = 10 * 60 * 1000 // 10分間キャッシュ
+
+// タブが非アクティブになった時刻を記録
+let tabHiddenAt: number | null = null
 
 export function useUserRole() {
   const { user } = useAuth()
   const [userRole, setUserRole] = useState<UserRoleData | null>(cachedUserRole)
   const [loading, setLoading] = useState(!cachedUserRole)
   const [error, setError] = useState<string | null>(null)
+  const [retryTrigger, setRetryTrigger] = useState(0)
+  const isRetryingRef = useRef(false)
+
+  // 再試行関数
+  const retry = useCallback(() => {
+    if (isRetryingRef.current) return // 重複リトライ防止
+    isRetryingRef.current = true
+    cachedUserRole = null
+    cacheExpiry = 0
+    setRetryTrigger(prev => prev + 1)
+    setTimeout(() => { isRetryingRef.current = false }, 1000)
+  }, [])
+
+  // タブがアクティブになった時のハンドラ
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'hidden') {
+        // タブが非アクティブになった時刻を記録
+        tabHiddenAt = Date.now()
+        return
+      }
+
+      // タブがアクティブになった
+      if (document.visibilityState === 'visible' && tabHiddenAt && user) {
+        const hiddenDuration = Date.now() - tabHiddenAt
+        tabHiddenAt = null
+
+        // 5分以上離れていた場合、キャッシュをクリアして再取得
+        if (hiddenDuration > 5 * 60 * 1000) {
+          console.log('🔄 useUserRole: Tab was hidden for', Math.round(hiddenDuration / 1000), 'seconds, refreshing...')
+
+          // AuthProviderのセッションリフレッシュを待つ
+          await new Promise(resolve => setTimeout(resolve, 2000))
+
+          // キャッシュをクリアして再取得
+          retry()
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [user, retry])
 
   useEffect(() => {
     async function fetchUserRole() {
@@ -183,12 +229,13 @@ export function useUserRole() {
     }
 
     fetchUserRole()
-  }, [user])
+  }, [user, retryTrigger])
 
   return {
     userRole,
     loading,
     error,
+    retry,
     // Helper functions for common permission checks
     isAdmin: userRole?.permissions.can_access_admin || false,
     isSystemAdmin: userRole?.role === 'system_admin',

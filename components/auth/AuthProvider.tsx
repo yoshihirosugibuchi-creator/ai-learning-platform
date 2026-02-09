@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { UserProfile, getOrCreateUserProfile } from '@/lib/supabase-user'
@@ -39,6 +39,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [, setIsHydrated] = useState(false)
   const [lastLoadedUserId, setLastLoadedUserId] = useState<string | null>(null)
+
+  // 最新のuser状態を追跡するref（visibilitychange等のイベントハンドラで使用）
+  const userRef = useRef<User | null>(null)
+  userRef.current = user
 
   const loadUserProfile = async (user: User | null) => {
     if (user) {
@@ -292,78 +296,121 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // タブがアクティブになった時にセッションをリフレッシュ（タブ切り替え対策）
     // より積極的に常にリフレッシュして、API呼び出し失敗を防ぐ
     const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible' && user) {
-        console.log('👁️ Tab became visible, proactively refreshing session...')
-        try {
-          // 常にセッションをリフレッシュ（期限に関係なく）
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+      // refを使用して最新のuser状態を取得（クロージャの問題を回避）
+      const currentUser = userRef.current
+      if (document.visibilityState !== 'visible' || !currentUser) {
+        return
+      }
 
-          if (refreshError || !refreshData.session) {
-            console.error('❌ Session refresh failed on tab focus:', refreshError)
-            // リフレッシュ失敗時はログアウトしてログインページへ
-            await supabase.auth.signOut()
-            setUser(null)
-            setProfile(null)
-            window.location.href = '/login'
-          } else {
+      console.log('👁️ Tab became visible, proactively refreshing session...')
+
+      // リトライロジック付きでリフレッシュ
+      let retryCount = 0
+      const maxRetries = 2
+
+      while (retryCount <= maxRetries) {
+        try {
+          // タイムアウト付きでリフレッシュ
+          const refreshPromise = supabase.auth.refreshSession()
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Refresh timeout')), 8000)
+          )
+
+          const { data: refreshData, error: refreshError } = await Promise.race([
+            refreshPromise,
+            timeoutPromise
+          ])
+
+          if (!refreshError && refreshData.session) {
             const expiresAt = refreshData.session.expires_at || 0
             const now = Math.floor(Date.now() / 1000)
             console.log('✅ Session refreshed on tab focus, expires in', Math.round((expiresAt - now) / 60), 'minutes')
             setUser(refreshData.session.user)
+            return // 成功したので終了
+          }
+
+          console.warn(`⚠️ Session refresh attempt ${retryCount + 1} failed:`, refreshError?.message)
+          retryCount++
+
+          if (retryCount <= maxRetries) {
+            // リトライ前に少し待機
+            await new Promise(resolve => setTimeout(resolve, 1000))
           }
         } catch (err) {
-          console.error('❌ Error refreshing session on tab focus:', err)
+          console.warn(`⚠️ Session refresh attempt ${retryCount + 1} error:`, err)
+          retryCount++
+
+          if (retryCount <= maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+          }
         }
       }
+
+      // 全リトライ失敗後もすぐにログアウトせず、既存セッションで継続を試みる
+      console.warn('⚠️ All refresh attempts failed, but keeping current session. User may need to re-login if API calls fail.')
+      // 注: ここでログアウトしない。API呼び出し時に401が返ったらuseUserRoleで処理する
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    // 定期的なセッション健全性チェック（20分毎、負荷軽減・プロフィール保持）
+    // 定期的なセッション健全性チェック（5分毎）
     const sessionHealthCheck = setInterval(async () => {
       try {
-        // タイムアウト付きでセッション確認
+        // タイムアウト付きでセッション確認（タイムアウトはnullを返す、エラーにしない）
         const sessionPromise = supabase.auth.getSession()
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Health check timeout')), 5000)
+        const timeoutPromise: Promise<{ data: { session: null }, error: null }> = new Promise((resolve) =>
+          setTimeout(() => {
+            console.debug('⏱️ Health check timed out, skipping this cycle')
+            resolve({ data: { session: null }, error: null })
+          }, 10000)
         )
-        
+
         const { data: { session }, error } = await Promise.race([
           sessionPromise,
           timeoutPromise
-        ]) as { data: { session: Session | null }, error: { message?: string } | null }
-        
+        ])
+
         if (error) {
-          console.error('⚠️ Session health check failed:', error)
+          console.warn('⚠️ Session health check failed:', error)
           return
         }
-        
-        if (session && 'expires_at' in session && typeof session.expires_at === 'number') {
+
+        // タイムアウトでsessionがnullの場合はスキップ
+        if (!session) {
+          return
+        }
+
+        if ('expires_at' in session && typeof session.expires_at === 'number') {
           const now = Math.floor(Date.now() / 1000)
           const expiresAt = session.expires_at
           const timeUntilExpiry = expiresAt - now
-          
-          // 2分以内に期限切れになる場合は事前リフレッシュ（プロフィール保持のため閾値短縮）
+
+          // 2分以内に期限切れになる場合は事前リフレッシュ
           if (timeUntilExpiry < 120 && timeUntilExpiry > 0) {
             console.log('🔄 Pre-emptive session refresh (expires in', timeUntilExpiry, 'seconds)')
             try {
-              const _refreshResult = await Promise.race([
-                supabase.auth.refreshSession(),
-                new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Refresh timeout')), 5000)
-                )
-              ])
-              // ✅ リフレッシュ成功時もプロフィールを保持（クリアしない）
-              console.log('✅ Session refreshed successfully, profile preserved')
+              const refreshPromise = supabase.auth.refreshSession()
+              const refreshTimeoutPromise: Promise<{ data: { session: null }, error: null }> = new Promise((resolve) =>
+                setTimeout(() => {
+                  console.debug('⏱️ Refresh timed out, will retry next cycle')
+                  resolve({ data: { session: null }, error: null })
+                }, 10000)
+              )
+
+              const refreshResult = await Promise.race([refreshPromise, refreshTimeoutPromise])
+              if (refreshResult.data.session) {
+                console.log('✅ Session refreshed successfully, profile preserved')
+              }
             } catch (refreshError) {
-              console.error('❌ Pre-emptive refresh failed:', refreshError)
+              console.warn('⚠️ Pre-emptive refresh failed:', refreshError)
             }
           }
         }
       } catch (error) {
-        console.error('❌ Session health check error:', error)
+        // エラーは警告レベルで記録（ユーザー体験に影響しない）
+        console.warn('⚠️ Session health check error:', error)
       }
-    }, 5 * 60 * 1000) // 5分毎（セッション維持のため頻度を上げる）
+    }, 5 * 60 * 1000) // 5分毎
 
     return () => {
       console.log('🧹 AuthProvider: Cleanup')
