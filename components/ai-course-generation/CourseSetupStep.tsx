@@ -57,6 +57,7 @@ interface CourseSetupWorkflow {
     includeQuizzes: boolean
     interactivityLevel: 'low' | 'medium' | 'high'
     contentStyle: 'formal' | 'casual' | 'technical'
+    diagramStyle?: 'mermaid' | 'ascii' | 'none'
   }
   published_course_id?: string  // コースデータ存在判定用
 }
@@ -493,6 +494,25 @@ export function CourseSetupStep({ workflow, onChange, onNext, onSave }: CourseSe
               </select>
               <div className="text-xs text-muted-foreground mt-1">
                 生成されるコンテンツの相互作用要素の多さを設定
+              </div>
+            </div>
+
+            <div>
+              <Label>図表・ダイアグラム形式</Label>
+              <select
+                value={workflow.generationPreferences?.diagramStyle || 'mermaid'}
+                onChange={(e) => updateGenerationPreferences({
+                  diagramStyle: e.target.value as 'mermaid' | 'ascii' | 'none'
+                })}
+                className={`mt-1 w-full p-2 border border-border rounded-md ${hasCourseData ? 'opacity-50' : ''}`}
+                disabled={hasCourseData}
+              >
+                <option key="diagram-mermaid" value="mermaid">Mermaid図表（ビジュアル重視）</option>
+                <option key="diagram-ascii" value="ascii">テキスト図表（シンプル・確実）</option>
+                <option key="diagram-none" value="none">図表なし（テキストのみ）</option>
+              </select>
+              <div className="text-xs text-muted-foreground mt-1">
+                フローチャートや関係図の表現形式を選択
               </div>
             </div>
           </div>

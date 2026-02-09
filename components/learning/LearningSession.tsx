@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { LearningSession as LearningSessionType, SessionTypeLabels, UserBadge, LearningCourse } from '@/lib/types/learning'
 import { useAuth } from '@/components/auth/AuthProvider'
+import MermaidRenderer, { parseContentWithMermaid } from './MermaidRenderer'
 import { useXPStats } from '@/hooks/useXPStats'
 import { supabase } from '@/lib/supabase'
 import { acquireKnowledgeCard } from '@/lib/knowledge-cards-v2'
@@ -771,11 +772,23 @@ export default function LearningSession({
                   
                   {item.type === 'text' && item.content && (
                     <div className="space-y-3">
-                      {item.content.split('\n').map((paragraph: string, pIndex: number) => (
-                        paragraph.trim() && (
-                          <p key={pIndex} className="leading-relaxed text-gray-700">
-                            {paragraph.trim()}
-                          </p>
+                      {parseContentWithMermaid(item.content).map((segment, segIndex) => (
+                        segment.type === 'mermaid' ? (
+                          <MermaidRenderer
+                            key={`mermaid-${segIndex}`}
+                            chart={segment.content}
+                            className="my-4"
+                          />
+                        ) : (
+                          <div key={`text-${segIndex}`}>
+                            {segment.content.split('\n').map((paragraph: string, pIndex: number) => (
+                              paragraph.trim() && (
+                                <p key={pIndex} className="leading-relaxed text-gray-700">
+                                  {paragraph.trim()}
+                                </p>
+                              )
+                            ))}
+                          </div>
                         )
                       ))}
                     </div>
@@ -784,12 +797,22 @@ export default function LearningSession({
                   {item.type === 'key_points' && item.content && (
                     <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
                       <div className="space-y-2">
-                        {item.content.split('\n').map((point: string, pIndex: number) => (
-                          point.trim() && (
-                            <div key={pIndex} className="flex items-start space-x-2">
-                              <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
-                              <span className="text-sm text-blue-800">{point.trim().replace(/^[•\-]\s*/, '')}</span>
-                            </div>
+                        {parseContentWithMermaid(item.content).map((segment, segIndex) => (
+                          segment.type === 'mermaid' ? (
+                            <MermaidRenderer
+                              key={`mermaid-kp-${segIndex}`}
+                              chart={segment.content}
+                              className="my-4 bg-white"
+                            />
+                          ) : (
+                            segment.content.split('\n').map((point: string, pIndex: number) => (
+                              point.trim() && (
+                                <div key={`kp-${segIndex}-${pIndex}`} className="flex items-start space-x-2">
+                                  <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                                  <span className="text-sm text-blue-800">{point.trim().replace(/^[•\-]\s*/, '')}</span>
+                                </div>
+                              )
+                            ))
                           )
                         ))}
                       </div>
@@ -799,11 +822,21 @@ export default function LearningSession({
                   {item.type === 'example' && item.content && (
                     <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
                       <div className="space-y-2">
-                        {item.content.split('\n').map((line: string, pIndex: number) => (
-                          line.trim() && (
-                            <p key={pIndex} className="text-sm text-green-800 leading-relaxed">
-                              {line.trim()}
-                            </p>
+                        {parseContentWithMermaid(item.content).map((segment, segIndex) => (
+                          segment.type === 'mermaid' ? (
+                            <MermaidRenderer
+                              key={`mermaid-ex-${segIndex}`}
+                              chart={segment.content}
+                              className="my-4 bg-white"
+                            />
+                          ) : (
+                            segment.content.split('\n').map((line: string, pIndex: number) => (
+                              line.trim() && (
+                                <p key={`ex-${segIndex}-${pIndex}`} className="text-sm text-green-800 leading-relaxed">
+                                  {line.trim()}
+                                </p>
+                              )
+                            ))
                           )
                         ))}
                       </div>

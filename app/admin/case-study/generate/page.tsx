@@ -552,6 +552,7 @@ export default function CaseStudyGeneratePage() {
     infoClarityCode: '',
     stepCount: 5,
     questionType: 'hybrid' as QuestionType,
+    diagramStyle: 'mermaid' as 'mermaid' | 'ascii' | 'none',
     customPrompt: '',
     aiModel: 'chatgpt' as 'claude' | 'chatgpt' | 'gemini',
   })
@@ -674,6 +675,7 @@ export default function CaseStudyGeneratePage() {
             infoClarityCode: log.info_clarity_code || '',
             stepCount: log.step_count || 5,
             questionType: log.question_type || 'hybrid',
+            diagramStyle: log.diagram_style || 'mermaid',
             customPrompt: log.custom_prompt || '',
             aiModel: log.ai_model || 'chatgpt',
           })
@@ -905,6 +907,7 @@ export default function CaseStudyGeneratePage() {
       infoClarityName: clarityObj?.name,
       stepCount: params.stepCount,
       questionType: params.questionType,
+      diagramStyle: params.diagramStyle,
       customPrompt: params.customPrompt || undefined,
       aiModel: params.aiModel,
       // DB駆動型マスタデータ
@@ -1381,6 +1384,24 @@ export default function CaseStudyGeneratePage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div>
+                  <Label>図表形式</Label>
+                  <Select
+                    value={params.diagramStyle}
+                    onValueChange={(v) => setParams(p => ({ ...p, diagramStyle: v as 'mermaid' | 'ascii' | 'none' }))}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mermaid">Mermaid図表（ビジュアル重視）</SelectItem>
+                      <SelectItem value="ascii">テキスト図表（シンプル）</SelectItem>
+                      <SelectItem value="none">図表なし（テキストのみ）</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ケース本文で使用する図表の形式
+                  </p>
                 </div>
               </div>
 

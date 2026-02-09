@@ -35,6 +35,7 @@ import {
   FileCode,
   HelpCircle
 } from 'lucide-react'
+import MermaidRenderer, { parseContentWithMermaid } from '@/components/learning/MermaidRenderer'
 
 interface SessionData {
   id: string
@@ -1430,9 +1431,21 @@ export function ContentGenerationStep({
                                                         </Badge>
                                                         <span className="font-medium">{content.title || 'タイトルなし'}</span>
                                                       </div>
-                                                      <p className="text-gray-700 whitespace-pre-wrap text-xs max-h-32 overflow-y-auto">
-                                                        {content.content || 'コンテンツなし'}
-                                                      </p>
+                                                      <div className="text-gray-700 text-xs max-h-48 overflow-y-auto">
+                                                        {parseContentWithMermaid(content.content || 'コンテンツなし').map((segment, segIndex) => (
+                                                          segment.type === 'mermaid' ? (
+                                                            <MermaidRenderer
+                                                              key={`mermaid-${segIndex}`}
+                                                              chart={segment.content}
+                                                              className="my-2"
+                                                            />
+                                                          ) : (
+                                                            <p key={`text-${segIndex}`} className="whitespace-pre-wrap">
+                                                              {segment.content}
+                                                            </p>
+                                                          )
+                                                        ))}
+                                                      </div>
                                                     </div>
                                                   ))}
                                                 </div>

@@ -26,16 +26,113 @@ export interface ContentGenerationPrompt {
   generationType: 'single' | 'theme' | 'genre'
 }
 
+export type DiagramStyle = 'mermaid' | 'ascii' | 'none'
+
 export class ContentPromptBuilder {
-  
+
+  /**
+   * 図表・ダイアグラムのガイダンスを取得
+   */
+  private getDiagramGuidance(diagramStyle: DiagramStyle): string {
+    switch (diagramStyle) {
+      case 'mermaid':
+        return `
+### 図表・ダイアグラムについて（Mermaid形式）
+
+**Mermaid記法を使用すること**:
+- フローチャート、シーケンス図、クラス図などを表現する場合、必ずMermaid記法を使用してください
+- ASCIIアートやテキストベースの図は禁止です
+
+**Mermaid記法の例**:
+\`\`\`mermaid
+graph TD
+    A["開始"] --> B{"条件分岐"}
+    B -->|Yes| C["処理A"]
+    B -->|No| D["処理B"]
+    C --> E["終了"]
+    D --> E
+\`\`\`
+
+\`\`\`mermaid
+graph LR
+    subgraph input ["📥 入力層"]
+        A["データ取得"]
+    end
+    subgraph process ["⚙️ 処理層"]
+        B["変換処理"]
+    end
+    A --> B
+\`\`\`
+
+**使用可能なMermaidダイアグラム**:
+- graph / flowchart（フローチャート）
+- sequenceDiagram（シーケンス図）
+- classDiagram（クラス図）
+- stateDiagram-v2（状態遷移図）
+- pie（円グラフ）
+
+**重要な構文ルール**:
+- コンテンツ内で図を使う場合は、必ず\`\`\`mermaid ... \`\`\`の形式で記述
+- **subgraph名は英語ID + ラベル形式を使用**:
+  - ❌ \`subgraph 予測系\` （日本語直接は禁止）
+  - ✅ \`subgraph prediction ["📊 予測系"]\` （英語ID + 日本語ラベル）
+- **ノードラベル内で改行（\\n）は使用禁止**:
+  - ❌ \`A["項目1\\n項目2"]\`
+  - ✅ \`A["項目1 項目2"]\` （スペースで区切る）
+- 絵文字は使用OK（📊、⚙️、📋等でわかりやすく）`
+
+      case 'ascii':
+        return `
+### 図表・ダイアグラムについて（テキスト形式）
+
+**テキストベースの図を使用すること**:
+- フローチャートや関係図はシンプルなテキストで表現してください
+- Mermaid記法は使用しないでください
+
+**テキスト図の例**:
+\`\`\`
+┌─────────┐    ┌─────────┐    ┌─────────┐
+│  入力   │ → │  処理   │ → │  出力   │
+└─────────┘    └─────────┘    └─────────┘
+\`\`\`
+
+\`\`\`
+[ユーザー] ──リクエスト──→ [サーバー]
+     ↑                          │
+     └────レスポンス────────────┘
+\`\`\`
+
+**テキスト図のルール**:
+- 罫線文字（─│┌┐└┘→←↑↓）を使用してシンプルに表現
+- 複雑になりすぎないよう、要素は5-7個以内に
+- 必要に応じて箇条書きで補足説明を追加`
+
+      case 'none':
+        return `
+### 図表について
+
+**図表は使用しないでください**:
+- フローチャートやダイアグラムは使用せず、テキストのみで説明してください
+- 複雑な関係性は箇条書きや番号付きリストで表現してください
+
+**代替表現の例**:
+- 手順の説明: 番号付きリストを使用
+- 関係性の説明: 「AはBに影響する」のような文章で表現
+- 比較: 表形式（マークダウンテーブル）または箇条書きで表現`
+
+      default:
+        return ''
+    }
+  }
+
   /**
    * コンテンツタイプの説明
    */
-  private getContentTypeGuidance(): string {
+  private getContentTypeGuidance(diagramStyle: DiagramStyle = 'mermaid'): string {
     return `
 ### コンテンツタイプについて
 
-**text型**: 
+**text型**:
 - 詳細な説明文、導入文、まとめなどのテキストコンテンツ
 - マークダウン形式対応（見出し、箇条書き、強調など）
 - 300-800文字程度を目安に、読みやすく構造化
@@ -49,6 +146,8 @@ export class ContentPromptBuilder {
 - 実例、ケーススタディ、具体例を示すコンテンツ
 - 【実例】【ケース】【演習】などのタグを使って明確化
 - 状況設定、実施内容、結果・学びの流れで構成
+
+${this.getDiagramGuidance(diagramStyle)}
 
 ### セッションタイプ別の推奨構成
 
@@ -86,6 +185,7 @@ export class ContentPromptBuilder {
     const contentStyle = generation_preferences?.style || 'formal'
     const interactivityLevel = generation_preferences?.interactivity_level || 'medium'
     const sessionLength = generation_preferences?.session_length || sessionRequest.estimatedMinutes || 15
+    const diagramStyle: DiagramStyle = generation_preferences?.diagram_style || 'mermaid'
     
     // コース全体構造の文脈情報（ジャンル・テーマ情報を含む）
     const courseContext = `
@@ -126,7 +226,7 @@ ${courseContext}
 
 ${generationSettings}
 
-${this.getContentTypeGuidance()}
+${this.getContentTypeGuidance(diagramStyle)}
 
 ## 今回生成対象セッション
 **セッションID**: \`${sessionRequest.sessionId}\`
@@ -201,6 +301,7 @@ ${this.getContentTypeGuidance()}
 2. **実用性**: ${course_basic_info.target_audience}が実際に使える知識・スキル
 3. **段階性**: ${sessionRequest.estimatedMinutes}分で理解できる適切なボリューム
 4. **文脈性**: ジャンル・テーマ全体の流れを意識した内容
+5. **図表**: ${diagramStyle === 'mermaid' ? 'フローやプロセスを説明する際はMermaid記法で図を作成' : diagramStyle === 'ascii' ? 'フローやプロセスはテキストベースの図で表現' : '図表は使用せずテキストで説明'}
 
 ### 必須ルール（フィールド名厳守）
 1. **content_typeは 'text', 'key_points', 'example' のみ使用**
@@ -270,12 +371,13 @@ ${includeQuizzes ? `### クイズ設計（1セッション1問制限・single_ch
   ): ContentGenerationPrompt {
     
     const { course_basic_info, generation_preferences } = workflow
-    
+
     // generation_preferencesから正しい値を取得
     const includeQuizzes = generation_preferences?.include_quizzes ?? true
     const contentStyle = generation_preferences?.style || 'formal'
     const interactivityLevel = generation_preferences?.interactivity_level || 'medium'
-    
+    const diagramStyle: DiagramStyle = generation_preferences?.diagram_style || 'mermaid'
+
     const sessionList = sessionRequests.map((s, i) =>
       `${i + 1}. **${s.sessionTitle}** (ID: \`${s.sessionId}\`, ${s.sessionType}, ${s.estimatedMinutes}分)`
     ).join('\n')
@@ -299,7 +401,7 @@ ${sessionList}
 - **相互作用レベル**: ${interactivityLevel}
 - **クイズ生成**: ${includeQuizzes ? '各セッションに1問・4択形式' : 'なし'}
 
-${this.getContentTypeGuidance()}
+${this.getContentTypeGuidance(diagramStyle)}
 
 ## 出力要求
 
@@ -361,14 +463,15 @@ ${sessionRequests.map(s => `    {
     genreTitle: string,
     sessionRequests: SessionContentRequest[]
   ): ContentGenerationPrompt {
-    
+
     const { course_basic_info, generation_preferences } = workflow
-    
+
     // generation_preferencesから正しい値を取得
     const includeQuizzes = generation_preferences?.include_quizzes ?? true
     const contentStyle = generation_preferences?.style || 'formal'
     const interactivityLevel = generation_preferences?.interactivity_level || 'medium'
-    
+    const diagramStyle: DiagramStyle = generation_preferences?.diagram_style || 'mermaid'
+
     // テーマごとにセッションをグループ化
     const themeGroups = sessionRequests.reduce((acc, session) => {
       if (!acc[session.themeTitle]) {
@@ -404,7 +507,7 @@ ${themeList}
 - **相互作用レベル**: ${interactivityLevel}
 - **クイズ生成**: ${includeQuizzes ? '各セッションに1問・4択形式' : 'なし'}
 
-${this.getContentTypeGuidance()}
+${this.getContentTypeGuidance(diagramStyle)}
 
 ## 出力要求
 

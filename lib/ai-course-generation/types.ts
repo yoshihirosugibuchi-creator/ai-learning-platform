@@ -219,6 +219,7 @@ export interface CourseGenerationWorkflow {
     include_quizzes: boolean
     session_length: number
     interactivity_level: 'low' | 'medium' | 'high'
+    diagram_style?: 'mermaid' | 'ascii' | 'none'  // 図表形式（デフォルト: mermaid）
   }
   
   // 手動AI入力用（現在の手動プロンプト情報）

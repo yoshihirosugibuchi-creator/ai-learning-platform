@@ -25,6 +25,9 @@ export const questionTypeToDbValue: Record<string, QuestionType> = {
   'text': 'text',
 }
 
+// 図表形式タイプ
+export type DiagramStyle = 'mermaid' | 'ascii' | 'none'
+
 export interface PromptGeneratorParams {
   // 基本設定
   categoryId: string
@@ -50,6 +53,7 @@ export interface PromptGeneratorParams {
   // 構成設定
   stepCount: number
   questionType?: QuestionType // 問題形式（デフォルト: hybrid）
+  diagramStyle?: DiagramStyle // 図表形式（デフォルト: mermaid）
   customPrompt?: string      // 追加指示
   aiModel: 'claude' | 'chatgpt' | 'gemini'
 
@@ -275,6 +279,56 @@ function buildStepJsonExampleClaude(questionType: QuestionType, params: PromptGe
   }
 }
 
+// 図表形式別のガイダンスを生成
+function buildDiagramGuidance(diagramStyle: DiagramStyle): string {
+  switch (diagramStyle) {
+    case 'mermaid':
+      return `
+【図表・ダイアグラム（Mermaid形式）】
+ケーステキストや選択肢で図を使用する場合、Mermaid記法を使用してください。
+- フローチャート、組織図、プロセス図などはMermaid記法で記述
+- ASCIIアートやテキストベースの図は使用禁止
+
+Mermaid記法の例:
+\`\`\`mermaid
+graph TD
+    A["📥 現状分析"] --> B{"課題特定"}
+    B -->|重要| C["⚡ 優先対応"]
+    B -->|軽微| D["📋 改善計画"]
+\`\`\`
+
+重要な構文ルール:
+- subgraph名は英語ID + ラベル形式: subgraph sales ["📊 営業部門"]
+- ノードラベル内での改行（\\n）は禁止（スペースで区切る）
+- 絵文字は使用OK（📊、⚙️、📋等で視覚的に分かりやすく）`
+
+    case 'ascii':
+      return `
+【図表・ダイアグラム（テキスト形式）】
+ケーステキストや選択肢で図を使用する場合、シンプルなテキスト図を使用してください。
+- Mermaid記法は使用禁止
+- 罫線文字（─│┌┐└┘→←↑↓）を使用してシンプルに表現
+
+テキスト図の例:
+\`\`\`
+┌─────────┐    ┌─────────┐    ┌─────────┐
+│ 現状分析 │ → │ 課題特定 │ → │ 施策立案 │
+└─────────┘    └─────────┘    └─────────┘
+\`\`\``
+
+    case 'none':
+      return `
+【図表について】
+ケーステキストや選択肢で図は使用しないでください。
+- フローチャートやダイアグラムは使用禁止
+- 関係性は文章や箇条書きで説明
+- プロセスは番号付きリストで表現`
+
+    default:
+      return ''
+  }
+}
+
 // 問題形式別の要件テキストを生成
 function buildQuestionTypeRequirements(questionType: QuestionType): string {
   switch (questionType) {
@@ -362,6 +416,8 @@ function buildCommonRequirements(params: PromptGeneratorParams): string {
   // DB駆動型：パラメータが渡されていればそれを使用、なければデフォルト
   const stepFramework = params.stepFrameworkText || DEFAULT_STEP_FRAMEWORK
   const rubricAxes = params.rubricAxesText || DEFAULT_RUBRIC_AXES
+  const diagramStyle = params.diagramStyle || 'mermaid'
+  const diagramGuidance = buildDiagramGuidance(diagramStyle)
 
   return `【生成する問題の仕様】
 - カテゴリー: ${params.categoryName} (${params.categoryId})
@@ -380,6 +436,7 @@ ${buildQuestionTypeRequirements(params.questionType || 'hybrid')}
 - target_skills: 上記10軸から2-3個選択（ステップの目的に合わせて）
 - category_id / subcategory_id: 各ステップのXP計上先カテゴリー（問題全体と異なってもよい）
 - max_score: 20（全ステップ共通）
+${diagramGuidance}
 ${params.customPrompt ? `\n【追加指示】\n${params.customPrompt}` : ''}`
 }
 
