@@ -290,42 +290,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     // タブがアクティブになった時にセッションをリフレッシュ（タブ切り替え対策）
+    // より積極的に常にリフレッシュして、API呼び出し失敗を防ぐ
     const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible') {
-        console.log('👁️ Tab became visible, checking session...')
+      if (document.visibilityState === 'visible' && user) {
+        console.log('👁️ Tab became visible, proactively refreshing session...')
         try {
-          const { data: { session }, error } = await supabase.auth.getSession()
+          // 常にセッションをリフレッシュ（期限に関係なく）
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
 
-          if (error || !session) {
-            console.warn('⚠️ No valid session on tab focus')
-            return
-          }
-
-          const now = Math.floor(Date.now() / 1000)
-          const expiresAt = session.expires_at || 0
-          const timeUntilExpiry = expiresAt - now
-
-          // 5分以内に期限切れになる場合、または既に期限切れの場合はリフレッシュ
-          if (timeUntilExpiry < 300) {
-            console.log('🔄 Session expiring soon or expired, refreshing on tab focus...')
-            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
-
-            if (refreshError || !refreshData.session) {
-              console.error('❌ Session refresh failed on tab focus:', refreshError)
-              // リフレッシュ失敗時はログアウトしてログインページへ
-              await supabase.auth.signOut()
-              setUser(null)
-              setProfile(null)
-              window.location.href = '/login'
-            } else {
-              console.log('✅ Session refreshed successfully on tab focus')
-              setUser(refreshData.session.user)
-            }
+          if (refreshError || !refreshData.session) {
+            console.error('❌ Session refresh failed on tab focus:', refreshError)
+            // リフレッシュ失敗時はログアウトしてログインページへ
+            await supabase.auth.signOut()
+            setUser(null)
+            setProfile(null)
+            window.location.href = '/login'
           } else {
-            console.log('✅ Session still valid, expires in', Math.round(timeUntilExpiry / 60), 'minutes')
+            const expiresAt = refreshData.session.expires_at || 0
+            const now = Math.floor(Date.now() / 1000)
+            console.log('✅ Session refreshed on tab focus, expires in', Math.round((expiresAt - now) / 60), 'minutes')
+            setUser(refreshData.session.user)
           }
         } catch (err) {
-          console.error('❌ Error checking session on tab focus:', err)
+          console.error('❌ Error refreshing session on tab focus:', err)
         }
       }
     }
@@ -376,7 +363,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('❌ Session health check error:', error)
       }
-    }, 20 * 60 * 1000) // 20分毎（負荷軽減・頻度削減）
+    }, 5 * 60 * 1000) // 5分毎（セッション維持のため頻度を上げる）
 
     return () => {
       console.log('🧹 AuthProvider: Cleanup')
