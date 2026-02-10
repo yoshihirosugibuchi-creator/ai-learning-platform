@@ -89,6 +89,7 @@ export interface QuestionWithWeight {
   subcategory_id?: string | null
   difficulty: string | null
   weight: number
+  created_at?: string | null  // 新規問題ブースト判定用
   // ... other question fields
 }
 
@@ -237,8 +238,11 @@ export async function generateBusinessAISet(
     
     // 2. Apply focus category weights (Business-AI uses main categories only)
     const focusCategories = extractBusinessCategories(userProfile || {})
-    const weightedQuestions = applyFocusCategoryWeights(availableQuestions, focusCategories)
-    
+    const categoryWeightedQuestions = applyFocusCategoryWeights(availableQuestions, focusCategories)
+
+    // 2.5. Apply new question boost (created_at が新しい問題を優先)
+    const weightedQuestions = applyNewQuestionBoost(categoryWeightedQuestions)
+
     // 3. Calculate optimal difficulty distribution from database
     const avgAccuracy = calculateAverageAccuracy(recentAccuracy)
     const difficultyDistribution = await calculateOptimalDistribution(avgAccuracy)
@@ -592,10 +596,10 @@ async function getBusinessQuestions(): Promise<QuestionWithWeight[]> {
   
   console.log(`🔍 [Business Questions] Using main category IDs: ${mainCategoryIds.length} categories`, mainCategoryIds)
   
-  // Get questions for main categories
+  // Get questions for main categories (created_atも取得：新規問題ブースト用)
   const { data, error } = await supabaseAdmin
     .from('quiz_questions')
-    .select('id, category_id, subcategory_id, difficulty')
+    .select('id, category_id, subcategory_id, difficulty, created_at')
     .in('category_id', mainCategoryIds)
     .eq('is_deleted', false)
     .limit(1000)
@@ -621,10 +625,10 @@ async function getBusinessQuestions(): Promise<QuestionWithWeight[]> {
       throw new Error('No main categories found in database')
     }
     
-    // Get questions for fallback main categories  
+    // Get questions for fallback main categories (created_atも取得：新規問題ブースト用)
     const { data: fallbackQuestions, error: fallbackError } = await supabaseAdmin
       .from('quiz_questions')
-      .select('id, category_id, subcategory_id, difficulty')
+      .select('id, category_id, subcategory_id, difficulty, created_at')
       .in('category_id', categoryIds)
       .eq('is_deleted', false)
       .limit(1000)
@@ -634,11 +638,11 @@ async function getBusinessQuestions(): Promise<QuestionWithWeight[]> {
     }
     
     console.log(`✅ [Business Questions] Retrieved ${fallbackQuestions?.length || 0} questions from fallback categories`)
-    return (fallbackQuestions || []).map(q => ({ ...q, weight: 1.0 }))
+    return (fallbackQuestions || []).map(q => ({ ...q, weight: 1.0, created_at: q.created_at }))
   }
-  
+
   console.log(`✅ [Business Questions] Retrieved ${data?.length || 0} questions from main categories`)
-  return (data || []).map(q => ({ ...q, weight: 1.0 }))
+  return (data || []).map(q => ({ ...q, weight: 1.0, created_at: q.created_at }))
 }
 
 async function getQuestionsByCategories(categories: string[]): Promise<QuestionWithWeight[]> {
@@ -897,7 +901,7 @@ async function selectWithUnaskedPriority(
   questions: QuestionWithWeight[],
   count: number,
   userId: string,
-  minUnaskedRatio: number = 0.5
+  minUnaskedRatio: number = 0.8 // 80%を未回答から選出（従来50%から引き上げ）
 ): Promise<QuestionWithWeight[]> {
   console.log(`🎯 [Unasked Priority] Starting selection: ${count} questions, min unasked ratio: ${minUnaskedRatio}`)
   
@@ -992,32 +996,33 @@ async function selectWithUnaskedPriority(
 
 /**
  * ユーザーの過去出題問題IDセットを取得
+ * 全期間の回答履歴を取得（未回答問題を正確に判定するため）
  */
 async function getUserAskedQuestions(userId: string): Promise<{
   recentQuestions: Set<number>
   totalQuestions: Set<number>
 }> {
   try {
-    // 過去30日間の出題履歴を取得（時間別分析用）
+    // 全期間の出題履歴を取得（未回答問題の正確な判定のため30日制限を撤廃）
+    // パフォーマンス最適化: question_idのみ取得し、ユニークIDを効率的に収集
     const { data: answerHistory, error } = await supabaseAdmin
       .from('quiz_answers')
       .select('question_id, created_at')
       .eq('user_id', userId)
-      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
-      .limit(1000) // Limit to prevent timeout
-    
+      .limit(5000) // 全期間対応のためlimitを拡大（ユニーク問題数は500程度のため十分）
+
     if (error) {
       console.warn('⚠️ [getUserAskedQuestions] Error fetching answer history:', error)
       return { recentQuestions: new Set(), totalQuestions: new Set() }
     }
-    
+
     // 数値IDのみ抽出（クイズ問題のみ、コース問題除外）
     const numericQuestionIds = (answerHistory || [])
       .map(a => ({ id: a.question_id, createdAt: a.created_at }))
       .filter(item => /^\d+$/.test(item.id))
       .map(item => ({ id: parseInt(item.id, 10), createdAt: item.createdAt || new Date().toISOString() }))
-    
+
     // 時間で分類：直近7日 vs 全期間（忘却曲線対応）
     const recentCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
     const recentQuestions = new Set(
@@ -1026,11 +1031,11 @@ async function getUserAskedQuestions(userId: string): Promise<{
         .map(item => item.id)
     )
     const totalQuestions = new Set(numericQuestionIds.map(item => item.id))
-    
-    console.log(`📚 [getUserAskedQuestions] Found ${recentQuestions.size} recent (7 days) / ${totalQuestions.size} total (30 days) asked questions`)
-    
+
+    console.log(`📚 [getUserAskedQuestions] Found ${recentQuestions.size} recent (7 days) / ${totalQuestions.size} total (all-time) asked questions`)
+
     return { recentQuestions, totalQuestions }
-    
+
   } catch (error) {
     console.error('❌ [getUserAskedQuestions] Error:', error)
     return { recentQuestions: new Set(), totalQuestions: new Set() }
@@ -1038,7 +1043,46 @@ async function getUserAskedQuestions(userId: string): Promise<{
 }
 
 /**
+ * 新規問題への重み付けブースト
+ * 作成日が新しい問題の優先度を上げる
+ * - 14日以内: weight × 1.5
+ * - 30日以内: weight × 1.25
+ * - それ以外: 変更なし
+ */
+function applyNewQuestionBoost(questions: QuestionWithWeight[]): QuestionWithWeight[] {
+  const now = Date.now()
+  const fourteenDaysAgo = now - 14 * 24 * 60 * 60 * 1000
+  const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000
+
+  let boostedCount14 = 0
+  let boostedCount30 = 0
+
+  const boosted = questions.map(q => {
+    if (!q.created_at) return q
+
+    const createdTime = new Date(q.created_at).getTime()
+
+    if (createdTime >= fourteenDaysAgo) {
+      boostedCount14++
+      return { ...q, weight: q.weight * 1.5 }
+    } else if (createdTime >= thirtyDaysAgo) {
+      boostedCount30++
+      return { ...q, weight: q.weight * 1.25 }
+    }
+
+    return q
+  })
+
+  if (boostedCount14 > 0 || boostedCount30 > 0) {
+    console.log(`🚀 [NewQuestionBoost] Applied boost: ${boostedCount14} questions (14 days, ×1.5), ${boostedCount30} questions (30 days, ×1.25)`)
+  }
+
+  return boosted
+}
+
+/**
  * カテゴリーバランスを考慮した問題選択
+ * 未回答問題が10問以上あるカテゴリーを優先
  */
 function selectWithCategoryBalance(
   questions: QuestionWithWeight[],
@@ -1046,52 +1090,71 @@ function selectWithCategoryBalance(
 ): QuestionWithWeight[] {
   if (questions.length === 0) return []
   if (count <= 0) return []
-  
+
   // カテゴリーごとにグループ化
   const byCategory = questions.reduce((acc, q) => {
     if (!acc[q.category_id]) acc[q.category_id] = []
     acc[q.category_id].push(q)
     return acc
   }, {} as Record<string, QuestionWithWeight[]>)
-  
-  const categories = Object.keys(byCategory)
+
+  // 未回答問題数でカテゴリーを優先度順にソート
+  // 10問以上あるカテゴリーを優先、その後は問題数の多い順
+  const PRIORITY_THRESHOLD = 10
+  const categories = Object.keys(byCategory).sort((a, b) => {
+    const countA = byCategory[a].length
+    const countB = byCategory[b].length
+    const priorityA = countA >= PRIORITY_THRESHOLD ? 1 : 0
+    const priorityB = countB >= PRIORITY_THRESHOLD ? 1 : 0
+
+    // 優先度グループが異なる場合は優先度でソート
+    if (priorityA !== priorityB) {
+      return priorityB - priorityA // 優先度高い方が先
+    }
+    // 同じ優先度グループ内では問題数の多い順
+    return countB - countA
+  })
+
   const selected: QuestionWithWeight[] = []
-  
-  console.log(`📋 [Category Balance] Distributing ${count} questions across ${categories.length} categories`)
-  
-  // カテゴリー間で均等分散
+
+  // カテゴリー別の問題数をログ出力
+  const categoryStats = categories.map(c => `${c}(${byCategory[c].length})`).join(', ')
+  console.log(`📋 [Category Balance] Distributing ${count} questions across ${categories.length} categories (sorted by priority):`)
+  console.log(`   ${categoryStats}`)
+
+  // カテゴリー間で均等分散（優先度順で開始）
   let currentCategoryIndex = 0
   let consecutiveEmptyAttempts = 0
   const maxEmptyAttempts = categories.length // 全カテゴリーチェック後にストップ
-  
+
   for (let i = 0; i < count && selected.length < count; i++) {
     const category = categories[currentCategoryIndex]
-    const availableInCategory = byCategory[category]?.filter(q => 
+    const availableInCategory = byCategory[category]?.filter(q =>
       !selected.some(s => s.id === q.id)
     ) || []
-    
+
     if (availableInCategory.length > 0) {
       // 重み順でソートして最高重みを選択
       availableInCategory.sort((a, b) => b.weight - a.weight)
       selected.push(availableInCategory[0])
-      
-      console.log(`  📌 Selected from ${category}: question ${availableInCategory[0].id} (weight: ${availableInCategory[0].weight})`)
+
+      console.log(`  📌 Selected from ${category}: question ${availableInCategory[0].id} (weight: ${availableInCategory[0].weight.toFixed(2)})`)
       consecutiveEmptyAttempts = 0 // リセット
     } else {
       console.log(`  ⚠️ No more questions available in ${category}`)
       consecutiveEmptyAttempts++
-      
+
       // 全カテゴリーで問題が枯渇した場合はループを終了
       if (consecutiveEmptyAttempts >= maxEmptyAttempts) {
         console.log(`⚠️ [Category Balance] All categories exhausted, selected ${selected.length}/${count} questions`)
         break
       }
     }
-    
+
     // 次のカテゴリーに移動（ラウンドロビン）
     currentCategoryIndex = (currentCategoryIndex + 1) % categories.length
   }
-  
+
   return selected
 }
 

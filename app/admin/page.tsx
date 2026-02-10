@@ -75,6 +75,23 @@ export default function AdminPage() {
             </Card>
           </Link>
 
+          <Link href="/admin/difficulty-settings">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <BarChart3 className="h-5 w-5 text-orange-600" />
+                  <span>難易度分布設定</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  正答率に応じた問題難易度の<br/>
+                  出題比率を管理します
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link href="/admin/industry-targets">
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
               <CardHeader>
