@@ -109,6 +109,19 @@ export default function QuizManagementPage() {
     setLoading(false)
   }
 
+  // CSV出力用のテキストエスケープ（改行をスペースに、ダブルクォートをエスケープ）
+  const escapeCSVField = (value: string | null | undefined): string => {
+    if (value === null || value === undefined) return '""'
+    // 1. 改行文字をスペースに変換（Excel対策）
+    // 2. ダブルクォートを二重にエスケープ
+    const escaped = value
+      .replace(/\r\n/g, ' ')
+      .replace(/\r/g, ' ')
+      .replace(/\n/g, ' ')
+      .replace(/"/g, '""')
+    return `"${escaped}"`
+  }
+
   // CSV出力
   const exportToCSV = () => {
     if (questions.length === 0) {
@@ -118,9 +131,9 @@ export default function QuizManagementPage() {
 
     try {
       const csvHeaders = [
-        'id', 'legacy_id', 'category', 'subcategory', 'subcategory_id', 'question', 
-        'option1', 'option2', 'option3', 'option4', 
-        'correct', 'explanation', 'difficulty', 'timeLimit', 
+        'id', 'legacy_id', 'category', 'subcategory', 'subcategory_id', 'question',
+        'option1', 'option2', 'option3', 'option4',
+        'correct', 'explanation', 'difficulty', 'timeLimit',
         'relatedTopics', 'source', 'deleted', 'createdAt', 'updatedAt',
         // ヒント情報を追加
         'level1_hint', 'level2_hint', 'level3_hint'
@@ -132,29 +145,30 @@ export default function QuizManagementPage() {
         q.category || '',
         q.subcategory || '',
         q.subcategory_id || '',
-        `"${q.question.replace(/"/g, '""')}"`,
-        `"${q.options[0]?.replace(/"/g, '""') || ''}"`,
-        `"${q.options[1]?.replace(/"/g, '""') || ''}"`,
-        `"${q.options[2]?.replace(/"/g, '""') || ''}"`,
-        `"${q.options[3]?.replace(/"/g, '""') || ''}"`,
+        escapeCSVField(q.question),
+        escapeCSVField(q.options[0]),
+        escapeCSVField(q.options[1]),
+        escapeCSVField(q.options[2]),
+        escapeCSVField(q.options[3]),
         q.correct,
-        `"${q.explanation?.replace(/"/g, '""') || ''}"`,
+        escapeCSVField(q.explanation),
         q.difficulty || '',
         q.timeLimit || '',
         Array.isArray(q.relatedTopics) ? `"${q.relatedTopics.join('|')}"` : '""',
-        `"${q.source?.replace(/"/g, '""') || ''}"`,
-        q.deleted ? 'true' : 'false', // deleted flag
-        q.createdAt ? new Date(q.createdAt).toISOString().split('T')[0] : '', // createdAt
-        q.updatedAt ? new Date(q.updatedAt).toISOString().split('T')[0] : '', // updatedAt
-        // ヒント情報を追加
-        `"${q.level1_hint?.replace(/"/g, '""') || ''}"`,
-        `"${q.level2_hint?.replace(/"/g, '""') || ''}"`,
-        `"${q.level3_hint?.replace(/"/g, '""') || ''}"`
+        escapeCSVField(q.source),
+        q.deleted ? 'true' : 'false',
+        q.createdAt ? new Date(q.createdAt).toISOString().split('T')[0] : '',
+        q.updatedAt ? new Date(q.updatedAt).toISOString().split('T')[0] : '',
+        escapeCSVField(q.level1_hint),
+        escapeCSVField(q.level2_hint),
+        escapeCSVField(q.level3_hint)
       ])
 
       const csvContent = [csvHeaders.join(','), ...csvRows.map(row => row.join(','))].join('\n')
-      
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+
+      // UTF-8 BOM付きでExcel対応（文字化け防止）
+      const BOM = '\uFEFF'
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
       const link = document.createElement('a')
       const url = URL.createObjectURL(blob)
       link.setAttribute('href', url)
