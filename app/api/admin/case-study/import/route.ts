@@ -76,6 +76,7 @@ interface ImportProblem {
   scenario_type?: string
   estimated_minutes?: number
   step_count?: number
+  step_template?: string
   steps: ImportStep[]
   // 生成メタデータ
   generation_model?: string
@@ -111,8 +112,8 @@ export async function POST(request: NextRequest) {
     if (!body.steps || body.steps.length === 0) {
       return NextResponse.json({ success: false, error: 'ステップは1つ以上必要です' }, { status: 400 })
     }
-    if (body.steps.length < 5 || body.steps.length > 8) {
-      return NextResponse.json({ success: false, error: 'ステップ数は5〜8の範囲で指定してください' }, { status: 400 })
+    if (body.steps.length < 3 || body.steps.length > 8) {
+      return NextResponse.json({ success: false, error: 'ステップ数は3〜8の範囲で指定してください' }, { status: 400 })
     }
 
     const validDifficulties = ['basic', 'intermediate', 'advanced', 'expert']
@@ -135,6 +136,7 @@ export async function POST(request: NextRequest) {
         scenario_type: body.scenario_type || null,
         estimated_minutes: body.estimated_minutes || 30,
         step_count: body.steps.length,
+        step_template: body.step_template || 'consulting',
         status: 'draft',
         is_ai_generated: true,
         generation_model: body.generation_model || null,

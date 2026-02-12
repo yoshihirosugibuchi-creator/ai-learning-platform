@@ -40,6 +40,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { generatePrompt, questionTypeDescriptions } from '@/lib/case-study-prompt-generators'
 import type { PromptGeneratorParams, QuestionType } from '@/lib/case-study-prompt-generators'
+import { getStepTemplate, getTemplateList, buildTemplateStepFrameworkText, buildTemplateRubricAxesText } from '@/lib/case-study-templates'
+import type { CaseStudyStepTemplate } from '@/lib/case-study-templates'
 
 type WizardStep = 1 | 2 | 3 | 4
 
@@ -111,10 +113,6 @@ interface OptionItem {
   is_extended?: boolean
 }
 
-interface StepFrameworkItem extends OptionItem {
-  target_skills: string[]
-  is_extended: boolean
-}
 
 interface RubricAxis {
   axis_code: string
@@ -509,7 +507,6 @@ export default function CaseStudyGeneratePage() {
   const [currentStep, setCurrentStep] = useState<WizardStep>(1)
   const [copied, setCopied] = useState(false)
   const [importing, setImporting] = useState(false)
-  const [showFramework, setShowFramework] = useState(false)
 
   // 下書きID（DB保存時に取得）
   const [draftId, setDraftId] = useState<string | null>(draftIdParam)
@@ -531,13 +528,11 @@ export default function CaseStudyGeneratePage() {
     scenario_type: [],
     info_clarity: [],
   })
-  const [stepFramework, setStepFramework] = useState<StepFrameworkItem[]>([])
-  const [_rubricAxes, setRubricAxes] = useState<RubricAxis[]>([])
+  const [rubricAxes, setRubricAxes] = useState<RubricAxis[]>([])
   const [rubricPromptText, setRubricPromptText] = useState('')
   const [loadingCategories, setLoadingCategories] = useState(true)
   const [loadingSubcategories, setLoadingSubcategories] = useState(false)
   const [loadingOptions, setLoadingOptions] = useState(true)
-  const [loadingStepFramework, setLoadingStepFramework] = useState(true)
   const [loadingRubric, setLoadingRubric] = useState(true)
 
   // Step 1: パラメータ
@@ -551,6 +546,7 @@ export default function CaseStudyGeneratePage() {
     scenarioTypeCode: '',
     infoClarityCode: '',
     stepCount: 5,
+    stepTemplate: 'consulting' as CaseStudyStepTemplate,
     questionType: 'hybrid' as QuestionType,
     diagramStyle: 'mermaid' as 'mermaid' | 'ascii' | 'none',
     customPrompt: '',
@@ -600,6 +596,7 @@ export default function CaseStudyGeneratePage() {
         scenario_type_name: scenarioObj?.name,
         info_clarity_code: params.infoClarityCode || null,
         step_count: params.stepCount,
+        step_template: params.stepTemplate || 'consulting',
         question_type: params.questionType,
         custom_prompt: params.customPrompt || null,
         ai_model: params.aiModel,
@@ -674,6 +671,7 @@ export default function CaseStudyGeneratePage() {
             scenarioTypeCode: log.scenario_type_code || '',
             infoClarityCode: log.info_clarity_code || '',
             stepCount: log.step_count || 5,
+            stepTemplate: (log.step_template || 'consulting') as CaseStudyStepTemplate,
             questionType: log.question_type || 'hybrid',
             diagramStyle: log.diagram_style || 'mermaid',
             customPrompt: log.custom_prompt || '',
@@ -777,24 +775,6 @@ export default function CaseStudyGeneratePage() {
     fetchOptions()
   }, [])
 
-  // ステップフレームワーク取得
-  useEffect(() => {
-    const fetchStepFramework = async () => {
-      try {
-        const res = await fetch('/api/admin/case-study/options?type=step_framework')
-        const data = await res.json()
-        if (data.success && data.options) {
-          setStepFramework(data.options as StepFrameworkItem[])
-        }
-      } catch (error) {
-        console.error('Step framework fetch error:', error)
-      } finally {
-        setLoadingStepFramework(false)
-      }
-    }
-    fetchStepFramework()
-  }, [])
-
   // ルーブリック軸取得
   useEffect(() => {
     const fetchRubricAxes = async () => {
@@ -847,34 +827,7 @@ export default function CaseStudyGeneratePage() {
     fetchSubcategories()
   }, [params.categoryId])
 
-  // ステップフレームワークテキストを生成（DBデータから）
-  const buildStepFrameworkText = useCallback((): string => {
-    if (stepFramework.length === 0) return ''
 
-    const standardSteps = stepFramework.filter(s => !s.is_extended).sort((a, b) => a.display_order - b.display_order)
-    const extendedSteps = stepFramework.filter(s => s.is_extended).sort((a, b) => a.display_order - b.display_order)
-
-    let text = '【5ステップ標準フレームワーク】\n'
-
-    for (const step of standardSteps) {
-      const stepNum = step.code.replace('step_', '')
-      const skills = step.target_skills?.join(', ') || ''
-      text += `Step ${stepNum}: ${step.name} - ${step.description}\n`
-      text += `  → 主要評価軸: ${skills}\n`
-    }
-
-    if (extendedSteps.length > 0) {
-      text += '\n【拡張ステップ（6〜8ステップの場合）】\n'
-      for (const step of extendedSteps) {
-        const stepNum = step.code.replace('step_', '')
-        const skills = step.target_skills?.join(', ') || ''
-        text += `Step ${stepNum}: ${step.name} - ${step.description}\n`
-        text += `  → 主要評価軸: ${skills}\n`
-      }
-    }
-
-    return text
-  }, [stepFramework])
 
   // Step 1 → 2: プロンプト生成
   const handleGeneratePrompt = () => {
@@ -886,8 +839,10 @@ export default function CaseStudyGeneratePage() {
     const scenarioObj = options.scenario_type.find(o => o.code === params.scenarioTypeCode)
     const clarityObj = options.info_clarity.find(o => o.code === params.infoClarityCode)
 
-    // DB駆動型：マスタデータからテキスト生成
-    const stepFrameworkText = buildStepFrameworkText()
+    // テンプレートベースでプロンプトテキスト生成
+    const template = getStepTemplate(params.stepTemplate)
+    const stepFrameworkText = buildTemplateStepFrameworkText(template)
+    const templateRubricText = buildTemplateRubricAxesText(template, rubricAxes)
 
     const promptParams: PromptGeneratorParams = {
       categoryId: params.categoryId,
@@ -910,9 +865,10 @@ export default function CaseStudyGeneratePage() {
       diagramStyle: params.diagramStyle,
       customPrompt: params.customPrompt || undefined,
       aiModel: params.aiModel,
-      // DB駆動型マスタデータ
+      // テンプレート情報
+      stepTemplateName: template.steps[0]?.stepName,
       stepFrameworkText: stepFrameworkText || undefined,
-      rubricAxesText: rubricPromptText || undefined,
+      rubricAxesText: templateRubricText || rubricPromptText || undefined,
     }
 
     const prompt = generatePrompt(promptParams)
@@ -1022,6 +978,7 @@ export default function CaseStudyGeneratePage() {
         primary_subcategory_id: params.subcategoryId || 'structured_thinking_mece',
         industry: params.industryId || null,
         difficulty: (parsedData as Record<string, unknown>).difficulty || params.difficulty || 'intermediate',
+        step_template: params.stepTemplate || 'consulting',
         generation_model: params.aiModel,
         generation_prompt: generatedPrompt.substring(0, 2000),
       }
@@ -1085,7 +1042,7 @@ export default function CaseStudyGeneratePage() {
     }
   }
 
-  const isLoading = loadingCategories || loadingOptions || loadingStepFramework || loadingRubric
+  const isLoading = loadingCategories || loadingOptions || loadingRubric
 
   // 下書き読み込み中
   if (loadingDraft) {
@@ -1368,6 +1325,60 @@ export default function CaseStudyGeneratePage() {
                 </div>
 
                 <div>
+                  <Label>ステップテンプレート</Label>
+                  <Select
+                    value={params.stepTemplate}
+                    onValueChange={(v) => {
+                      const tmpl = getStepTemplate(v)
+                      setParams(p => ({
+                        ...p,
+                        stepTemplate: v as CaseStudyStepTemplate,
+                        stepCount: tmpl.defaultStepCount,
+                      }))
+                    }}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {getTemplateList().map(t => {
+                        const tmpl = getStepTemplate(t.id)
+                        return (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.name}（{tmpl.defaultStepCount}ステップ）
+                            {t.id === 'consulting' && ' - デフォルト'}
+                          </SelectItem>
+                        )
+                      })}
+                    </SelectContent>
+                  </Select>
+                  {(() => {
+                    const tmpl = getStepTemplate(params.stepTemplate)
+                    const usedAxes = new Set<string>()
+                    tmpl.steps.forEach(s => s.targetSkills.forEach(sk => usedAxes.add(sk)))
+                    const recommendedScenario: Record<string, string> = {
+                      consulting: '全シナリオタイプと組み合わせ可能',
+                      code_review: '「問題解決」との組み合わせが最適',
+                      incident_response: '「問題解決」との組み合わせが最適',
+                      review_correction: '「問題解決」との組み合わせが最適',
+                      prompt_design: '「問題解決」「戦略立案」との組み合わせが最適',
+                    }
+                    return (
+                      <div className="mt-2 p-3 bg-muted/50 rounded-lg text-xs space-y-1.5">
+                        <p className="text-sm font-medium">{tmpl.description}</p>
+                        <p className="text-muted-foreground">
+                          ステップ数: {tmpl.minStepCount}〜{tmpl.maxStepCount}（標準: {tmpl.defaultStepCount}）/ 評価軸: {usedAxes.size}軸
+                        </p>
+                        <p className="text-muted-foreground">
+                          使用評価軸: {[...usedAxes].join(', ')}
+                        </p>
+                        <p className="font-medium text-blue-600 dark:text-blue-400">
+                          推奨シナリオ: {recommendedScenario[tmpl.id] || '全タイプ対応'}
+                        </p>
+                      </div>
+                    )
+                  })()}
+                </div>
+
+                <div>
                   <Label>ステップ数</Label>
                   <Select
                     value={params.stepCount.toString()}
@@ -1375,15 +1386,55 @@ export default function CaseStudyGeneratePage() {
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {[5, 6, 7, 8].map(n => (
-                        <SelectItem key={n} value={n.toString()}>
-                          {n}ステップ
-                          {n === 5 && ' （標準）'}
-                          {n > 5 && ' （拡張）'}
-                        </SelectItem>
-                      ))}
+                      {(() => {
+                        const tmpl = getStepTemplate(params.stepTemplate)
+                        const opts = []
+                        for (let n = tmpl.minStepCount; n <= tmpl.maxStepCount; n++) {
+                          opts.push(n)
+                        }
+                        return opts.map(n => {
+                          const stepsForN = tmpl.steps.filter(s => s.stepNumber <= n)
+                          const stepNames = stepsForN.map(s => s.stepName).join(' → ')
+                          return (
+                            <SelectItem key={n} value={n.toString()}>
+                              <div>
+                                <span className="font-medium">
+                                  {n}ステップ
+                                  {n === tmpl.defaultStepCount && ' （標準）'}
+                                  {n > tmpl.defaultStepCount && ' （拡張）'}
+                                </span>
+                                <p className="text-xs text-muted-foreground">{stepNames}</p>
+                              </div>
+                            </SelectItem>
+                          )
+                        })
+                      })()}
                     </SelectContent>
                   </Select>
+                  {/* 選択中のステップ構成プレビュー */}
+                  {(() => {
+                    const tmpl = getStepTemplate(params.stepTemplate)
+                    const stepsToShow = tmpl.steps.filter(s => s.stepNumber <= params.stepCount)
+                    return (
+                      <div className="mt-2 space-y-1">
+                        {stepsToShow.map(step => (
+                          <div key={step.stepNumber} className="flex items-center text-xs gap-2 px-2 py-1 rounded bg-muted/40">
+                            <Badge variant={step.isExtended ? 'secondary' : 'default'} className="text-[10px] px-1.5 py-0">
+                              {step.stepNumber}
+                            </Badge>
+                            <span className="font-medium">{step.stepName}</span>
+                            <span className="text-muted-foreground hidden sm:inline">- {step.description}</span>
+                          </div>
+                        ))}
+                        {tmpl.steps.filter(s => s.stepNumber > params.stepCount).length > 0 && (
+                          <p className="text-[10px] text-muted-foreground px-2">
+                            +{tmpl.steps.filter(s => s.stepNumber > params.stepCount).length}ステップ拡張可能:
+                            {' '}{tmpl.steps.filter(s => s.stepNumber > params.stepCount).map(s => s.stepName).join('、')}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
 
                 <div>
@@ -1405,47 +1456,15 @@ export default function CaseStudyGeneratePage() {
                 </div>
               </div>
 
-              {/* ステップフレームワーク説明 */}
-              <Collapsible open={showFramework} onOpenChange={setShowFramework}>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-full justify-between">
-                    <span className="flex items-center text-sm">
-                      <Info className="h-4 w-4 mr-2" />
-                      ステップフレームワークを表示
-                    </span>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${showFramework ? 'rotate-180' : ''}`} />
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2">
-                  <div className="p-4 bg-muted/50 rounded-lg space-y-2 text-sm">
-                    <p className="font-medium mb-3">選択したステップ数に応じて、以下のフレームワークで問題が生成されます：</p>
-                    {loadingStepFramework ? (
-                      <p className="text-muted-foreground">読み込み中...</p>
-                    ) : (
-                      Array.from({ length: params.stepCount }, (_, i) => i + 1).map(num => {
-                        const stepItem = stepFramework.find(s => s.code === `step_${num}`)
-                        const skills = stepItem?.target_skills?.join(', ') || ''
-                        return (
-                          <div key={num} className="flex items-start space-x-2 p-2 rounded bg-background">
-                            <Badge variant={num <= 5 ? 'default' : 'secondary'} className="mt-0.5">
-                              Step {num}
-                            </Badge>
-                            <div>
-                              <span className="font-medium">{stepItem?.name || `ステップ${num}`}</span>
-                              <span className="text-muted-foreground ml-2">- {stepItem?.description || ''}</span>
-                              {skills && (
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  評価軸: {skills}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })
-                    )}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+              {/* テンプレートとシナリオタイプの関係説明 */}
+              <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-xs">
+                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                <p className="text-muted-foreground">
+                  <span className="font-medium">テンプレート</span>は問題の進め方（ステップ構成）、
+                  <span className="font-medium">シナリオタイプ</span>は題材の場面設定（問題解決・意思決定・戦略立案）を決めます。
+                  テンプレートごとの推奨シナリオは上記を参照してください。
+                </p>
+              </div>
 
               <div>
                 <Label>追加指示（オプション）</Label>

@@ -29,10 +29,11 @@ export type CaseStudyActionType =
   | 'step_submitted'
 
 // ============================================================
-// 10軸ルーブリック評価のスキル軸
+// 18軸ルーブリック評価のスキル軸
 // ============================================================
 
 export type CaseStudySkillAxis =
+  // グループA-E: 既存10軸
   | 'problem_setting'       // 問題設定力
   | 'structuring_logic'     // ロジック構造化
   | 'hypothesis_thinking'   // 仮説思考
@@ -43,6 +44,17 @@ export type CaseStudySkillAxis =
   | 'impact'                // インパクト
   | 'expression'            // 表現力
   | 'originality'           // 独自性
+  // グループF: 技術実務
+  | 'technical_accuracy'    // 技術的正確性
+  | 'security_awareness'    // セキュリティ考慮
+  | 'test_coverage'         // テスト網羅性
+  | 'code_quality'          // コード品質
+  // グループG: ビジネススキル
+  | 'documentation_quality' // ドキュメント品質
+  | 'cost_estimation'       // 見積もり妥当性
+  // グループH: AI活用スキル
+  | 'prompt_effectiveness'  // プロンプト設計力
+  | 'ai_output_validation'  // AI出力の検証力
 
 // ============================================================
 // JSON構造の型定義
@@ -131,6 +143,7 @@ export interface CaseStudyProblemRow {
   scenario_type: string | null
   estimated_minutes: number
   step_count: number
+  step_template: string | null
   custom_base_xp_per_step: number | null
   is_ai_generated: boolean
   generation_prompt: string | null
@@ -153,6 +166,7 @@ export interface CaseStudyProblemInsert {
   scenario_type?: string | null
   estimated_minutes?: number
   step_count?: number
+  step_template?: string | null
   custom_base_xp_per_step?: number | null
   is_ai_generated?: boolean
   generation_prompt?: string | null
@@ -175,6 +189,7 @@ export interface CaseStudyProblemUpdate {
   scenario_type?: string | null
   estimated_minutes?: number
   step_count?: number
+  step_template?: string | null
   custom_base_xp_per_step?: number | null
   is_ai_generated?: boolean
   generation_prompt?: string | null

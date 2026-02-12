@@ -1,0 +1,233 @@
+/**
+ * XP統計テーブル再計算スクリプト
+ *
+ * user_subcategory_xp_stats_v2 と user_category_xp_stats_v2 を
+ * quiz_answers から再計算します。
+ *
+ * 使用方法:
+ *   node scripts/fix-xp-stats-recalc.js --dry-run   # プレビュー
+ *   node scripts/fix-xp-stats-recalc.js --execute   # 実行
+ */
+
+require('dotenv').config({ path: '.env.local' })
+const { createClient } = require('@supabase/supabase-js')
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('❌ 環境変数が設定されていません')
+  process.exit(1)
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+const isDryRun = process.argv.includes('--dry-run')
+const isExecute = process.argv.includes('--execute')
+
+if (!isDryRun && !isExecute) {
+  console.log('使用方法:')
+  console.log('  node scripts/fix-xp-stats-recalc.js --dry-run   # プレビュー')
+  console.log('  node scripts/fix-xp-stats-recalc.js --execute   # 実行')
+  process.exit(0)
+}
+
+async function main() {
+  console.log('='.repeat(60))
+  console.log(isDryRun ? '🔍 ドライラン（プレビュー）モード' : '⚡ 実行モード')
+  console.log('='.repeat(60))
+  console.log('')
+
+  try {
+    // 影響を受けるユーザーを取得
+    const { data: users, error: usersError } = await supabase
+      .from('quiz_answers')
+      .select('user_id')
+      .not('subcategory_id', 'is', null)
+
+    if (usersError) throw new Error(`ユーザー取得エラー: ${usersError.message}`)
+
+    const affectedUsers = [...new Set((users || []).map(u => u.user_id))]
+    console.log(`📊 対象ユーザー: ${affectedUsers.length} 人`)
+
+    if (isDryRun) {
+      // プレビュー: 最初のユーザーのデータを見せる
+      if (affectedUsers.length > 0) {
+        const sampleUserId = affectedUsers[0]
+        console.log('')
+        console.log(`📋 サンプルユーザー (${sampleUserId.substring(0, 8)}...) の再計算プレビュー:`)
+
+        const { data: answers } = await supabase
+          .from('quiz_answers')
+          .select('category_id, subcategory_id, earned_xp, is_correct')
+          .eq('user_id', sampleUserId)
+          .not('subcategory_id', 'is', null)
+
+        // サブカテゴリー別集計
+        const subStats = {}
+        for (const a of (answers || [])) {
+          const key = `${a.category_id}|${a.subcategory_id}`
+          if (!subStats[key]) {
+            subStats[key] = { category_id: a.category_id, subcategory_id: a.subcategory_id, xp: 0, answered: 0, correct: 0 }
+          }
+          subStats[key].xp += a.earned_xp || 0
+          subStats[key].answered += 1
+          subStats[key].correct += a.is_correct ? 1 : 0
+        }
+
+        console.log('   サブカテゴリー別XP (上位10件):')
+        const sorted = Object.values(subStats).sort((a, b) => b.xp - a.xp).slice(0, 10)
+        for (const s of sorted) {
+          console.log(`     ${s.subcategory_id}: ${s.xp} XP (${s.answered}問, ${s.correct}正解)`)
+        }
+      }
+
+      console.log('')
+      console.log('='.repeat(60))
+      console.log('🔍 ドライランモードのため、ここで終了します')
+      console.log('='.repeat(60))
+      return
+    }
+
+    // 実行モード
+    let successCount = 0
+    let errorCount = 0
+
+    for (const userId of affectedUsers) {
+      try {
+        // quiz_answersから回答を取得
+        const { data: answers, error: aError } = await supabase
+          .from('quiz_answers')
+          .select('category_id, subcategory_id, earned_xp, is_correct, created_at')
+          .eq('user_id', userId)
+          .not('subcategory_id', 'is', null)
+          .neq('subcategory_id', '')
+
+        if (aError) throw aError
+
+        // サブカテゴリー別集計
+        const subStats = new Map()
+        const catStats = new Map()
+
+        for (const a of (answers || [])) {
+          // サブカテゴリー
+          const subKey = `${a.category_id}|${a.subcategory_id}`
+          if (!subStats.has(subKey)) {
+            subStats.set(subKey, {
+              user_id: userId,
+              category_id: a.category_id,
+              subcategory_id: a.subcategory_id,
+              total_xp: 0,
+              quiz_xp: 0,
+              course_xp: 0,
+              quiz_questions_answered: 0,
+              quiz_questions_correct: 0,
+              updated_at: null
+            })
+          }
+          const sub = subStats.get(subKey)
+          sub.total_xp += a.earned_xp || 0
+          sub.quiz_xp += a.earned_xp || 0
+          sub.quiz_questions_answered += 1
+          sub.quiz_questions_correct += a.is_correct ? 1 : 0
+          if (!sub.updated_at || a.created_at > sub.updated_at) {
+            sub.updated_at = a.created_at
+          }
+
+          // カテゴリー
+          if (!catStats.has(a.category_id)) {
+            catStats.set(a.category_id, {
+              user_id: userId,
+              category_id: a.category_id,
+              total_xp: 0,
+              quiz_xp: 0,
+              course_xp: 0,
+              quiz_questions_answered: 0,
+              quiz_questions_correct: 0,
+              updated_at: null
+            })
+          }
+          const cat = catStats.get(a.category_id)
+          cat.total_xp += a.earned_xp || 0
+          cat.quiz_xp += a.earned_xp || 0
+          cat.quiz_questions_answered += 1
+          cat.quiz_questions_correct += a.is_correct ? 1 : 0
+          if (!cat.updated_at || a.created_at > cat.updated_at) {
+            cat.updated_at = a.created_at
+          }
+        }
+
+        // サブカテゴリー統計を更新（UPSERT）
+        for (const [, stats] of subStats) {
+          const accuracy = stats.quiz_questions_answered > 0
+            ? (stats.quiz_questions_correct / stats.quiz_questions_answered) * 100
+            : 0
+
+          const { error: upsertError } = await supabase
+            .from('user_subcategory_xp_stats_v2')
+            .upsert({
+              user_id: stats.user_id,
+              category_id: stats.category_id,
+              subcategory_id: stats.subcategory_id,
+              total_xp: stats.total_xp,
+              quiz_xp: stats.quiz_xp,
+              course_xp: stats.course_xp,
+              quiz_questions_answered: stats.quiz_questions_answered,
+              quiz_questions_correct: stats.quiz_questions_correct,
+              quiz_average_accuracy: accuracy,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'user_id,category_id,subcategory_id'
+            })
+
+          if (upsertError) throw upsertError
+        }
+
+        // カテゴリー統計を更新（UPSERT）
+        for (const [, stats] of catStats) {
+          const accuracy = stats.quiz_questions_answered > 0
+            ? (stats.quiz_questions_correct / stats.quiz_questions_answered) * 100
+            : 0
+
+          const { error: upsertError } = await supabase
+            .from('user_category_xp_stats_v2')
+            .upsert({
+              user_id: stats.user_id,
+              category_id: stats.category_id,
+              total_xp: stats.total_xp,
+              quiz_xp: stats.quiz_xp,
+              course_xp: stats.course_xp,
+              quiz_questions_answered: stats.quiz_questions_answered,
+              quiz_questions_correct: stats.quiz_questions_correct,
+              quiz_average_accuracy: accuracy,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'user_id,category_id'
+            })
+
+          if (upsertError) throw upsertError
+        }
+
+        successCount++
+        if (successCount % 10 === 0 || successCount === affectedUsers.length) {
+          console.log(`   進捗: ${successCount}/${affectedUsers.length} ユーザー完了`)
+        }
+
+      } catch (err) {
+        console.error(`   ❌ ユーザー ${userId.substring(0, 8)}... エラー: ${err.message}`)
+        errorCount++
+      }
+    }
+
+    console.log('')
+    console.log('='.repeat(60))
+    console.log(`🎉 完了！ 成功: ${successCount}, エラー: ${errorCount}`)
+    console.log('='.repeat(60))
+
+  } catch (error) {
+    console.error('❌ エラー:', error.message)
+    process.exit(1)
+  }
+}
+
+main()

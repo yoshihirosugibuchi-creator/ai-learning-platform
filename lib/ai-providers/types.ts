@@ -33,9 +33,8 @@ export interface AIScoringRequest {
   /** ルーブリック軸の情報 */
   rubricAxes: Array<{
     axisName: string
-    axisNameEn: string
-    description: string | null
-    weight: number
+    axisCode: string
+    definition: string | null
     rubricGroupName: string
   }>
   /** ヒント使用回数 */

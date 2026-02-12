@@ -305,11 +305,22 @@ export class CoursePublisher {
 
             // 強化されたテーマナレッジカードデータを使用（IDが一致するはず）
             const enhancedTheme = enhancements?.enhancedThemes.find(et => et.id === themeId)
+
+            // テーマのサブカテゴリーID決定ロジック:
+            // 1. カテゴリマッピングのテーママッピングから取得
+            // 2. テーマ固有の suggested_subcategory_id があればそれを使用
+            // 3. なければ null（表示時にジャンルのsubcategory_idを参照）
+            type ThemeMappingType = { theme_id: string; selected_subcategory_id?: string }
+            const themeMappings = (categoryMapping as { theme_mappings?: ThemeMappingType[] })?.theme_mappings || []
+            const themeMapping = themeMappings.find((tm: ThemeMappingType) => tm.theme_id === theme.id)
+            const themeSubcategoryId = themeMapping?.selected_subcategory_id || theme.suggested_subcategory_id || null
+
             const themeData = {
               id: themeId,
               genre_id: genreId,
               title: theme.title,
               description: theme.description,
+              subcategory_id: themeSubcategoryId,
               estimated_minutes: theme.estimatedMinutes || 15,
               display_order: j,
               reward_card_data: (enhancedTheme?.reward_card_data || {

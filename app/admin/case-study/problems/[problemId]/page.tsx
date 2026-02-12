@@ -51,6 +51,7 @@ import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import StepEditor from '@/components/case-study/StepEditor'
+import { getStepTemplate, getTemplateList } from '@/lib/case-study-templates'
 
 interface StepOption {
   id: string
@@ -105,6 +106,7 @@ interface Problem {
   scenario_type: string | null
   estimated_minutes: number
   step_count: number
+  step_template: string | null
   status: string
   featured_date: string | null
   created_at: string
@@ -177,16 +179,6 @@ export default function CaseStudyProblemDetailPage() {
   // AI採点デフォルトプロバイダー
   const [defaultAiProvider, setDefaultAiProvider] = useState('huggingface')
 
-  // ステップフレームワークマスタ
-  const [stepFrameworkOptions, setStepFrameworkOptions] = useState<{
-    id: string
-    code: string
-    name: string
-    description: string
-    display_order: number
-    target_skills: string[] | null
-    is_extended: boolean
-  }[]>([])
 
   // 問題カテゴリー選択用state
   const [problemSubcategories, setProblemSubcategories] = useState<Subcategory[]>([])
@@ -203,6 +195,7 @@ export default function CaseStudyProblemDetailPage() {
     scenario_type: '',
     estimated_minutes: 30,
     step_count: 5,
+    step_template: 'consulting',
     status: 'draft',
     featured_date: '',
     scoring_ai_provider: '',
@@ -287,23 +280,6 @@ export default function CaseStudyProblemDetailPage() {
       console.error('Courses fetch error:', error)
     }
   }, [getAuthHeaders])
-
-  // ステップフレームワークマスタ取得
-  const fetchStepFrameworkOptions = useCallback(async () => {
-    try {
-      const res = await fetch('/api/admin/case-study/options?type=step_framework')
-      if (!res.ok) {
-        console.error('Step framework fetch failed:', res.status)
-        return
-      }
-      const data = await res.json()
-      if (data.success && data.options) {
-        setStepFrameworkOptions(data.options)
-      }
-    } catch (error) {
-      console.error('Step framework fetch error:', error)
-    }
-  }, [])
 
   // ステップ追加
   const handleAddStep = () => {
@@ -415,6 +391,7 @@ export default function CaseStudyProblemDetailPage() {
           scenario_type: data.problem.scenario_type || '',
           estimated_minutes: data.problem.estimated_minutes || 30,
           step_count: data.problem.step_count || 5,
+          step_template: data.problem.step_template || 'consulting',
           status: data.problem.status || 'draft',
           featured_date: data.problem.featured_date || '',
           scoring_ai_provider: data.problem.scoring_ai_provider || '',
@@ -435,7 +412,6 @@ export default function CaseStudyProblemDetailPage() {
     fetchCategories()
     fetchAiSettings()
     fetchCourses()
-    fetchStepFrameworkOptions()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problemId])
 
@@ -969,6 +945,29 @@ export default function CaseStudyProblemDetailPage() {
               </div>
 
               <div>
+                <Label>テンプレート</Label>
+                {editMode ? (
+                  <Select
+                    value={formData.step_template}
+                    onValueChange={(v) => setFormData(prev => ({ ...prev, step_template: v }))}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {getTemplateList().map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="mt-1">
+                    <Badge variant="outline">
+                      {getStepTemplate(problem?.step_template).name}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              <div>
                 <Label>注目日</Label>
                 {editMode ? (
                   <Input
@@ -1102,7 +1101,7 @@ export default function CaseStudyProblemDetailPage() {
         onSave={handleSaveStep}
         categories={categories}
         loadSubcategories={loadSubcategories}
-        stepFrameworkOptions={stepFrameworkOptions}
+        stepTemplate={formData.step_template}
       />
 
     </div>

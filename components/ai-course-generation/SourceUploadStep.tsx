@@ -159,14 +159,28 @@ export function SourceUploadStep({
         setUploadProgress(10)
 
         // 1. ブラウザ内でPDFからテキスト抽出
-        const parseResult = await parsePDFInBrowser(file)
+        console.log('🔧 [PDF] Starting browser-side parsing...')
+        let parseResult
+        try {
+          parseResult = await parsePDFInBrowser(file)
+          console.log('🔧 [PDF] Parse result:', { success: parseResult.success, textLength: parseResult.text?.length, pageCount: parseResult.pageCount })
+        } catch (parseError) {
+          console.error('❌ [PDF] Browser parsing failed:', parseError)
+          throw new Error(`PDF解析エラー: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`)
+        }
         setUploadProgress(50)
 
         if (!parseResult.success) {
           throw new Error(parseResult.error || 'PDF解析に失敗しました')
         }
 
+        // テキストが空の場合のチェック
+        if (!parseResult.text || parseResult.text.trim().length < 10) {
+          throw new Error('PDFからテキストを抽出できませんでした。画像ベースのPDFの可能性があります。')
+        }
+
         // 2. 抽出したテキストをAPIに送信
+        console.log('🔧 [PDF] Sending to API...')
         const response = await fetch('/api/ai-course-generation/upload-sources', {
           method: 'POST',
           headers: {
@@ -191,10 +205,12 @@ export function SourceUploadStep({
 
         if (!response.ok) {
           const error = await response.json()
+          console.error('❌ [PDF] API error:', error)
           throw new Error(error.error || 'テキスト送信に失敗しました')
         }
 
         const result = await response.json()
+        console.log('✅ [PDF] API success:', { sourceId: result.source?.id, title: result.source?.title })
         setUploadProgress(100)
 
         // SourceMaterialの型を調整（PDFとして表示）
@@ -210,6 +226,7 @@ export function SourceUploadStep({
           }
         } as SourceMaterial
 
+        console.log('🔧 [PDF] Updating state with new source:', newSource.id)
         const updatedSources = [...sources, newSource]
         setSources(updatedSources)
         onSourcesChange?.(updatedSources)
@@ -239,10 +256,12 @@ export function SourceUploadStep({
 
         if (!response.ok) {
           const error = await response.json()
+          console.error('❌ [PDF] Server upload error:', error)
           throw new Error(error.error || 'アップロードに失敗しました')
         }
 
         const result = await response.json()
+        console.log('✅ [PDF] Server upload success:', { sourceId: result.source?.id })
         setUploadProgress(100)
 
         const newSource = result.source as SourceMaterial

@@ -26,33 +26,54 @@ export interface BrowserPDFParseResult {
 export async function parsePDFInBrowser(file: File): Promise<BrowserPDFParseResult> {
   try {
     console.log(`📄 [Browser PDF Parser] Processing: ${file.name} (${file.size} bytes)`)
+    console.log(`📄 [Browser PDF Parser] Worker path: ${pdfjsLib.GlobalWorkerOptions.workerSrc}`)
 
     // FileをArrayBufferに変換
+    console.log('🔧 [Browser PDF Parser] Converting file to ArrayBuffer...')
     const arrayBuffer = await file.arrayBuffer()
+    console.log(`🔧 [Browser PDF Parser] ArrayBuffer size: ${arrayBuffer.byteLength}`)
 
-    // PDF.jsでドキュメントを読み込み
-    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer })
-    const pdf = await loadingTask.promise
+    // PDF.jsでドキュメントを読み込み（タイムアウト付き）
+    console.log('🔧 [Browser PDF Parser] Loading PDF document...')
+    const loadingTask = pdfjsLib.getDocument({
+      data: arrayBuffer,
+      // Disable range requests to work better in browser
+      disableRange: true,
+      disableStream: true
+    })
 
+    // 60秒タイムアウト
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('PDF読み込みがタイムアウトしました（60秒）')), 60000)
+    })
+
+    const pdf = await Promise.race([loadingTask.promise, timeoutPromise])
     console.log(`📖 [Browser PDF Parser] PDF loaded: ${pdf.numPages} pages`)
 
     // 全ページからテキストを抽出
     const textParts: string[] = []
 
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      const page = await pdf.getPage(pageNum)
-      const textContent = await page.getTextContent()
+      try {
+        console.log(`🔧 [Browser PDF Parser] Processing page ${pageNum}/${pdf.numPages}...`)
+        const page = await pdf.getPage(pageNum)
+        const textContent = await page.getTextContent()
 
-      const pageText = textContent.items
-        .map((item) => {
-          if ('str' in item) {
-            return item.str
-          }
-          return ''
-        })
-        .join(' ')
+        const pageText = textContent.items
+          .map((item) => {
+            if ('str' in item) {
+              return item.str
+            }
+            return ''
+          })
+          .join(' ')
 
-      textParts.push(pageText)
+        textParts.push(pageText)
+      } catch (pageError) {
+        console.warn(`⚠️ [Browser PDF Parser] Error on page ${pageNum}:`, pageError)
+        // ページエラーは無視して続行
+        textParts.push('')
+      }
     }
 
     const fullText = textParts.join('\n\n')
@@ -68,11 +89,23 @@ export async function parsePDFInBrowser(file: File): Promise<BrowserPDFParseResu
 
   } catch (error) {
     console.error('❌ [Browser PDF Parser] Error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'PDF解析に失敗しました'
+
+    // より詳細なエラーメッセージ
+    let detailedMessage = errorMessage
+    if (errorMessage.includes('Invalid PDF structure')) {
+      detailedMessage = 'PDFファイルの形式が不正です。別のPDFファイルをお試しください。'
+    } else if (errorMessage.includes('Password')) {
+      detailedMessage = 'パスワード保護されたPDFは処理できません。'
+    } else if (errorMessage.includes('タイムアウト')) {
+      detailedMessage = 'PDFの読み込みに時間がかかりすぎました。ファイルサイズが大きすぎる可能性があります。'
+    }
+
     return {
       success: false,
       text: '',
       pageCount: 0,
-      error: error instanceof Error ? error.message : 'PDF解析に失敗しました'
+      error: detailedMessage
     }
   }
 }

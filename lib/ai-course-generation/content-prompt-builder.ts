@@ -79,7 +79,42 @@ graph LR
 - **ノードラベル内で改行（\\n）は使用禁止**:
   - ❌ \`A["項目1\\n項目2"]\`
   - ✅ \`A["項目1 項目2"]\` （スペースで区切る）
-- 絵文字は使用OK（📊、⚙️、📋等でわかりやすく）`
+- 絵文字は使用OK（📊、⚙️、📋等でわかりやすく）
+
+### コードブロックについて（技術コンテンツ向け）
+
+**プログラムコード、SQL、コマンド、設定ファイル等を説明する場合**:
+- 必ずコードブロック記法を使用してください
+- 言語を指定してシンタックスハイライトを有効化
+
+**コードブロックの例**:
+\`\`\`python
+def calculate_score(correct, total):
+    """正答率を計算する"""
+    return (correct / total) * 100
+\`\`\`
+
+\`\`\`sql
+SELECT user_id, COUNT(*) as quiz_count
+FROM quiz_sessions
+GROUP BY user_id
+HAVING COUNT(*) > 10;
+\`\`\`
+
+\`\`\`javascript
+const fetchData = async (url) => {
+  const response = await fetch(url);
+  return response.json();
+};
+\`\`\`
+
+**主な言語指定**:
+- python, javascript, typescript, java, sql, bash, json, yaml, html, css など
+- 言語が不明な場合は \`text\` を使用
+
+**インラインコード**:
+- 変数名、関数名、コマンド等の短いコードは \`バッククォート\` で囲む
+- 例: \`calculateScore()\` 関数を呼び出す、\`SELECT\` 文を使用`
 
       case 'ascii':
         return `
@@ -135,6 +170,7 @@ graph LR
 **text型**:
 - 詳細な説明文、導入文、まとめなどのテキストコンテンツ
 - マークダウン形式対応（見出し、箇条書き、強調など）
+- **コードブロック対応**：技術的な内容ではコードブロックを積極的に使用
 - 300-800文字程度を目安に、読みやすく構造化
 
 **key_points型**:

@@ -287,6 +287,128 @@ const staticMainCategories: MainCategory[] = [
     ],
     "icon": "🛡️",
     "color": "#DC2626"
+  },
+  {
+    "id": "ai_fundamentals",
+    "name": "AI基礎",
+    "description": "AI検定・G検定対応。人工知能の基礎概念から機械学習、ディープラーニング、生成AI、AI倫理まで体系的に学習",
+    "type": "main",
+    "displayOrder": 11,
+    "isActive": true,
+    "isVisible": true,
+    "subcategories": [
+      "AI概論",
+      "機械学習基礎",
+      "ディープラーニング基礎",
+      "ディープラーニング応用",
+      "生成AI・LLM",
+      "AI数理・統計",
+      "AI社会実装",
+      "AI法規・倫理"
+    ],
+    "icon": "🤖",
+    "color": "#8B5CF6"
+  },
+  {
+    "id": "si_basic_tech_foundation",
+    "name": "SI基礎_技術基盤",
+    "description": "システムアーキテクチャ、プログラミング、DB、クラウド、AI活用の基礎",
+    "type": "main",
+    "displayOrder": 15,
+    "isActive": true,
+    "isVisible": true,
+    "subcategories": [
+      "A0 システムの全体像",
+      "A1 プログラミング・開発基礎",
+      "A2 データベース・SQL",
+      "A3 クラウド・インフラ基礎",
+      "A4 AI・データ活用リテラシー"
+    ],
+    "icon": "🏗️",
+    "color": "#3B82F6"
+  },
+  {
+    "id": "si_basic_dev_methodology",
+    "name": "SI基礎_開発手法",
+    "description": "ウォーターフォール、アジャイル、要件定義・設計技法",
+    "type": "main",
+    "displayOrder": 16,
+    "isActive": true,
+    "isVisible": true,
+    "subcategories": [
+      "B1 ウォーターフォール・V字モデル",
+      "B2 アジャイル・スクラム実践",
+      "B3 要件定義・設計技法"
+    ],
+    "icon": "📊",
+    "color": "#10B981"
+  },
+  {
+    "id": "si_basic_testing",
+    "name": "SI基礎_テスト技法",
+    "description": "テスト計画、テストレベル別技法、テスト自動化",
+    "type": "main",
+    "displayOrder": 17,
+    "isActive": true,
+    "isVisible": true,
+    "subcategories": [
+      "C1 テスト全体論・テスト計画",
+      "C2 テストレベル別技法",
+      "C3 テスト自動化・AI活用"
+    ],
+    "icon": "🧪",
+    "color": "#8B5CF6"
+  },
+  {
+    "id": "si_basic_eng_practice",
+    "name": "SI基礎_エンジニアリング実務",
+    "description": "Git/CI/CD、セキュリティ、障害対応",
+    "type": "main",
+    "displayOrder": 18,
+    "isActive": true,
+    "isVisible": true,
+    "subcategories": [
+      "D1 Git・バージョン管理・CI/CD",
+      "D2 セキュリティ基礎",
+      "D3 障害対応・インシデント管理"
+    ],
+    "icon": "🔧",
+    "color": "#F59E0B"
+  },
+  {
+    "id": "si_basic_business_skills",
+    "name": "SI基礎_ビジネス・ソフトスキル",
+    "description": "ドキュメンテーション、PM、労務管理、経営リテラシー",
+    "type": "main",
+    "displayOrder": 19,
+    "isActive": true,
+    "isVisible": true,
+    "subcategories": [
+      "E1 技術ドキュメンテーション",
+      "E2 プロジェクトマネジメント基礎",
+      "E3 SI労務管理・働き方",
+      "E4 ベンチャー経営リテラシー"
+    ],
+    "icon": "💼",
+    "color": "#EF4444"
+  },
+  {
+    "id": "si_basic_ai_collab",
+    "name": "SI基礎_AI協働プログラミング",
+    "description": "AIコーディングツール活用、AI生成コードレビュー、AI活用設計",
+    "type": "main",
+    "displayOrder": 20,
+    "isActive": true,
+    "isVisible": true,
+    "subcategories": [
+      "M1 AIコーディングツール基礎",
+      "M2 プロンプトエンジニアリング for コード",
+      "M3 AI生成コードのレビュー力",
+      "M4 AI活用の設計・アーキテクチャ判断",
+      "M5 テスト・デバッグのAI活用"
+    ],
+    "icon": "🤖",
+    "color": "#06B6D4"
   }
 ]
 
@@ -1022,8 +1144,14 @@ export function getDifficultyId(displayName: string): string {
 
 /**
  * 同期版：既存コードとの互換性のため
+ * キャッシュがあればキャッシュを使用、なければ静的データ
  */
 export function getAllCategoriesSync(): (MainCategory | IndustryCategory)[] {
+  // キャッシュがあればキャッシュを優先
+  if (cachedCategories && cachedCategories.length > 0) {
+    return cachedCategories
+  }
+  // フォールバック：静的データ
   return [...staticMainCategories, ...staticIndustryCategories]
 }
 
@@ -1211,8 +1339,14 @@ export async function getCategoryById(id: string): Promise<MainCategory | Indust
 
 /**
  * 同期版：既存コードとの互換性のため
+ * キャッシュがあればキャッシュを使用、なければ静的データ
  */
 export function getCategoryByIdSync(id: string): MainCategory | IndustryCategory | undefined {
+  // キャッシュがあればキャッシュを優先
+  if (cachedCategories && cachedCategories.length > 0) {
+    return cachedCategories.find(cat => cat.id === id)
+  }
+  // フォールバック：静的データ
   return [...staticMainCategories, ...staticIndustryCategories].find(cat => cat.id === id)
 }
 

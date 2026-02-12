@@ -19,13 +19,31 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { ChevronDown, ChevronUp, ChevronLeft, Lightbulb, CheckCircle, AlertCircle, Brain } from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { ChevronDown, ChevronUp, ChevronLeft, Lightbulb, CheckCircle, AlertCircle, Brain, GripVertical } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import type {
   CaseStudyProblemRow,
   CaseStudyStepRow,
   CaseStudyStepOption
 } from '@/lib/types/case-study'
+import MarkdownContent from '@/components/ui/markdown-content'
 
 interface StepResponse {
   step_number: number
@@ -42,6 +60,47 @@ interface CaseStudySessionProps {
   token: string
   initialResponses?: StepResponse[]
   fromHome?: boolean
+}
+
+function SortableOptionItem({ id, index, option }: { id: string; index: number; option: CaseStudyStepOption }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 p-3 rounded-lg border border-border bg-background ${
+        isDragging ? 'shadow-lg z-10' : ''
+      }`}
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground"
+      >
+        <GripVertical className="h-4 w-4" />
+      </div>
+      <Badge variant="secondary" className="shrink-0 w-6 h-6 flex items-center justify-center p-0 text-xs">
+        {index + 1}
+      </Badge>
+      <span className="flex-1">
+        <MarkdownContent content={option.text} compact />
+      </span>
+    </div>
+  )
 }
 
 export default function CaseStudySession({
@@ -106,6 +165,30 @@ export default function CaseStudySession({
     setStepStartTime(new Date())
   }, [activeStepIndex])
 
+  // dnd-kit sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  // ordering初期化: ステップ変更時に選択肢をシャッフルしてselectedChoicesに設定
+  useEffect(() => {
+    if (currentStep?.question_type !== 'ordering') return
+    const opts = (currentStep.options as CaseStudyStepOption[] | null) || []
+    if (opts.length === 0) return
+    // 既に回答済みの場合はスキップ
+    if (submittedAnswers[currentStepIndex]?.selectedChoices?.length) return
+    // activeStepDraftがある場合もスキップ
+    if (currentStepIndex === activeStepIndex && activeStepDraft?.selectedChoices?.length) return
+    // シャッフル
+    const ids = opts.map(o => o.id)
+    const shuffled = [...ids].sort(() => Math.random() - 0.5)
+    setSelectedChoices(shuffled)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStepIndex, currentStep?.question_type])
+
   const handleChoiceToggle = useCallback((choiceId: string) => {
     const questionType = currentStep?.question_type
 
@@ -119,6 +202,16 @@ export default function CaseStudySession({
       )
     }
   }, [currentStep?.question_type])
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setSelectedChoices(prev => {
+      const oldIndex = prev.indexOf(active.id as string)
+      const newIndex = prev.indexOf(over.id as string)
+      return arrayMove(prev, oldIndex, newIndex)
+    })
+  }, [])
 
   const handleRequestHint = async () => {
     if (hintUsed) return
@@ -161,7 +254,16 @@ export default function CaseStudySession({
     const hasReasoning = reasoningText.trim().length > 0
     const questionType = currentStep.question_type
 
-    if (questionType === 'single' || questionType === 'multiple') {
+    if (questionType === 'ordering') {
+      const opts = (currentStep.options as CaseStudyStepOption[] | null) || []
+      if (selectedChoices.length !== opts.length) {
+        toast({
+          title: '全ての選択肢を並べ替えてください',
+          variant: 'destructive'
+        })
+        return
+      }
+    } else if (questionType === 'single' || questionType === 'multiple') {
       if (!hasSelection) {
         toast({
           title: '選択肢を選んでください',
@@ -506,7 +608,7 @@ export default function CaseStudySession({
           <CollapsibleContent>
             <CardContent className="pt-0">
               <div className="prose prose-sm dark:prose-invert max-w-none">
-                <div className="whitespace-pre-wrap text-sm">{problem.case_text}</div>
+                <MarkdownContent content={problem.case_text || ''} />
               </div>
             </CardContent>
           </CollapsibleContent>
@@ -525,11 +627,41 @@ export default function CaseStudySession({
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground">{currentStep.description}</p>
+          <div className="text-muted-foreground">
+            <MarkdownContent content={currentStep.description || ''} />
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* 選択肢 */}
-          {options.length > 0 && (
+          {options.length > 0 && currentStep.question_type === 'ordering' ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                選択肢を正しい順序に並べ替えてください
+              </label>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext items={selectedChoices} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-2">
+                    {selectedChoices.map((choiceId, index) => {
+                      const option = options.find(o => o.id === choiceId)
+                      if (!option) return null
+                      return (
+                        <SortableOptionItem
+                          key={choiceId}
+                          id={choiceId}
+                          index={index}
+                          option={option}
+                        />
+                      )
+                    })}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            </div>
+          ) : options.length > 0 && (
             <div className="space-y-2">
               <label className="text-sm font-medium">
                 選択肢
@@ -559,7 +691,9 @@ export default function CaseStudySession({
                           <CheckCircle className="h-3 w-3 text-primary-foreground" />
                         )}
                       </div>
-                      <span>{option.id}. {option.text}</span>
+                      <span className="flex-1">
+                        {option.id}. <MarkdownContent content={option.text} compact />
+                      </span>
                     </div>
                   </button>
                 ))}
@@ -657,7 +791,9 @@ export default function CaseStudySession({
             </DialogTitle>
             <DialogDescription asChild>
               <div className="space-y-3 pt-2">
-                <p className="whitespace-pre-wrap">{hint}</p>
+                <div className="text-foreground">
+                  <MarkdownContent content={hint || ''} />
+                </div>
                 <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
                   <AlertCircle className="h-4 w-4" />
                   <span>ヒント使用によりXPボーナスが減少します</span>

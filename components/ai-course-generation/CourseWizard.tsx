@@ -193,13 +193,14 @@ export function CourseWizard({
     return () => clearTimeout(autoSaveTimer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    workflow.title, 
-    workflow.description, 
+    workflow.title,
+    workflow.description,
     workflow.difficultyId,
-    workflow.learningObjectives, 
+    workflow.learningObjectives,
     workflow.aiOutlineResponse,
     workflow.categoryMappings,
-    workflow.outline_data
+    workflow.outline_data,
+    workflow.sources // 🔧 sourcesの変更も自動保存対象に追加
   ])
 
   // 認証ヘッダー取得ヘルパー
@@ -407,13 +408,22 @@ export function CourseWizard({
     }
   }, [workflow, toast, onSave])
 
-  // 参考資料変更ハンドラ
-  const handleSourcesChange = (sources: SourceMaterial[]) => {
-    setWorkflow(prev => ({
-      ...prev,
-      sources
-    }))
-  }
+  // 参考資料変更ハンドラ（即時保存付き）
+  const handleSourcesChange = useCallback((sources: SourceMaterial[]) => {
+    console.log('🔧 [CourseWizard] handleSourcesChange:', { count: sources.length })
+    setWorkflow(prev => {
+      const updated = {
+        ...prev,
+        sources
+      }
+      // ワークフローIDがある場合は即時保存（非同期）
+      if (prev.id) {
+        console.log('💾 [CourseWizard] Triggering immediate save for sources')
+        handleSave(updated)
+      }
+      return updated
+    })
+  }, [handleSave])
 
   // AIレスポンス変更ハンドラ
   const handleAIResponse = async (aiResponse: string) => {

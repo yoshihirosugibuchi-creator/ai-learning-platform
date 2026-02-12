@@ -74,7 +74,8 @@ interface GroupedAxis {
  * ルーブリック軸をプロンプト用のテキスト形式に変換
  */
 function generatePromptText(groups: GroupedAxis[]): string {
-  let text = '【10軸ルーブリック評価システム】\n'
+  const totalAxes = groups.reduce((sum, g) => sum + g.axes.length, 0)
+  let text = `【ルーブリック評価システム（${totalAxes}軸）】\n`
 
   const sortedGroups = [...groups].sort((a, b) => a.group_code.localeCompare(b.group_code))
   for (const group of sortedGroups) {

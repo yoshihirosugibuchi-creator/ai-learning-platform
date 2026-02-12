@@ -13,7 +13,7 @@
  */
 
 // 問題形式タイプ（DB値に統一）
-export type QuestionType = 'single' | 'multiple' | 'text' | 'hybrid'
+export type QuestionType = 'single' | 'multiple' | 'ordering' | 'text' | 'hybrid'
 
 // 旧UI値からDB値への変換マップ（後方互換性用）
 export const questionTypeToDbValue: Record<string, QuestionType> = {
@@ -22,6 +22,7 @@ export const questionTypeToDbValue: Record<string, QuestionType> = {
   'hybrid': 'hybrid',
   'single': 'single',
   'multiple': 'multiple',
+  'ordering': 'ordering',
   'text': 'text',
 }
 
@@ -57,9 +58,11 @@ export interface PromptGeneratorParams {
   customPrompt?: string      // 追加指示
   aiModel: 'claude' | 'chatgpt' | 'gemini'
 
+  // テンプレート情報
+  stepTemplateName?: string    // テンプレートの最初のステップ名（JSON例に使用）
   // DB駆動型マスタデータ（オプション - 未指定時はデフォルト値使用）
-  stepFrameworkText?: string   // APIから取得したステップフレームワークテキスト
-  rubricAxesText?: string      // APIから取得したルーブリック軸テキスト
+  stepFrameworkText?: string   // テンプレートから生成したステップフレームワークテキスト
+  rubricAxesText?: string      // テンプレートから生成したルーブリック軸テキスト
 }
 
 const difficultyDescriptions: Record<string, string> = {
@@ -100,7 +103,7 @@ Step 8: モニタリング設計 - 効果測定と改善サイクルの仕組み
 
 // デフォルトのルーブリック軸（API未取得時のフォールバック）
 const DEFAULT_RUBRIC_AXES = `
-【10軸ルーブリック評価システム】
+【ルーブリック評価システム】
 グループA: 思考基盤
   - problem_setting（問題設定力）: 事象の本質を見抜き、解くべき問いを設定する力
   - structuring_logic（ロジック構造化）: 情報や論点を整理し、論理的に構造化する力
@@ -126,6 +129,7 @@ const DEFAULT_RUBRIC_AXES = `
 export const questionTypeDescriptions: Record<QuestionType, string> = {
   single: '単一選択のみ',
   multiple: '複数選択のみ',
+  ordering: '順序並べ替え',
   text: '記述式のみ',
   hybrid: '複数選択＋記述',
 }
@@ -134,15 +138,17 @@ export const questionTypeDescriptions: Record<QuestionType, string> = {
 export const questionTypeDetails: Record<QuestionType, string> = {
   single: '4択から1つだけ選ぶ形式（記述なし）',
   multiple: '4択から1〜4つ選べる形式（記述なし）',
+  ordering: '4択を正しい順序に並べ替える形式（記述なし）',
   text: '選択肢なし、記述のみで回答する形式',
   hybrid: '4択から1〜4つ選んだ上で理由を記述する形式',
 }
 
 // 問題形式別のステップJSONスキーマ例を生成（Claude用）
 function buildStepJsonExampleClaude(questionType: QuestionType, params: PromptGeneratorParams): string {
+  const firstStepName = params.stepTemplateName || '状況把握'
   const baseStep = `{
       "step_number": 1,
-      "step_name": "状況把握",
+      "step_name": "${firstStepName}",
       "description": "このステップで学習者に求めること（100-200文字）",
       "category_id": "${params.categoryId}",
       "subcategory_id": "${params.subcategoryId}",
@@ -209,6 +215,39 @@ function buildStepJsonExampleClaude(questionType: QuestionType, params: PromptGe
         }
       },
       "hint": "ヒント文（50-100文字）",
+      "target_skills": ["problem_setting", "structuring_logic"],
+      "max_score": 20
+    }`
+
+    case 'ordering':
+      // 順序並べ替え：4択を正しい順序に並べる（記述なし）
+      return `${baseStep}
+      "options": [
+        {"id": "1a", "text": "正しい順序で1番目の項目", "is_correct": true, "partial_score": 4},
+        {"id": "1b", "text": "正しい順序で2番目の項目", "is_correct": true, "partial_score": 3},
+        {"id": "1c", "text": "正しい順序で3番目の項目", "is_correct": true, "partial_score": 2},
+        {"id": "1d", "text": "正しい順序で4番目の項目", "is_correct": true, "partial_score": 1}
+      ],
+      "model_answer": {
+        "ideal_choices": ["1a", "1b", "1c", "1d"],
+        "choice_explanations": {
+          "1a": "【正解位置：1番目】理由：最初に○○を行う必要がある。",
+          "1b": "【正解位置：2番目】理由：○○の後に△△を実施する。",
+          "1c": "【正解位置：3番目】理由：△△の結果を受けて□□を行う。",
+          "1d": "【正解位置：4番目】理由：最後に☆☆で締めくくる。"
+        },
+        "essential_points": [],
+        "good_examples": [],
+        "common_mistakes": ["1bと1cを入れ替える（△△と□□の順序を誤解している）", "1aを最後にする（○○の優先度を見落としている）"],
+        "scoring_anchors": {
+          "1": "1点：0-1個が正しい位置",
+          "2": "2点：2個が正しい位置",
+          "3": "3点：2-3個が正しい位置",
+          "4": "4点：3個が正しい位置",
+          "5": "5点：全て正しい位置"
+        }
+      },
+      "hint": "ヒント文（50-100文字、順序のヒントを示唆）",
       "target_skills": ["problem_setting", "structuring_logic"],
       "max_score": 20
     }`
@@ -300,7 +339,22 @@ graph TD
 重要な構文ルール:
 - subgraph名は英語ID + ラベル形式: subgraph sales ["📊 営業部門"]
 - ノードラベル内での改行（\\n）は禁止（スペースで区切る）
-- 絵文字は使用OK（📊、⚙️、📋等で視覚的に分かりやすく）`
+- 絵文字は使用OK（📊、⚙️、📋等で視覚的に分かりやすく）
+
+【コードブロック（技術系ケーススタディ向け）】
+プログラムコード、SQL、設定ファイル等を含むケースの場合:
+- 必ずコードブロック記法（\`\`\`言語名）を使用
+- コードレビュー型問題では脆弱性や問題点を含むコードを提示
+
+コードブロックの例:
+\`\`\`python
+def process_user_input(data):
+    # このコードに問題はありますか？
+    query = f"SELECT * FROM users WHERE id = {data}"
+    return execute_query(query)
+\`\`\`
+
+主な言語指定: python, javascript, java, sql, bash, json等`
 
     case 'ascii':
       return `
@@ -322,7 +376,8 @@ graph TD
 ケーステキストや選択肢で図は使用しないでください。
 - フローチャートやダイアグラムは使用禁止
 - 関係性は文章や箇条書きで説明
-- プロセスは番号付きリストで表現`
+- プロセスは番号付きリストで表現
+- ただし、コードブロック（\`\`\`言語名）は技術系コンテンツで使用可能`
 
     default:
       return ''
@@ -364,6 +419,21 @@ function buildQuestionTypeRequirements(questionType: QuestionType): string {
   - good_examples: 空配列[]（記述なしのため不要）
   - common_mistakes: よくある選択ミスのパターン（2-3個）★必須
   - scoring_anchors: 選択の組み合わせによる採点基準（正解を全て選び不正解を選ばない=満点）`
+
+    case 'ordering':
+      return `【各ステップの要件】
+- question_type: "ordering"（順序並べ替え - 4択を正しい順序に並べる、記述なし）
+- options: 4択（id, text, is_correct, partial_score付き）
+  - 全選択肢を is_correct: true に設定
+  - partial_scoreは位置に応じた整数（1番目=4、2番目=3、3番目=2、4番目=1）
+- model_answer: 以下の全フィールドを含むこと
+  - ideal_choices: 正しい順序の選択肢ID配列（例: ["1a", "1b", "1c", "1d"]）★必須
+  - choice_explanations: 各選択肢のなぜその位置が正解かの解説 ★必須
+    - 形式: {"1a": "【正解位置：1番目】理由...", "1b": "【正解位置：2番目】理由...", ...}
+  - essential_points: 空配列[]（記述なしのため不要）
+  - good_examples: 空配列[]（記述なしのため不要）
+  - common_mistakes: よくある順序ミスのパターン（2-3個）★必須
+  - scoring_anchors: 正しい位置の数による採点基準`
 
     case 'text':
       return `【各ステップの要件】
@@ -433,7 +503,7 @@ ${rubricAxes}
 
 ${buildQuestionTypeRequirements(params.questionType || 'hybrid')}
 - hint: 各ステップにヒント文を1つ（直接答えを示さず、思考の方向性を示唆）
-- target_skills: 上記10軸から2-3個選択（ステップの目的に合わせて）
+- target_skills: 上記評価軸から2-3個選択（ステップの目的に合わせて）
 - category_id / subcategory_id: 各ステップのXP計上先カテゴリー（問題全体と異なってもよい）
 - max_score: 20（全ステップ共通）
 ${diagramGuidance}
@@ -479,6 +549,7 @@ ${questionType !== 'text' ? '- 各ステップの選択肢は、学習者が「�
 ${questionType === 'text' || questionType === 'hybrid' ? '- good_examplesは具体的で模範となる回答例を記述\n- essential_pointsは記述回答で含めるべき重要なキーワードや概念を列挙' : ''}
 ${questionType === 'single' ? '- 単一選択：正解は1つのみ、学習者は1つだけ選択可能' : ''}
 ${questionType === 'multiple' || questionType === 'hybrid' ? '- 複数選択：学習者は1〜4つの選択肢を選べる（正解が複数あってもよい）' : ''}
+${questionType === 'ordering' ? '- 順序並べ替え：全選択肢をis_correct:trueに設定し、ideal_choicesを正しい順序で記載\n- choice_explanationsは各位置がなぜその順序なのかを説明' : ''}
 - common_mistakesは学習者が陥りやすい思考パターンを具体的に記述
 - 各ステップのtarget_skillsはステップの目的に合わせて選択`
 }
@@ -526,6 +597,7 @@ ${questionType === 'text' || questionType === 'hybrid' ? `- **good_examples**は
 - **essential_points**は記述で含めるべきキーワードを必ず含めてください` : ''}
 ${questionType === 'single' ? '- 単一選択：正解は1つのみ、学習者は1つだけ選択可能' : ''}
 ${questionType === 'multiple' || questionType === 'hybrid' ? '- 複数選択：学習者は1〜4つの選択肢を選べる' : ''}
+${questionType === 'ordering' ? '- 順序並べ替え：全選択肢をis_correct:trueに設定し、ideal_choicesを正しい順序で記載' : ''}
 - **common_mistakes**はよくある間違いパターンを必ず含めてください
 - scoring_anchorsは1-5点の段階的な基準にしてください
 - JSON以外のテキストは出力しないでください`
@@ -567,6 +639,19 @@ export function generateGeminiPrompt(params: PromptGeneratorParams): string {
       requiredFields = 'choice_explanations、common_mistakesは必須です。学習者は1〜4つ選択可能。'
       break
 
+    case 'ordering':
+      // 順序並べ替え
+      modelAnswerSchema = `"model_answer": {
+      "ideal_choices": string[] (正しい順序の配列),
+      "choice_explanations": {[optionId: string]: string},
+      "essential_points": [],
+      "good_examples": [],
+      "common_mistakes": string[],
+      "scoring_anchors": {"1": string, "2": string, "3": string, "4": string, "5": string}
+    }`
+      requiredFields = 'ideal_choicesは正しい順序の配列、choice_explanationsは各位置の理由、common_mistakesは必須です。全選択肢をis_correct:trueに設定。'
+      break
+
     case 'text':
       // 記述式のみ
       modelAnswerSchema = `"model_answer": {
@@ -596,6 +681,8 @@ export function generateGeminiPrompt(params: PromptGeneratorParams): string {
 
   const optionsSchema = questionType === 'text'
     ? '"options": [],'
+    : questionType === 'ordering'
+    ? '"options": [{"id": string, "text": string, "is_correct": true, "partial_score": 1-4}] (全てis_correct:true),'
     : '"options": [{"id": string, "text": string, "is_correct": boolean, "partial_score": 0-4}],'
 
   return `ケーススタディ問題をJSON形式で1つ生成してください。
@@ -625,7 +712,7 @@ ${common}
     ${optionsSchema}
     ${modelAnswerSchema},
     "hint": string (50-100文字),
-    "target_skills": string[] (10軸から2-3個),
+    "target_skills": string[] (評価軸から2-3個),
     "max_score": 20
   }]
 }

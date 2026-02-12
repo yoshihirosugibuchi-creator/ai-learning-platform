@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/accordion'
 import { Trophy, Star, Zap, Clock, Home, RotateCcw, CheckCircle, XCircle, History } from 'lucide-react'
 import type { CaseStudyScoringResult, CaseStudyBonusDetails, CaseStudySkillAxis } from '@/lib/types/case-study'
+import MarkdownContent from '@/components/ui/markdown-content'
 
 interface StepDetail {
   step_number: number
@@ -70,6 +71,7 @@ interface CaseStudyResultProps {
 }
 
 const skillAxisLabels: Record<CaseStudySkillAxis, string> = {
+  // グループA-E: 既存10軸
   problem_setting: '問題設定力',
   structuring_logic: 'ロジック構造化',
   hypothesis_thinking: '仮説思考',
@@ -79,7 +81,18 @@ const skillAxisLabels: Record<CaseStudySkillAxis, string> = {
   perspective_diversity: '視点の多様性',
   impact: 'インパクト',
   expression: '表現力',
-  originality: '独自性'
+  originality: '独自性',
+  // グループF: 技術実務
+  technical_accuracy: '技術的正確性',
+  security_awareness: 'セキュリティ考慮',
+  test_coverage: 'テスト網羅性',
+  code_quality: 'コード品質',
+  // グループG: ビジネススキル
+  documentation_quality: 'ドキュメント品質',
+  cost_estimation: '見積もり妥当性',
+  // グループH: AI活用スキル
+  prompt_effectiveness: 'プロンプト設計力',
+  ai_output_validation: 'AI出力の検証力',
 }
 
 export default function CaseStudyResult({
@@ -222,7 +235,7 @@ export default function CaseStudyResult({
           <CardTitle className="text-lg">AIフィードバック</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="whitespace-pre-wrap">{scoringResult.overall_feedback}</p>
+          <MarkdownContent content={scoringResult.overall_feedback || ''} />
         </CardContent>
       </Card>
 
@@ -261,33 +274,86 @@ export default function CaseStudyResult({
                       {/* 設問 */}
                       <div>
                         <div className="text-sm font-medium text-muted-foreground mb-1">設問</div>
-                        <p className="text-sm">{step.description}</p>
+                        <div className="text-sm">
+                          <MarkdownContent content={step.description} compact />
+                        </div>
                       </div>
 
                       {/* あなたの回答 */}
                       <div>
                         <div className="text-sm font-medium text-muted-foreground mb-1">あなたの回答</div>
-                        {step.user_answer.selected_choices && step.user_answer.selected_choices.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-2">
-                            {step.user_answer.selected_choices.map(choice => (
-                              <Badge key={choice} variant="secondary">{choice}</Badge>
-                            ))}
+                        {step.question_type === 'ordering' && step.user_answer.selected_choices && step.user_answer.selected_choices.length > 0 ? (
+                          <div className="space-y-1 mb-2">
+                            {step.user_answer.selected_choices.map((choice, idx) => {
+                              const idealChoices = step.model_answer?.ideal_choices || []
+                              const isCorrectPosition = idealChoices[idx] === choice
+                              const optionText = step.options?.find(o => o.id === choice)?.text || choice
+                              return (
+                                <div
+                                  key={`${choice}-${idx}`}
+                                  className={`flex items-center gap-2 p-2 rounded text-sm ${
+                                    isCorrectPosition
+                                      ? 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800'
+                                      : 'bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800'
+                                  }`}
+                                >
+                                  {isCorrectPosition ? (
+                                    <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
+                                  ) : (
+                                    <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+                                  )}
+                                  <Badge variant="secondary" className="shrink-0">{idx + 1}</Badge>
+                                  <span><MarkdownContent content={optionText} compact /></span>
+                                </div>
+                              )
+                            })}
                           </div>
+                        ) : (
+                          <>
+                            {step.user_answer.selected_choices && step.user_answer.selected_choices.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mb-2">
+                                {step.user_answer.selected_choices.map(choice => (
+                                  <Badge key={choice} variant="secondary">{choice}</Badge>
+                                ))}
+                              </div>
+                            )}
+                          </>
                         )}
                         {step.user_answer.reasoning_text && (
-                          <p className="text-sm bg-muted p-2 rounded">{step.user_answer.reasoning_text}</p>
+                          <div className="text-sm bg-muted p-2 rounded">
+                            <MarkdownContent content={step.user_answer.reasoning_text} compact />
+                          </div>
                         )}
                       </div>
 
                       {/* 模範解答 */}
-                      {step.model_answer?.ideal_choices && (
+                      {step.model_answer?.ideal_choices && step.model_answer.ideal_choices.length > 0 && (
                         <div>
-                          <div className="text-sm font-medium text-muted-foreground mb-1">模範解答</div>
-                          <div className="flex flex-wrap gap-2">
-                            {step.model_answer.ideal_choices.map(choice => (
-                              <Badge key={choice} variant="outline">{choice}</Badge>
-                            ))}
+                          <div className="text-sm font-medium text-muted-foreground mb-1">
+                            {step.question_type === 'ordering' ? '正しい順序' : '模範解答'}
                           </div>
+                          {step.question_type === 'ordering' ? (
+                            <div className="space-y-1">
+                              {step.model_answer.ideal_choices.map((choice, idx) => {
+                                const optionText = step.options?.find(o => o.id === choice)?.text || choice
+                                return (
+                                  <div
+                                    key={`${choice}-${idx}`}
+                                    className="flex items-center gap-2 p-2 rounded text-sm bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800"
+                                  >
+                                    <Badge variant="secondary" className="shrink-0">{idx + 1}</Badge>
+                                    <span><MarkdownContent content={optionText} compact /></span>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap gap-2">
+                              {step.model_answer.ideal_choices.map(choice => (
+                                <Badge key={choice} variant="outline">{choice}</Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -295,7 +361,9 @@ export default function CaseStudyResult({
                       {scoring?.feedback && (
                         <div>
                           <div className="text-sm font-medium text-muted-foreground mb-1">フィードバック</div>
-                          <p className="text-sm">{scoring.feedback}</p>
+                          <div className="text-sm">
+                            <MarkdownContent content={scoring.feedback} compact />
+                          </div>
                         </div>
                       )}
                     </div>

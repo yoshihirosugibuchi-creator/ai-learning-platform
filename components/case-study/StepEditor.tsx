@@ -21,6 +21,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { X, Plus, Trash2, GripVertical } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { getStepTemplate } from '@/lib/case-study-templates'
 
 interface StepOption {
   id: string
@@ -71,7 +73,8 @@ interface StepEditorProps {
   onSave: (step: Step) => Promise<void>
   categories: Category[]
   loadSubcategories: (categoryId: string) => Promise<Subcategory[]>
-  stepFrameworkOptions: StepFrameworkOption[]
+  /** テンプレートID（例: 'consulting', 'code_review'）。ステップ名候補とデフォルト値の決定に使用 */
+  stepTemplate?: string
 }
 
 const QUESTION_TYPES = [
@@ -83,6 +86,7 @@ const QUESTION_TYPES = [
 ]
 
 const SKILL_AXES = [
+  // グループA-E: 既存10軸
   { id: 'problem_setting', name: '問題設定力' },
   { id: 'structuring_logic', name: 'ロジック構造化' },
   { id: 'hypothesis_thinking', name: '仮説思考' },
@@ -93,17 +97,18 @@ const SKILL_AXES = [
   { id: 'impact', name: 'インパクト' },
   { id: 'expression', name: '表現力' },
   { id: 'originality', name: '独自性' },
+  // グループF: 技術実務
+  { id: 'technical_accuracy', name: '技術的正確性' },
+  { id: 'security_awareness', name: 'セキュリティ考慮' },
+  { id: 'test_coverage', name: 'テスト網羅性' },
+  { id: 'code_quality', name: 'コード品質' },
+  // グループG: ビジネススキル
+  { id: 'documentation_quality', name: 'ドキュメント品質' },
+  { id: 'cost_estimation', name: '見積もり妥当性' },
+  // グループH: AI活用スキル
+  { id: 'prompt_effectiveness', name: 'プロンプト設計力' },
+  { id: 'ai_output_validation', name: 'AI出力の検証力' },
 ]
-
-interface StepFrameworkOption {
-  id: string
-  code: string
-  name: string
-  description: string
-  display_order: number
-  target_skills: string[] | null
-  is_extended: boolean
-}
 
 export default function StepEditor({
   step,
@@ -113,8 +118,11 @@ export default function StepEditor({
   onSave,
   categories,
   loadSubcategories,
-  stepFrameworkOptions,
+  stepTemplate,
 }: StepEditorProps) {
+  // テンプレートからステップ候補を取得
+  const template = getStepTemplate(stepTemplate || null)
+  const templateSteps = template.steps
   const isNew = !step?.id
 
   const [formData, setFormData] = useState<Step>({
@@ -141,6 +149,7 @@ export default function StepEditor({
     display_order: null,
   })
 
+  const { toast } = useToast()
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [loadingSub, setLoadingSub] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -166,11 +175,11 @@ export default function StepEditor({
         display_order: step.display_order ?? null,
       })
     } else {
-      // 新規ステップ: ステップ番号に応じた標準名を設定（マスタから取得）
-      const defaultStep = stepFrameworkOptions.find(s => s.display_order === stepNumber) || stepFrameworkOptions[0]
+      // 新規ステップ: テンプレートからステップ番号に応じたデフォルト値を設定
+      const defaultStep = templateSteps.find(s => s.stepNumber === stepNumber) || templateSteps[0]
       setFormData({
         step_number: stepNumber,
-        step_name: defaultStep?.name || '',
+        step_name: defaultStep?.stepName || '',
         description: defaultStep?.description || '',
         category_id: categories[0]?.category_id || '',
         subcategory_id: '',
@@ -187,12 +196,13 @@ export default function StepEditor({
           scoring_anchors: { '1': '', '2': '', '3': '', '4': '', '5': '' },
         },
         hint: '',
-        target_skills: defaultStep?.target_skills || [],
+        target_skills: defaultStep?.targetSkills || [],
         max_score: 20,
         display_order: null,
       })
     }
-  }, [step, stepNumber, categories, stepFrameworkOptions])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, stepNumber, categories, stepTemplate])
 
   // カテゴリー変更時にサブカテゴリー取得
   useEffect(() => {
@@ -244,21 +254,35 @@ export default function StepEditor({
 
   const handleSave = async () => {
     if (!formData.step_name.trim()) {
-      alert('ステップ名は必須です')
+      toast({ title: 'ステップ名は必須です', variant: 'destructive' })
       return
     }
     if (!formData.description.trim()) {
-      alert('説明は必須です')
+      toast({ title: '説明は必須です', variant: 'destructive' })
       return
     }
 
     // ideal_choicesを選択肢から自動計算
-    const idealChoices = (formData.options || [])
-      .filter((opt) => opt.is_correct)
-      .map((opt) => opt.id)
+    let optionsToSave = formData.options || []
+    let idealChoices: string[]
+
+    if (formData.question_type === 'ordering') {
+      // ordering: 全選択肢をis_correct:trueに設定、ideal_choicesは表示順
+      optionsToSave = optionsToSave.map((opt, idx) => ({
+        ...opt,
+        is_correct: true,
+        partial_score: optionsToSave.length - idx,
+      }))
+      idealChoices = optionsToSave.map((opt) => opt.id)
+    } else {
+      idealChoices = optionsToSave
+        .filter((opt) => opt.is_correct)
+        .map((opt) => opt.id)
+    }
 
     const dataToSave: Step = {
       ...formData,
+      options: optionsToSave,
       model_answer: {
         ...formData.model_answer,
         ideal_choices: idealChoices,
@@ -296,14 +320,14 @@ export default function StepEditor({
               <Select
                 value={formData.step_name}
                 onValueChange={(v) => {
-                  const selectedStep = stepFrameworkOptions.find(s => s.name === v)
+                  const selectedStep = templateSteps.find(s => s.stepName === v)
                   setFormData((prev) => ({
                     ...prev,
                     step_name: v,
                     // 説明が空の場合のみ自動入力
                     description: prev.description || selectedStep?.description || '',
                     // 主要評価軸も自動設定
-                    target_skills: selectedStep?.target_skills || prev.target_skills,
+                    target_skills: selectedStep?.targetSkills || prev.target_skills,
                   }))
                 }}
               >
@@ -311,16 +335,16 @@ export default function StepEditor({
                   <SelectValue placeholder="ステップを選択..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {stepFrameworkOptions.map((opt) => (
-                    <SelectItem key={opt.code} value={opt.name}>
-                      Step {opt.display_order}: {opt.name}
-                      {opt.is_extended && ' (拡張)'}
+                  {templateSteps.map((ts) => (
+                    <SelectItem key={ts.stepNumber} value={ts.stepName}>
+                      Step {ts.stepNumber}: {ts.stepName}
+                      {ts.isExtended && ' (拡張)'}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground mt-1">
-                ※標準フレームワーク: Step1〜5必須、Step6〜8は拡張用
+                テンプレート: {template.name}（{template.steps.filter(s => !s.isExtended).length}ステップ＋拡張{template.steps.filter(s => s.isExtended).length}）
               </p>
             </div>
 
@@ -334,7 +358,7 @@ export default function StepEditor({
                 className="min-h-[120px]"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                標準説明: {stepFrameworkOptions.find(s => s.name === formData.step_name)?.description || '(ステップを選択してください)'}
+                標準説明: {templateSteps.find(s => s.stepName === formData.step_name)?.description || '(ステップを選択してください)'}
               </p>
             </div>
 
@@ -409,7 +433,7 @@ export default function StepEditor({
           </div>
 
           {/* 選択肢 */}
-          {['single', 'multiple', 'hybrid'].includes(formData.question_type) && (
+          {['single', 'multiple', 'hybrid', 'ordering'].includes(formData.question_type) && (
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label>選択肢</Label>
@@ -418,6 +442,11 @@ export default function StepEditor({
                   追加
                 </Button>
               </div>
+              {formData.question_type === 'ordering' && (
+                <p className="text-xs text-muted-foreground mb-2">
+                  順序並べ替え問題: 選択肢を正しい順序で並べてください。上から順に正解順として保存されます。
+                </p>
+              )}
               <div className="space-y-2">
                 {(formData.options || []).map((option, index) => (
                   <div

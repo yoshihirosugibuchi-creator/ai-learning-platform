@@ -77,6 +77,7 @@ export async function PUT(
       'scenario_type_code',
       'info_clarity_code',
       'step_count',
+      'step_template',
       'question_type',
       'custom_prompt',
       'ai_model',

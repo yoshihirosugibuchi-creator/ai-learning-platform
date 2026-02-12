@@ -13,6 +13,7 @@ import LoadingScreen from '@/components/layout/LoadingScreen'
 import { getLearningCourseDetails } from '@/lib/learning/data'
 import { LearningCourse, LearningGenre, LearningTheme, LearningSession, DifficultyLabels, SessionTypeLabels } from '@/lib/types/learning'
 import { getCategoryInfoForCourse, getCategoryInfoForGenre } from '@/lib/learning/category-integration'
+import { getCategories } from '@/lib/categories'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { MainCategory } from '@/lib/types/category'
@@ -87,10 +88,13 @@ export default function CourseDetailPage() {
   useEffect(() => {
     const loadCourseData = async () => {
       if (!courseId) return
-      
+
       try {
         console.log('📚 Loading course data for:', courseId)
-        
+
+        // カテゴリーキャッシュを事前に初期化（サブカテゴリー表示のため）
+        await getCategories().catch(err => console.warn('Category pre-load warning:', err))
+
         // コースデータを取得
         const courseData = await getLearningCourseDetails(courseId)
         

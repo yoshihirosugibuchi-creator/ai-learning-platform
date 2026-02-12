@@ -157,7 +157,7 @@ export async function PUT(
     const allowedFields = [
       'title', 'case_text', 'primary_category_id', 'primary_subcategory_id',
       'difficulty', 'industry', 'scenario_type', 'estimated_minutes',
-      'step_count', 'status', 'featured_date', 'scoring_ai_provider'
+      'step_count', 'step_template', 'status', 'featured_date', 'scoring_ai_provider'
     ]
 
     for (const field of allowedFields) {

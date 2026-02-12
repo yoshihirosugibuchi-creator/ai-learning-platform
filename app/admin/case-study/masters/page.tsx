@@ -59,7 +59,6 @@ const OPTION_TYPE_LABELS: Record<string, string> = {
   business_phase: 'フェーズ',
   scenario_type: 'シナリオタイプ',
   info_clarity: '情報明確さ',
-  step_framework: 'ステップフレームワーク',
 }
 
 const RUBRIC_GROUPS = [
@@ -68,6 +67,9 @@ const RUBRIC_GROUPS = [
   { code: 'C', name: '分析・検証' },
   { code: 'D', name: '実務適用' },
   { code: 'E', name: 'コミュニケーション' },
+  { code: 'F', name: '技術実務' },
+  { code: 'G', name: 'ビジネススキル' },
+  { code: 'H', name: 'AI活用スキル' },
 ]
 
 // ========== オプションマスタタブ ==========
@@ -314,28 +316,6 @@ function OptionsTab() {
                 />
               </div>
 
-              {selectedType === 'step_framework' && (
-                <>
-                  <div>
-                    <Label>評価スキル軸（カンマ区切り）</Label>
-                    <Input
-                      value={(editItem.target_skills || []).join(', ')}
-                      onChange={e => setEditItem({
-                        ...editItem,
-                        target_skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                      })}
-                      placeholder="problem_setting, structuring_logic"
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      checked={editItem.is_extended || false}
-                      onCheckedChange={checked => setEditItem({ ...editItem, is_extended: checked })}
-                    />
-                    <Label>拡張ステップ（Step 6-8）</Label>
-                  </div>
-                </>
-              )}
 
               <div className="flex items-center space-x-2">
                 <Switch
@@ -718,7 +698,7 @@ export default function CaseStudyMastersPage() {
             <CardHeader>
               <CardTitle>ルーブリック評価軸</CardTitle>
               <CardDescription>
-                10軸ルーブリック評価システムの軸定義とスコアアンカー
+                ルーブリック評価システムの軸定義とスコアアンカー
               </CardDescription>
             </CardHeader>
             <CardContent>

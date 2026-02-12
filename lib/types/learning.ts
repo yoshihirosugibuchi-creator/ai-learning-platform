@@ -30,6 +30,7 @@ export interface LearningTheme {
   id: string
   title: string
   description: string
+  subcategoryId?: string // サブカテゴリーID（ジャンルから継承または個別設定）
   sessions: LearningSession[]
   estimatedMinutes: number
   rewardCard: LearningRewardCard

@@ -322,6 +322,16 @@ export async function POST(
       manual_override?: boolean
     }>) || []
 
+    // テーママッピングの型定義
+    interface ThemeMapping {
+      themeId?: string
+      theme_id?: string
+      themeTitle?: string
+      theme_title?: string
+      selectedSubcategoryId?: string
+      selected_subcategory_id?: string
+    }
+
     const categoryMappings = rawCategoryMappings.map(m => ({
       genre_id: m.genre_id || m.genreId || '',
       genre_title: m.genre_title || m.genreTitle || '',
@@ -330,7 +340,13 @@ export async function POST(
       ai_recommended_category_id: m.ai_recommended_category_id || m.aiRecommendedCategoryId,
       ai_recommended_subcategory_id: m.ai_recommended_subcategory_id || m.aiRecommendedSubcategoryId,
       confidence_score: m.confidence_score ?? m.confidenceScore,
-      manual_override: m.manual_override ?? m.manualOverride ?? false
+      manual_override: m.manual_override ?? m.manualOverride ?? false,
+      // テーマ単位のサブカテゴリーマッピング
+      theme_mappings: ((m as { themeMappings?: ThemeMapping[]; theme_mappings?: ThemeMapping[] }).theme_mappings ||
+        (m as { themeMappings?: ThemeMapping[]; theme_mappings?: ThemeMapping[] }).themeMappings || []).map((tm: ThemeMapping) => ({
+        theme_id: tm.theme_id || tm.themeId || '',
+        selected_subcategory_id: tm.selected_subcategory_id || tm.selectedSubcategoryId
+      }))
     }))
     const generationPreferences = parseJsonField(workflow.generation_preferences, {
       ai_mode: 'manual' as const,

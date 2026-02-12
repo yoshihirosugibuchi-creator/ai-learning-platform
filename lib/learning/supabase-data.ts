@@ -51,6 +51,7 @@ interface DbTheme {
   genre_id: string
   title: string
   description: string
+  subcategory_id: string | null // テーマ単位のサブカテゴリー
   estimated_minutes: number
   display_order: number
   reward_card_data: unknown
@@ -332,10 +333,14 @@ export async function getCourseDetailsFromDB(courseId: string): Promise<Learning
               })
             )
             
+            // サブカテゴリーID: テーマ優先、なければジャンルから継承
+            const themeSubcategoryId = theme.subcategory_id || genre.subcategory_id || undefined
+
             return {
               id: theme.id,
               title: theme.title,
               description: theme.description,
+              subcategoryId: themeSubcategoryId,
               estimatedMinutes: theme.estimated_minutes,
               displayOrder: theme.display_order,
               rewardCard: theme.reward_card_data,

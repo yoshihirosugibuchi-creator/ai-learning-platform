@@ -147,9 +147,8 @@ async function performAIScoring(
       })),
       rubricAxes: (rubricAxes || []).map(a => ({
         axisName: a.axis_name,
-        axisNameEn: a.axis_name_en,
-        description: a.description,
-        weight: a.weight,
+        axisCode: a.axis_code,
+        definition: a.definition,
         rubricGroupName: a.rubric_group_name,
       })),
       hintCount,

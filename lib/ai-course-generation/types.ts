@@ -105,6 +105,7 @@ export interface ThemeOutline {
   id: string
   title: string
   description: string
+  suggested_subcategory_id?: string // テーマ単位のサブカテゴリー（ジャンルに設定がない場合に使用）
   estimatedMinutes: number
   display_order: number
   reward_card_data?: Json // AI生成ナレッジカード
@@ -120,6 +121,13 @@ export interface SessionOutline {
   display_order: number
 }
 
+// テーマ単位のサブカテゴリーマッピング
+export interface ThemeSubcategoryMapping {
+  theme_id: string
+  theme_title?: string
+  selected_subcategory_id?: string
+}
+
 // カテゴリマッピング型定義
 export interface CategoryMapping {
   genre_id: string
@@ -130,6 +138,8 @@ export interface CategoryMapping {
   ai_recommended_subcategory_id?: string
   confidence_score?: number
   manual_override: boolean
+  // テーマ単位のサブカテゴリーマッピング（ジャンルにサブカテゴリーがない場合に使用）
+  theme_mappings?: ThemeSubcategoryMapping[]
 }
 
 // AI提案情報

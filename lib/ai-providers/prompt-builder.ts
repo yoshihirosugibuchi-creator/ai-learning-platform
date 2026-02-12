@@ -27,6 +27,7 @@ export function buildSystemPrompt(): string {
 - single（単一選択）: 選択結果のみで評価。記述は求められていません。
 - multiple（複数選択）: 選択結果のみで評価。記述は求められていません。
 - text（記述式）: 記述内容のみで評価。選択肢はありません。
+- ordering（順序並べ替え）: 選択肢の並び順で評価。正しい位置にある選択肢の数で採点。
 - hybrid（複数選択＋記述）: 選択結果と記述内容の両方を評価。`
 }
 
@@ -35,6 +36,7 @@ function getQuestionTypeLabel(questionType: QuestionType): string {
   switch (questionType) {
     case 'single': return '単一選択のみ（1つだけ選択、記述なし）'
     case 'multiple': return '複数選択のみ（1〜4つ選択可、記述なし）'
+    case 'ordering': return '順序並べ替え（4択を正しい順序に並べる、記述なし）'
     case 'text': return '記述式のみ（選択肢なし）'
     case 'hybrid': return '複数選択＋記述（1〜4つ選択＋理由記述）'
     default: return '複数選択＋記述'
@@ -50,8 +52,16 @@ function formatStepAnswer(step: AIScoringRequest['steps'][0]): string {
     `Step${step.stepNumber}（${step.stepName}）[${getQuestionTypeLabel(questionType)}]:`
   ]
 
-  // 選択式の場合のみ選択結果を表示
-  if (questionType === 'single' || questionType === 'multiple' || questionType === 'hybrid') {
+  // ordering: 選択した順序を表示
+  if (questionType === 'ordering') {
+    if (answer?.selectedChoices?.length) {
+      const ordered = answer.selectedChoices.map((c, i) => `${i + 1}.${c}`).join(' → ')
+      lines.push(`  選択した順序: ${ordered}`)
+    } else {
+      lines.push(`  選択した順序: (未回答)`)
+    }
+  } else if (questionType === 'single' || questionType === 'multiple' || questionType === 'hybrid') {
+    // 選択式の場合のみ選択結果を表示
     const choices = answer?.selectedChoices?.length
       ? answer.selectedChoices.join(', ')
       : '(未選択)'
@@ -82,8 +92,20 @@ function formatModelAnswer(step: AIScoringRequest['steps'][0]): string {
 
   const parts = [`Step${step.stepNumber}（${step.stepName}）[${getQuestionTypeLabel(questionType)}]:`]
 
-  // 選択式の場合のみ理想選択肢を表示
-  if (questionType === 'single' || questionType === 'multiple' || questionType === 'hybrid') {
+  // ordering: 正しい順序と各位置の理由を表示
+  if (questionType === 'ordering') {
+    if (ma.ideal_choices?.length) {
+      const ordered = ma.ideal_choices.map((c, i) => `${i + 1}.${c}`).join(' → ')
+      parts.push(`  正しい順序: ${ordered}`)
+    }
+    if (ma.choice_explanations) {
+      parts.push(`  各位置の理由:`)
+      for (const [id, explanation] of Object.entries(ma.choice_explanations)) {
+        parts.push(`    ${id}: ${explanation.substring(0, 200)}${explanation.length > 200 ? '...' : ''}`)
+      }
+    }
+  } else if (questionType === 'single' || questionType === 'multiple' || questionType === 'hybrid') {
+    // 選択式の場合のみ理想選択肢を表示
     if (ma.ideal_choices?.length) {
       parts.push(`  理想選択: ${ma.ideal_choices.join(', ')}`)
     }
@@ -131,6 +153,11 @@ function getEvaluationRulesForStep(step: AIScoringRequest['steps'][0]): string {
     case 'multiple':
       return `Step${step.stepNumber}は【複数選択】です。選択結果のみで評価してください。記述は求められていないため、記述がなくても減点しないでください。正解選択肢を全て選び不正解を選ばなければ満点、部分的に正解なら部分点としてください。`
 
+    case 'ordering': {
+      const optCount = (step.options as Array<unknown>)?.length || 4
+      return `Step${step.stepNumber}は【順序並べ替え】です。選択肢の並び順を評価してください。正しい位置にある選択肢の数を基準に採点してください。全${optCount}個中N個が正しい位置の場合、品質レベル = ceil(N/${optCount} * 5) で評価してください。記述は求められていないため、記述がなくても減点しないでください。`
+    }
+
     case 'text':
       return `Step${step.stepNumber}は【記述式】です。記述内容のみで評価してください。選択肢はないため、選択がなくても問題ありません。記述の論理性、具体性、必須ポイントの網羅度で評価してください。`
 
@@ -146,7 +173,7 @@ function getEvaluationRulesForStep(step: AIScoringRequest['steps'][0]): string {
 export function buildScoringPrompt(request: AIScoringRequest): string {
   // ルーブリック軸情報
   const axesDescription = request.rubricAxes
-    .map((axis, i) => `${i + 1}. ${axis.axisNameEn}: ${axis.axisName}（${axis.description || '説明なし'}）重み: ${(axis.weight * 100).toFixed(0)}%`)
+    .map((axis, i) => `${i + 1}. ${axis.axisCode}: ${axis.axisName}（${axis.definition || '説明なし'}）`)
     .join('\n')
 
   // ステップ回答情報（問題形式に応じてフォーマット）
@@ -165,7 +192,7 @@ export function buildScoringPrompt(request: AIScoringRequest): string {
     .join('\n')
 
   // スキル軸名一覧（JSONキー用）
-  const skillKeys = request.rubricAxes.map(a => a.axisNameEn)
+  const skillKeys = request.rubricAxes.map(a => a.axisCode)
 
   return `【評価対象ケース】
 ${request.caseText.substring(0, 1000)}${request.caseText.length > 1000 ? '...(省略)' : ''}

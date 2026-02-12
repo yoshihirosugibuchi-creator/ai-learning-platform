@@ -287,6 +287,20 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
 - 最終調整: 問題複雑度に応じて±5-10秒
 </time_setting_guide>
 
+<markdown_formatting>
+**技術系問題でのMarkdown/コードブロック使用について**：
+- プログラムコード、SQL、コマンド等を含む問題では、必ずコードブロック（\`\`\`言語名）を使用
+- 変数名、関数名等の短いコードはインラインコード（\`バッククォート\`）で囲む
+
+コードブロック例（問題文内で使用可能）：
+\`\`\`python
+def calculate(x, y):
+    return x + y
+\`\`\`
+
+主な言語指定: python, javascript, java, sql, bash, json等
+</markdown_formatting>
+
 <quality_requirements>
 ✅ 正確性・明確性・教育的価値を確保
 ✅ ${data.difficultyName}レベルに適した内容・制限時間
@@ -294,6 +308,7 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
 ✅ 正解選択肢をA/B/C/Dにランダム配置
 ✅ 既存問題と完全に異なる観点・アプローチ
 ✅ 制限時間は上記ガイドに従って適切に設定
+✅ 技術系問題ではコードブロックを適切に使用
 </quality_requirements>`
 }
 
@@ -373,6 +388,11 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
 - **追加時間**: 計算問題+10-15秒、コード読解+15-20秒、実装パターン+20-30秒
 - **最終調整**: 問題複雑度に応じて±5-10秒
 
+## Markdown/コードブロック使用（技術系問題向け）
+- プログラムコード、SQL、コマンド等を含む問題では、コードブロック（\`\`\`言語名）を使用
+- 変数名、関数名等の短いコードはインラインコード（\`バッククォート\`）で囲む
+- 主な言語指定: python, javascript, java, sql, bash, json等
+
 ## 品質要件
 1. **正確性**: 技術的に正しく最新の情報
 2. **明確性**: 曖昧さのない問題文と選択肢
@@ -380,6 +400,7 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
 4. **適切性**: ${data.difficultyName}レベルに適合・制限時間適正
 5. **実践性**: 実際の業務で遭遇する場面
 6. **ランダム性**: 正解選択肢をA/B/C/Dにランダム配置
+7. **コード表示**: 技術系問題ではコードブロックを適切に使用
 
 ⚠️ **正解選択肢（correctAnswer）は必ずA/B/C/Dをランダムに使用してください**
 ⚠️ **制限時間（timeLimit）は上記ガイドに従って適切に設定してください**`
@@ -453,8 +474,12 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
 **制限時間ガイド**
 基本時間: ${getDifficultyDescription(data.difficultyName).match(/(\d+-\d+秒)/)?.[1] || '10-25秒'} + 追加時間（計算+10-15秒、コード読解+15-20秒、実装+20-30秒）
 
+**コードブロック使用（技術系問題）**
+プログラムコード、SQL等を含む問題では\`\`\`言語名でコードブロック使用
+変数名等はインラインコード（\`name\`）で囲む
+
 **必須要件**
-正確性・明確性・教育的価値・${data.difficultyName}レベル適合・制限時間適正・実践性・A/B/C/Dランダム配置
+正確性・明確性・教育的価値・${data.difficultyName}レベル適合・制限時間適正・実践性・A/B/C/Dランダム配置・技術系はコードブロック使用
 ⚠️ correctAnswerは必ずA,B,C,Dランダム使用
 ⚠️ timeLimitは上記ガイド従って設定`
 }

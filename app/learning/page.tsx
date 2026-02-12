@@ -13,6 +13,7 @@ import CourseCard from '@/components/learning/CourseCard'
 import { getLearningCourses } from '@/lib/learning/data'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { globalCache, useResourceMonitor } from '@/lib/performance-optimizer'
+import { getCategories } from '@/lib/categories'
 
 export default function LearningPage() {
   const router = useRouter()
@@ -87,14 +88,18 @@ export default function LearningPage() {
     const loadData = async () => {
       console.log('📚 Learning page: Starting data load')
       console.log('👤 User state:', { userId: user?.id, userEmail: user?.email })
-      
+
       try {
+        // カテゴリーキャッシュを事前に初期化（サブカテゴリー表示のため）
+        console.log('📂 Pre-loading categories cache...')
+        await getCategories().catch(err => console.warn('Category pre-load warning:', err))
+
         // 全体のタイムアウト設定（30秒）
         const dataTimeout = setTimeout(() => {
           console.warn('⚠️ Data loading timeout, showing error state')
           setLoading(false)
         }, 30000)
-        
+
         // キャッシュから先に確認
         const cacheKey = 'learning_courses'
         const cachedCourses = globalCache.get(cacheKey)

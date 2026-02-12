@@ -43,7 +43,7 @@ async function checkAdminAuth(request: NextRequest) {
   return { userId: user.id, role: userData.role }
 }
 
-const VALID_OPTION_TYPES = ['job_role', 'business_phase', 'scenario_type', 'info_clarity', 'step_framework']
+const VALID_OPTION_TYPES = ['job_role', 'business_phase', 'scenario_type', 'info_clarity']
 
 export async function GET(request: NextRequest) {
   try {

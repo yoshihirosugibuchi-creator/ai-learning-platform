@@ -226,6 +226,7 @@ export type Database = {
           scenario_type_code: string | null
           status: string | null
           step_count: number | null
+          step_template: string | null
           subcategory_id: string | null
           updated_at: string | null
         }
@@ -251,6 +252,7 @@ export type Database = {
           scenario_type_code?: string | null
           status?: string | null
           step_count?: number | null
+          step_template?: string | null
           subcategory_id?: string | null
           updated_at?: string | null
         }
@@ -276,6 +278,7 @@ export type Database = {
           scenario_type_code?: string | null
           status?: string | null
           step_count?: number | null
+          step_template?: string | null
           subcategory_id?: string | null
           updated_at?: string | null
         }
@@ -362,6 +365,7 @@ export type Database = {
           scoring_ai_provider: string | null
           status: string
           step_count: number
+          step_template: string | null
           title: string
           updated_at: string | null
         }
@@ -385,6 +389,7 @@ export type Database = {
           scoring_ai_provider?: string | null
           status?: string
           step_count?: number
+          step_template?: string | null
           title: string
           updated_at?: string | null
         }
@@ -408,6 +413,7 @@ export type Database = {
           scoring_ai_provider?: string | null
           status?: string
           step_count?: number
+          step_template?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -1464,6 +1470,7 @@ export type Database = {
           genre_id: string
           id: string
           reward_card_data: Json | null
+          subcategory_id: string | null
           title: string
           updated_at: string | null
         }
@@ -1475,6 +1482,7 @@ export type Database = {
           genre_id: string
           id: string
           reward_card_data?: Json | null
+          subcategory_id?: string | null
           title: string
           updated_at?: string | null
         }
@@ -1486,6 +1494,7 @@ export type Database = {
           genre_id?: string
           id?: string
           reward_card_data?: Json | null
+          subcategory_id?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -3978,6 +3987,7 @@ export const Constants = {
     },
   },
 } as const
+
 // ============= Complete Type Aliases (All 56 Types - Updated 2025.11.05) =============
 export type UserXPStatsV2 = Database['public']['Tables']['user_xp_stats_v2']['Row']
 export type SKPTransaction = Database['public']['Tables']['skp_transactions']['Row']

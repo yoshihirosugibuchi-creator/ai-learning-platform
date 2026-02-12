@@ -26,6 +26,23 @@ import {
 } from 'lucide-react'
 
 // AIアウトラインの型定義（新形式対応）
+interface AITheme {
+  id: string
+  title: string
+  description: string
+  suggested_subcategory_id?: string // テーマ単位のサブカテゴリー
+  estimatedMinutes: number
+  display_order: number
+  sessions: Array<{
+    id: string
+    title: string
+    description?: string
+    session_type: string
+    estimatedMinutes: number
+    display_order: number
+  }>
+}
+
 interface AIGenre {
   id: string
   title: string
@@ -34,21 +51,7 @@ interface AIGenre {
   suggested_subcategory_id?: string
   estimatedDays?: number
   display_order?: number
-  themes: Array<{
-    id: string
-    title: string
-    description: string
-    estimatedMinutes: number
-    display_order: number
-    sessions: Array<{
-      id: string
-      title: string
-      description?: string
-      session_type: string
-      estimatedMinutes: number
-      display_order: number
-    }>
-  }>
+  themes: AITheme[]
 }
 
 interface AIParsedOutline {
@@ -63,6 +66,13 @@ interface AIParsedOutline {
   genres: AIGenre[]
 }
 
+// テーマ単位のサブカテゴリーマッピング
+interface ThemeSubcategoryMapping {
+  themeId: string
+  themeTitle: string
+  selectedSubcategoryId?: string
+}
+
 // カテゴリマッピングの型定義
 interface CategoryMapping {
   genreId: string
@@ -73,6 +83,8 @@ interface CategoryMapping {
   aiRecommendedSubcategoryId?: string
   confidenceScore?: number
   manualOverride: boolean
+  // テーマ単位のサブカテゴリー（ジャンルにサブカテゴリーがない場合に使用）
+  themeMappings?: ThemeSubcategoryMapping[]
 }
 
 interface Category {
@@ -216,31 +228,38 @@ export function CategoryMappingStep({
       console.log('🔄 [CategoryMapping] 新規カテゴリマッピングを初期化')
       // クライアントサイドID生成ライブラリを使用
       const { generateClientId } = await import('@/lib/id-generation-client')
-      
+
       // 各ジャンルに対してマッピング初期化
       const initialMappings: CategoryMapping[] = await Promise.all(
         outline.genres.map(async (genre, index) => {
           // genreIdはすでに存在するIDを優先使用
           let genreId = genre.id
-          
+
           // IDが存在しない場合のみ生成
           if (!genreId) {
             genreId = await generateClientId('genre', genre.title)
           }
-          
+
           // すでにユニークなIDがあるかチェック
           const existingIds = outline.genres
             .slice(0, index)
             .map(g => g.id)
             .filter(Boolean)
-          
+
           // 重複している場合のみインデックスを追加
           if (existingIds.includes(genreId)) {
             genreId = `${genreId}_${index}`
           }
-          
+
           console.log(`📋 [CategoryMapping] Genre mapping初期化: "${genre.title}" -> ID: "${genreId}"`)
-          
+
+          // テーマ単位のサブカテゴリーマッピングを初期化
+          const themeMappings: ThemeSubcategoryMapping[] = genre.themes.map(theme => ({
+            themeId: theme.id,
+            themeTitle: theme.title,
+            selectedSubcategoryId: theme.suggested_subcategory_id || undefined
+          }))
+
           return {
             genreId,
             genreTitle: genre.title,
@@ -249,7 +268,8 @@ export function CategoryMappingStep({
             aiRecommendedCategoryId: genre.suggested_category_id,
             aiRecommendedSubcategoryId: genre.suggested_subcategory_id,
             confidenceScore: 0.8, // デフォルト信頼度
-            manualOverride: false
+            manualOverride: false,
+            themeMappings
           }
         })
       )
@@ -332,6 +352,33 @@ export function CategoryMappingStep({
     setShouldNotifyParent(true)
   }
 
+  // テーマ単位のサブカテゴリ選択変更ハンドラ
+  const handleThemeSubcategoryChange = (genreId: string, themeId: string, subcategoryId: string) => {
+    console.log(`📋 [CategoryMapping] テーマサブカテゴリ変更: genreId="${genreId}", themeId="${themeId}", subcategoryId="${subcategoryId}"`)
+
+    setCategoryMappings(prev => {
+      const updated = prev.map(mapping => {
+        if (mapping.genreId === genreId) {
+          const updatedThemeMappings = (mapping.themeMappings || []).map(tm => {
+            if (tm.themeId === themeId) {
+              return { ...tm, selectedSubcategoryId: subcategoryId }
+            }
+            return tm
+          })
+          return {
+            ...mapping,
+            themeMappings: updatedThemeMappings,
+            manualOverride: true
+          }
+        }
+        return mapping
+      })
+      return updated
+    })
+
+    // 親コンポーネントへの通知をスケジュール
+    setShouldNotifyParent(true)
+  }
 
   // 指定カテゴリのサブカテゴリ取得
   const getSubcategoriesForCategory = (categoryId: string) => {
@@ -360,10 +407,23 @@ export function CategoryMappingStep({
   console.log('🔍 [CategoryMappingStep] hasCourseData:', hasCourseData)
 
   // マッピング完了チェック
+  // ルール: ジャンルにカテゴリー必須、サブカテゴリーがない場合はテーマごとにサブカテゴリー必須
   const isMappingComplete = () => {
-    return categoryMappings.length > 0 && categoryMappings.every(mapping =>
-      mapping.selectedCategoryId
-    )
+    return categoryMappings.length > 0 && categoryMappings.every(mapping => {
+      // カテゴリーは必須
+      if (!mapping.selectedCategoryId) return false
+
+      // サブカテゴリーがジャンルに設定されていれば完了
+      if (mapping.selectedSubcategoryId) return true
+
+      // サブカテゴリーがジャンルにない場合、全テーマにサブカテゴリーが設定されているか確認
+      if (mapping.themeMappings && mapping.themeMappings.length > 0) {
+        return mapping.themeMappings.every(tm => tm.selectedSubcategoryId)
+      }
+
+      // テーママッピングがない場合（テーマがない場合）は完了
+      return true
+    })
   }
 
   // 承認して次のステップ実行（コースデータ生成）
@@ -612,12 +672,54 @@ export function CategoryMappingStep({
               {mapping.selectedCategoryId && (
                 <div className="text-sm text-green-700 bg-green-50 p-2 rounded">
                   ✅ {getCategoryName(mapping.selectedCategoryId)}
-                  {mapping.selectedSubcategoryId && 
+                  {mapping.selectedSubcategoryId &&
                     ` > ${getSubcategoryName(mapping.selectedSubcategoryId)}`
                   }
                   {mapping.manualOverride && (
                     <Badge variant="outline" className="ml-2 text-xs">手動設定</Badge>
                   )}
+                </div>
+              )}
+
+              {/* テーマ単位のサブカテゴリー設定（ジャンルにサブカテゴリーがない場合のみ表示） */}
+              {mapping.selectedCategoryId && !mapping.selectedSubcategoryId && mapping.themeMappings && mapping.themeMappings.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Layers className="h-4 w-4 text-purple-500" />
+                    <Label className="text-sm font-medium text-purple-700">
+                      テーマ単位のサブカテゴリー設定
+                    </Label>
+                    <Badge variant="outline" className="text-xs">必須</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    ジャンルにサブカテゴリーが設定されていないため、各テーマにサブカテゴリーを設定してください
+                  </p>
+                  <div className="space-y-2">
+                    {mapping.themeMappings.map((themeMapping) => (
+                      <div key={themeMapping.themeId} className="flex items-center gap-3 pl-4 py-2 bg-gray-50 rounded">
+                        <span className="text-sm text-gray-700 min-w-[150px]">{themeMapping.themeTitle}</span>
+                        <Select
+                          value={themeMapping.selectedSubcategoryId || ''}
+                          onValueChange={(value) => handleThemeSubcategoryChange(mapping.genreId, themeMapping.themeId, value)}
+                          disabled={hasCourseData}
+                        >
+                          <SelectTrigger className={`w-[200px] ${hasCourseData ? 'opacity-50' : ''}`}>
+                            <SelectValue placeholder="サブカテゴリを選択" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getSubcategoriesForCategory(mapping.selectedCategoryId!).map((subcategory) => (
+                              <SelectItem key={subcategory.subcategory_id} value={subcategory.subcategory_id}>
+                                {subcategory.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {themeMapping.selectedSubcategoryId && (
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>

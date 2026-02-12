@@ -35,7 +35,45 @@ export const categoryDisplayNames: Record<string, string> = {
 }
 
 export const subcategoryDisplayNames: Record<string, string> = {
+  // AI基礎カテゴリー
   'ai_overview': 'AI概論',
+  'machine_learning_basics': '機械学習基礎',
+  'deep_learning_basics': 'ディープラーニング基礎',
+  'deep_learning_applications': 'ディープラーニング応用',
+  'generative_ai_llm': '生成AI・LLM',
+  'ai_math_statistics': 'AI数理・統計',
+  'ai_social_implementation': 'AI社会実装',
+  'ai_law_ethics': 'AI法規・倫理',
+  // SI基礎_技術基盤
+  'si_basic_system_overview': 'A0 システムの全体像',
+  'si_basic_programming': 'A1 プログラミング・開発基礎',
+  'si_basic_database': 'A2 データベース・SQL',
+  'si_basic_cloud': 'A3 クラウド・インフラ基礎',
+  'si_basic_ai_literacy': 'A4 AI・データ活用リテラシー',
+  // SI基礎_開発手法
+  'si_basic_waterfall': 'B1 ウォーターフォール・V字モデル',
+  'si_basic_agile': 'B2 アジャイル・スクラム実践',
+  'si_basic_requirements': 'B3 要件定義・設計技法',
+  // SI基礎_テスト技法
+  'si_basic_test_planning': 'C1 テスト全体論・テスト計画',
+  'si_basic_test_levels': 'C2 テストレベル別技法',
+  'si_basic_test_automation': 'C3 テスト自動化・AI活用',
+  // SI基礎_エンジニアリング実務
+  'si_basic_git_cicd': 'D1 Git・バージョン管理・CI/CD',
+  'si_basic_security': 'D2 セキュリティ基礎',
+  'si_basic_incident': 'D3 障害対応・インシデント管理',
+  // SI基礎_ビジネス・ソフトスキル
+  'si_basic_documentation': 'E1 技術ドキュメンテーション',
+  'si_basic_pm': 'E2 プロジェクトマネジメント基礎',
+  'si_basic_labor': 'E3 SI労務管理・働き方',
+  'si_basic_business': 'E4 ベンチャー経営リテラシー',
+  // SI基礎_AI協働プログラミング
+  'si_basic_ai_tools': 'M1 AIコーディングツール基礎',
+  'si_basic_prompt_code': 'M2 プロンプトエンジニアリング for コード',
+  'si_basic_code_review': 'M3 AI生成コードのレビュー力',
+  'si_basic_ai_design': 'M4 AI活用の設計・アーキテクチャ判断',
+  'si_basic_ai_test': 'M5 テスト・デバッグのAI活用',
+  // AI・デジタル活用カテゴリー
   'ai_ml_utilization': 'AI・機械学習活用',
   'data_driven_management': 'データドリブン経営',
   'dx_strategy_transformation': 'DX戦略・デジタル変革',

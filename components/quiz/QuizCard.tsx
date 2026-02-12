@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Clock, CheckCircle, XCircle, Lightbulb, Star } from 'lucide-react'
 import { Question } from '@/lib/types'
 import { getDifficultyDisplayName } from '@/lib/categories'
+import MarkdownContent from '@/components/ui/markdown-content'
 
 // 難易度に応じたバッジのバリアントを取得
 function getDifficultyBadgeVariant(difficulty: string): "default" | "secondary" | "destructive" | "outline" {
@@ -295,9 +296,9 @@ export default function QuizCard({
           <Progress value={progressPercentage} className="flex-1" />
         </div>
         
-        <CardTitle className="text-lg leading-relaxed">
-          {question.question}
-        </CardTitle>
+        <div className="text-lg leading-relaxed font-semibold">
+          <MarkdownContent content={question.question} />
+        </div>
         
         <div className="flex justify-center space-x-2">
           <Badge variant="outline" className="text-xs">
@@ -316,10 +317,12 @@ export default function QuizCard({
               onClick={() => handleOptionClick(index)}
               disabled={showResult || isTimeUp}
             >
-              <span className="mr-3 font-semibold">
+              <span className="mr-3 font-semibold flex-shrink-0">
                 {String.fromCharCode(65 + index)}.
               </span>
-              {option}
+              <span className="flex-1">
+                <MarkdownContent content={option} compact />
+              </span>
             </Button>
           ))}
         </div>
@@ -357,9 +360,11 @@ export default function QuizCard({
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start space-x-2">
                 <Lightbulb className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                <div>
+                <div className="flex-1">
                   <h4 className="font-medium text-blue-900 mb-1">解説</h4>
-                  <p className="text-sm text-blue-800">{question.explanation}</p>
+                  <div className="text-sm text-blue-800">
+                    <MarkdownContent content={question.explanation || ''} compact />
+                  </div>
                 </div>
               </div>
             </div>
