@@ -28,7 +28,7 @@ import {
   Target,
   Loader2
 } from 'lucide-react'
-import MermaidRenderer, { parseContentWithMermaid } from '@/components/learning/MermaidRenderer'
+import MarkdownContent from '@/components/ui/markdown-content'
 
 // 型定義（設計書準拠）
 interface SessionContent {
@@ -677,19 +677,10 @@ export function ContentReviewStep({ workflow, onChange, onNext, onPrevious }: Co
                                   <div className="space-y-2">
                                     <h5 className="font-medium">{(content.content_data.title as string) || 'タイトルなし'}</h5>
                                     <div className="text-sm text-muted-foreground">
-                                      {parseContentWithMermaid((content.content_data.content as string) || 'コンテンツなし').map((segment, segIndex) => (
-                                        segment.type === 'mermaid' ? (
-                                          <MermaidRenderer
-                                            key={`mermaid-${segIndex}`}
-                                            chart={segment.content}
-                                            className="my-4"
-                                          />
-                                        ) : (
-                                          <p key={`text-${segIndex}`} className="whitespace-pre-wrap">
-                                            {segment.content}
-                                          </p>
-                                        )
-                                      ))}
+                                      <MarkdownContent
+                                        content={(content.content_data.content as string) || 'コンテンツなし'}
+                                        className="space-y-2"
+                                      />
                                     </div>
                                   </div>
                                 )}

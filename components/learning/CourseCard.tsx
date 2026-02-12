@@ -24,7 +24,7 @@ interface CourseCardProps {
     genreCount: number
     themeCount: number
     status: 'available' | 'coming_soon' | 'draft'
-    genres?: { categoryId: string; subcategoryId?: string }[]
+    genres?: { categoryId: string; subcategoryId?: string; themes?: Array<{ subcategoryId?: string }> }[]
   }
   progress?: {
     completedThemes: number

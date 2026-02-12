@@ -114,65 +114,63 @@ export async function getCoursesFromDB(): Promise<{
       return []
     }
     
+    // 全コースのジャンルを一括取得（category_id, subcategory_id含む）
+    const courseIds = coursesData.map(c => c.id)
+    const { data: allGenres } = await supabase
+      .from('learning_genres')
+      .select('id, course_id, category_id, subcategory_id')
+      .in('course_id', courseIds)
+
+    // ジャンルIDからテーマのサブカテゴリーを一括取得
+    const genreIds = allGenres?.map(g => g.id) || []
+    const { data: allThemes } = genreIds.length > 0
+      ? await supabase
+          .from('learning_themes')
+          .select('id, genre_id, subcategory_id')
+          .in('genre_id', genreIds)
+      : { data: [] }
+
+    // テーマをジャンルIDでグループ化
+    const themesByGenre = new Map<string, Array<{ subcategoryId?: string }>>()
+    for (const theme of (allThemes || [])) {
+      const existing = themesByGenre.get(theme.genre_id) || []
+      existing.push({ subcategoryId: theme.subcategory_id || undefined })
+      themesByGenre.set(theme.genre_id, existing)
+    }
+
     // 各コースのジャンル・テーマ数を集計
-    const coursesWithCounts = await Promise.all(
-      coursesData.map(async (course) => {
-        try {
-          // ジャンル数取得
-          const { count: genreCount } = await supabase
-            .from('learning_genres')
-            .select('*', { count: 'exact', head: true })
-            .eq('course_id', course.id)
-          
-          // テーマ数取得（ジャンル経由）
-          const { data: genresData } = await supabase
-            .from('learning_genres')
-            .select('id')
-            .eq('course_id', course.id)
-          
-          let themeCount = 0
-          if (genresData) {
-            const genreIds = genresData.map(g => g.id)
-            if (genreIds.length > 0) {
-              const { count } = await supabase
-                .from('learning_themes')
-                .select('*', { count: 'exact', head: true })
-                .in('genre_id', genreIds)
-              themeCount = count || 0
-            }
-          }
-          
-          return {
-            id: course.id,
-            title: course.title,
-            description: course.description,
-            estimatedDays: course.estimated_days,
-            difficulty: course.difficulty,
-            icon: course.icon,
-            color: course.color,
-            displayOrder: course.display_order,
-            genreCount: genreCount || 0,
-            themeCount,
-            status: course.status as 'available' | 'coming_soon' | 'draft'
-          }
-        } catch (error) {
-          console.warn(`Failed to get counts for course ${course.id}:`, error)
-          return {
-            id: course.id,
-            title: course.title,
-            description: course.description,
-            estimatedDays: course.estimated_days,
-            difficulty: course.difficulty,
-            icon: course.icon,
-            color: course.color,
-            displayOrder: course.display_order,
-            genreCount: 0,
-            themeCount: 0,
-            status: course.status as 'available' | 'coming_soon' | 'draft'
-          }
+    const coursesWithCounts = coursesData.map((course) => {
+      const courseGenres = (allGenres || []).filter(g => g.course_id === course.id)
+      const genreCount = courseGenres.length
+
+      // テーマ数をジャンル経由で集計
+      let themeCount = 0
+      const genres = courseGenres.map(g => {
+        const themes = themesByGenre.get(g.id) || []
+        themeCount += themes.length
+        return {
+          id: g.id,
+          categoryId: g.category_id,
+          subcategoryId: g.subcategory_id || undefined,
+          themes
         }
       })
-    )
+
+      return {
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        estimatedDays: course.estimated_days,
+        difficulty: course.difficulty,
+        icon: course.icon,
+        color: course.color,
+        displayOrder: course.display_order,
+        genreCount,
+        themeCount,
+        status: course.status as 'available' | 'coming_soon' | 'draft',
+        genres
+      }
+    })
     
     // キャッシュに保存（5分間）
     serverCache.set(cacheKey, coursesWithCounts, 5 * 60 * 1000)

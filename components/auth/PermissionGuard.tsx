@@ -23,16 +23,26 @@ export default function PermissionGuard({
   const { userRole, loading, error, retry: retryUserRole } = useUserRole()
   const [retryCount, setRetryCount] = useState(0)
   const [showError, setShowError] = useState(false)
+  // 一度でも認証成功した場合、以降は子コンポーネントを絶対にアンマウントしない
+  const [hasBeenAuthorized, setHasBeenAuthorized] = useState(false)
 
-  // エラー表示を遅延させる（一時的なエラーを無視）
+  // 認証成功を追跡
   useEffect(() => {
+    if (userRole && !loading) {
+      setHasBeenAuthorized(true)
+    }
+  }, [userRole, loading])
+
+  // 初回認証時のみリトライ（認証済み後はバックグラウンドで処理）
+  useEffect(() => {
+    // 認証済みの場合はリトライ不要（useUserRoleがバックグラウンドで処理）
+    if (hasBeenAuthorized) return
+
     if (error || (!loading && !userRole)) {
-      // 3秒待ってからエラー表示（その間にリフレッシュが完了する可能性あり）
       const timer = setTimeout(() => {
         if (retryCount < 2) {
           setRetryCount(prev => prev + 1)
-          // リトライをトリガー（ページをリロードせずに状態を更新）
-          console.log('🔄 PermissionGuard: Retrying permission check...', retryCount + 1)
+          console.log('🔄 PermissionGuard: Initial auth retry...', retryCount + 1)
           retryUserRole()
         } else {
           setShowError(true)
@@ -44,16 +54,24 @@ export default function PermissionGuard({
       setRetryCount(0)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [error, loading, userRole, retryCount])
+  }, [error, loading, userRole, retryCount, hasBeenAuthorized])
 
   const handleRetry = useCallback(() => {
     setRetryCount(0)
     setShowError(false)
-    // まずuseUserRoleのリトライを試行
     retryUserRole()
   }, [retryUserRole])
 
-  // Show loading state while checking permissions
+  // 🔒 核心ルール: 一度認証成功したら、以降は何があっても子コンポーネントを維持
+  // セッション切れはuseUserRoleのサイレントリフレッシュで処理
+  // API呼び出し時の401はAPIレイヤーで個別に処理
+  if (hasBeenAuthorized) {
+    return <>{children}</>
+  }
+
+  // === 以下は初回認証フローのみ ===
+
+  // 初回ローディング中
   if (loading || (!showError && !userRole && retryCount < 2)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -67,7 +85,7 @@ export default function PermissionGuard({
     )
   }
 
-  // Handle errors (only after retries exhausted)
+  // 初回認証エラー（リトライ全失敗後）
   if (showError || (!loading && !userRole)) {
     if (fallback) {
       return <>{fallback}</>
@@ -99,7 +117,7 @@ export default function PermissionGuard({
     )
   }
 
-  // この時点でuserRoleはnullではないことが保証されている
+  // 初回認証待ち（userRoleがまだない）
   if (!userRole) {
     return null
   }

@@ -13,7 +13,6 @@ import {
   X,
   Check,
   AlertTriangle,
-  Shield,
   Database,
   Loader2,
   RefreshCw,
@@ -109,35 +108,7 @@ export default function QuestionMaintenancePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthorized, roleLoading])
 
-  // システム管理者権限チェック
-  if (roleLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">権限確認中...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isAuthorized) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Shield className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">アクセス権限不足</h2>
-              <p className="text-muted-foreground">
-                この機能を使用するには管理者権限が必要です。
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // 権限チェックはadmin/layout.tsxのPermissionGuardで実施済み
 
   // 編集開始
   const startEdit = (questionId: number, field: string, currentValue: string | null) => {

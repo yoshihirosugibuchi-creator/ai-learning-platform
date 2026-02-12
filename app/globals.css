@@ -152,3 +152,32 @@
     visibility: hidden !important;
   }
 }
+
+/* Mermaid図表のレスポンシブ対応 */
+.mermaid-container {
+  -webkit-overflow-scrolling: touch;
+}
+
+.mermaid-container svg {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+/* SVG内のテキストがノードからはみ出すのを防止 */
+.mermaid-container svg .nodeLabel,
+.mermaid-container svg .edgeLabel,
+.mermaid-container svg .label {
+  overflow: visible !important;
+}
+
+/* ノード内のテキスト折り返しを改善 */
+.mermaid-container svg foreignObject {
+  overflow: visible !important;
+}
+
+.mermaid-container svg foreignObject div {
+  overflow: visible !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}

@@ -78,12 +78,15 @@ export default function SessionPage() {
 
         // Calculate session position and navigation data
         const currentIndex = theme.sessions.findIndex(s => s.id === sessionId)
+        // サブカテゴリーID: テーマ優先 → ジャンルからフォールバック
+        const effectiveSubcategoryId = theme.subcategoryId || genre.subcategoryId || ''
+
         setSessionData({
           totalSessions: theme.sessions.length,
           currentIndex,
           sessions: theme.sessions,
           categoryId: genre.categoryId,
-          subcategoryId: genre.subcategoryId || '',
+          subcategoryId: effectiveSubcategoryId,
           themeRewardCard: theme.rewardCard
         })
 

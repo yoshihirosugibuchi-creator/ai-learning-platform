@@ -112,7 +112,7 @@ interface QuizQuestion {
 }
 
 export default function QuizGeneratorPage() {
-  const { isSystemAdmin, isAdmin, loading: roleLoading } = useUserRole()
+  const { isSystemAdmin, isAdmin } = useUserRole()
   const { user } = useAuth()
   const { toast, toasts, removeToast } = useToast()
   const [categories, setCategories] = useState<Category[]>([])
@@ -317,28 +317,8 @@ export default function QuizGeneratorPage() {
       setSelectedSubcategory(subcategory_id)
     }, 100)
   }
-  
-  // システム管理者権限チェック
-  if (roleLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-      </div>
-    )
-  }
 
-  if (!isSystemAdmin && !isAdmin) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            このページへのアクセスには管理者権限が必要です。
-          </AlertDescription>
-        </Alert>
-      </div>
-    )
-  }
+  // 権限チェックはadmin/layout.tsxのPermissionGuardで実施済み
 
   const generatePrompt = () => {
     // 必須項目のバリデーション

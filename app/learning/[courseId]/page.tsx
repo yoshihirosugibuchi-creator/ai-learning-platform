@@ -16,7 +16,7 @@ import { getCategoryInfoForCourse, getCategoryInfoForGenre } from '@/lib/learnin
 import { getCategories } from '@/lib/categories'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
-import { MainCategory } from '@/lib/types/category'
+import { MainCategory, IndustryCategory } from '@/lib/types/category'
 
 // 新設計: セッション完了データ型
 interface SessionCompletion {
@@ -41,10 +41,10 @@ export default function CourseDetailPage() {
     categories: Array<{
       genreId: string
       genreTitle: string
-      mainCategory: MainCategory | null
+      mainCategory: (MainCategory | IndustryCategory) | null
       subcategory: string | null
     }>
-    uniqueMainCategories: MainCategory[]
+    uniqueMainCategories: (MainCategory | IndustryCategory)[]
   } | null>(null)
   const [isPreviewMode, setIsPreviewMode] = useState(false)
 
@@ -55,6 +55,11 @@ export default function CourseDetailPage() {
     const urlParams = new URLSearchParams(window.location.search)
     setIsPreviewMode(urlParams.get('preview') === 'admin')
   }, [])
+
+  // ページ遷移時にスクロール位置をトップにリセット
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [courseId])
 
   // 新設計: course_session_completions テーブルから完了状態を取得
   const loadSessionCompletions = useCallback(async (userId: string) => {

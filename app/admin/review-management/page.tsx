@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { 
@@ -12,7 +11,6 @@ import {
   Filter,
   Edit2,
   Trash2,
-  AlertCircle,
   CheckCircle,
   XCircle,
   RotateCcw,
@@ -87,7 +85,7 @@ interface Filters {
 // ======================================================================
 
 export default function ReviewManagementPage() {
-  const { isAdmin, isSystemAdmin, loading: roleLoading } = useUserRole()
+  const { isAdmin, isSystemAdmin } = useUserRole()
   const { user } = useAuth()
   const { toast, toasts, removeToast } = useToast()
   
@@ -442,30 +440,7 @@ export default function ReviewManagementPage() {
     return new Date(dateString).toLocaleString('ja-JP')
   }
 
-  // ======================================================================
-  // 認証・権限チェック
-  // ======================================================================
-
-  if (roleLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            この機能は管理者のみ利用可能です。
-          </AlertDescription>
-        </Alert>
-      </div>
-    )
-  }
+  // 権限チェックはadmin/layout.tsxのPermissionGuardで実施済み
 
   // ======================================================================
   // メインレンダリング

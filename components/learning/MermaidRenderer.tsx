@@ -58,6 +58,21 @@ function sanitizeMermaidChart(text: string): string {
       return match
     })
 
+    // stateDiagram: 遷移ラベル内の余分なコロンをハイフンに置換
+    // 例: [*] --> Step1 : Step 1: 設計 → [*] --> Step1 : Step 1 - 設計
+    // Mermaidパーサーがラベル内のコロンを状態説明セパレータと誤認するのを防止
+    if (result.includes('stateDiagram')) {
+      result = result.split('\n').map(line => {
+        // 遷移行: State1 --> State2 : label（labelの中のコロンを修正）
+        const transitionMatch = line.match(/^(\s*(?:\[\*\]|\S+)\s*-->\s*(?:\[\*\]|\S+)\s*:\s*)(.+)$/)
+        if (transitionMatch) {
+          const [, prefix, label] = transitionMatch
+          return prefix + label.replace(/:/g, ' -')
+        }
+        return line
+      }).join('\n')
+    }
+
     // 余分なスペースを整理（改行は保持）
     result = result.replace(/\[" +/g, '["')
     result = result.replace(/ +"\]/g, '"]')
@@ -69,6 +84,25 @@ function sanitizeMermaidChart(text: string): string {
     console.warn('Mermaid sanitization failed, using original text:', e)
     return text
   }
+}
+
+/**
+ * SVGをレスポンシブに変換
+ * - 固定width/heightを削除し、viewBoxベースのスケーリングに変更
+ * - コンテナ幅に合わせて自動縮小、はみ出し防止
+ */
+function makeResponsiveSvg(svgString: string): string {
+  return svgString.replace(
+    /<svg\b([^>]*)>/,
+    (_, attrs) => {
+      const cleanAttrs = (attrs as string)
+        .replace(/\s*width="[^"]*"/g, '')
+        .replace(/\s*height="[^"]*"/g, '')
+        .replace(/\s*style="[^"]*"/g, '')
+
+      return `<svg${cleanAttrs} style="max-width:100%;height:auto;">`
+    }
+  )
 }
 
 export default function MermaidRenderer({ chart, className = '' }: MermaidRendererProps) {
@@ -94,9 +128,33 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
           theme: 'default',
           securityLevel: 'loose',
           fontFamily: 'system-ui, -apple-system, sans-serif',
+          flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            padding: 15,
+            nodeSpacing: 30,
+            rankSpacing: 50,
+          },
+          sequence: {
+            useMaxWidth: true,
+          },
+          state: {
+            useMaxWidth: true,
+          },
+          er: {
+            useMaxWidth: true,
+          },
+          journey: {
+            useMaxWidth: true,
+          },
+          gantt: {
+            useMaxWidth: true,
+          },
+          pie: {
+            useMaxWidth: true,
+          },
         })
         mermaidInitialized = true
-        console.log('✅ Mermaid initialized')
       }
 
       // Generate unique ID for this chart
@@ -105,21 +163,11 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
       // Sanitize the chart (remove emojis, fix labels)
       const sanitizedChart = sanitizeMermaidChart(chart.trim())
 
-      // デバッグ: サニタイズ前後を比較
-      if (chart !== sanitizedChart) {
-        console.log('🔧 Mermaid chart sanitized:', {
-          originalLength: chart.length,
-          sanitizedLength: sanitizedChart.length,
-          hasLiteralBackslashN: chart.includes(String.raw`\n`),
-          sanitizedHasLiteralBackslashN: sanitizedChart.includes(String.raw`\n`),
-        })
-      }
-
       // Render the chart
       const { svg: renderedSvg } = await mermaid.render(id, sanitizedChart)
-      setSvg(renderedSvg)
+      // SVGをレスポンシブに変換（固定サイズ削除 → viewBoxでスケーリング）
+      setSvg(makeResponsiveSvg(renderedSvg))
       setError(null)
-      console.log('✅ Mermaid chart rendered successfully')
     } catch (err) {
       console.error('❌ Mermaid rendering error:', err)
       setError(err instanceof Error ? err.message : 'Failed to render diagram')
@@ -182,8 +230,13 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
     <div
       ref={containerRef}
       className={`mermaid-container bg-white border border-gray-200 rounded-lg p-4 overflow-x-auto ${className}`}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    >
+      <div
+        className="mermaid-svg-wrapper"
+        style={{ minWidth: 0 }}
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+    </div>
   )
 }
 

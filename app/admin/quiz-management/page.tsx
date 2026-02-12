@@ -42,19 +42,9 @@ export default function QuizManagementPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
-  // システム管理者権限チェック
-  if (roleLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">権限確認中...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isSystemAdmin) {
+  // 権限チェック（認証はadmin/layout.tsxのPermissionGuardで保護済み）
+  // system_admin限定チェック: roleLoadingがfalseかつuserRoleがある場合のみ判定
+  if (!roleLoading && !isSystemAdmin) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Card className="max-w-md mx-auto border-red-200">

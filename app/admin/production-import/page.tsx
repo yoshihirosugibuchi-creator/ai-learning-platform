@@ -10,7 +10,6 @@ import {
   CheckCircle,
   AlertTriangle,
   Clock,
-  AlertCircle,
   Database,
   RefreshCw,
   Package,
@@ -76,7 +75,7 @@ interface ImportResult {
 // ======================================================================
 
 export default function ProductionImportPage() {
-  const { isAdmin, loading: roleLoading } = useUserRole()
+  const { isAdmin } = useUserRole()
   const { user } = useAuth()
   const { toast, toasts, removeToast } = useToast()
   
@@ -323,30 +322,7 @@ export default function ProductionImportPage() {
     return colors[difficulty as keyof typeof colors] || 'bg-gray-100 text-gray-800'
   }
 
-  // ======================================================================
-  // 認証・権限チェック
-  // ======================================================================
-
-  if (roleLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            この機能は管理者のみ利用可能です。
-          </AlertDescription>
-        </Alert>
-      </div>
-    )
-  }
+  // 権限チェックはadmin/layout.tsxのPermissionGuardで実施済み
 
   // ======================================================================
   // メインレンダリング

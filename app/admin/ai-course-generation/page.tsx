@@ -14,7 +14,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { useUserRole } from '@/hooks/useUserRole'
 import { 
   Brain, 
   FileText, 
@@ -113,31 +112,10 @@ interface CourseWorkflow {
 
 export default function AdminAICourseGenerationPage() {
   const { toast } = useToast()
-  const { isAdmin, isSystemAdmin } = useUserRole()
+  // 権限チェックはadmin/layout.tsxのPermissionGuardで実施済み
   const [showWizard, setShowWizard] = useState(false)
   const [selectedWorkflow, setSelectedWorkflow] = useState<CourseWorkflow | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-
-  // 権限チェック
-  if (!isAdmin && !isSystemAdmin) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
-              <AlertCircle className="h-5 w-5" />
-              アクセス権限がありません
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              この機能は管理者のみ利用可能です。
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
 
   const handleStartCreation = () => {
     setSelectedWorkflow(null)

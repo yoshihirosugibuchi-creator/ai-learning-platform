@@ -30,7 +30,7 @@ export default function LearningPage() {
     genreCount: number
     themeCount: number
     status: 'available' | 'coming_soon' | 'draft'
-    genres?: { categoryId: string; subcategoryId?: string }[]
+    genres?: { categoryId: string; subcategoryId?: string; themes?: Array<{ subcategoryId?: string }> }[]
   }>>([])
   const [loading, setLoading] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -118,7 +118,7 @@ export default function LearningPage() {
             genreCount: number
             themeCount: number
             status: 'available' | 'coming_soon' | 'draft'
-            genres?: { categoryId: string; subcategoryId?: string }[]
+            genres?: { categoryId: string; subcategoryId?: string; themes?: Array<{ subcategoryId?: string }> }[]
           }>)
           setLoading(false) // キャッシュデータがあれば即座に表示
           clearTimeout(dataTimeout)
@@ -159,7 +159,7 @@ export default function LearningPage() {
             genreCount: number
             themeCount: number
             status: 'available' | 'coming_soon' | 'draft'
-            genres?: { categoryId: string; subcategoryId?: string }[]
+            genres?: { categoryId: string; subcategoryId?: string; themes?: Array<{ subcategoryId?: string }> }[]
           }>)
           globalCache.set(cacheKey, coursesData, 5 * 60 * 1000) // 5分キャッシュ
           clearTimeout(dataTimeout)
@@ -298,7 +298,7 @@ export default function LearningPage() {
                       genreCount: number
                       themeCount: number
                       status: 'available' | 'coming_soon' | 'draft'
-                      genres?: { categoryId: string; subcategoryId?: string }[]
+                      genres?: { categoryId: string; subcategoryId?: string; themes?: Array<{ subcategoryId?: string }> }[]
                     }}
                     onStartCourse={handleStartCourse}
                   />
@@ -333,7 +333,7 @@ export default function LearningPage() {
                       genreCount: number
                       themeCount: number
                       status: 'available' | 'coming_soon' | 'draft'
-                      genres?: { categoryId: string; subcategoryId?: string }[]
+                      genres?: { categoryId: string; subcategoryId?: string; themes?: Array<{ subcategoryId?: string }> }[]
                     }}
                     onStartCourse={handleStartCourse}
                   />

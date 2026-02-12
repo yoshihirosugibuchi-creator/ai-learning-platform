@@ -1344,9 +1344,11 @@ export async function getCategoryById(id: string): Promise<MainCategory | Indust
 export function getCategoryByIdSync(id: string): MainCategory | IndustryCategory | undefined {
   // キャッシュがあればキャッシュを優先
   if (cachedCategories && cachedCategories.length > 0) {
-    return cachedCategories.find(cat => cat.id === id)
+    const found = cachedCategories.find(cat => cat.id === id)
+    if (found) return found
+    // キャッシュにない場合（非アクティブカテゴリー等）は静的データにフォールバック
   }
-  // フォールバック：静的データ
+  // フォールバック：静的データ（非アクティブカテゴリーも含む）
   return [...staticMainCategories, ...staticIndustryCategories].find(cat => cat.id === id)
 }
 

@@ -294,15 +294,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     // タブがアクティブになった時にセッションをリフレッシュ（タブ切り替え対策）
-    // より積極的に常にリフレッシュして、API呼び出し失敗を防ぐ
+    // 短時間のタブ切り替えではスキップし、長時間離れた場合のみリフレッシュ
+    let authTabHiddenAt: number | null = null
+
     const handleVisibilityChange = async () => {
       // refを使用して最新のuser状態を取得（クロージャの問題を回避）
       const currentUser = userRef.current
+
+      if (document.visibilityState === 'hidden') {
+        authTabHiddenAt = Date.now()
+        return
+      }
+
       if (document.visibilityState !== 'visible' || !currentUser) {
         return
       }
 
-      console.log('👁️ Tab became visible, proactively refreshing session...')
+      // 短時間のタブ切り替え（60秒未満）はリフレッシュをスキップ
+      const hiddenDuration = authTabHiddenAt ? Date.now() - authTabHiddenAt : 0
+      authTabHiddenAt = null
+
+      if (hiddenDuration < 60 * 1000) {
+        console.log('👁️ Tab visible after', Math.round(hiddenDuration / 1000), 's, skipping refresh (< 60s)')
+        return
+      }
+
+      console.log('👁️ Tab visible after', Math.round(hiddenDuration / 1000), 's, proactively refreshing session...')
 
       // リトライロジック付きでリフレッシュ
       let retryCount = 0

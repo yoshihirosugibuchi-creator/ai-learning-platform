@@ -236,20 +236,9 @@ export default function FallbackSyncPage() {
     )
   }
 
-  // 未認証
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-xl font-bold text-gray-900 mb-2">認証が必要です</h1>
-          <p className="text-gray-600">このページにアクセスするにはログインしてください。</p>
-        </div>
-      </div>
-    )
-  }
-
-  // 権限不足
-  if (!isSystemAdmin) {
+  // 権限不足（認証はadmin/layout.tsxのPermissionGuardで保護済み）
+  // roleLoadingがtrue = まだ判定中なのでスキップ
+  if (!roleLoading && userRole && !isSystemAdmin) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

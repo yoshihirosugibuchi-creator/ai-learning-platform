@@ -32,8 +32,10 @@ export function useUserRole() {
   const [error, setError] = useState<string | null>(null)
   const [retryTrigger, setRetryTrigger] = useState(0)
   const isRetryingRef = useRef(false)
+  // サイレントリフレッシュ時はloading状態を変更しない（UIブロック防止）
+  const silentRefreshRef = useRef(false)
 
-  // 再試行関数
+  // 再試行関数（エラー時のリトライ用 - キャッシュクリアする）
   const retry = useCallback(() => {
     if (isRetryingRef.current) return // 重複リトライ防止
     isRetryingRef.current = true
@@ -57,26 +59,35 @@ export function useUserRole() {
         const hiddenDuration = Date.now() - tabHiddenAt
         tabHiddenAt = null
 
-        // 5分以上離れていた場合、キャッシュをクリアして再取得
+        // 5分以上離れていた場合、バックグラウンドで再取得（UIはブロックしない）
         if (hiddenDuration > 5 * 60 * 1000) {
-          console.log('🔄 useUserRole: Tab was hidden for', Math.round(hiddenDuration / 1000), 'seconds, refreshing...')
+          console.log('🔄 useUserRole: Tab was hidden for', Math.round(hiddenDuration / 1000), 'seconds, silently refreshing...')
 
           // AuthProviderのセッションリフレッシュを待つ
           await new Promise(resolve => setTimeout(resolve, 2000))
 
-          // キャッシュをクリアして再取得
-          retry()
+          // キャッシュは保持したまま、期限だけリセットしてバックグラウンド再取得
+          silentRefreshRef.current = true
+          cacheExpiry = 0
+          setRetryTrigger(prev => prev + 1)
         }
       }
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [user, retry])
+  }, [user])
 
   useEffect(() => {
     async function fetchUserRole() {
       if (!user) {
+        // セッションリフレッシュ中にuserが一瞬nullになるケースがある
+        // キャッシュが有効な場合はロールをクリアせず、UIフラッシュを防止
+        if (cachedUserRole && Date.now() < cacheExpiry) {
+          console.log('⏳ useUserRole: user is null but cache still valid, keeping cached role')
+          setLoading(false)
+          return
+        }
         setUserRole(null)
         setLoading(false)
         cachedUserRole = null
@@ -93,9 +104,13 @@ export function useUserRole() {
       }
 
       try {
-        setLoading(true)
+        // サイレントリフレッシュ時はloadingを変更しない（UIブロック防止）
+        if (silentRefreshRef.current) {
+          console.log('🔄 Silent refresh: fetching user role without blocking UI...')
+        } else {
+          setLoading(true)
+        }
         setError(null)
-        console.log('🔄 Fetching fresh user role from API...')
 
         // Get session token from Supabase directly with graceful timeout handling
         const sessionPromise = supabase.auth.getSession()
@@ -196,13 +211,21 @@ export function useUserRole() {
         }
       } catch (err) {
         console.error('Error fetching user role:', err)
-        
+
+        // サイレントリフレッシュ失敗時はキャッシュを保持してエラーを無視
+        if (silentRefreshRef.current) {
+          console.log('⚠️ Silent refresh failed, keeping cached role')
+          silentRefreshRef.current = false
+          setLoading(false)
+          return
+        }
+
         // ユーザーフレンドリーなエラーメッセージを設定
         let userMessage = 'ユーザー権限の取得に失敗しました。'
-        
+
         if (err instanceof Error) {
           const errorMsg = err.message.toLowerCase()
-          
+
           // 401エラーやセッション関連エラーは静かに処理（ログアウト状態は正常）
           if (errorMsg.includes('401') || errorMsg.includes('no session token')) {
             console.debug('User session invalid or expired, this is expected after logout')
@@ -210,7 +233,7 @@ export function useUserRole() {
             setLoading(false)
             return
           }
-          
+
           if (errorMsg.includes('permission denied') || errorMsg.includes('insufficient_privilege')) {
             userMessage = 'このページにアクセスする権限がありません。'
           } else if (errorMsg.includes('authentication') || errorMsg.includes('token')) {
@@ -219,11 +242,12 @@ export function useUserRole() {
             userMessage = 'ネットワークエラーが発生しました。'
           }
         }
-        
+
         setError(userMessage)
         setUserRole(null)
         cachedUserRole = null
       } finally {
+        silentRefreshRef.current = false
         setLoading(false)
       }
     }
