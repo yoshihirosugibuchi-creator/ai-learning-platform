@@ -88,19 +88,29 @@ function sanitizeMermaidChart(text: string): string {
 
 /**
  * SVGをレスポンシブに変換
- * - 固定width/heightを削除し、viewBoxベースのスケーリングに変更
- * - コンテナ幅に合わせて自動縮小、はみ出し防止
+ * - Mermaidが計算した元の幅をmax-widthとして保持（PCでの過剰拡大を防止）
+ * - モバイルではコンテナ幅に自動縮小
+ * - 中央揃えで表示
  */
 function makeResponsiveSvg(svgString: string): string {
   return svgString.replace(
     /<svg\b([^>]*)>/,
     (_, attrs) => {
-      const cleanAttrs = (attrs as string)
+      const attrsStr = attrs as string
+
+      // Mermaidが計算した元の幅を取得（width属性 or style内のmax-width）
+      const widthAttrMatch = attrsStr.match(/width="(\d+(?:\.\d+)?)"/)
+      const styleMaxWidthMatch = attrsStr.match(/max-width:\s*(\d+(?:\.\d+)?)px/)
+      const originalWidth = widthAttrMatch?.[1] || styleMaxWidthMatch?.[1]
+
+      const cleanAttrs = attrsStr
         .replace(/\s*width="[^"]*"/g, '')
         .replace(/\s*height="[^"]*"/g, '')
         .replace(/\s*style="[^"]*"/g, '')
 
-      return `<svg${cleanAttrs} style="max-width:100%;height:auto;">`
+      // 元の幅をmax-widthに使用: PCでは自然なサイズ、モバイルでは縮小
+      const maxWidth = originalWidth ? `${originalWidth}px` : '100%'
+      return `<svg${cleanAttrs} style="max-width:min(${maxWidth},100%);height:auto;display:block;margin:0 auto;">`
     }
   )
 }

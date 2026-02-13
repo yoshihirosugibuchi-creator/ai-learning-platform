@@ -159,9 +159,9 @@
 }
 
 .mermaid-container svg {
-  max-width: 100% !important;
   height: auto !important;
   display: block;
+  margin: 0 auto;
 }
 
 /* SVG内のテキストがノードからはみ出すのを防止 */
