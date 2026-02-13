@@ -609,14 +609,16 @@ export default function ReviewManagementPage() {
             <div className="flex items-center gap-2">
               {questions.length > 0 && (
                 <div className="flex items-center gap-2 mr-4">
+                  {/* NOTE: 全選択は現在表示中のページ内のみ対象。全ページ横断選択には各ページで操作が必要 */}
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={selectAllQuestions}
                     disabled={questions.length === 0 || selectedQuestions.length === questions.length}
+                    title="現在のページ内の問題のみ選択されます"
                   >
                     <CheckSquare className="h-4 w-4 mr-1" />
-                    全選択
+                    全選択(このページ)
                   </Button>
                   <Button
                     size="sm"
