@@ -91,9 +91,10 @@ function sanitizeMermaidChart(text: string): string {
  * - Mermaidが計算した元の幅をmax-widthとして保持（PCでの過剰拡大を防止）
  * - モバイルではコンテナ幅に自動縮小
  * - 中央揃えで表示
+ * - foreignObjectのoverflow問題を修正
  */
 function makeResponsiveSvg(svgString: string): string {
-  return svgString.replace(
+  let result = svgString.replace(
     /<svg\b([^>]*)>/,
     (_, attrs) => {
       const attrsStr = attrs as string
@@ -113,6 +114,14 @@ function makeResponsiveSvg(svgString: string): string {
       return `<svg${cleanAttrs} style="max-width:min(${maxWidth},100%);height:auto;display:block;margin:0 auto;">`
     }
   )
+
+  // foreignObjectのoverflow:hiddenをvisibleに修正（テキストはみ出し防止）
+  result = result.replace(
+    /(<foreignObject[^>]*style="[^"]*?)overflow:\s*hidden/g,
+    '$1overflow:visible'
+  )
+
+  return result
 }
 
 export default function MermaidRenderer({ chart, className = '' }: MermaidRendererProps) {
@@ -141,9 +150,10 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
           flowchart: {
             useMaxWidth: true,
             htmlLabels: true,
-            padding: 15,
-            nodeSpacing: 30,
+            padding: 20,
+            nodeSpacing: 40,
             rankSpacing: 50,
+            wrappingWidth: 200,
           },
           sequence: {
             useMaxWidth: true,
@@ -241,6 +251,20 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
       ref={containerRef}
       className={`mermaid-container bg-white border border-gray-200 rounded-lg p-4 overflow-x-auto ${className}`}
     >
+      <style>{`
+        .mermaid-svg-wrapper foreignObject {
+          overflow: visible !important;
+        }
+        .mermaid-svg-wrapper .nodeLabel {
+          white-space: normal !important;
+          word-break: break-word !important;
+          overflow-wrap: break-word !important;
+          line-height: 1.4 !important;
+        }
+        .mermaid-svg-wrapper .label {
+          overflow: visible !important;
+        }
+      `}</style>
       <div
         className="mermaid-svg-wrapper"
         style={{ minWidth: 0 }}
