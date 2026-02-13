@@ -22,6 +22,7 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import { useToast } from '@/hooks/use-toast'
 import { ToastContainer } from '@/components/ui/toast'
 import { generateAIOptimizedPrompt } from '@/lib/ai-prompt-generators'
+import MarkdownContent from '@/components/ui/markdown-content'
 
 interface Category {
   category_id: string
@@ -1337,25 +1338,19 @@ export default function QuizGeneratorPage() {
                         {/* 問題文 */}
                         <div>
                           <h5 className="text-sm font-medium text-muted-foreground mb-1">問題文</h5>
-                          <p className="font-medium">{question.question}</p>
+                          <div className="font-medium"><MarkdownContent content={question.question} compact /></div>
                         </div>
 
                         {/* 選択肢 */}
                         <div>
                           <h5 className="text-sm font-medium text-muted-foreground mb-1">選択肢</h5>
                           <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div className={`p-2 rounded ${question.correctAnswer === 'A' ? 'bg-green-100 text-green-800 font-semibold' : 'bg-gray-50'}`}>
-                              A: {question.options.A}
-                            </div>
-                            <div className={`p-2 rounded ${question.correctAnswer === 'B' ? 'bg-green-100 text-green-800 font-semibold' : 'bg-gray-50'}`}>
-                              B: {question.options.B}
-                            </div>
-                            <div className={`p-2 rounded ${question.correctAnswer === 'C' ? 'bg-green-100 text-green-800 font-semibold' : 'bg-gray-50'}`}>
-                              C: {question.options.C}
-                            </div>
-                            <div className={`p-2 rounded ${question.correctAnswer === 'D' ? 'bg-green-100 text-green-800 font-semibold' : 'bg-gray-50'}`}>
-                              D: {question.options.D}
-                            </div>
+                            {(['A', 'B', 'C', 'D'] as const).map((key) => (
+                              <div key={key} className={`p-2 rounded ${question.correctAnswer === key ? 'bg-green-100 text-green-800 font-semibold' : 'bg-gray-50'}`}>
+                                <span className="font-medium mr-1">{key}:</span>
+                                <MarkdownContent content={question.options[key]} compact className="inline" />
+                              </div>
+                            ))}
                           </div>
                         </div>
 
@@ -1416,7 +1411,7 @@ export default function QuizGeneratorPage() {
                         {/* 解説 */}
                         <div>
                           <h6 className="font-medium text-muted-foreground mb-1">解説</h6>
-                          <p className="text-sm bg-blue-50 p-3 rounded">{question.explanation}</p>
+                          <div className="text-sm bg-blue-50 p-3 rounded"><MarkdownContent content={question.explanation} compact /></div>
                         </div>
 
                         {/* ヒント */}

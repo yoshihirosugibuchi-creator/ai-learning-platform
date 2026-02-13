@@ -23,6 +23,7 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import { useToast } from '@/hooks/use-toast'
 import { ToastContainer } from '@/components/ui/toast'
 import type { Json } from '@/lib/database-types-official'
+import MarkdownContent from '@/components/ui/markdown-content'
 
 // ======================================================================
 // 型定義
@@ -706,32 +707,21 @@ export default function ReviewManagementPage() {
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                      <h4 className="font-medium mb-2">{question.question}</h4>
+                      <div className="font-medium mb-2"><MarkdownContent content={question.question} compact /></div>
                       <div className="space-y-1 text-sm">
-                        <div className="flex items-center">
-                          <span className={`w-6 h-6 rounded-full text-white text-xs flex items-center justify-center mr-2 ${question.correct_answer === 0 ? 'bg-green-600' : 'bg-gray-400'}`}>
-                            A
-                          </span>
-                          {question.option_a}
-                        </div>
-                        <div className="flex items-center">
-                          <span className={`w-6 h-6 rounded-full text-white text-xs flex items-center justify-center mr-2 ${question.correct_answer === 1 ? 'bg-green-600' : 'bg-gray-400'}`}>
-                            B
-                          </span>
-                          {question.option_b}
-                        </div>
-                        <div className="flex items-center">
-                          <span className={`w-6 h-6 rounded-full text-white text-xs flex items-center justify-center mr-2 ${question.correct_answer === 2 ? 'bg-green-600' : 'bg-gray-400'}`}>
-                            C
-                          </span>
-                          {question.option_c}
-                        </div>
-                        <div className="flex items-center">
-                          <span className={`w-6 h-6 rounded-full text-white text-xs flex items-center justify-center mr-2 ${question.correct_answer === 3 ? 'bg-green-600' : 'bg-gray-400'}`}>
-                            D
-                          </span>
-                          {question.option_d}
-                        </div>
+                        {[
+                          { key: 'A', text: question.option_a, idx: 0 },
+                          { key: 'B', text: question.option_b, idx: 1 },
+                          { key: 'C', text: question.option_c, idx: 2 },
+                          { key: 'D', text: question.option_d, idx: 3 },
+                        ].map(({ key, text, idx }) => (
+                          <div key={key} className="flex items-start">
+                            <span className={`w-6 h-6 rounded-full text-white text-xs flex items-center justify-center mr-2 flex-shrink-0 mt-0.5 ${question.correct_answer === idx ? 'bg-green-600' : 'bg-gray-400'}`}>
+                              {key}
+                            </span>
+                            <span className="flex-1"><MarkdownContent content={text} compact /></span>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -755,7 +745,7 @@ export default function ReviewManagementPage() {
                   {question.explanation && (
                     <div className="mt-3 p-3 bg-gray-50 rounded">
                       <strong className="text-sm">解説:</strong>
-                      <p className="text-sm mt-1">{question.explanation}</p>
+                      <div className="text-sm mt-1"><MarkdownContent content={question.explanation} compact /></div>
                     </div>
                   )}
 

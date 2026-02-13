@@ -17,6 +17,7 @@ import {
 import type { Question } from '@/lib/types'
 import { useUserRole } from '@/hooks/useUserRole'
 import { supabase } from '@/lib/supabase'
+import MarkdownContent from '@/components/ui/markdown-content'
 
 interface ImportPreview {
   questions: Question[]
@@ -589,9 +590,9 @@ export default function QuizManagementPage() {
                       <Badge>{question.category}</Badge>
                       <Badge variant="secondary">{question.difficulty}</Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {question.question}
-                    </p>
+                    <div className="text-sm text-muted-foreground line-clamp-2 overflow-hidden">
+                      <MarkdownContent content={question.question} compact />
+                    </div>
                   </div>
                 </div>
               ))}

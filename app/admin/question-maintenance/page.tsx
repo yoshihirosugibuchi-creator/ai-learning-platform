@@ -22,6 +22,7 @@ import {
 import { useUserRole } from '@/hooks/useUserRole'
 import { supabase } from '@/lib/supabase'
 import type { QuizQuestion } from '@/lib/database-types-official'
+import MarkdownContent from '@/components/ui/markdown-content'
 
 type QuestionData = QuizQuestion
 
@@ -390,7 +391,7 @@ export default function QuestionMaintenancePage() {
                       {/* 問題文 */}
                       <div className="bg-blue-50 p-4 rounded-lg mb-4">
                         <h3 className="font-semibold text-blue-900 mb-2">問題文</h3>
-                        <p className="text-blue-800">{question.question}</p>
+                        <div className="text-blue-800"><MarkdownContent content={question.question} compact /></div>
                       </div>
 
                       {/* 選択肢 */}
@@ -399,7 +400,8 @@ export default function QuestionMaintenancePage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {[question.option1, question.option2, question.option3, question.option4].map((option, index) => (
                             <div key={index} className={`p-2 rounded ${question.correct_answer === index ? 'bg-green-100 border-2 border-green-500' : 'bg-white border'}`}>
-                              <span className="font-medium">{index + 1}.</span> {option}
+                              <span className="font-medium">{index + 1}.</span>
+                              <MarkdownContent content={option || ''} compact className="inline" />
                               {question.correct_answer === index && (
                                 <span className="ml-2 text-green-600 font-bold">✓ 正解</span>
                               )}
@@ -474,11 +476,13 @@ export default function QuestionMaintenancePage() {
                                   </div>
                                 </div>
                               ) : (
-                                <div 
+                                <div
                                   className="min-h-[60px] p-3 border border-orange-200 rounded-md cursor-pointer hover:bg-orange-50 transition-colors"
                                   onClick={() => startEdit(question.id, field, getFieldValue(question, field))}
                                 >
-                                  {getFieldValue(question, field) || (
+                                  {getFieldValue(question, field) ? (
+                                    <MarkdownContent content={getFieldValue(question, field)} compact />
+                                  ) : (
                                     <span className="text-muted-foreground italic">クリックして誤字修正</span>
                                   )}
                                 </div>
@@ -539,11 +543,13 @@ export default function QuestionMaintenancePage() {
                               </div>
                             </div>
                           ) : (
-                            <div 
+                            <div
                               className="min-h-[50px] p-3 border rounded-md cursor-pointer hover:bg-muted/50 transition-colors"
                               onClick={() => startEdit(question.id, field, getFieldValue(question, field))}
                             >
-                              {getFieldValue(question, field) || (
+                              {getFieldValue(question, field) ? (
+                                <MarkdownContent content={getFieldValue(question, field)} compact />
+                              ) : (
                                 <span className="text-muted-foreground italic">クリックして編集</span>
                               )}
                             </div>
