@@ -1484,7 +1484,7 @@ export default function QuizSession({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">
-          {category || 'チャレンジクイズ'}
+          {category ? getCategoryDisplayName(category) : 'チャレンジクイズ'}
         </h2>
         <Button variant="outline" size="sm" onClick={onExit}>
           終了
