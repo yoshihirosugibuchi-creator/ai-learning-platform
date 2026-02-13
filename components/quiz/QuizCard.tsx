@@ -75,7 +75,7 @@ function HintDisplay({ hints, currentLevel, onRequestHint, disabled, maxLevel }:
       {hints.map((hint, index) => (
         <div key={index} className="bg-white border border-yellow-200 rounded p-3">
           <div className="text-xs text-yellow-600 mb-1">ヒント {index + 1}</div>
-          <div className="text-sm text-gray-800">{hint}</div>
+          <div className="text-sm text-gray-800"><MarkdownContent content={hint} compact /></div>
         </div>
       ))}
       

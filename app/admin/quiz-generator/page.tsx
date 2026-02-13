@@ -1422,19 +1422,19 @@ export default function QuizGeneratorPage() {
                               {question.hint1 && (
                                 <div className="bg-yellow-50 p-3 rounded text-sm">
                                   <span className="font-medium text-yellow-800">ヒント1（基礎知識）: </span>
-                                  <span className="text-yellow-700">{question.hint1}</span>
+                                  <div className="text-yellow-700 mt-1"><MarkdownContent content={question.hint1} compact /></div>
                                 </div>
                               )}
                               {question.hint2 && (
                                 <div className="bg-orange-50 p-3 rounded text-sm">
                                   <span className="font-medium text-orange-800">ヒント2（思考誘導）: </span>
-                                  <span className="text-orange-700">{question.hint2}</span>
+                                  <div className="text-orange-700 mt-1"><MarkdownContent content={question.hint2} compact /></div>
                                 </div>
                               )}
                               {question.hint3 && (
                                 <div className="bg-green-50 p-3 rounded text-sm">
                                   <span className="font-medium text-green-800">ヒント3（根拠提示）: </span>
-                                  <span className="text-green-700">{question.hint3}</span>
+                                  <div className="text-green-700 mt-1"><MarkdownContent content={question.hint3} compact /></div>
                                 </div>
                               )}
                             </div>

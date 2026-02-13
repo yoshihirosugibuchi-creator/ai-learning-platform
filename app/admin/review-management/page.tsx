@@ -757,19 +757,19 @@ export default function ReviewManagementPage() {
                         {question.level1_hint && (
                           <div className="text-sm">
                             <span className="font-medium text-yellow-700">ヒント1:</span>
-                            <span className="text-yellow-600 ml-1">{question.level1_hint}</span>
+                            <div className="text-yellow-600 ml-1"><MarkdownContent content={question.level1_hint} compact /></div>
                           </div>
                         )}
                         {question.level2_hint && (
                           <div className="text-sm">
                             <span className="font-medium text-orange-700">ヒント2:</span>
-                            <span className="text-orange-600 ml-1">{question.level2_hint}</span>
+                            <div className="text-orange-600 ml-1"><MarkdownContent content={question.level2_hint} compact /></div>
                           </div>
                         )}
                         {question.level3_hint && (
                           <div className="text-sm">
                             <span className="font-medium text-green-700">ヒント3:</span>
-                            <span className="text-green-600 ml-1">{question.level3_hint}</span>
+                            <div className="text-green-600 ml-1"><MarkdownContent content={question.level3_hint} compact /></div>
                           </div>
                         )}
                       </div>
