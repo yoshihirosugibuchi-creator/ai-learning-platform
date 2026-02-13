@@ -95,33 +95,29 @@ function QuizPackPlayContent() {
   }, [user, packId, sessionParam])
 
   const handleComplete = async (results: QuizResults) => {
-    // セッション完了処理
+    // パックセッションのステータスを完了に更新
+    // （XP保存はQuizSession内のsaveQuizSessionが別途実行するため、ここではパックセッションの完了のみ）
     try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const token = sessionData.session?.access_token
-
-      if (token && sessionId) {
-        // セッションステータスを更新（既存のXP保存APIを使用）
-        await fetch('/api/xp-save/quiz', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            session_id: sessionId,
+      if (sessionId) {
+        const { error: updateError } = await supabase
+          .from('quiz_sessions')
+          .update({
+            status: 'completed',
             correct_answers: results.correctAnswers,
             total_questions: results.totalQuestions,
-            time_spent: results.timeSpent,
-            category_scores: results.categoryScores
           })
-        })
+          .eq('id', sessionId)
+
+        if (updateError) {
+          console.error('Failed to update pack session status:', updateError)
+        } else {
+          console.log('✅ Pack session marked as completed:', sessionId)
+        }
       }
     } catch (error) {
-      console.error('Failed to save results:', error)
+      console.error('Failed to complete pack session:', error)
     }
 
-    // 結果表示後にパック一覧に戻る
     toast({ title: `クイズ完了！ ${results.correctAnswers}/${results.totalQuestions}問正解` })
   }
 

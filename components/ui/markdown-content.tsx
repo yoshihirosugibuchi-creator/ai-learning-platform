@@ -61,24 +61,26 @@ function MarkdownContentBase({ content, className = '', compact = false }: Markd
 
             // 通常のコードブロック（シンタックスハイライト付き）
             return (
-              <div className="my-4 rounded-lg overflow-hidden">
+              <div className="my-4 rounded-lg overflow-hidden max-w-full">
                 {language && (
                   <div className="bg-gray-700 text-gray-300 text-xs px-4 py-1 font-mono">
                     {language}
                   </div>
                 )}
-                <SyntaxHighlighter
-                  style={oneDark}
-                  language={language || 'text'}
-                  PreTag="div"
-                  customStyle={{
-                    margin: 0,
-                    borderRadius: language ? '0 0 0.5rem 0.5rem' : '0.5rem',
-                    fontSize: compact ? '0.75rem' : '0.875rem',
-                  }}
-                >
-                  {codeString}
-                </SyntaxHighlighter>
+                <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+                  <SyntaxHighlighter
+                    style={oneDark}
+                    language={language || 'text'}
+                    PreTag="div"
+                    customStyle={{
+                      margin: 0,
+                      borderRadius: language ? '0 0 0.5rem 0.5rem' : '0.5rem',
+                      fontSize: compact ? '0.75rem' : '0.875rem',
+                    }}
+                  >
+                    {codeString}
+                  </SyntaxHighlighter>
+                </div>
               </div>
             )
           },

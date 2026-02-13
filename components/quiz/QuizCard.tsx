@@ -357,10 +357,10 @@ export default function QuizCard({
               </span>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 overflow-hidden">
               <div className="flex items-start space-x-2">
                 <Lightbulb className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-blue-900 mb-1">解説</h4>
                   <div className="text-sm text-blue-800">
                     <MarkdownContent content={question.explanation || ''} compact />

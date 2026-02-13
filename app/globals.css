@@ -181,3 +181,25 @@
   white-space: normal !important;
   word-break: break-word !important;
 }
+
+/* MarkdownコンテンツのレスポンシブCSS（モバイル対応） */
+.markdown-content {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.markdown-content pre {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.markdown-content code {
+  word-break: break-all;
+}
+
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+}
