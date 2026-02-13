@@ -14,7 +14,8 @@ import {
   Edit2,
   Trash2,
   Upload,
-  FileCheck
+  FileCheck,
+  Loader2
 } from 'lucide-react'
 import { useUserRole } from '@/hooks/useUserRole'
 import { useAuth } from '@/components/auth/AuthProvider'
@@ -134,6 +135,7 @@ export default function QuizGeneratorPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [importing, setImporting] = useState(false)
   const [savingToReview, setSavingToReview] = useState(false)
+  const [validating, setValidating] = useState(false)
   const [saveToReviewMode, setSaveToReviewMode] = useState(true) // レビューDB保存モード（デフォルトはレビューDB）
   const [existingQuestionStats, setExistingQuestionStats] = useState<{[key: string]: number}>({})
   const [existingQuestionSamples, setExistingQuestionSamples] = useState<{[key: string]: string[]}>({})
@@ -418,12 +420,14 @@ export default function QuizGeneratorPage() {
   }
 
   const validateAndReview = async () => {
+    setValidating(true)
+    setValidationError('')
     try {
       const parsed = JSON.parse(generatedResult)
       if (!parsed.questions || !Array.isArray(parsed.questions)) {
         throw new Error('questions配列が見つかりません')
       }
-      
+
       // 既存の最大legacy_idを取得
       let maxLegacyId = 0
       try {
@@ -436,7 +440,7 @@ export default function QuizGeneratorPage() {
         console.log('最大ID取得エラー（新規DBの可能性）:', error)
         maxLegacyId = 0
       }
-      
+
       // 問題データを整形
       const formattedQuestions = parsed.questions.map((q: QuizQuestion, index: number) => {
         // 正解選択肢をABCD形式から0-3のインデックスに変換
@@ -447,7 +451,7 @@ export default function QuizGeneratorPage() {
         } else if (typeof q.correctAnswer === 'number') {
           correctAnswerIndex = q.correctAnswer
         }
-        
+
         return {
           ...q,
           id: maxLegacyId + index + 1, // 既存の最大値から連番
@@ -465,12 +469,14 @@ export default function QuizGeneratorPage() {
           }
         }
       })
-      
+
       setParsedQuestions(formattedQuestions)
       setValidationError('')
       setShowReview(true)
     } catch (error) {
       setValidationError(`JSONの解析に失敗しました: ${error}`)
+    } finally {
+      setValidating(false)
     }
   }
 
@@ -1077,12 +1083,16 @@ export default function QuizGeneratorPage() {
               </Alert>
             )}
             <div className="mt-4 flex gap-2">
-              <Button 
+              <Button
                 onClick={validateAndReview}
-                disabled={!generatedResult}
+                disabled={!generatedResult || validating}
               >
-                <FileJson className="mr-2 h-4 w-4" />
-                検証＆レビュー
+                {validating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileJson className="mr-2 h-4 w-4" />
+                )}
+                {validating ? '検証中...' : '検証＆レビュー'}
               </Button>
             </div>
           </CardContent>
