@@ -100,14 +100,29 @@ export async function POST(request: NextRequest) {
     }
 
     // 重複を除外した問題リスト
-    const questionsToImport = reviewQuestions.filter(q => 
+    const questionsToImport = reviewQuestions.filter(q =>
       !duplicates.find(d => d.id === q.id)
     )
 
+    // 重複問題は既に本番DBにあるため、imported_atを設定して画面から消す
+    if (duplicates.length > 0) {
+      const dupUpdatePromises = duplicates.map(d =>
+        supabaseAdmin
+          .from('quiz_questions_review')
+          .update({
+            imported_at: new Date().toISOString(),
+            imported_by: userId,
+          })
+          .eq('id', d.id)
+      )
+      await Promise.all(dupUpdatePromises)
+      console.log(`📌 Marked ${duplicates.length} duplicates as imported (already in production)`)
+    }
+
     if (questionsToImport.length === 0) {
       return NextResponse.json({
-        success: false,
-        message: 'All questions are duplicates',
+        success: true,
+        message: `All ${duplicates.length} questions already exist in production (marked as imported)`,
         summary: {
           requested: questionIds.length,
           approved: reviewQuestions.length,
@@ -126,30 +141,34 @@ export async function POST(request: NextRequest) {
     
     const maxLegacyId = maxIdData?.[0]?.legacy_id || 0
 
-    // 本番DB用にデータを整形
-    const productionQuestions = questionsToImport.map((q, index) => ({
-      legacy_id: maxLegacyId + index + 1, // 最大値+1から連番
-      category_id: q.category_id,
-      subcategory: q.subcategory || '',
-      subcategory_id: q.subcategory_id || '',
-      question: q.question,
-      option1: q.option_a,
-      option2: q.option_b,
-      option3: q.option_c,
-      option4: q.option_d,
-      correct_answer: q.correct_answer,
-      explanation: q.explanation || '',
-      difficulty: q.difficulty || '中級',
-      time_limit: q.time_limit || 45,
-      related_topics: q.tags || [],
-      source: q.source || 'AI Generated',
-      level1_hint: q.level1_hint || null,
-      level2_hint: q.level2_hint || null,
-      level3_hint: q.level3_hint || null,
-      is_deleted: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }))
+    // 本番DB用にデータを整形（review_idを追跡用に保持）
+    const reviewIdToIndex = new Map<number, number>()
+    const productionQuestions = questionsToImport.map((q, index) => {
+      reviewIdToIndex.set(index, q.id)
+      return {
+        legacy_id: maxLegacyId + index + 1, // 最大値+1から連番
+        category_id: q.category_id,
+        subcategory: q.subcategory || '',
+        subcategory_id: q.subcategory_id || '',
+        question: q.question,
+        option1: q.option_a,
+        option2: q.option_b,
+        option3: q.option_c,
+        option4: q.option_d,
+        correct_answer: q.correct_answer,
+        explanation: q.explanation || '',
+        difficulty: q.difficulty || '中級',
+        time_limit: q.time_limit || 45,
+        related_topics: q.tags || [],
+        source: q.source || 'AI Generated',
+        level1_hint: q.level1_hint || null,
+        level2_hint: q.level2_hint || null,
+        level3_hint: q.level3_hint || null,
+        is_deleted: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    })
 
     // 本番DBに挿入
     const { data: importedData, error: importError } = await supabaseAdmin
@@ -159,7 +178,7 @@ export async function POST(request: NextRequest) {
 
     if (importError) {
       console.error('❌ Error importing to production DB:', importError)
-      
+
       // バッチエラーを記録
       await supabaseAdmin
         .from('quiz_review_batches')
@@ -179,20 +198,45 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Successfully imported ${importedData.length} questions to production DB`)
 
     // レビューDBの取込情報を更新
-    const updatePromises = importedData.map((imported, index) => {
-      const reviewId = questionsToImport[index].id
-      return supabaseAdmin
-        .from('quiz_questions_review')
-        .update({
-          imported_at: new Date().toISOString(),
-          imported_by: userId,
-          production_question_id: imported.id,
-          import_batch_id: importBatchId
-        })
-        .eq('id', reviewId)
+    // indexベースの対応付けは順序不一致リスクがあるため、
+    // question内容でマッチングして正確に紐付ける
+    const importedByQuestion = new Map<string, number>()
+    importedData.forEach(imported => {
+      importedByQuestion.set(imported.question, imported.id)
     })
 
-    await Promise.all(updatePromises)
+    const now = new Date().toISOString()
+    const reviewIds = questionsToImport.map(q => q.id)
+
+    // 全レビュー問題のimported_atを一括更新（個別Promise.allではなくバルク）
+    const { error: bulkUpdateError } = await supabaseAdmin
+      .from('quiz_questions_review')
+      .update({
+        imported_at: now,
+        imported_by: userId,
+        import_batch_id: importBatchId
+      })
+      .in('id', reviewIds)
+
+    if (bulkUpdateError) {
+      console.error('⚠️ Error updating review records (bulk):', bulkUpdateError)
+    }
+
+    // production_question_idは問題テキストで正確にマッチして個別更新
+    const prodIdUpdatePromises = questionsToImport.map(q => {
+      const prodId = importedByQuestion.get(q.question)
+      if (!prodId) return Promise.resolve()
+      return supabaseAdmin
+        .from('quiz_questions_review')
+        .update({ production_question_id: prodId })
+        .eq('id', q.id)
+    })
+
+    const prodIdResults = await Promise.allSettled(prodIdUpdatePromises)
+    const failedUpdates = prodIdResults.filter(r => r.status === 'rejected')
+    if (failedUpdates.length > 0) {
+      console.error(`⚠️ ${failedUpdates.length} production_question_id updates failed`)
+    }
 
     // 履歴に記録
     const historyRecords = questionsToImport.map(q => ({
