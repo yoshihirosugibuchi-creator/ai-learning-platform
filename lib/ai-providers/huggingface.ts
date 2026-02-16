@@ -1,12 +1,19 @@
 /**
  * HuggingFace AI プロバイダー実装
  *
- * Qwen2.5-72B-Instruct を OpenAI互換APIで呼び出し
+ * Llama-3.3-70B-Instruct を OpenAI互換APIで呼び出し
+ * （旧: Qwen2.5-72B-Instruct → 2026年2月に廃止）
  */
 
 import type { AIProvider, AIScoringRequest, AIScoringResponse, AIScoringStepResult } from './types'
 import type { CaseStudySkillAxis } from '@/lib/types/case-study'
 import { buildSystemPrompt, buildScoringPrompt } from './prompt-builder'
+
+// 利用可能なモデル（優先順）
+const MODELS = [
+  'meta-llama/Llama-3.3-70B-Instruct',
+  'Qwen/Qwen3-32B',
+] as const
 
 export class HuggingFaceProvider implements AIProvider {
   readonly name = 'huggingface' as const
@@ -24,41 +31,62 @@ export class HuggingFaceProvider implements AIProvider {
     const systemPrompt = buildSystemPrompt()
     const userPrompt = buildScoringPrompt(request)
 
-    const response = await fetch('https://router.huggingface.co/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${hfToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'Qwen/Qwen2.5-72B-Instruct',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        max_tokens: 2000,
-        temperature: 0.2,
-      }),
-    })
+    // モデルを順番に試行（最初に成功したものを使用）
+    let lastError: Error | null = null
+    for (const model of MODELS) {
+      try {
+        const response = await fetch('https://router.huggingface.co/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${hfToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            max_tokens: 2000,
+            temperature: 0.2,
+          }),
+        })
 
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'unknown error')
-      throw new Error(`HuggingFace API error: ${response.status} - ${errorText}`)
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => 'unknown error')
+          console.warn(`HuggingFace model ${model} failed: ${response.status} - ${errorText}`)
+          lastError = new Error(`HuggingFace API error: ${response.status} - ${errorText}`)
+          continue // 次のモデルを試行
+        }
+
+        const data = await response.json()
+        const generatedText = data.choices?.[0]?.message?.content
+
+        if (!generatedText) {
+          lastError = new Error(`No response generated from model ${model}`)
+          continue
+        }
+
+        console.log(`✅ HuggingFace scoring with model: ${model}`)
+        return this.parseResponse(generatedText, request)
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err))
+        console.warn(`HuggingFace model ${model} error:`, lastError.message)
+        continue
+      }
     }
 
-    const data = await response.json()
-    const generatedText = data.choices?.[0]?.message?.content
-
-    if (!generatedText) {
-      throw new Error('No response generated from HuggingFace API')
-    }
-
-    return this.parseResponse(generatedText, request)
+    throw lastError || new Error('All HuggingFace models failed')
   }
 
   private parseResponse(rawText: string, request: AIScoringRequest): AIScoringResponse {
-    // マークダウンコードブロックを除去（```json ... ``` 形式に対応）
+    // Qwen3の<think>タグを除去
     let jsonText = rawText.trim()
+    if (jsonText.includes('<think>')) {
+      jsonText = jsonText.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+    }
+
+    // マークダウンコードブロックを除去（```json ... ``` 形式に対応）
     if (jsonText.startsWith('```')) {
       // ```json または ``` で始まる場合、最初の行と最後の ``` を除去
       const lines = jsonText.split('\n')
