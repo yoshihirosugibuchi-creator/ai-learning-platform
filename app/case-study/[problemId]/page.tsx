@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Clock, BarChart3, Users, Trophy, ArrowLeft, Play } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import MarkdownContent from '@/components/ui/markdown-content'
 
 interface Problem {
   id: string
@@ -259,9 +260,9 @@ export default function CaseStudyDetailPage({
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <h4 className="text-base font-medium mb-2">ケース概要</h4>
               <div className="bg-muted/50 p-4 rounded-lg">
-                <p className="whitespace-pre-wrap text-sm">
-                  {showFullCase ? problem.case_text : problem.case_text_preview}
-                </p>
+                <div className="text-sm">
+                  <MarkdownContent content={showFullCase ? problem.case_text : problem.case_text_preview} />
+                </div>
                 {problem.case_text.length > 500 && !showFullCase && (
                   <Button
                     variant="link"

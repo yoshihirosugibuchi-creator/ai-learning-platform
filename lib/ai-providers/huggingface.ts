@@ -101,9 +101,21 @@ export class HuggingFaceProvider implements AIProvider {
       }
     })
 
-    // スキル軸スコアの変換
+    // この問題で使用されるスキル軸のみ抽出
+    const usedSkillCodes = new Set<string>()
+    for (const step of request.steps) {
+      if (step.targetSkills) {
+        for (const skill of step.targetSkills) {
+          usedSkillCodes.add(skill)
+        }
+      }
+    }
+
+    // スキル軸スコアの変換（関連するもののみ）
     const skillScores: Partial<Record<CaseStudySkillAxis, number>> = {}
     for (const [key, value] of Object.entries(parsed.skill_scores)) {
+      // target_skillsが設定されている場合、関連するスキルのみ含める
+      if (usedSkillCodes.size > 0 && !usedSkillCodes.has(key)) continue
       skillScores[key as CaseStudySkillAxis] = Math.min(Math.max(Number(value) || 0, 1), 5)
     }
 

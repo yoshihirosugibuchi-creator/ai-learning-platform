@@ -43,6 +43,58 @@ function getQuestionTypeLabel(questionType: QuestionType): string {
   }
 }
 
+/** 選択肢の正誤を事前判定 */
+function evaluateChoiceCorrectness(step: AIScoringRequest['steps'][0]): {
+  isFullyCorrect: boolean
+  correctChoices: string[]
+  incorrectChoices: string[]
+  missingChoices: string[]
+  matchingPositions?: number
+  totalPositions?: number
+} | null {
+  const questionType = step.questionType || 'hybrid'
+  if (!['single', 'multiple', 'ordering', 'hybrid'].includes(questionType)) return null
+
+  const ma = step.modelAnswer as { ideal_choices?: string[] } | null
+  const idealChoices = ma?.ideal_choices
+  if (!idealChoices || idealChoices.length === 0) return null
+
+  const selected = step.answer?.selectedChoices || []
+  if (selected.length === 0) {
+    return {
+      isFullyCorrect: false,
+      correctChoices: [],
+      incorrectChoices: [],
+      missingChoices: [...idealChoices],
+    }
+  }
+
+  if (questionType === 'ordering') {
+    const matching = selected.filter((c, i) => i < idealChoices.length && c === idealChoices[i]).length
+    return {
+      isFullyCorrect: matching === idealChoices.length,
+      correctChoices: selected.filter((c, i) => i < idealChoices.length && c === idealChoices[i]),
+      incorrectChoices: selected.filter((c, i) => i >= idealChoices.length || c !== idealChoices[i]),
+      missingChoices: [],
+      matchingPositions: matching,
+      totalPositions: idealChoices.length,
+    }
+  }
+
+  const idealSet = new Set(idealChoices)
+  const correctChoices = selected.filter(c => idealSet.has(c))
+  const incorrectChoices = selected.filter(c => !idealSet.has(c))
+  const selectedSet = new Set(selected)
+  const missingChoices = idealChoices.filter(c => !selectedSet.has(c))
+
+  return {
+    isFullyCorrect: correctChoices.length === idealChoices.length && incorrectChoices.length === 0,
+    correctChoices,
+    incorrectChoices,
+    missingChoices,
+  }
+}
+
 /** ステップの回答を問題形式に応じてフォーマット */
 function formatStepAnswer(step: AIScoringRequest['steps'][0]): string {
   const answer = step.answer
@@ -72,6 +124,30 @@ function formatStepAnswer(step: AIScoringRequest['steps'][0]): string {
   if (questionType === 'text' || questionType === 'hybrid') {
     const reasoning = answer?.reasoningText || '(記述なし)'
     lines.push(`  記述: ${reasoning}`)
+  }
+
+  // 選択肢の事前判定結果をプロンプトに組み込み（AIフィードバック精度向上のため）
+  const evaluation = evaluateChoiceCorrectness(step)
+  if (evaluation) {
+    lines.push(`  【システム事前判定】`)
+    if (questionType === 'ordering') {
+      lines.push(`    正しい位置の数: ${evaluation.matchingPositions}/${evaluation.totalPositions}`)
+      lines.push(`    判定: ${evaluation.isFullyCorrect ? '全問正解' : '一部不正解'}`)
+    } else {
+      if (evaluation.isFullyCorrect) {
+        lines.push(`    選択判定: ✅全問正解（正解選択肢を全て正しく選択）`)
+      } else {
+        if (evaluation.correctChoices.length > 0) {
+          lines.push(`    正解選択: ${evaluation.correctChoices.join(', ')}`)
+        }
+        if (evaluation.incorrectChoices.length > 0) {
+          lines.push(`    誤選択: ${evaluation.incorrectChoices.join(', ')}`)
+        }
+        if (evaluation.missingChoices.length > 0) {
+          lines.push(`    選択漏れ: ${evaluation.missingChoices.join(', ')}`)
+        }
+      }
+    }
   }
 
   return lines.join('\n')
@@ -145,24 +221,54 @@ function formatModelAnswer(step: AIScoringRequest['steps'][0]): string {
 /** ステップの評価ルールを問題形式に応じて生成 */
 function getEvaluationRulesForStep(step: AIScoringRequest['steps'][0]): string {
   const questionType = step.questionType || 'hybrid'
+  const evaluation = evaluateChoiceCorrectness(step)
 
   switch (questionType) {
-    case 'single':
-      return `Step${step.stepNumber}は【単一選択】です。選択結果のみで評価してください。記述は求められていないため、記述がなくても減点しないでください。正解選択肢を選んでいれば高得点、不正解なら低得点としてください。`
+    case 'single': {
+      if (evaluation?.isFullyCorrect) {
+        return `Step${step.stepNumber}は【単一選択】です。★システム判定: 正解★ 学習者は正解選択肢を選んでいます。スコアは満点（${step.maxScore}点）としてください。フィードバックでは、この選択が正しい理由と、選択肢解説を参照して選択が示す理解度を具体的に述べてください。`
+      }
+      return `Step${step.stepNumber}は【単一選択】です。★システム判定: 不正解★ 記述は求められていないため、記述がなくても減点しないでください。フィードバックでは、選んだ選択肢が不適切な理由と、正解選択肢の解説を述べてください。`
+    }
 
-    case 'multiple':
-      return `Step${step.stepNumber}は【複数選択】です。選択結果のみで評価してください。記述は求められていないため、記述がなくても減点しないでください。正解選択肢を全て選び不正解を選ばなければ満点、部分的に正解なら部分点としてください。`
+    case 'multiple': {
+      if (evaluation?.isFullyCorrect) {
+        return `Step${step.stepNumber}は【複数選択】です。★システム判定: 全問正解★ 学習者は正解選択肢を全て正しく選んでいます。スコアは満点（${step.maxScore}点）としてください。フィードバックでは、各正解選択肢がなぜ適切かを選択肢解説を参照して具体的に述べてください。`
+      }
+      const parts = [`Step${step.stepNumber}は【複数選択】です。★システム判定: 一部正解★`]
+      if (evaluation) {
+        if (evaluation.correctChoices.length > 0) parts.push(`正解選択: ${evaluation.correctChoices.join(', ')}`)
+        if (evaluation.incorrectChoices.length > 0) parts.push(`誤選択: ${evaluation.incorrectChoices.join(', ')}`)
+        if (evaluation.missingChoices.length > 0) parts.push(`選択漏れ: ${evaluation.missingChoices.join(', ')}`)
+      }
+      parts.push(`記述は求められていないため、記述がなくても減点しないでください。フィードバックでは選択肢解説を参照して、正解・不正解の理由を具体的に述べてください。`)
+      return parts.join(' ')
+    }
 
     case 'ordering': {
       const optCount = (step.options as Array<unknown>)?.length || 4
-      return `Step${step.stepNumber}は【順序並べ替え】です。選択肢の並び順を評価してください。正しい位置にある選択肢の数を基準に採点してください。全${optCount}個中N個が正しい位置の場合、品質レベル = ceil(N/${optCount} * 5) で評価してください。記述は求められていないため、記述がなくても減点しないでください。`
+      if (evaluation) {
+        return `Step${step.stepNumber}は【順序並べ替え】です。★システム判定: ${evaluation.matchingPositions}/${evaluation.totalPositions}個が正しい位置★ 記述は求められていないため、記述がなくても減点しないでください。フィードバックでは正しい順序の理由を説明してください。`
+      }
+      return `Step${step.stepNumber}は【順序並べ替え】です。選択肢の並び順を評価してください。全${optCount}個中N個が正しい位置の場合、品質レベル = ceil(N/${optCount} * 5) で評価してください。記述は求められていないため、記述がなくても減点しないでください。`
     }
 
     case 'text':
       return `Step${step.stepNumber}は【記述式】です。記述内容のみで評価してください。選択肢はないため、選択がなくても問題ありません。記述の論理性、具体性、必須ポイントの網羅度で評価してください。`
 
-    case 'hybrid':
-      return `Step${step.stepNumber}は【複数選択＋記述】です。選択結果と記述内容の両方を評価してください。選択の正確さと、記述による理由説明の質の両方が求められます。`
+    case 'hybrid': {
+      if (evaluation?.isFullyCorrect) {
+        return `Step${step.stepNumber}は【複数選択＋記述】です。★システム判定: 選択肢は全問正解★ 選択肢の正誤はシステムで確定済みです。あなたは記述内容（理由説明）の質のみを評価してください。記述が論理的で具体的か、必須ポイントを網羅しているかで採点してください。選択が正解であることを前提にフィードバックを生成し、記述の良い点・改善点を述べてください。`
+      }
+      const parts = [`Step${step.stepNumber}は【複数選択＋記述】です。★システム判定: 選択肢は一部不正解★`]
+      if (evaluation) {
+        if (evaluation.correctChoices.length > 0) parts.push(`正解選択: ${evaluation.correctChoices.join(', ')}`)
+        if (evaluation.incorrectChoices.length > 0) parts.push(`誤選択: ${evaluation.incorrectChoices.join(', ')}`)
+        if (evaluation.missingChoices.length > 0) parts.push(`選択漏れ: ${evaluation.missingChoices.join(', ')}`)
+      }
+      parts.push(`選択肢の正誤はシステムで確定済みです。あなたは記述内容（理由説明）の質を中心に評価してください。選択の誤りと記述の質を合わせてスコアを判断してください。`)
+      return parts.join(' ')
+    }
 
     default:
       return ''
@@ -171,8 +277,23 @@ function getEvaluationRulesForStep(step: AIScoringRequest['steps'][0]): string {
 
 /** ユーザープロンプトを構築 */
 export function buildScoringPrompt(request: AIScoringRequest): string {
+  // この問題で使用されるスキル軸のみ抽出（ステップのtarget_skillsに含まれるもの）
+  const usedSkillCodes = new Set<string>()
+  for (const step of request.steps) {
+    if (step.targetSkills) {
+      for (const skill of step.targetSkills) {
+        usedSkillCodes.add(skill)
+      }
+    }
+  }
+
+  // 関連するルーブリック軸のみフィルタ（target_skillsが空の場合は全軸使用）
+  const relevantAxes = usedSkillCodes.size > 0
+    ? request.rubricAxes.filter(a => usedSkillCodes.has(a.axisCode))
+    : request.rubricAxes
+
   // ルーブリック軸情報
-  const axesDescription = request.rubricAxes
+  const axesDescription = relevantAxes
     .map((axis, i) => `${i + 1}. ${axis.axisCode}: ${axis.axisName}（${axis.definition || '説明なし'}）`)
     .join('\n')
 
@@ -191,8 +312,8 @@ export function buildScoringPrompt(request: AIScoringRequest): string {
     .map(step => getEvaluationRulesForStep(step))
     .join('\n')
 
-  // スキル軸名一覧（JSONキー用）
-  const skillKeys = request.rubricAxes.map(a => a.axisCode)
+  // スキル軸名一覧（JSONキー用 - 関連するもののみ）
+  const skillKeys = relevantAxes.map(a => a.axisCode)
 
   return `【評価対象ケース】
 ${request.caseText.substring(0, 1000)}${request.caseText.length > 1000 ? '...(省略)' : ''}
@@ -215,18 +336,23 @@ ${stepEvaluationRules}
 
 【評価ルール】
 1. 各ステップごとに、そのステップのmax_score(${request.steps.map(s => `Step${s.stepNumber}:${s.maxScore}点`).join(', ')})を上限として採点すること。
-2. ★スコア計算★ 採点基準の品質レベル(1-5)はmax_scoreにスケーリングすること：
+2. ★最重要★ 「システム判定」に従うこと：
+   - 「★システム判定: 正解★」「★システム判定: 全問正解★」のステップは、システムが既に正解と確認済み。スコアは指示された点数にすること。
+   - 「★システム判定: 選択肢は全問正解★」（hybrid）のステップは、選択の正誤は確定済み。記述の質のみで評価すること。
+   - 選択式問題のスコアはシステムが後から上書きするため、AIは主にフィードバックの質に注力すること。
+3. ★スコア計算（text/hybrid記述部分）★ 採点基準の品質レベル(1-5)はmax_scoreにスケーリングすること：
    - 品質1 → max_score × 0.2 (例: 20点満点なら4点)
    - 品質3 → max_score × 0.6 (例: 20点満点なら12点)
    - 品質5 → max_score × 1.0 (例: 20点満点なら20点)
-3. 各スキル軸ごとに1〜5点の整数で採点すること。
-4. ★フィードバック生成★
+4. 各スキル軸ごとに1〜5点の整数で採点すること。
+5. ★フィードバック生成★
    - 「選択肢解説」を参照し、選んだ選択肢がなぜ良い/悪いかを具体的に説明すること
-   - 「正解を選びました」だけでなく、その選択が示す思考力や理解度を言及すること
+   - 正解の場合：その選択が示す思考力や理解度を言及すること
    - 例：「AsIs/ToBeの整理軸を選択したことで、課題の全体像を漏れなく把握できる視点を示しています」
-5. 書いていないことを加点しないこと。
-6. ヒントを使いすぎている場合、適切に減点してよい。
-7. ★重要★ 各ステップの問題形式（単一選択/複数選択/記述式/複合）に応じて適切に評価すること。求められていない形式の回答がなくても減点しないこと。
+   - hybrid形式で選択正解の場合：選択が正しいことを認めた上で、記述の質について詳しくフィードバックすること
+6. 書いていないことを加点しないこと。
+7. ヒントを使いすぎている場合、適切に減点してよい。
+8. ★重要★ 各ステップの問題形式（単一選択/複数選択/記述式/複合）に応じて適切に評価すること。求められていない形式の回答がなくても減点しないこと。
 
 【出力フォーマット（厳守）】
 {

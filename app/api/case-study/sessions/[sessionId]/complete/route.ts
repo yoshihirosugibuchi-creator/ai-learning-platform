@@ -76,6 +76,94 @@ async function loadCaseStudyXPSettings(supabase: ReturnType<typeof getSupabaseAd
   return xpSettings
 }
 
+/**
+ * 選択式問題の決定論的スコア計算
+ * AIの採点ミスを防ぐため、選択肢の一致で正確にスコアを算出
+ *
+ * - single/multiple/ordering: 完全に決定論的（AIスコアを上書き）
+ * - hybrid: 選択正解なら null（AI記述評価を使用）、選択不正解なら上限値を返す
+ * - text: null（AI評価のみ）
+ */
+function calculateDeterministicScore(
+  questionType: string,
+  selectedChoices: string[] | null,
+  modelAnswer: unknown,
+  maxScore: number,
+  aiScore?: number
+): number | null {
+  if (questionType === 'text') {
+    return null // 記述式はAI採点を使用
+  }
+
+  const ma = modelAnswer as { ideal_choices?: string[] } | null
+  const idealChoices = ma?.ideal_choices
+  if (!idealChoices || idealChoices.length === 0) {
+    return null // 模範解答がない場合はAI採点を使用
+  }
+
+  if (!selectedChoices || selectedChoices.length === 0) {
+    return 0 // 未回答
+  }
+
+  switch (questionType) {
+    case 'single': {
+      // 単一選択: 完全一致で満点、不一致で最低点
+      return selectedChoices[0] === idealChoices[0]
+        ? maxScore
+        : Math.round(maxScore * 0.2)
+    }
+
+    case 'multiple': {
+      // 複数選択: 正解選択数と誤選択数で計算
+      const idealSet = new Set(idealChoices)
+      const correctCount = selectedChoices.filter(c => idealSet.has(c)).length
+      const incorrectCount = selectedChoices.filter(c => !idealSet.has(c)).length
+
+      // 正解率 - 誤答ペナルティ（誤答1つにつき正解1つ分の半分を減算）
+      const correctRatio = correctCount / idealChoices.length
+      const penalty = incorrectCount * (0.5 / idealChoices.length)
+      const scoreRatio = Math.max(0, Math.min(1, correctRatio - penalty))
+
+      return Math.round(scoreRatio * maxScore)
+    }
+
+    case 'ordering': {
+      // 順序並べ替え: 正しい位置にある数で計算
+      const matchingPositions = selectedChoices.filter(
+        (c, i) => i < idealChoices.length && c === idealChoices[i]
+      ).length
+      const ratio = matchingPositions / idealChoices.length
+
+      return Math.round(ratio * maxScore)
+    }
+
+    case 'hybrid': {
+      // ハイブリッド: 選択の正誤を判定し、AIの記述評価と組み合わせ
+      const idealSet = new Set(idealChoices)
+      const correctCount = selectedChoices.filter(c => idealSet.has(c)).length
+      const incorrectCount = selectedChoices.filter(c => !idealSet.has(c)).length
+      const allCorrect = correctCount === idealChoices.length && incorrectCount === 0
+
+      if (allCorrect) {
+        // 選択全問正解 → AIの記述評価スコアをそのまま使用
+        return null
+      }
+
+      // 選択不正解 → 選択正誤率でAIスコアに上限を設定
+      const choiceCorrectRatio = Math.max(0, (correctCount / idealChoices.length) - (incorrectCount * 0.5 / idealChoices.length))
+      // 選択50% + 記述50%の配分でスコア計算
+      const choicePortion = choiceCorrectRatio * 0.5 * maxScore
+      const aiScoreToUse = aiScore !== undefined ? aiScore : maxScore * 0.5
+      const reasoningPortion = Math.min(aiScoreToUse, maxScore) / maxScore * 0.5 * maxScore
+
+      return Math.round(choicePortion + reasoningPortion)
+    }
+
+    default:
+      return null
+  }
+}
+
 // AI採点エラーを表すカスタムエラー
 class AIScoringError extends Error {
   public readonly userMessage: string
@@ -155,6 +243,28 @@ async function performAIScoring(
     }
 
     const aiResponse = await provider.score(request)
+
+    // 選択式問題の決定論的スコアでAIスコアをオーバーライド
+    for (const stepResult of aiResponse.stepResults) {
+      const step = steps.find(s => s.step_number === stepResult.step)
+      if (!step) continue
+
+      const deterministicScore = calculateDeterministicScore(
+        step.question_type,
+        step.detail?.selected_choices || null,
+        step.model_answer,
+        step.max_score,
+        stepResult.score // hybrid用にAIスコアを渡す
+      )
+
+      if (deterministicScore !== null) {
+        const aiScore = stepResult.score
+        stepResult.score = deterministicScore
+        console.log(
+          `📊 Step${stepResult.step} (${step.question_type}): AI=${aiScore} → 決定論的=${deterministicScore}/${step.max_score}`
+        )
+      }
+    }
 
     // AI結果をCaseStudyScoringResult形式に変換
     const stepScores = aiResponse.stepResults.map(r => ({

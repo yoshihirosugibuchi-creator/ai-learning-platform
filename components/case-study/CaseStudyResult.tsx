@@ -210,21 +210,32 @@ export default function CaseStudyResult({
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {Object.entries(scoringResult.skill_scores).map(([skill, score]) => {
-              const axis = rubricAxes.find(a => a.axis_code === skill)
-              const label = axis?.axis_name || skillAxisLabels[skill as CaseStudySkillAxis] || skill
-              const percentage = (score / 5) * 100
+            {(() => {
+              // この問題で使用されるスキル軸のみ表示
+              const usedSkills = new Set<string>()
+              stepsWithDetails.forEach(step => {
+                step.target_skills?.forEach(s => usedSkills.add(s))
+              })
 
-              return (
-                <div key={skill} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>{label}</span>
-                    <span className="font-medium">{score}/5</span>
+              const entries = Object.entries(scoringResult.skill_scores)
+                .filter(([skill]) => usedSkills.size === 0 || usedSkills.has(skill))
+
+              return entries.map(([skill, score]) => {
+                const axis = rubricAxes.find(a => a.axis_code === skill)
+                const label = axis?.axis_name || skillAxisLabels[skill as CaseStudySkillAxis] || skill
+                const percentage = (score / 5) * 100
+
+                return (
+                  <div key={skill} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>{label}</span>
+                      <span className="font-medium">{score}/5</span>
+                    </div>
+                    <Progress value={percentage} className="h-2" />
                   </div>
-                  <Progress value={percentage} className="h-2" />
-                </div>
-              )
-            })}
+                )
+              })
+            })()}
           </div>
         </CardContent>
       </Card>

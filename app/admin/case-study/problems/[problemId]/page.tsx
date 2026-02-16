@@ -50,6 +50,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
+import MarkdownContent from '@/components/ui/markdown-content'
 import StepEditor from '@/components/case-study/StepEditor'
 import { getStepTemplate, getTemplateList } from '@/lib/case-study-templates'
 
@@ -603,8 +604,8 @@ export default function CaseStudyProblemDetailPage() {
                     rows={8}
                   />
                 ) : (
-                  <div className="mt-1 p-3 bg-muted/50 rounded-lg text-sm whitespace-pre-wrap">
-                    {problem?.case_text || '(未設定)'}
+                  <div className="mt-1 p-3 bg-muted/50 rounded-lg text-sm">
+                    <MarkdownContent content={problem?.case_text || '(未設定)'} />
                   </div>
                 )}
               </div>
@@ -749,7 +750,7 @@ export default function CaseStudyProblemDetailPage() {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium">{step.step_name}</div>
                           <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {step.description || '(説明なし)'}
+                            <MarkdownContent content={step.description || '(説明なし)'} compact />
                           </div>
                           <div className="flex items-center space-x-2 mt-2">
                             <Badge variant="outline" className="text-xs">{step.question_type}</Badge>
