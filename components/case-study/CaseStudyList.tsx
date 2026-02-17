@@ -125,7 +125,7 @@ export default function CaseStudyList({ initialProblems }: CaseStudyListProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全ての難易度</SelectItem>
-                <SelectItem value="basic">基礎</SelectItem>
+                <SelectItem value="basic">初級</SelectItem>
                 <SelectItem value="intermediate">中級</SelectItem>
                 <SelectItem value="advanced">上級</SelectItem>
                 <SelectItem value="expert">エキスパート</SelectItem>

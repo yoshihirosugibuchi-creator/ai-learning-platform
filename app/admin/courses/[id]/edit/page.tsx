@@ -235,7 +235,7 @@ export default function CourseEditPage() {
       console.error('Fetch skill levels error:', error)
       // フォールバック
       setSkillLevels([
-        { id: 'basic', label: '基礎', display_order: 1 },
+        { id: 'basic', label: '初級', display_order: 1 },
         { id: 'intermediate', label: '中級', display_order: 2 },
         { id: 'advanced', label: '上級', display_order: 3 }
       ])

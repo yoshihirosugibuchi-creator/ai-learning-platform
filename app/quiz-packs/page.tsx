@@ -40,7 +40,7 @@ interface QuizPack {
 
 interface SkillLevel {
   id: string
-  display_name: string
+  name: string
 }
 
 const colorThemeClasses: Record<string, string> = {
@@ -80,7 +80,7 @@ export default function QuizPacksPage() {
         fetch('/api/quiz-packs', {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        supabase.from('skill_levels').select('id, display_name').order('display_order')
+        supabase.from('skill_levels').select('id, name').order('display_order')
       ])
 
       if (packsResponse.ok) {
@@ -205,7 +205,7 @@ export default function QuizPacksPage() {
                         className="text-xs"
                         style={{ backgroundColor: (DifficultyColors as Record<string, string>)[diff] || '#6B7280', color: 'white' }}
                       >
-                        {skillLevels.find(s => s.id === diff)?.display_name || (DifficultyLabels as Record<string, string>)[diff] || diff}
+                        {skillLevels.find(s => s.id === diff)?.name || (DifficultyLabels as Record<string, string>)[diff] || diff}
                       </Badge>
                     ))}
                   </div>

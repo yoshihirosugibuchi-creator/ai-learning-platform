@@ -274,7 +274,7 @@ function DifficultySettingsContent() {
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                   <div>
                     <Label htmlFor={`basic-${setting.id}`} className="text-sm">
-                      基礎 (Basic)
+                      初級 (Basic)
                     </Label>
                     <div className="flex items-center gap-1">
                       <Input
@@ -392,7 +392,7 @@ function DifficultySettingsContent() {
                 <div className="flex justify-between items-center">
                   <div className="flex gap-4 text-xs text-gray-500">
                     <span className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded bg-green-400" /> 基礎
+                      <div className="w-3 h-3 rounded bg-green-400" /> 初級
                     </span>
                     <span className="flex items-center gap-1">
                       <div className="w-3 h-3 rounded bg-blue-400" /> 中級

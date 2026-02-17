@@ -79,7 +79,7 @@ const statusConfig = {
 
 // スキルレベル設定（動的取得とフォールバック）
 const defaultDifficultyConfig = {
-  basic: { label: '基礎', color: 'bg-blue-100 text-blue-800' },
+  basic: { label: '初級', color: 'bg-blue-100 text-blue-800' },
   intermediate: { label: '中級', color: 'bg-purple-100 text-purple-800' },
   advanced: { label: '上級', color: 'bg-orange-100 text-orange-800' },
   expert: { label: 'エキスパート', color: 'bg-red-100 text-red-800' }
@@ -400,7 +400,7 @@ export default function CoursesManagementPage() {
       console.error('Error loading skill levels:', error)
       // フォールバック: デフォルト設定を使用
       setSkillLevels([
-        { id: 'basic', name: '基礎', displayOrder: 1 },
+        { id: 'basic', name: '初級', displayOrder: 1 },
         { id: 'intermediate', name: '中級', displayOrder: 2 },
         { id: 'advanced', name: '上級', displayOrder: 3 },
         { id: 'expert', name: 'エキスパート', displayOrder: 4 }

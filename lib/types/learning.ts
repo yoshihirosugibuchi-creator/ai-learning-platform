@@ -140,8 +140,9 @@ export const SessionTypeDescriptions: Record<SessionType, string> = {
 }
 
 // 難易度ラベル（DB統一スキルレベルに対応）
+// skill_levelsテーブルのnameと一致させること（DBが正）
 export const DifficultyLabels: Record<LearningCourse['difficulty'], string> = {
-  basic: '基礎',
+  basic: '初級',
   intermediate: '中級',
   advanced: '上級',
   expert: 'エキスパート'

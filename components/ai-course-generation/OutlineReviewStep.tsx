@@ -89,7 +89,7 @@ interface OutlineReviewStepProps {
 
 // 難易度表示マッピング（フォールバック用）
 const fallbackDifficultyLabels = {
-  basic: { label: '基礎', color: 'bg-blue-100 text-blue-800' },
+  basic: { label: '初級', color: 'bg-blue-100 text-blue-800' },
   intermediate: { label: '中級', color: 'bg-yellow-100 text-yellow-800' },
   advanced: { label: '上級', color: 'bg-orange-100 text-orange-800' },
   expert: { label: 'エキスパート', color: 'bg-red-100 text-red-800' }

@@ -48,6 +48,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
+import { DifficultyLabels } from '@/lib/types/learning'
 
 interface Subcategory {
   subcategory_id: string
@@ -82,7 +83,6 @@ interface QuizPack {
 interface SkillLevel {
   id: string
   name: string
-  display_name: string
   display_order: number
 }
 
@@ -141,7 +141,7 @@ export default function QuizPacksAdminPage() {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         // skill_levelsテーブルから難易度を直接取得
-        supabase.from('skill_levels').select('id, name, display_name, display_order').order('display_order')
+        supabase.from('skill_levels').select('id, name, display_order').order('display_order')
       ])
 
       if (packsRes.ok) {
@@ -396,7 +396,7 @@ export default function QuizPacksAdminPage() {
   // 難易度ラベルの取得
   const getDifficultyLabels = (difficulties: string[]) => {
     return difficulties
-      .map(d => skillLevels.find(s => s.id === d)?.display_name)
+      .map(d => skillLevels.find(s => s.id === d)?.name || (DifficultyLabels as Record<string, string>)[d] || d)
       .filter(Boolean)
       .join(', ')
   }
@@ -715,7 +715,7 @@ export default function QuizPacksAdminPage() {
                     className="cursor-pointer"
                     onClick={() => toggleDifficulty(level.id)}
                   >
-                    {level.display_name}
+                    {level.name}
                   </Badge>
                 ))}
               </div>

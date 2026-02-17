@@ -83,7 +83,7 @@ async function fetchFromAPI<T>(endpoint: string): Promise<T | null> {
 const staticSkillLevels: SkillLevelDefinition[] = [
   {
     "id": "basic",
-    "name": "基礎",
+    "name": "初級",
     "description": "基本的な知識とスキルレベル",
     "targetExperience": "新人〜入社3年目",
     "displayOrder": 1
