@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
+import { DifficultyLabels, DifficultyColors } from '@/lib/types/learning'
 
 interface QuizPack {
   id: string
@@ -198,8 +199,13 @@ export default function QuizPacksPage() {
                   {/* 難易度バッジ */}
                   <div className="flex flex-wrap gap-1 mb-3">
                     {pack.difficulties.map(diff => (
-                      <Badge key={diff} variant="secondary" className="text-xs">
-                        {skillLevels.find(s => s.id === diff)?.display_name || diff}
+                      <Badge
+                        key={diff}
+                        variant="secondary"
+                        className="text-xs"
+                        style={{ backgroundColor: (DifficultyColors as Record<string, string>)[diff] || '#6B7280', color: 'white' }}
+                      >
+                        {skillLevels.find(s => s.id === diff)?.display_name || (DifficultyLabels as Record<string, string>)[diff] || diff}
                       </Badge>
                     ))}
                   </div>

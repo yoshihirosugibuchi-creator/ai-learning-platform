@@ -139,12 +139,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   archived: { label: 'アーカイブ', color: 'bg-red-100 text-red-800' },
 }
 
-const difficultyConfig: Record<string, { label: string; color: string }> = {
-  basic: { label: '初級', color: 'bg-blue-100 text-blue-800' },
-  intermediate: { label: '中級', color: 'bg-purple-100 text-purple-800' },
-  advanced: { label: '上級', color: 'bg-orange-100 text-orange-800' },
-  expert: { label: 'エキスパート', color: 'bg-red-100 text-red-800' },
-}
+import { DifficultyLabels, DifficultyColors } from '@/lib/types/learning'
 
 export default function CaseStudyProblemDetailPage() {
   const params = useParams()
@@ -925,8 +920,8 @@ export default function CaseStudyProblemDetailPage() {
                   </Select>
                 ) : (
                   <div className="mt-1">
-                    <Badge className={difficultyConfig[problem?.difficulty || 'intermediate']?.color}>
-                      {difficultyConfig[problem?.difficulty || 'intermediate']?.label}
+                    <Badge style={{ backgroundColor: (DifficultyColors as Record<string, string>)[problem?.difficulty || 'intermediate'] || '#F59E0B', color: 'white' }}>
+                      {(DifficultyLabels as Record<string, string>)[problem?.difficulty || 'intermediate'] || '中級'}
                     </Badge>
                   </div>
                 )}

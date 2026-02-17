@@ -114,12 +114,7 @@ const allowedTransitions: Record<string, string[]> = {
   archived: ['draft'],
 }
 
-const difficultyConfig: Record<string, { label: string; color: string }> = {
-  basic: { label: '初級', color: 'bg-blue-100 text-blue-800' },
-  intermediate: { label: '中級', color: 'bg-purple-100 text-purple-800' },
-  advanced: { label: '上級', color: 'bg-orange-100 text-orange-800' },
-  expert: { label: 'エキスパート', color: 'bg-red-100 text-red-800' },
-}
+import { DifficultyLabels, DifficultyColors } from '@/lib/types/learning'
 
 export default function CaseStudyAdminPage() {
   const { toast } = useToast()
@@ -585,8 +580,8 @@ export default function CaseStudyAdminPage() {
                           </Select>
                         </TableCell>
                         <TableCell>
-                          <Badge className={`${difficultyConfig[problem.difficulty]?.color || 'bg-gray-100'} text-xs`}>
-                            {difficultyConfig[problem.difficulty]?.label || problem.difficulty}
+                          <Badge className="text-xs" style={{ backgroundColor: (DifficultyColors as Record<string, string>)[problem.difficulty] || '#6B7280', color: 'white' }}>
+                            {(DifficultyLabels as Record<string, string>)[problem.difficulty] || problem.difficulty}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -915,9 +910,9 @@ export default function CaseStudyAdminPage() {
                           {log.category_name || '-'}
                         </TableCell>
                         <TableCell>
-                          {log.difficulty && difficultyConfig[log.difficulty] ? (
-                            <Badge className={difficultyConfig[log.difficulty].color}>
-                              {difficultyConfig[log.difficulty].label}
+                          {log.difficulty ? (
+                            <Badge style={{ backgroundColor: (DifficultyColors as Record<string, string>)[log.difficulty] || '#6B7280', color: 'white' }}>
+                              {(DifficultyLabels as Record<string, string>)[log.difficulty] || log.difficulty}
                             </Badge>
                           ) : '-'}
                         </TableCell>

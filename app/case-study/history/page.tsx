@@ -57,19 +57,8 @@ interface HistorySession {
   }
 }
 
-const difficultyLabels: Record<CaseStudyDifficulty, string> = {
-  basic: '基礎',
-  intermediate: '中級',
-  advanced: '上級',
-  expert: 'エキスパート'
-}
-
-const difficultyColors: Record<CaseStudyDifficulty, string> = {
-  basic: 'bg-green-100 text-green-800',
-  intermediate: 'bg-blue-100 text-blue-800',
-  advanced: 'bg-orange-100 text-orange-800',
-  expert: 'bg-red-100 text-red-800'
-}
+// コース学習と統一した難易度表示
+import { DifficultyLabels, DifficultyColors } from '@/lib/types/learning'
 
 export default function CaseStudyHistoryPage() {
   const router = useRouter()
@@ -283,8 +272,8 @@ export default function CaseStudyHistoryPage() {
                         {/* 問題タイトルとステータス */}
                         <div className="flex items-center gap-2 mb-1">
                           {getStatusBadge(session.status)}
-                          <Badge className={difficultyColors[problem.difficulty]}>
-                            {difficultyLabels[problem.difficulty]}
+                          <Badge style={{ backgroundColor: (DifficultyColors as Record<string, string>)[problem.difficulty] || '#F59E0B', color: 'white' }}>
+                            {(DifficultyLabels as Record<string, string>)[problem.difficulty] || problem.difficulty}
                           </Badge>
                           {session.is_retry && (
                             <Badge variant="outline" className="text-xs">再挑戦</Badge>

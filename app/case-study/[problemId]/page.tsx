@@ -56,12 +56,7 @@ interface Stats {
   avg_time_seconds: number
 }
 
-const difficultyConfig = {
-  basic: { label: '初級', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
-  intermediate: { label: '中級', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
-  advanced: { label: '上級', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' },
-  expert: { label: '超上級', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }
-}
+import { DifficultyLabels, DifficultyColors } from '@/lib/types/learning'
 
 export default function CaseStudyDetailPage({
   params
@@ -197,7 +192,8 @@ export default function CaseStudyDetailPage({
     return <LoadingScreen message="問題が見つかりません" />
   }
 
-  const difficulty = difficultyConfig[problem.difficulty] || difficultyConfig.intermediate
+  const difficultyLabel = (DifficultyLabels as Record<string, string>)[problem.difficulty] || '中級'
+  const difficultyColor = (DifficultyColors as Record<string, string>)[problem.difficulty] || '#F59E0B'
   const isRetry = userHistory && userHistory.completed_count > 0
   const hasInProgress = userHistory?.in_progress_session_id
 
@@ -232,7 +228,7 @@ export default function CaseStudyDetailPage({
         <Card className="mb-6">
           <CardHeader>
             <div className="flex flex-wrap gap-2 mb-2">
-              <Badge className={difficulty.color}>{difficulty.label}</Badge>
+              <Badge style={{ backgroundColor: difficultyColor, color: 'white' }}>{difficultyLabel}</Badge>
               {(problem.industry_name || problem.industry) && <Badge variant="outline">{problem.industry_name || problem.industry}</Badge>}
               {problem.scenario_type && <Badge variant="secondary">{problem.scenario_type}</Badge>}
             </div>
