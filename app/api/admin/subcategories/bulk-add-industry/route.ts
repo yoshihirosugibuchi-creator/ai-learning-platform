@@ -87,7 +87,7 @@ const industrySubcategories = [
     display_order: 5
   },
 
-  // 金融・保険業界
+  // 金融業界
   {
     subcategory_id: "financial_products",
     name: "金融商品・サービス設計",
@@ -120,13 +120,71 @@ const industrySubcategories = [
     icon: "🛡️",
     display_order: 4
   },
+
+  // 生命保険業界
   {
-    subcategory_id: "insurance_underwriting",
-    name: "保険・アンダーライティング",
-    description: "保険商品設計、引受審査、保険数理",
-    parent_category_id: "financial_services_industry",
-    icon: "🔒",
+    subcategory_id: "life_insurance_market",
+    name: "生保市場・業界構造",
+    description: "生命保険業界の市場規模、プレイヤー分類、販売チャネル構造、業界再編の歴史",
+    parent_category_id: "life_insurance_industry",
+    icon: "📊",
+    display_order: 1
+  },
+  {
+    subcategory_id: "insurance_products_model",
+    name: "保険商品体系・ビジネスモデル",
+    description: "保険商品分類、主契約・特約、保険料の仕組み（三利源）、アクチュアリー、再保険",
+    parent_category_id: "life_insurance_industry",
+    icon: "📦",
+    display_order: 2
+  },
+  {
+    subcategory_id: "insurance_business_process",
+    name: "保険業務プロセス",
+    description: "商品開発、募集・販売、新契約引受（アンダーライティング）、契約管理（保全）、保険金・給付金支払、代理店管理",
+    parent_category_id: "life_insurance_industry",
+    icon: "🔄",
+    display_order: 3
+  },
+  {
+    subcategory_id: "insurance_asset_management",
+    name: "保険資産運用・ALM",
+    description: "一般勘定・特別勘定、資産ポートフォリオ、ALM、ソルベンシー規制（ESR）、IFRS17、運用戦略",
+    parent_category_id: "life_insurance_industry",
+    icon: "💹",
+    display_order: 4
+  },
+  {
+    subcategory_id: "insurance_information_systems",
+    name: "保険情報システム",
+    description: "基幹系（新契約・契約管理・数理）、営業支援、情報系・分析基盤、レガシーモダナイゼーション",
+    parent_category_id: "life_insurance_industry",
+    icon: "🖥️",
     display_order: 5
+  },
+  {
+    subcategory_id: "insurance_dx_insurtech",
+    name: "保険DX・インシュアテック",
+    description: "デジタル化戦略、AI-OCR・チャットボット、インシュアテック連携、組込型保険、AI引受査定・支払査定",
+    parent_category_id: "life_insurance_industry",
+    icon: "🤖",
+    display_order: 6
+  },
+  {
+    subcategory_id: "insurance_regulation",
+    name: "保険法規制・コンプライアンス",
+    description: "保険業法、募集規制、契約者保護制度、個人情報・機微情報、AML/CFT、金融庁モニタリング",
+    parent_category_id: "life_insurance_industry",
+    icon: "⚖️",
+    display_order: 7
+  },
+  {
+    subcategory_id: "insurance_management_strategy",
+    name: "保険経営戦略・課題",
+    description: "少子高齢化対応、海外事業展開、非保険領域、人材・組織変革、サステナビリティ、経営指標分析",
+    parent_category_id: "life_insurance_industry",
+    icon: "🎯",
+    display_order: 8
   },
 
   // ヘルスケア・医療業界

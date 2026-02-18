@@ -538,8 +538,8 @@ const staticIndustryCategories: IndustryCategory[] = [
   },
   {
     "id": "financial_services_industry",
-    "name": "金融・保険業界",
-    "description": "銀行、証券、保険、フィンテック企業特有の知識とスキル",
+    "name": "金融業界",
+    "description": "銀行、証券、フィンテック企業特有の知識とスキル",
     "type": "industry",
     "displayOrder": 6,
     "isActive": false,
@@ -548,11 +548,31 @@ const staticIndustryCategories: IndustryCategory[] = [
       "金融商品・サービス設計",
       "金融規制・コンプライアンス",
       "フィンテック・デジタル化",
-      "与信・リスク管理",
-      "保険・アンダーライティング"
+      "与信・リスク管理"
     ],
     "icon": "🏦",
     "color": "#1E40AF"
+  },
+  {
+    "id": "life_insurance_industry",
+    "name": "生命保険業界",
+    "description": "生命保険会社の商品体系、業務プロセス、資産運用、法規制など業界固有の専門知識",
+    "type": "industry",
+    "displayOrder": 15,
+    "isActive": false,
+    "isVisible": true,
+    "subcategories": [
+      "生保市場・業界構造",
+      "保険商品体系・ビジネスモデル",
+      "保険業務プロセス",
+      "保険資産運用・ALM",
+      "保険情報システム",
+      "保険DX・インシュアテック",
+      "保険法規制・コンプライアンス",
+      "保険経営戦略・課題"
+    ],
+    "icon": "🛡️",
+    "color": "#0D9488"
   },
   {
     "id": "healthcare_industry",
