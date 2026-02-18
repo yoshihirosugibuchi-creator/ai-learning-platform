@@ -1324,18 +1324,27 @@ export default function QuizSession({
 
           <div className="space-y-3">
             <h4 className="font-semibold">カテゴリ別成績</h4>
-            {Object.entries(results.categoryScores).map(([cat, score]) => (
+            {(() => {
+              // sessionQuestionsからcategory→category_name（日本語）のマップを構築
+              const catNameMap = new Map<string, string>()
+              sessionQuestions.forEach(q => {
+                if (q.category_name && !catNameMap.has(q.category)) {
+                  catNameMap.set(q.category, q.category_name)
+                }
+              })
+              return Object.entries(results.categoryScores).map(([cat, score]) => (
               <div key={cat} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                <span className="text-sm font-medium">{getCategoryDisplayName(cat)}</span>
+                <span className="text-sm font-medium">{catNameMap.get(cat) || getCategoryDisplayName(cat)}</span>
                 <div className="flex items-center space-x-2">
                   <span className="text-sm">{score.correct}/{score.total}</span>
-                  <Progress 
-                    value={(score.correct / score.total) * 100} 
+                  <Progress
+                    value={(score.correct / score.total) * 100}
                     className="w-20 h-2"
                   />
                 </div>
               </div>
-            ))}
+              ))
+            })()}
           </div>
 
           {/* Card Reward Section */}
