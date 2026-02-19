@@ -38,6 +38,11 @@ export default function LearningPage() {
   // パフォーマンス監視
   useResourceMonitor()
 
+  // ページ遷移時にスクロール位置をトップにリセット
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
   useEffect(() => {
     // 認証ローディング中はデータロードを待つ（最大5秒）
     if (authLoading) {
