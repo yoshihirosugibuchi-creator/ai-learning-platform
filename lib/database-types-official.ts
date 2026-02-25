@@ -3354,17 +3354,34 @@ export type Database = {
           ai_mode: string | null
           course_status: string | null
           created_at: string | null
-          current_step: string | null
-          description: string | null
-          difficulty: string | null
           id: string | null
           source_count: number | null
           status: string | null
-          target_audience: string | null
           title: string | null
           updated_at: string | null
-          user_email: string | null
           user_id: string | null
+        }
+        Insert: {
+          ai_mode?: never
+          course_status?: never
+          created_at?: string | null
+          id?: string | null
+          source_count?: never
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ai_mode?: never
+          course_status?: never
+          created_at?: string | null
+          id?: string | null
+          source_count?: never
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

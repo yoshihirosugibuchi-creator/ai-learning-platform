@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command'
 import { useToast } from '@/hooks/use-toast'
 import {
   Target,
@@ -22,8 +24,11 @@ import {
   Layers,
   Brain,
   Info,
-  Loader2
+  Loader2,
+  Check,
+  ChevronsUpDown
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 // AIアウトラインの型定義（新形式対応）
 interface AITheme {
@@ -160,6 +165,7 @@ export function CategoryMappingStep({
   const [aiOutline, setAiOutline] = useState<AIParsedOutline | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isCreatingDraft, setIsCreatingDraft] = useState(false)
+  const [openCategoryGenreId, setOpenCategoryGenreId] = useState<string | null>(null)
 
   // カテゴリ・サブカテゴリデータ読み込み
   const loadCategoriesData = async () => {
@@ -627,22 +633,72 @@ export function CategoryMappingStep({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>カテゴリ</Label>
-                  <Select
-                    value={mapping.selectedCategoryId || ''}
-                    onValueChange={(value) => handleCategoryChange(mapping.genreId, value)}
-                    disabled={hasCourseData}
+                  <Popover
+                    open={openCategoryGenreId === mapping.genreId}
+                    onOpenChange={(open) => setOpenCategoryGenreId(open ? mapping.genreId : null)}
                   >
-                    <SelectTrigger className={hasCourseData ? 'opacity-50' : ''}>
-                      <SelectValue placeholder="カテゴリを選択" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.category_id} value={category.category_id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openCategoryGenreId === mapping.genreId}
+                        className={cn(
+                          'w-full justify-between font-normal',
+                          hasCourseData && 'opacity-50 pointer-events-none',
+                          !mapping.selectedCategoryId && 'text-muted-foreground'
+                        )}
+                        disabled={hasCourseData}
+                      >
+                        {mapping.selectedCategoryId
+                          ? (() => {
+                              const cat = categories.find(c => c.category_id === mapping.selectedCategoryId)
+                              return cat ? `${cat.icon || ''} ${cat.name}`.trim() : 'カテゴリを選択'
+                            })()
+                          : 'カテゴリを選択'}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="カテゴリを検索..." />
+                        <CommandList>
+                          <CommandEmpty>カテゴリが見つかりません</CommandEmpty>
+                          <CommandGroup heading="基本スキル">
+                            {categories.filter(c => c.type === 'main').map((category) => (
+                              <CommandItem
+                                key={category.category_id}
+                                value={`${category.name} ${category.icon || ''}`}
+                                onSelect={() => {
+                                  handleCategoryChange(mapping.genreId, category.category_id)
+                                  setOpenCategoryGenreId(null)
+                                }}
+                              >
+                                <Check className={cn('mr-2 h-4 w-4', mapping.selectedCategoryId === category.category_id ? 'opacity-100' : 'opacity-0')} />
+                                {category.icon && <span className="mr-1">{category.icon}</span>}
+                                {category.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                          <CommandGroup heading="業界特化">
+                            {categories.filter(c => c.type === 'industry').map((category) => (
+                              <CommandItem
+                                key={category.category_id}
+                                value={`${category.name} ${category.icon || ''}`}
+                                onSelect={() => {
+                                  handleCategoryChange(mapping.genreId, category.category_id)
+                                  setOpenCategoryGenreId(null)
+                                }}
+                              >
+                                <Check className={cn('mr-2 h-4 w-4', mapping.selectedCategoryId === category.category_id ? 'opacity-100' : 'opacity-0')} />
+                                {category.icon && <span className="mr-1">{category.icon}</span>}
+                                {category.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div>
