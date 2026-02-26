@@ -231,7 +231,7 @@ async function syncLearningCourses(): Promise<SyncResult> {
       supabaseAdmin
         .from('learning_courses')
         .select('*')
-        .eq('status', 'active')
+        .in('status', ['available', 'coming_soon'])
         .order('display_order'),
       supabaseAdmin
         .from('learning_genres')

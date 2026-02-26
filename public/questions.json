@@ -19997,7 +19997,7 @@
     "withAnyHint": 319
   },
   "metadata": {
-    "generatedAt": "2026-02-18T02:59:51.942Z",
+    "generatedAt": "2026-02-26T01:17:22.869Z",
     "sourceRecordCount": 702,
     "databaseSource": "quiz_questions (統合テーブル)",
     "generatorScript": "scripts/sync-all-fallback-data.ts",

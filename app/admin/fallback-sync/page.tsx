@@ -133,10 +133,19 @@ export default function FallbackSyncPage() {
     console.log(`==========================================`)
     setSyncLoading(type)
     setAuthError(null)
-    
+
+    // Fast Refresh対策: 同期開始前にフラグを保存
+    // XP設定の.tsファイル書き込みでページがリロードされるため
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('fallback-sync-pending', JSON.stringify({
+        type,
+        startedAt: Date.now()
+      }))
+    }
+
     try {
       console.log(`📡 API呼び出し開始: /api/admin/fallback-sync?type=${type}`)
-      
+
       const response = await directAuthenticatedFetch(`/api/admin/fallback-sync?type=${type}`, {
         method: 'POST'
       })
@@ -175,14 +184,18 @@ export default function FallbackSyncPage() {
         setSuccessMessage(summary)
         setTimeout(() => setSuccessMessage(null), 5000) // 5秒後に消去
         
-        // 同期完了後、Fast Refreshによるリロードを検知して結果を保持
+        // 同期完了後、結果を保持 & pendingフラグをクリア
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('fallback-sync-result', JSON.stringify({
             result: result.data,
             timestamp: Date.now(),
             type: type
           }))
+          sessionStorage.removeItem('fallback-sync-pending')
         }
+
+        // ファイル状況を再取得
+        fetchFallbackStatus()
       } else {
         setAuthError(`同期に失敗しました: ${result.error || '不明なエラー'}`)
       }
@@ -205,6 +218,7 @@ export default function FallbackSyncPage() {
   // ページロード時にsessionStorageから同期結果を復元
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // 1. 完了済み結果の復元
       const savedResult = sessionStorage.getItem('fallback-sync-result')
       if (savedResult) {
         try {
@@ -220,6 +234,24 @@ export default function FallbackSyncPage() {
           console.error('同期結果の復元エラー:', error)
           sessionStorage.removeItem('fallback-sync-result')
         }
+      }
+
+      // 2. Fast Refreshで中断された同期の検知
+      // XP設定の.tsファイル書き込みでページがリロードされた場合
+      const pendingSync = sessionStorage.getItem('fallback-sync-pending')
+      if (pendingSync) {
+        try {
+          const { type, startedAt } = JSON.parse(pendingSync)
+          // 60秒以内に開始された同期なら完了とみなす
+          if (Date.now() - startedAt < 60 * 1000) {
+            console.log(`🔄 Fast Refreshで中断された同期を検知: ${type}`)
+            setSuccessMessage(`${type === 'all' ? '一括' : type}同期が完了しました（ページが自動リロードされました）`)
+            setTimeout(() => setSuccessMessage(null), 8000)
+          }
+        } catch {
+          // ignore
+        }
+        sessionStorage.removeItem('fallback-sync-pending')
       }
     }
   }, [])
@@ -313,93 +345,16 @@ export default function FallbackSyncPage() {
           <div className="mb-6">
             <button
               type="button"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                e.nativeEvent.preventDefault()
-                console.log('============================================')
-                console.log('🔘 一括同期ボタンがクリックされました!!!')
-                console.log('============================================')
-                console.log('🔘 同期ボタンが押されました - アラートなし版')
-                
-                // 直接API呼び出し（アラートなし版）
-                console.log('🚀 直接同期開始...')
-                
-                const executeSync = async () => {
-                  try {
-                    setSyncLoading('all')
-                    setAuthError(null)
-                    
-                    console.log('📡 直接API呼び出し開始...')
-                    const response = await directAuthenticatedFetch('/api/admin/fallback-sync?type=all', {
-                      method: 'POST'
-                    })
-
-                    if (!response.ok) {
-                      const text = await response.text()
-                      console.error(`❌ 一括同期API失敗: ${response.status} - ${text.substring(0, 200)}`)
-                      setAuthError(`同期エラー: ${response.status} - ${text.includes('<!DOCTYPE') ? 'HTMLページが返されました' : text}`)
-                      return
-                    }
-                    
-                    const contentType = response.headers.get('content-type')
-                    if (!contentType?.includes('application/json')) {
-                      const text = await response.text()
-                      console.error('❌ 一括同期APIがJSONを返しませんでした:', contentType, text.substring(0, 200))
-                      setAuthError(`同期エラー: APIがJSONを返しませんでした`)
-                      return
-                    }
-
-                    const result = await response.json()
-                    console.log('📊 同期結果:', result)
-
-                    if (result.success) {
-                      console.log('✅ 同期完了！')
-                      setLastSyncResult(result.data)
-                      setAuthError(null)
-                      
-                      // 成功メッセージを表示
-                      const summary = `一括同期完了！ ${result.data.successful}/${result.data.totalSynced}件成功 (${result.data.executionTime}ms)`
-                      setSuccessMessage(summary)
-                      setTimeout(() => setSuccessMessage(null), 5000) // 5秒後に消去
-                      
-                      // sessionStorageに結果を保存（Fast Refresh対策）
-                      if (typeof window !== 'undefined') {
-                        sessionStorage.setItem('fallback-sync-result', JSON.stringify({
-                          result: result.data,
-                          timestamp: Date.now(),
-                          type: 'all'
-                        }))
-                      }
-                      
-                      console.log('📋 詳細結果:')
-                      if (result.data.results) {
-                        result.data.results.forEach((item: SyncResult, index: number) => {
-                          console.log(`  ${index + 1}. ${item.dataType}: ${item.recordCount}件`)
-                          if (item.breakdown) {
-                            console.log(`     内訳: ${JSON.stringify(item.breakdown)}`)
-                          }
-                        })
-                      }
-                      console.log(`⏱️ 実行時間: ${result.data.executionTime}ms`)
-                    } else {
-                      console.error('❌ 同期エラー:', result.error)
-                      setAuthError(`同期エラー: ${result.error}`)
-                    }
-
-                  } catch (error) {
-                    console.error('❌ 同期処理エラー:', error)
-                    setAuthError(error instanceof Error ? error.message : '同期に失敗しました')
-                  } finally {
-                    setSyncLoading(null)
-                  }
+                try {
+                  await handleSync('all')
+                } catch (error) {
+                  console.error('一括同期エラー:', error)
                 }
-                
-                executeSync()
-                
-                return false
               }}
-              disabled={syncLoading === 'all'}
+              disabled={!!syncLoading}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white px-6 py-3 rounded-lg font-medium flex items-center space-x-2 transition-colors"
             >
               {syncLoading === 'all' ? (
