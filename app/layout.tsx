@@ -7,6 +7,7 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import ClientOnly from "@/components/ClientOnly";
 import ErrorBoundary from "@/components/auth/ErrorBoundary";
 import { ToastProvider } from "@/components/providers/ToastProvider";
+import ServiceWorkerRegistration from "@/components/pwa/ServiceWorkerRegistration";
 
 // 開発環境でのみ認証エラー回復ヘルパーとコンソールフィルターを読み込み
 if (process.env.NODE_ENV === 'development') {
@@ -28,11 +29,22 @@ const notoSansJP = Noto_Sans_JP({
 export const metadata: Metadata = {
   title: "AI Learning Enterprise - AIパーソナライズ学習プラットフォーム",
   description: "AI powered personalized learning platform",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'ALE学習',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#4f46e5',
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -42,9 +54,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
+      <head>
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
       <body
         className={`${inter.variable} ${notoSansJP.variable} antialiased min-h-screen bg-background font-sans`}
       >
+        <ServiceWorkerRegistration />
         <ErrorBoundary>
           <ClientOnly fallback={<div>Loading...</div>}>
             <QueryProvider>
