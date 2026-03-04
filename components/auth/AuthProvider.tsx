@@ -13,6 +13,8 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<{ error: unknown }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
+  refreshSessionWithToken: (refreshToken: string) => Promise<{ error: unknown }>
+  getSessionRefreshToken: () => Promise<string | null>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -23,6 +25,8 @@ const AuthContext = createContext<AuthContextType>({
   signUp: async () => ({ error: null }),
   signOut: async () => {},
   refreshProfile: async () => {},
+  refreshSessionWithToken: async () => ({ error: null }),
+  getSessionRefreshToken: async () => null,
 })
 
 export const useAuth = () => {
@@ -253,8 +257,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // セッション期限切れを検知
         if (event === 'TOKEN_REFRESHED') {
           console.log('🔄 Token refreshed automatically')
+          // ネイティブアプリ: Keychainのリフレッシュトークンを更新
+          if (session?.refresh_token) {
+            import('@/lib/native-secure-storage').then(({ storeRefreshToken, isBiometricEnabled }) => {
+              isBiometricEnabled().then((enabled) => {
+                if (enabled) storeRefreshToken(session.refresh_token)
+              })
+            }).catch(() => { /* ブラウザ環境では無視 */ })
+          }
         } else if (event === 'SIGNED_OUT') {
           console.log('👋 User signed out')
+          // ネイティブアプリ: Keychainのデータをクリア
+          import('@/lib/native-secure-storage').then(({ clearSecureStorage }) => {
+            clearSecureStorage()
+          }).catch(() => { /* ブラウザ環境では無視 */ })
         }
         
         try {
@@ -513,6 +529,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  /** リフレッシュトークンでセッションを復元（生体認証ログイン用） */
+  const refreshSessionWithToken = async (refreshToken: string) => {
+    try {
+      const { error } = await supabase.auth.refreshSession({ refresh_token: refreshToken })
+      return { error }
+    } catch (err) {
+      return { error: err }
+    }
+  }
+
+  /** 現在のセッションのリフレッシュトークンを取得 */
+  const getSessionRefreshToken = async (): Promise<string | null> => {
+    const { data } = await supabase.auth.getSession()
+    return data.session?.refresh_token ?? null
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -523,6 +555,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signOut,
         refreshProfile,
+        refreshSessionWithToken,
+        getSessionRefreshToken,
       }}
     >
       {children}

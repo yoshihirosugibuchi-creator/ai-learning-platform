@@ -8,17 +8,33 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Brain, Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react'
+import { Brain, Mail, Lock, User, ArrowRight, Sparkles, Fingerprint } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { logAuthDebugInfo, debugLoginAttempt, setupGlobalErrorHandling } from '@/lib/debug-auth'
+import { useBiometricAuth } from '@/hooks/useBiometricAuth'
+import BiometricEnableDialog from '@/components/native/BiometricEnableDialog'
 import type { AuthError } from '@supabase/supabase-js'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { signIn, signUp } = useAuth()
+  const { signIn, signUp, refreshSessionWithToken, getSessionRefreshToken } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [showBiometricDialog, setShowBiometricDialog] = useState(false)
+  const [pendingBiometricCredentials, setPendingBiometricCredentials] = useState<{
+    refreshToken: string
+    email: string
+  } | null>(null)
+
+  const {
+    canUseBiometric,
+    canLoginWithBiometric,
+    biometryLabel,
+    authenticating,
+    loginWithBiometric,
+    enableBiometric,
+  } = useBiometricAuth()
 
   // Setup debugging on component mount
   useEffect(() => {
@@ -106,6 +122,34 @@ export default function LoginPage() {
     return '登録中にエラーが発生しました。入力内容をご確認ください'
   }
 
+  // 生体認証ログイン処理
+  const handleBiometricLogin = async () => {
+    setError('')
+    setIsLoading(true)
+    try {
+      const result = await loginWithBiometric()
+      if (!result.success) {
+        setError(result.error ?? '生体認証に失敗しました')
+        return
+      }
+      if (!result.refreshToken) {
+        setError('保存済みの認証情報が見つかりません')
+        return
+      }
+      // Supabaseセッション復元
+      const { error } = await refreshSessionWithToken(result.refreshToken)
+      if (error) {
+        setError('セッションの復元に失敗しました。メールアドレスでログインしてください。')
+      } else {
+        router.push('/')
+      }
+    } catch {
+      setError('生体認証ログインに失敗しました')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   // ログイン処理
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -131,7 +175,7 @@ export default function LoginPage() {
       if (error) {
         // ユーザー入力エラーは静かに処理（Supabaseエラーアイコン回避）
         const errorMessage = (error as AuthError)?.message || ''
-        if (errorMessage.includes('Invalid login credentials') || 
+        if (errorMessage.includes('Invalid login credentials') ||
             errorMessage.includes('invalid credentials') ||
             errorMessage.includes('invalid email or password')) {
           console.debug('Login failed: Invalid credentials')
@@ -141,7 +185,19 @@ export default function LoginPage() {
         const userFriendlyMessage = translateAuthError(error)
         setError(userFriendlyMessage)
       } else {
-        console.log('✅ Login successful, redirecting to home')
+        console.log('✅ Login successful')
+        // ネイティブアプリで生体認証が使える場合、有効化を提案
+        if (canUseBiometric) {
+          const refreshToken = await getSessionRefreshToken()
+          if (refreshToken) {
+            setPendingBiometricCredentials({
+              refreshToken,
+              email: loginForm.email,
+            })
+            setShowBiometricDialog(true)
+            return
+          }
+        }
         router.push('/')
       }
     } catch (err) {
@@ -214,6 +270,28 @@ export default function LoginPage() {
             </TabsList>
 
             <TabsContent value="login" className="space-y-4">
+              {canLoginWithBiometric && (
+                <div className="mb-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full border-indigo-200 hover:bg-indigo-50"
+                    onClick={handleBiometricLogin}
+                    disabled={isLoading || authenticating}
+                  >
+                    <Fingerprint className="mr-2 h-5 w-5 text-indigo-600" />
+                    {authenticating ? '認証中...' : `${biometryLabel}でログイン`}
+                  </Button>
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-muted-foreground">または</span>
+                    </div>
+                  </div>
+                </div>
+              )}
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">メールアドレス</Label>
@@ -355,6 +433,27 @@ export default function LoginPage() {
           )}
         </CardContent>
       </Card>
+
+      <BiometricEnableDialog
+        open={showBiometricDialog}
+        biometryLabel={biometryLabel}
+        onEnable={async () => {
+          if (pendingBiometricCredentials) {
+            await enableBiometric(
+              pendingBiometricCredentials.refreshToken,
+              pendingBiometricCredentials.email
+            )
+          }
+          setShowBiometricDialog(false)
+          setPendingBiometricCredentials(null)
+          router.push('/')
+        }}
+        onSkip={() => {
+          setShowBiometricDialog(false)
+          setPendingBiometricCredentials(null)
+          router.push('/')
+        }}
+      />
     </div>
   )
 }
