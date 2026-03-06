@@ -60,14 +60,26 @@ jobs:
 
           # Install provisioning profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}" | base64 --decode \
-            > ~/Library/MobileDevice/Provisioning\ Profiles/build.mobileprovision
+          PP_PATH=~/Library/MobileDevice/Provisioning\ Profiles/build.mobileprovision
+          echo "${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > "$PP_PATH"
+
+          # Extract UUID from provisioning profile
+          PP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< \
+            "$(security cms -D -i "$PP_PATH")")
+          echo "Provisioning Profile UUID: $PP_UUID"
+
+          # Copy with UUID filename (Xcode expects this)
+          cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/${PP_UUID}.mobileprovision
 
       - name: Build iOS archive
         working-directory: ios/App
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          # Get provisioning profile UUID
+          PP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< \
+            "$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/build.mobileprovision)")
+
           xcodebuild archive \
             -project App.xcodeproj \
             -scheme App \
@@ -76,7 +88,8 @@ jobs:
             -destination "generic/platform=iOS" \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             CODE_SIGN_STYLE=Manual \
-            PROVISIONING_PROFILE_SPECIFIER="" \
+            PRODUCT_BUNDLE_IDENTIFIER=com.ale.learning \
+            PROVISIONING_PROFILE="$PP_UUID" \
             -allowProvisioningUpdates
 
       - name: Export IPA
