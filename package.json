@@ -63,9 +63,9 @@
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",
     "@aparajita/capacitor-secure-storage": "^8.0.0",
-    "@capacitor/cli": "^8.1.0",
-    "@capacitor/core": "^8.1.0",
-    "@capacitor/ios": "^8.1.0",
+    "@capacitor/cli": "8.0.2",
+    "@capacitor/core": "8.0.2",
+    "@capacitor/ios": "8.0.2",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -136,5 +136,10 @@
     "tw-animate-css": "^1.3.8",
     "typescript": "^5",
     "zod": "^4.1.12"
+  },
+  "overrides": {
+    "@capacitor/core": "8.0.2",
+    "@capacitor/ios": "8.0.2",
+    "@capacitor/android": "8.0.2"
   }
 }
