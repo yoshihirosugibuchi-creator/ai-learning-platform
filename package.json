@@ -63,9 +63,10 @@
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",
     "@aparajita/capacitor-secure-storage": "^8.0.0",
-    "@capacitor/cli": "8.0.2",
-    "@capacitor/core": "8.0.2",
-    "@capacitor/ios": "8.0.2",
+    "@capacitor/cli": "8.2.0",
+    "@capacitor/core": "8.2.0",
+    "@capacitor/ios": "8.2.0",
+    "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -139,8 +140,8 @@
     "zod": "^4.1.12"
   },
   "overrides": {
-    "@capacitor/core": "8.0.2",
-    "@capacitor/ios": "8.0.2",
-    "@capacitor/android": "8.0.2"
+    "@capacitor/core": "8.2.0",
+    "@capacitor/ios": "8.2.0",
+    "@capacitor/android": "8.2.0"
   }
 }

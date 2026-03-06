@@ -19,6 +19,11 @@ export default function NativeAppDetector() {
       import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
         StatusBar.setStyle({ style: Style.Dark }).catch(() => {})
       }).catch(() => {})
+
+      // スプラッシュスクリーンを非表示にする
+      import('@capacitor/splash-screen').then(({ SplashScreen }) => {
+        SplashScreen.hide().catch(() => {})
+      }).catch(() => {})
     }
 
     return () => {
