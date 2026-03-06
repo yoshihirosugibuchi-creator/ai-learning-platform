@@ -12,6 +12,18 @@ const config: CapacitorConfig = {
   ios: {
     scheme: 'ALE学習',
   },
+  plugins: {
+    SplashScreen: {
+      launchAutoHide: true,
+      launchShowDuration: 2000,
+      backgroundColor: '#4f46e5',
+      showSpinner: false,
+    },
+    StatusBar: {
+      style: 'DARK',
+      backgroundColor: '#4f46e5',
+    },
+  },
 }
 
 export default config
