@@ -49,5 +49,7 @@
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Face IDを使用して素早くログインします</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
