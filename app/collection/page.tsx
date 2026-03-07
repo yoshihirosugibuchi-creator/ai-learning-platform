@@ -101,6 +101,7 @@ export default function CollectionPage() {
   // バッジデータ
   const [userBadges, setUserBadges] = useState<UserBadge[]>([])
   const [badgeLoading, setBadgeLoading] = useState(true)
+  const [failedBadgeImages, setFailedBadgeImages] = useState<Set<string>>(new Set())
 
   // すべてのuseEffectを一箇所に集約
   useEffect(() => {
@@ -897,17 +898,16 @@ export default function CollectionPage() {
                         <Card key={badge.id} className={`relative overflow-hidden ${badge.isExpired ? 'opacity-60' : ''}`}>
                           <CardHeader className="text-center pb-3">
                             <div className="text-4xl mb-2">
-                              {badge.badge.badgeImageUrl ? (
+                              {badge.badge.badgeImageUrl && !failedBadgeImages.has(badge.badge.badgeImageUrl) ? (
                                 <div className="relative w-16 h-16 mx-auto">
-                                  <Image 
-                                    src={badge.badge.badgeImageUrl} 
+                                  <Image
+                                    src={badge.badge.badgeImageUrl}
                                     alt={badge.badge.title}
                                     width={64}
                                     height={64}
                                     className="object-contain"
                                     onError={() => {
-                                      // 画像読み込み失敗時のフォールバック
-                                      console.warn(`Failed to load badge image: ${badge.badge.badgeImageUrl}`);
+                                      setFailedBadgeImages(prev => new Set(prev).add(badge.badge.badgeImageUrl!))
                                     }}
                                   />
                                 </div>
@@ -972,16 +972,16 @@ export default function CollectionPage() {
                         <Card key={badge.id} className="relative overflow-hidden">
                           <CardHeader className="text-center pb-3">
                             <div className="text-4xl mb-2">
-                              {badge.badge.badgeImageUrl ? (
+                              {badge.badge.badgeImageUrl && !failedBadgeImages.has(badge.badge.badgeImageUrl) ? (
                                 <div className="relative w-16 h-16 mx-auto">
-                                  <Image 
-                                    src={badge.badge.badgeImageUrl} 
+                                  <Image
+                                    src={badge.badge.badgeImageUrl}
                                     alt={badge.badge.title}
                                     width={64}
                                     height={64}
                                     className="object-contain"
                                     onError={() => {
-                                      console.warn(`Failed to load badge image: ${badge.badge.badgeImageUrl}`);
+                                      setFailedBadgeImages(prev => new Set(prev).add(badge.badge.badgeImageUrl!))
                                     }}
                                   />
                                 </div>
@@ -1030,16 +1030,16 @@ export default function CollectionPage() {
                         <Card key={badge.id} className="relative overflow-hidden opacity-60">
                           <CardHeader className="text-center pb-3">
                             <div className="text-4xl mb-2">
-                              {badge.badge.badgeImageUrl ? (
+                              {badge.badge.badgeImageUrl && !failedBadgeImages.has(badge.badge.badgeImageUrl) ? (
                                 <div className="relative w-16 h-16 mx-auto">
-                                  <Image 
-                                    src={badge.badge.badgeImageUrl} 
+                                  <Image
+                                    src={badge.badge.badgeImageUrl}
                                     alt={badge.badge.title}
                                     width={64}
                                     height={64}
                                     className="object-contain"
                                     onError={() => {
-                                      console.warn(`Failed to load badge image: ${badge.badge.badgeImageUrl}`);
+                                      setFailedBadgeImages(prev => new Set(prev).add(badge.badge.badgeImageUrl!))
                                     }}
                                   />
                                 </div>
