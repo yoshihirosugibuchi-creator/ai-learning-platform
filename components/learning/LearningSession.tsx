@@ -648,54 +648,77 @@ export default function LearningSession({
           const apiResult = await saveSessionProgress(willCompleteTheme, willCompleteCourse)
 
           if (apiResult.success) {
+            // Server-side completion detection: update UI if server detected completion that client missed
+            if (apiResult.course_completed && !showCourseCompletion && isFirstCourseCompletion) {
+              console.log('🏆 Server detected course completion that client missed! Showing completion UI.')
+              setShowCourseCompletion(true)
+            }
+            if (apiResult.theme_completed && !showThemeCompletion && isFirstThemeCompletion) {
+              console.log('🎯 Server detected theme completion that client missed! Showing completion UI.')
+              setShowThemeCompletion(true)
+              setCardAcquired(true)
+              setIsThemeCompleted(true)
+              // Server detected theme completion - also acquire knowledge card
+              if (user?.id) {
+                try {
+                  const cardResult = await acquireKnowledgeCard(user.id, themeId, true)
+                  if (cardResult.success && cardResult.isNew) {
+                    console.log(`🎉 Knowledge card acquired (server-detected): ${cardResult.card?.title}`)
+                  }
+                } catch (cardErr) {
+                  console.warn('⚠️ Failed to acquire knowledge card (server-detected):', cardErr)
+                }
+              }
+            }
+
             // Verify XP prediction accuracy and update if different using new API structure
             if (apiResult.session_xp !== undefined || apiResult.completion_bonus_xp !== undefined || apiResult.total_earned_xp !== undefined) {
               const apiSessionXP = apiResult.session_xp || 0
               const apiBonusXP = apiResult.completion_bonus_xp || 0
               const apiTotalXP = apiResult.total_earned_xp || 0
-              
+
               console.log('🔍 API vs Client XP comparison:', {
                 api: { session: apiSessionXP, bonus: apiBonusXP, total: apiTotalXP },
                 client: { session: predictedSessionXP, bonus: predictedBonusXP, total: predictedSessionXP + predictedBonusXP }
               })
-              
+
               // Update with API values if different from predictions
               if (apiSessionXP !== predictedSessionXP) {
                 console.warn(`⚠️ Session XP prediction mismatch: predicted ${predictedSessionXP}, actual ${apiSessionXP}`)
                 setSessionXP(apiSessionXP)
               }
-              
+
               if (apiBonusXP !== predictedBonusXP) {
                 console.warn(`⚠️ Bonus XP prediction mismatch: predicted ${predictedBonusXP}, actual ${apiBonusXP}`)
                 setCourseCompletionBonusXP(apiBonusXP)
               }
-              
+
               if (apiTotalXP !== (predictedSessionXP + predictedBonusXP)) {
                 console.warn(`⚠️ Total XP prediction mismatch: predicted ${predictedSessionXP + predictedBonusXP}, actual ${apiTotalXP}`)
                 setTotalEarnedXP(apiTotalXP)
               }
-              
+
               // Fallback: if prediction failed completely, use API values
               if (predictedSessionXP === 0 && apiSessionXP > 0) {
                 setSessionXP(apiSessionXP)
                 console.log(`✅ Session XP displayed from API result: ${apiSessionXP}`)
               }
-              
+
               if (predictedBonusXP === 0 && apiBonusXP > 0) {
                 setCourseCompletionBonusXP(apiBonusXP)
                 console.log(`✅ Bonus XP displayed from API result: ${apiBonusXP}`)
               }
-              
+
               if ((predictedSessionXP + predictedBonusXP) === 0 && apiTotalXP > 0) {
                 setTotalEarnedXP(apiTotalXP)
                 console.log(`✅ Total XP displayed from API result: ${apiTotalXP}`)
               }
-              
+
               if (apiSessionXP === predictedSessionXP && apiBonusXP === predictedBonusXP) {
                 console.log(`✅ XP prediction accurate: session ${apiSessionXP}, bonus ${apiBonusXP}, total ${apiTotalXP}`)
               }
             }
-            
+
             console.log('✅ Database updates completed in background')
           } else {
             console.error('❌ API returned error:', apiResult.error)

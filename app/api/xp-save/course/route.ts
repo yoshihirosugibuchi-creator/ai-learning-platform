@@ -462,50 +462,141 @@ export async function POST(request: Request) {
       }
     }
 
-    // 10. クライアント側判定に基づくテーマ・コース完了処理（初回完了のみ）
+    // 10. テーマ・コース完了処理（クライアント判定 + サーバー二重チェック）
     let themeCompleted = false
     let courseCompleted = false
-    
+
     if (isFirstCompletion) {
       try {
-        console.log('🎯 Processing client-side completion results')
-        
+        console.log('🎯 Processing completion results (client + server verification)')
+
         // クライアント側の判定結果を受け取り
         const clientThemeCompleted = body.client_theme_completed || false
         const clientCourseCompleted = body.client_course_completed || false
-        
-        console.log('📱 Client completion judgments:', {
-          theme: clientThemeCompleted,
-          course: clientCourseCompleted,
-          sessionId: body.session_id,
-          themeId: body.theme_id,
-          courseId: body.course_id
-        })
-        
-        // テーマ完了処理（クライアント判定に基づく）
-        if (clientThemeCompleted) {
-          themeCompleted = await recordThemeCompletion(supabase, userId, body, xpSettings)
+
+        // サーバーサイド独自検証: テーマ完了チェック
+        let serverThemeCompleted = false
+        try {
+          const courseDetails = await getLearningCourseDetails(body.course_id)
+          if (courseDetails) {
+            // 現在のテーマの全セッションIDを取得
+            let themeSessionIds: string[] = []
+            for (const genre of courseDetails.genres) {
+              const theme = genre.themes.find(t => t.id === body.theme_id)
+              if (theme) {
+                themeSessionIds = theme.sessions.map(s => s.id)
+                break
+              }
+            }
+
+            if (themeSessionIds.length > 0) {
+              // DBから完了済みセッションを取得（今回のセッション含む）
+              const { data: completedInTheme } = await supabase
+                .from('course_session_completions')
+                .select('session_id')
+                .eq('user_id', userId)
+                .eq('course_id', body.course_id)
+                .eq('is_first_completion', true)
+                .in('session_id', themeSessionIds)
+
+              const completedIds = new Set((completedInTheme || []).map(c => c.session_id))
+              completedIds.add(body.session_id) // 今回のセッションを追加
+
+              serverThemeCompleted = themeSessionIds.every(sid => completedIds.has(sid))
+
+              console.log('🔍 Server theme completion check:', {
+                themeId: body.theme_id,
+                totalSessions: themeSessionIds.length,
+                completedSessions: completedIds.size,
+                serverResult: serverThemeCompleted,
+                clientResult: clientThemeCompleted
+              })
+            }
+
+            // サーバーサイド独自検証: コース完了チェック
+            let serverCourseCompleted = false
+            const allCourseSessionIds: string[] = []
+            for (const genre of courseDetails.genres) {
+              for (const theme of genre.themes) {
+                for (const session of theme.sessions) {
+                  allCourseSessionIds.push(session.id)
+                }
+              }
+            }
+
+            if (allCourseSessionIds.length > 0) {
+              const { data: completedInCourse } = await supabase
+                .from('course_session_completions')
+                .select('session_id')
+                .eq('user_id', userId)
+                .eq('course_id', body.course_id)
+                .eq('is_first_completion', true)
+
+              const completedCourseIds = new Set((completedInCourse || []).map(c => c.session_id))
+              completedCourseIds.add(body.session_id) // 今回のセッションを追加
+
+              serverCourseCompleted = allCourseSessionIds.every(sid => completedCourseIds.has(sid))
+
+              console.log('🔍 Server course completion check:', {
+                courseId: body.course_id,
+                totalSessions: allCourseSessionIds.length,
+                completedSessions: completedCourseIds.size,
+                serverResult: serverCourseCompleted,
+                clientResult: clientCourseCompleted,
+                missingSessions: allCourseSessionIds.filter(sid => !completedCourseIds.has(sid))
+              })
+            }
+
+            // クライアントとサーバーの判定不整合をログ
+            if (clientThemeCompleted !== serverThemeCompleted) {
+              console.warn('⚠️ Theme completion mismatch: client=', clientThemeCompleted, 'server=', serverThemeCompleted)
+            }
+            if (clientCourseCompleted !== serverCourseCompleted) {
+              console.warn('⚠️ Course completion mismatch: client=', clientCourseCompleted, 'server=', serverCourseCompleted)
+            }
+
+            // テーマ完了処理（クライアントORサーバーのどちらかがtrueなら実行）
+            if (clientThemeCompleted || serverThemeCompleted) {
+              themeCompleted = await recordThemeCompletion(supabase, userId, body, xpSettings)
+            }
+
+            // コース完了処理（クライアントORサーバーのどちらかがtrueなら実行）
+            if (clientCourseCompleted || serverCourseCompleted) {
+              courseCompleted = await recordCourseCompletion(supabase, userId, body, xpSettings)
+            }
+          } else {
+            // コース詳細が取得できない場合はクライアント判定にフォールバック
+            console.warn('⚠️ Course details not available for server-side check, using client judgment')
+            if (clientThemeCompleted) {
+              themeCompleted = await recordThemeCompletion(supabase, userId, body, xpSettings)
+            }
+            if (clientCourseCompleted) {
+              courseCompleted = await recordCourseCompletion(supabase, userId, body, xpSettings)
+            }
+          }
+        } catch (verifyError) {
+          console.warn('⚠️ Server-side completion verification failed, using client judgment:', verifyError)
+          if (clientThemeCompleted) {
+            themeCompleted = await recordThemeCompletion(supabase, userId, body, xpSettings)
+          }
+          if (clientCourseCompleted) {
+            courseCompleted = await recordCourseCompletion(supabase, userId, body, xpSettings)
+          }
         }
-        
-        // コース完了処理（クライアント判定に基づく）
-        // クライアント判定でコース完了の場合は、テーマ完了の成功に関係なく実行
-        if (clientCourseCompleted) {
-          courseCompleted = await recordCourseCompletion(supabase, userId, body, xpSettings)
-        }
-        
+
         console.log('✅ Database completion recording results:', { themeCompleted, courseCompleted })
-        
-        // 🔧 修正: テーマ・コース完了記録後に統計更新（タイミング修正）
+
+        // テーマ・コース完了記録後に統計更新
         if (earnedXP > 0 || totalSKP > 0) {
           // 1. カテゴリー・サブカテゴリー統計更新
           console.log('📊 Updating category and subcategory stats after completion processing...')
           await updateCategoryAndSubcategoryStats(supabase, userId, body, earnedXP)
-          
+
           // 2. user_xp_stats_v2のテーマ・コース完了統計更新（完了記録後）
           console.log('📊 Updating user_xp_stats_v2 theme/course completion stats after records created...')
           await updateUserXPStatsCompletions(supabase, userId, earnedXP, totalSKP, isFirstCompletion)
         }
-        
+
       } catch (error) {
         console.warn('⚠️ Completion recording error:', error)
       }
