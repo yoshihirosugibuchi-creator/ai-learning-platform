@@ -35,6 +35,7 @@ export default function LoginPage() {
     authenticating,
     loginWithBiometric,
     enableBiometric,
+    biometryInfo,
   } = useBiometricAuth()
 
   // Setup debugging on component mount
@@ -277,6 +278,9 @@ export default function LoginPage() {
                 <p>canUseBiometric: {canUseBiometric ? 'YES' : 'NO'}</p>
                 <p>canLoginWithBiometric: {canLoginWithBiometric ? 'YES' : 'NO'}</p>
                 <p>biometryLabel: {biometryLabel}</p>
+                <p>biometryAvailable: {biometryInfo.isAvailable ? 'YES' : 'NO'}</p>
+                <p>biometryType: {biometryInfo.biometryType}</p>
+                <p>biometryReason: {biometryInfo.reason}</p>
               </div>
               {canLoginWithBiometric && (
                 <div className="mb-4">
