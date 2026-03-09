@@ -13,6 +13,7 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import { logAuthDebugInfo, debugLoginAttempt, setupGlobalErrorHandling } from '@/lib/debug-auth'
 import { useBiometricAuth } from '@/hooks/useBiometricAuth'
 import BiometricEnableDialog from '@/components/native/BiometricEnableDialog'
+import { isNativeApp } from '@/lib/capacitor-utils'
 import type { AuthError } from '@supabase/supabase-js'
 
 export default function LoginPage() {
@@ -270,6 +271,13 @@ export default function LoginPage() {
             </TabsList>
 
             <TabsContent value="login" className="space-y-4">
+              {/* デバッグ表示（Face ID問題調査用・後で削除） */}
+              <div className="text-xs p-2 bg-gray-100 rounded mb-2">
+                <p>Native: {isNativeApp() ? 'YES' : 'NO'}</p>
+                <p>canUseBiometric: {canUseBiometric ? 'YES' : 'NO'}</p>
+                <p>canLoginWithBiometric: {canLoginWithBiometric ? 'YES' : 'NO'}</p>
+                <p>biometryLabel: {biometryLabel}</p>
+              </div>
               {canLoginWithBiometric && (
                 <div className="mb-4">
                   <Button
