@@ -520,6 +520,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    // ネイティブアプリ: WebViewのストレージも明示的にクリア
+    try {
+      localStorage.removeItem('supabase.auth.token')
+      sessionStorage.clear()
+      // sb-で始まるSupabase関連のlocalStorageをクリア
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('sb-')) {
+          localStorage.removeItem(key)
+        }
+      })
+    } catch {
+      // ストレージクリア失敗は無視
+    }
+    setUser(null)
+    setProfile(null)
   }
 
   const refreshProfile = async () => {
