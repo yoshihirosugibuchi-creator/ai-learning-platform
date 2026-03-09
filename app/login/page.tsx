@@ -273,7 +273,7 @@ export default function LoginPage() {
 
             <TabsContent value="login" className="space-y-4">
               {/* デバッグ表示（Face ID問題調査用・後で削除） */}
-              <div className="text-xs p-2 bg-gray-100 rounded mb-2">
+              <div className="text-xs p-2 bg-yellow-200 rounded mb-2 border border-yellow-400">
                 <p>Native: {isNativeApp() ? 'YES' : 'NO'}</p>
                 <p>canUseBiometric: {canUseBiometric ? 'YES' : 'NO'}</p>
                 <p>canLoginWithBiometric: {canLoginWithBiometric ? 'YES' : 'NO'}</p>
