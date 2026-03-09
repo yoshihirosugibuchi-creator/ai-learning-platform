@@ -5,9 +5,9 @@ const config: CapacitorConfig = {
   appName: 'ALE学習',
   webDir: 'out',
   server: {
-    url: 'https://ai-learning-platform-next.vercel.app',
+    url: 'https://ai-learning-platform-ochre.vercel.app',
     cleartext: false,
-    hostname: 'ai-learning-platform-next.vercel.app',
+    hostname: 'ai-learning-platform-ochre.vercel.app',
   },
   ios: {
     scheme: 'ALE学習',
