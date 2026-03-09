@@ -520,13 +520,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    // ネイティブアプリ: WebViewのストレージも明示的にクリア
+    // WebViewのストレージも明示的にクリア
     try {
-      localStorage.removeItem('supabase.auth.token')
       sessionStorage.clear()
-      // sb-で始まるSupabase関連のlocalStorageをクリア
       Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('sb-')) {
+        if (key.startsWith('sb-') || key.includes('supabase')) {
           localStorage.removeItem(key)
         }
       })
@@ -535,6 +533,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUser(null)
     setProfile(null)
+    // ページを強制リロードしてセッション状態を完全にリセット
+    window.location.href = '/login'
   }
 
   const refreshProfile = async () => {
