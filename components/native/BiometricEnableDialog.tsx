@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef, useEffect } from 'react'
 import { Fingerprint } from 'lucide-react'
 
 type BiometricEnableDialogProps = {
@@ -15,10 +16,45 @@ export default function BiometricEnableDialog({
   onEnable,
   onSkip,
 }: BiometricEnableDialogProps) {
+  const enableBtnRef = useRef<HTMLButtonElement>(null)
+  const skipBtnRef = useRef<HTMLButtonElement>(null)
+
+  // DOM直接のイベントリスナー（Reactのイベントシステムを回避）
+  useEffect(() => {
+    if (!open) return
+
+    const enableBtn = enableBtnRef.current
+    const skipBtn = skipBtnRef.current
+
+    const handleEnable = (e: Event) => {
+      e.preventDefault()
+      e.stopPropagation()
+      onEnable()
+    }
+    const handleSkip = (e: Event) => {
+      e.preventDefault()
+      e.stopPropagation()
+      onSkip()
+    }
+
+    enableBtn?.addEventListener('touchend', handleEnable, { passive: false })
+    enableBtn?.addEventListener('click', handleEnable)
+    skipBtn?.addEventListener('touchend', handleSkip, { passive: false })
+    skipBtn?.addEventListener('click', handleSkip)
+
+    return () => {
+      enableBtn?.removeEventListener('touchend', handleEnable)
+      enableBtn?.removeEventListener('click', handleEnable)
+      skipBtn?.removeEventListener('touchend', handleSkip)
+      skipBtn?.removeEventListener('click', handleSkip)
+    }
+  }, [open, onEnable, onSkip])
+
   if (!open) return null
 
   return (
     <div
+      id="biometric-overlay"
       style={{
         position: 'fixed',
         top: 0,
@@ -30,7 +66,6 @@ export default function BiometricEnableDialog({
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 99999,
-        touchAction: 'auto',
       }}
     >
       <div
@@ -63,8 +98,8 @@ export default function BiometricEnableDialog({
         </p>
 
         <button
+          ref={enableBtnRef}
           type="button"
-          onClick={onEnable}
           style={{
             width: '100%',
             padding: '12px',
@@ -74,16 +109,16 @@ export default function BiometricEnableDialog({
             border: 'none',
             fontSize: '16px',
             fontWeight: '500',
-            cursor: 'pointer',
             marginBottom: '8px',
-            WebkitTapHighlightColor: 'transparent',
+            WebkitTapHighlightColor: 'rgba(0,0,0,0.1)',
+            WebkitAppearance: 'none',
           }}
         >
           {biometryLabel}を有効にする
         </button>
         <button
+          ref={skipBtnRef}
           type="button"
-          onClick={onSkip}
           style={{
             width: '100%',
             padding: '12px',
@@ -92,8 +127,8 @@ export default function BiometricEnableDialog({
             borderRadius: '8px',
             border: 'none',
             fontSize: '16px',
-            cursor: 'pointer',
-            WebkitTapHighlightColor: 'transparent',
+            WebkitTapHighlightColor: 'rgba(0,0,0,0.1)',
+            WebkitAppearance: 'none',
           }}
         >
           あとで

@@ -31,11 +31,14 @@ export default function BiometricAuthGate({ children }: { children: React.ReactN
       return
     }
 
-    // ネイティブアプリならダイアログを表示
-    setBiometryLabel('Face ID')
-    setShowEnableDialog(true)
-    setHasPromptedEnable(true)
-    sessionStorage.setItem('biometric_prompted', 'true')
+    // ページの描画完了を待ってからダイアログ表示（ハイドレーション完了後）
+    const timer = setTimeout(() => {
+      setBiometryLabel('Face ID')
+      setShowEnableDialog(true)
+      setHasPromptedEnable(true)
+      sessionStorage.setItem('biometric_prompted', 'true')
+    }, 2000)
+    return () => clearTimeout(timer)
   }, [user, loading, hasPromptedEnable])
 
   const handleEnableBiometric = useCallback(async () => {
