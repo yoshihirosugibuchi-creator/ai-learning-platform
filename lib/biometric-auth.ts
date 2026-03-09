@@ -32,10 +32,11 @@ export async function checkBiometricAvailability(): Promise<BiometryInfo> {
     return {
       isAvailable: result.isAvailable,
       biometryType,
-      reason: result.reason,
+      reason: result.reason || `raw: avail=${result.isAvailable}, type=${result.biometryType}, strongType=${typeof result.biometryType}`,
     }
-  } catch {
-    return { isAvailable: false, biometryType: 'none', reason: 'Check failed' }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return { isAvailable: false, biometryType: 'none', reason: `Check failed: ${msg}` }
   }
 }
 
