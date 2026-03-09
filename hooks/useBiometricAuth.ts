@@ -44,18 +44,30 @@ export function useBiometricAuth() {
     let mounted = true
 
     async function init() {
-      const [info, enabled] = await Promise.all([
-        checkBiometricAvailability(),
-        isBiometricEnabled(),
-      ])
+      try {
+        const [info, enabled] = await Promise.all([
+          checkBiometricAvailability(),
+          isBiometricEnabled().catch(() => false),
+        ])
 
-      if (mounted) {
-        setState({
-          biometryInfo: info,
-          enabled,
-          authenticating: false,
-          biometryLabel: getBiometryLabel(info.biometryType),
-        })
+        if (mounted) {
+          setState({
+            biometryInfo: info,
+            enabled,
+            authenticating: false,
+            biometryLabel: getBiometryLabel(info.biometryType),
+          })
+        }
+      } catch (err) {
+        if (mounted) {
+          const msg = err instanceof Error ? err.message : String(err)
+          setState({
+            biometryInfo: { isAvailable: false, biometryType: 'none', reason: `init error: ${msg}` },
+            enabled: false,
+            authenticating: false,
+            biometryLabel: '生体認証',
+          })
+        }
       }
     }
 
