@@ -31,52 +31,52 @@ async function getStorage() {
 export async function storeRefreshToken(token: string): Promise<void> {
   const storage = await getStorage()
   if (!storage) return
-  await storage.set(KEYS.REFRESH_TOKEN, token)
+  await storage.setItem(KEYS.REFRESH_TOKEN, token)
 }
 
 /** Keychainからリフレッシュトークンを取得 */
 export async function getRefreshToken(): Promise<string | null> {
   const storage = await getStorage()
   if (!storage) return null
-  const result = await storage.get(KEYS.REFRESH_TOKEN)
-  return result != null ? String(result) : null
+  const result = await storage.getItem(KEYS.REFRESH_TOKEN)
+  return result
 }
 
 /** ユーザーのメールアドレスをKeychainに保存 */
 export async function storeUserEmail(email: string): Promise<void> {
   const storage = await getStorage()
   if (!storage) return
-  await storage.set(KEYS.USER_EMAIL, email)
+  await storage.setItem(KEYS.USER_EMAIL, email)
 }
 
 /** Keychainからメールアドレスを取得 */
 export async function getUserEmail(): Promise<string | null> {
   const storage = await getStorage()
   if (!storage) return null
-  const result = await storage.get(KEYS.USER_EMAIL)
-  return result != null ? String(result) : null
+  const result = await storage.getItem(KEYS.USER_EMAIL)
+  return result
 }
 
 /** 生体認証の有効/無効をKeychainに保存 */
 export async function setBiometricEnabled(enabled: boolean): Promise<void> {
   const storage = await getStorage()
   if (!storage) return
-  await storage.set(KEYS.BIOMETRIC_ENABLED, enabled ? 'true' : 'false')
+  await storage.setItem(KEYS.BIOMETRIC_ENABLED, enabled ? 'true' : 'false')
 }
 
 /** 生体認証が有効かどうかを取得 */
 export async function isBiometricEnabled(): Promise<boolean> {
   const storage = await getStorage()
   if (!storage) return false
-  const result = await storage.get(KEYS.BIOMETRIC_ENABLED)
-  return String(result) === 'true'
+  const result = await storage.getItem(KEYS.BIOMETRIC_ENABLED)
+  return result === 'true'
 }
 
 /** Keychain内の認証データをすべてクリア */
 export async function clearSecureStorage(): Promise<void> {
   const storage = await getStorage()
   if (!storage) return
-  await storage.remove(KEYS.REFRESH_TOKEN)
-  await storage.remove(KEYS.USER_EMAIL)
-  await storage.remove(KEYS.BIOMETRIC_ENABLED)
+  await storage.removeItem(KEYS.REFRESH_TOKEN)
+  await storage.removeItem(KEYS.USER_EMAIL)
+  await storage.removeItem(KEYS.BIOMETRIC_ENABLED)
 }
