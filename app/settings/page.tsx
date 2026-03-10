@@ -24,11 +24,15 @@ export default function SettingsPage() {
   const { user, getSessionRefreshToken } = useAuth()
 
   // Face ID 状態管理
+  const [isNative, setIsNative] = useState(false)
   const [biometricStatus, setBiometricStatus] = useState<'loading' | 'unavailable' | 'available' | 'enabled'>('loading')
   const [biometricLabel, setBiometricLabel] = useState('Face ID')
+  const [biometricDebug, setBiometricDebug] = useState('')
 
   useEffect(() => {
-    if (!isNativeApp()) {
+    const native = isNativeApp()
+    setIsNative(native)
+    if (!native) {
       setBiometricStatus('unavailable')
       return
     }
@@ -43,6 +47,7 @@ export default function SettingsPage() {
         ])
         if (!mounted) return
         setBiometricLabel(getBiometryLabel(info.biometryType))
+        setBiometricDebug(`available=${info.isAvailable}, type=${info.biometryType}, reason=${info.reason}, enabled=${enabled}`)
         if (enabled) {
           setBiometricStatus('enabled')
         } else if (info.isAvailable) {
@@ -50,8 +55,11 @@ export default function SettingsPage() {
         } else {
           setBiometricStatus('unavailable')
         }
-      } catch {
-        if (mounted) setBiometricStatus('unavailable')
+      } catch (e) {
+        if (mounted) {
+          setBiometricStatus('unavailable')
+          setBiometricDebug(`error: ${e instanceof Error ? e.message : String(e)}`)
+        }
       }
     }
     check()
@@ -165,7 +173,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Face ID / Touch ID（ネイティブアプリのみ表示） */}
-          {biometricStatus !== 'unavailable' && (
+          {isNative && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">セキュリティ</CardTitle>
@@ -179,9 +187,15 @@ export default function SettingsPage() {
                     <div className="font-medium">{biometricLabel}</div>
                     <div className="text-sm text-muted-foreground">
                       {biometricStatus === 'loading' && '確認中...'}
+                      {biometricStatus === 'unavailable' && 'この端末では利用できません'}
                       {biometricStatus === 'available' && '次回から素早くログインできます'}
                       {biometricStatus === 'enabled' && '有効'}
                     </div>
+                    {biometricDebug && (
+                      <div className="text-xs text-muted-foreground mt-1 font-mono">
+                        {biometricDebug}
+                      </div>
+                    )}
                   </div>
                   {biometricStatus === 'loading' && (
                     <div className="h-8 w-16 bg-muted rounded animate-pulse" />

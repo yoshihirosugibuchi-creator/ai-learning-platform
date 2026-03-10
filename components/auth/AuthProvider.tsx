@@ -519,36 +519,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
+    // 1. Supabaseセッション破棄
     await supabase.auth.signOut()
-    // WebView/ブラウザの全ストレージを明示的にクリア
+    // 2. React状態クリア
+    setUser(null)
+    setProfile(null)
+    // 3. WebView/ブラウザの全ストレージを明示的にクリア
     try {
-      // sessionStorage全クリア
       sessionStorage.clear()
-      // localStorage全クリア（Supabase関連だけでなく全て）
       localStorage.clear()
-      // Cookie全クリア（WKWebViewでセッション復元を防ぐ）
+      // Cookie全クリア
       document.cookie.split(';').forEach(cookie => {
         const name = cookie.split('=')[0].trim()
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`
       })
-      // IndexedDBの全データベースを削除（WKWebViewセッション永続化対策）
+      // IndexedDB全削除
       if (window.indexedDB && typeof window.indexedDB.databases === 'function') {
         const databases = await window.indexedDB.databases()
         databases.forEach(db => {
           if (db.name) window.indexedDB.deleteDatabase(db.name)
         })
       }
-      // Cache API クリア
+      // Cache API全クリア
       if ('caches' in window) {
         const cacheNames = await caches.keys()
         await Promise.all(cacheNames.map(name => caches.delete(name)))
       }
+      // Service Worker解除（キャッシュからのセッション復元を防止）
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations()
+        await Promise.all(registrations.map(r => r.unregister()))
+      }
     } catch {
       // ストレージクリア失敗は無視
     }
-    setUser(null)
-    setProfile(null)
-    // ページを強制リロードしてセッション状態を完全にリセット
+    // 4. ページを強制リロードしてセッション状態を完全にリセット
     window.location.href = '/login'
   }
 
