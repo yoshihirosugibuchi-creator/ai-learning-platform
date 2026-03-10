@@ -17,30 +17,12 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "ClearWebDataPlugin",
-            dependencies: [
-                .product(name: "Capacitor", package: "capacitor-swift-pm"),
-                .product(name: "Cordova", package: "capacitor-swift-pm")
-            ],
-            path: "Sources/ClearWebDataPlugin"
-        ),
-        .target(
-            name: "SimpleStoragePlugin",
-            dependencies: [
-                .product(name: "Capacitor", package: "capacitor-swift-pm"),
-                .product(name: "Cordova", package: "capacitor-swift-pm")
-            ],
-            path: "Sources/SimpleStoragePlugin"
-        ),
-        .target(
             name: "CapApp-SPM",
             dependencies: [
                 .product(name: "Capacitor", package: "capacitor-swift-pm"),
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
                 .product(name: "AparajitaCapacitorBiometricAuth", package: "AparajitaCapacitorBiometricAuth"),
-                .product(name: "AparajitaCapacitorSecureStorage", package: "AparajitaCapacitorSecureStorage"),
-                "ClearWebDataPlugin",
-                "SimpleStoragePlugin"
+                .product(name: "AparajitaCapacitorSecureStorage", package: "AparajitaCapacitorSecureStorage")
             ]
         )
     ]
