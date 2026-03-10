@@ -554,11 +554,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // ブラウザ環境では無視
     }
 
-    // 2. Supabaseセッション破棄
+    // 2. Supabaseセッション破棄（scope: 'global'でサーバー側トークンも無効化）
+    // WKWebViewがlocalStorageを復元しても、トークンが無効なのでセッション復活しない
     try {
-      await supabase.auth.signOut()
+      await supabase.auth.signOut({ scope: 'global' })
     } catch {
-      // ネットワークエラーでも続行
+      // ネットワークエラーでもローカルクリアは続行
+      try {
+        await supabase.auth.signOut({ scope: 'local' })
+      } catch {
+        // 無視
+      }
     }
 
     // 3. React状態クリア
