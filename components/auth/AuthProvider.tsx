@@ -520,14 +520,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    // WebViewのストレージも明示的にクリア
+    // WebView/ブラウザの全ストレージを明示的にクリア
     try {
+      // sessionStorage全クリア
       sessionStorage.clear()
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('sb-') || key.includes('supabase')) {
-          localStorage.removeItem(key)
-        }
+      // localStorage全クリア（Supabase関連だけでなく全て）
+      localStorage.clear()
+      // Cookie全クリア（WKWebViewでセッション復元を防ぐ）
+      document.cookie.split(';').forEach(cookie => {
+        const name = cookie.split('=')[0].trim()
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
       })
+      // IndexedDBの全データベースを削除（WKWebViewセッション永続化対策）
+      if (window.indexedDB && typeof window.indexedDB.databases === 'function') {
+        const databases = await window.indexedDB.databases()
+        databases.forEach(db => {
+          if (db.name) window.indexedDB.deleteDatabase(db.name)
+        })
+      }
+      // Cache API クリア
+      if ('caches' in window) {
+        const cacheNames = await caches.keys()
+        await Promise.all(cacheNames.map(name => caches.delete(name)))
+      }
     } catch {
       // ストレージクリア失敗は無視
     }

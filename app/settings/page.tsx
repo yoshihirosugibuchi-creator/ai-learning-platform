@@ -1,23 +1,89 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import MobileNav from '@/components/layout/MobileNav'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { 
-  Settings, 
-  Shield, 
-  Bell, 
+import {
+  Settings,
+  Shield,
+  Bell,
   Palette,
-  ChevronRight
+  ChevronRight,
+  Fingerprint
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { isNativeApp } from '@/lib/capacitor-utils'
+import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function SettingsPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const router = useRouter()
+  const { user, getSessionRefreshToken } = useAuth()
+
+  // Face ID 状態管理
+  const [biometricStatus, setBiometricStatus] = useState<'loading' | 'unavailable' | 'available' | 'enabled'>('loading')
+  const [biometricLabel, setBiometricLabel] = useState('Face ID')
+
+  useEffect(() => {
+    if (!isNativeApp()) {
+      setBiometricStatus('unavailable')
+      return
+    }
+    let mounted = true
+    async function check() {
+      try {
+        const { checkBiometricAvailability, getBiometryLabel } = await import('@/lib/biometric-auth')
+        const { isBiometricEnabled } = await import('@/lib/native-secure-storage')
+        const [info, enabled] = await Promise.all([
+          checkBiometricAvailability(),
+          isBiometricEnabled().catch(() => false),
+        ])
+        if (!mounted) return
+        setBiometricLabel(getBiometryLabel(info.biometryType))
+        if (enabled) {
+          setBiometricStatus('enabled')
+        } else if (info.isAvailable) {
+          setBiometricStatus('available')
+        } else {
+          setBiometricStatus('unavailable')
+        }
+      } catch {
+        if (mounted) setBiometricStatus('unavailable')
+      }
+    }
+    check()
+    return () => { mounted = false }
+  }, [])
+
+  const handleEnableBiometric = useCallback(async () => {
+    try {
+      const { storeRefreshToken, storeUserEmail, setBiometricEnabled } = await import('@/lib/native-secure-storage')
+      const refreshToken = await getSessionRefreshToken()
+      if (refreshToken && user?.email) {
+        await Promise.all([
+          storeRefreshToken(refreshToken),
+          storeUserEmail(user.email),
+          setBiometricEnabled(true),
+        ])
+        setBiometricStatus('enabled')
+      }
+    } catch {
+      // 失敗時は無視
+    }
+  }, [user, getSessionRefreshToken])
+
+  const handleDisableBiometric = useCallback(async () => {
+    try {
+      const { clearSecureStorage } = await import('@/lib/native-secure-storage')
+      await clearSecureStorage()
+      setBiometricStatus('available')
+    } catch {
+      // 失敗時は無視
+    }
+  }, [])
 
   const settingsMenuItems = [
     {
@@ -97,6 +163,43 @@ export default function SettingsPage() {
               </p>
             </div>
           </div>
+
+          {/* Face ID / Touch ID（ネイティブアプリのみ表示） */}
+          {biometricStatus !== 'unavailable' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">セキュリティ</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-4 p-4">
+                  <div className="p-2 rounded-lg bg-muted">
+                    <Fingerprint className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium">{biometricLabel}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {biometricStatus === 'loading' && '確認中...'}
+                      {biometricStatus === 'available' && '次回から素早くログインできます'}
+                      {biometricStatus === 'enabled' && '有効'}
+                    </div>
+                  </div>
+                  {biometricStatus === 'loading' && (
+                    <div className="h-8 w-16 bg-muted rounded animate-pulse" />
+                  )}
+                  {biometricStatus === 'available' && (
+                    <Button size="sm" onClick={handleEnableBiometric}>
+                      有効にする
+                    </Button>
+                  )}
+                  {biometricStatus === 'enabled' && (
+                    <Button size="sm" variant="outline" onClick={handleDisableBiometric}>
+                      無効にする
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Settings Groups */}
           {Object.entries(groupedSettings).map(([category, items]) => (

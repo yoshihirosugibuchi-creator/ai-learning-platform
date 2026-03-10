@@ -9,7 +9,6 @@ import ErrorBoundary from "@/components/auth/ErrorBoundary";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import ServiceWorkerRegistration from "@/components/pwa/ServiceWorkerRegistration";
 import NativeAppDetector from "@/components/native/NativeAppDetector";
-import BiometricAuthGate from "@/components/native/BiometricAuthGate";
 
 // 開発環境でのみ認証エラー回復ヘルパーとコンソールフィルターを読み込み
 if (process.env.NODE_ENV === 'development') {
@@ -68,13 +67,11 @@ export default function RootLayout({
           <ClientOnly fallback={<div>Loading...</div>}>
             <QueryProvider>
               <AuthProvider>
-                <BiometricAuthGate>
-                  <UserProvider>
-                    <ToastProvider>
-                      {children}
-                    </ToastProvider>
-                  </UserProvider>
-                </BiometricAuthGate>
+                <UserProvider>
+                  <ToastProvider>
+                    {children}
+                  </ToastProvider>
+                </UserProvider>
               </AuthProvider>
             </QueryProvider>
           </ClientOnly>
