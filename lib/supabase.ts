@@ -10,6 +10,27 @@ if (process.env.NODE_ENV === 'development') {
   console.log('Supabase Key (first 10 chars):', supabaseAnonKey.substring(0, 10))
 }
 
+// ネイティブアプリ: ログアウトフラグがある場合はlocalStorageを即座にクリア
+// WKWebViewはlocalStorage.clear()の結果を終了前にディスクに書かないことがあるため
+// Supabaseクライアント初期化前にセッションを消す必要がある
+if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).Capacitor) {
+  try {
+    // UserDefaultsのログアウトフラグをCapacitor経由でチェック（同期的にはできないが、
+    // localStorageのSupabaseキーを先に削除して復元を防ぐ）
+    const loggedOutKey = 'ale_logged_out'
+    // Capacitorプラグインは非同期なので、代わりにlocalStorageにミラーフラグを置く
+    if (localStorage.getItem(loggedOutKey) === 'true') {
+      console.log('🚪 Logged out flag found, clearing localStorage before Supabase init')
+      const flagValue = localStorage.getItem(loggedOutKey)
+      localStorage.clear()
+      // フラグを復元（AuthProviderでクリアする）
+      if (flagValue) localStorage.setItem(loggedOutKey, flagValue)
+    }
+  } catch {
+    // 無視
+  }
+}
+
 // Supabaseクライアントを作成（Database型あり）
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {

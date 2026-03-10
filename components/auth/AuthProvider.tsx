@@ -539,7 +539,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    // 1. ネイティブアプリ: ログアウトフラグをUserDefaultsに保存（再起動時に確実にクリア）
+    // 1. ログアウトフラグを保存（localStorage + UserDefaults両方）
+    // WKWebViewはlocalStorage.clear()の結果を終了前にディスクに書かないことがあるため
+    // フラグを先に書いて、次回起動時にSupabase初期化前にセッションをクリアする
+    try {
+      localStorage.setItem('ale_logged_out', 'true')
+    } catch {
+      // 無視
+    }
     try {
       const { setLoggedOutFlag } = await import('@/lib/native-secure-storage')
       await setLoggedOutFlag()
@@ -558,14 +565,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     setProfile(null)
 
-    // 4. JS側ストレージ全クリア
+    // 4. JS側ストレージ全クリア（フラグは残す）
     try {
       sessionStorage.clear()
+      const flag = localStorage.getItem('ale_logged_out')
       localStorage.clear()
-      document.cookie.split(';').forEach(cookie => {
-        const name = cookie.split('=')[0].trim()
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
-      })
+      if (flag) localStorage.setItem('ale_logged_out', flag)
     } catch {
       // 無視
     }
