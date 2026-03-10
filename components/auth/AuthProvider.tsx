@@ -131,7 +131,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log('🔍 AuthProvider: Getting initial session...')
         setIsHydrated(true)
-        
+
+        // ネイティブアプリ: ログアウトフラグチェック（前回ログアウト後の再起動対応）
+        try {
+          const { checkAndClearLoggedOutFlag } = await import('@/lib/native-secure-storage')
+          const wasLoggedOut = await checkAndClearLoggedOutFlag()
+          if (wasLoggedOut) {
+            console.log('🚪 Logged out flag detected, clearing session...')
+            sessionStorage.clear()
+            localStorage.clear()
+            await supabase.auth.signOut().catch(() => {})
+            setUser(null)
+            setProfile(null)
+            setLoading(false)
+            clearTimeout(loadingTimeout)
+            window.location.href = '/login'
+            return
+          }
+        } catch {
+          // ブラウザ環境では無視
+        }
+
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
@@ -519,26 +539,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    // 1. JS側ストレージを先にクリア（Supabaseセッションキーを確実に削除）
+    // 1. ネイティブアプリ: ログアウトフラグをUserDefaultsに保存（再起動時に確実にクリア）
     try {
-      // Supabaseの認証キーを直接削除
-      const supabaseKeys = Object.keys(localStorage).filter(
-        k => k.startsWith('sb-') || k.includes('supabase') || k.includes('auth-token')
-      )
-      supabaseKeys.forEach(k => localStorage.removeItem(k))
-      // 全クリア
-      sessionStorage.clear()
-      localStorage.clear()
-      // Cookie全クリア
-      document.cookie.split(';').forEach(cookie => {
-        const name = cookie.split('=')[0].trim()
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
-      })
+      const { setLoggedOutFlag } = await import('@/lib/native-secure-storage')
+      await setLoggedOutFlag()
     } catch {
-      // クリア失敗は無視
+      // ブラウザ環境では無視
     }
 
-    // 2. Supabaseセッション破棄（サーバー側トークン無効化）
+    // 2. Supabaseセッション破棄
     try {
       await supabase.auth.signOut()
     } catch {
@@ -549,36 +558,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     setProfile(null)
 
-    // 4. 再度ストレージクリア（signOutが再保存した可能性に対応）
+    // 4. JS側ストレージ全クリア
     try {
       sessionStorage.clear()
       localStorage.clear()
+      document.cookie.split(';').forEach(cookie => {
+        const name = cookie.split('=')[0].trim()
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+      })
     } catch {
       // 無視
     }
 
-    // 5. ネイティブアプリ: WKWebsiteDataStoreをネイティブ側から完全クリア
-    try {
-      const { clearAllWebViewData } = await import('@/lib/clear-web-data')
-      await clearAllWebViewData()
-    } catch {
-      // プラグイン未対応時は無視
-    }
-
-    // 6. Service Worker解除
-    try {
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations()
-        await Promise.all(registrations.map(r => r.unregister()))
-      }
-    } catch {
-      // 無視
-    }
-
-    // 7. WKWebViewがストレージクリアを永続化するのを待つ
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    // 8. ページを強制リロード
+    // 5. ページを強制リロード
     window.location.href = '/login'
   }
 

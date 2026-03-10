@@ -19,6 +19,7 @@ const KEYS = {
   REFRESH_TOKEN: 'refresh_token',
   USER_EMAIL: 'user_email',
   BIOMETRIC_ENABLED: 'biometric_enabled',
+  LOGGED_OUT: 'logged_out',
 } as const
 
 /** リフレッシュトークンを保存 */
@@ -60,8 +61,25 @@ export async function isBiometricEnabled(): Promise<boolean> {
   return value === 'true'
 }
 
-/** 認証データをすべてクリア */
+/** 認証データをすべてクリア（生体認証設定も含む） */
 export async function clearSecureStorage(): Promise<void> {
   if (!isNativeApp()) return
   await SimpleStorage.clear()
+}
+
+/** ログアウトフラグを設定（アプリ再起動時にチェック用） */
+export async function setLoggedOutFlag(): Promise<void> {
+  if (!isNativeApp()) return
+  await SimpleStorage.setItem({ key: KEYS.LOGGED_OUT, value: 'true' })
+}
+
+/** ログアウトフラグを確認＆クリア（trueなら未処理のログアウトあり） */
+export async function checkAndClearLoggedOutFlag(): Promise<boolean> {
+  if (!isNativeApp()) return false
+  const { value } = await SimpleStorage.getItem({ key: KEYS.LOGGED_OUT })
+  if (value === 'true') {
+    await SimpleStorage.removeItem({ key: KEYS.LOGGED_OUT })
+    return true
+  }
+  return false
 }
