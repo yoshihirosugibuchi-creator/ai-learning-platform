@@ -187,36 +187,45 @@ export default function SettingsPage() {
                 <CardTitle className="text-lg">セキュリティ</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center space-x-4 p-4">
-                  <div className="p-2 rounded-lg bg-muted">
-                    <Fingerprint className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium">{biometricLabel}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {biometricStatus === 'loading' && '確認中...'}
-                      {biometricStatus === 'unavailable' && 'この端末では利用できません'}
-                      {biometricStatus === 'available' && '次回から素早くログインできます'}
-                      {biometricStatus === 'enabled' && '有効'}
+                <div className="p-4 space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <Fingerprint className="h-5 w-5" />
                     </div>
-                    {biometricDebug && (
-                      <div className="text-xs text-muted-foreground mt-1 font-mono">
-                        {biometricDebug}
+                    <div className="flex-1">
+                      <div className="font-medium">{biometricLabel}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {biometricStatus === 'loading' && '確認中...'}
+                        {biometricStatus === 'unavailable' && 'この端末では利用できません'}
+                        {biometricStatus === 'available' && '次回から素早くログインできます'}
+                        {biometricStatus === 'enabled' && '有効'}
                       </div>
-                    )}
+                      {biometricDebug && (
+                        <div className="text-xs text-muted-foreground mt-1 font-mono">
+                          {biometricDebug}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  {biometricStatus === 'loading' && (
-                    <div className="h-8 w-16 bg-muted rounded animate-pulse" />
-                  )}
                   {biometricStatus === 'available' && (
-                    <Button size="sm" onClick={handleEnableBiometric}>
-                      有効にする
-                    </Button>
+                    <button
+                      type="button"
+                      className="w-full py-3 text-sm font-medium text-white bg-indigo-600 rounded-lg active:bg-indigo-800"
+                      style={{ WebkitAppearance: 'none' }}
+                      onPointerUp={handleEnableBiometric}
+                    >
+                      {biometricLabel}を有効にする
+                    </button>
                   )}
                   {biometricStatus === 'enabled' && (
-                    <Button size="sm" variant="outline" onClick={handleDisableBiometric}>
-                      無効にする
-                    </Button>
+                    <button
+                      type="button"
+                      className="w-full py-3 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg active:bg-gray-100"
+                      style={{ WebkitAppearance: 'none' }}
+                      onPointerUp={handleDisableBiometric}
+                    >
+                      {biometricLabel}を無効にする
+                    </button>
                   )}
                 </div>
               </CardContent>
