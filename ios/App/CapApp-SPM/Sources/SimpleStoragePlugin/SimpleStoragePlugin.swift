@@ -1,10 +1,10 @@
 import Capacitor
 import Foundation
 
-@objc(SimpleStoragePlugin)
-public class SimpleStoragePlugin: CAPPlugin, CAPBridgedPlugin {
-    public let identifier = "SimpleStoragePlugin"
-    public let jsName = "SimpleStoragePlugin"
+@objc(ALESimpleStorage)
+public class ALESimpleStorage: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "ALESimpleStorage"
+    public let jsName = "ALESimpleStorage"
     public let pluginMethods: [CAPPluginMethod] = [
         .init(#selector(setItem)),
         .init(#selector(getItem)),

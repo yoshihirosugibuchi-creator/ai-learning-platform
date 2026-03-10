@@ -12,7 +12,6 @@ import { Brain, Mail, Lock, User, ArrowRight, Sparkles, Fingerprint } from 'luci
 import { useAuth } from '@/components/auth/AuthProvider'
 import { logAuthDebugInfo, debugLoginAttempt, setupGlobalErrorHandling } from '@/lib/debug-auth'
 import { useBiometricAuth } from '@/hooks/useBiometricAuth'
-import BiometricEnableDialog from '@/components/native/BiometricEnableDialog'
 import type { AuthError } from '@supabase/supabase-js'
 
 export default function LoginPage() {
@@ -21,11 +20,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [showBiometricDialog, setShowBiometricDialog] = useState(false)
-  const [pendingBiometricCredentials, setPendingBiometricCredentials] = useState<{
-    refreshToken: string
-    email: string
-  } | null>(null)
 
   const {
     canUseBiometric,
@@ -186,18 +180,7 @@ export default function LoginPage() {
         setError(userFriendlyMessage)
       } else {
         console.log('✅ Login successful')
-        // ネイティブアプリで生体認証が使える場合、有効化を提案
-        if (canUseBiometric) {
-          const refreshToken = await getSessionRefreshToken()
-          if (refreshToken) {
-            setPendingBiometricCredentials({
-              refreshToken,
-              email: loginForm.email,
-            })
-            setShowBiometricDialog(true)
-            return
-          }
-        }
+        // Face IDの有効化は設定ページで行う
         router.push('/')
       }
     } catch (err) {
@@ -434,26 +417,6 @@ export default function LoginPage() {
         </CardContent>
       </Card>
 
-      <BiometricEnableDialog
-        open={showBiometricDialog}
-        biometryLabel={biometryLabel}
-        onEnable={async () => {
-          if (pendingBiometricCredentials) {
-            await enableBiometric(
-              pendingBiometricCredentials.refreshToken,
-              pendingBiometricCredentials.email
-            )
-          }
-          setShowBiometricDialog(false)
-          setPendingBiometricCredentials(null)
-          router.push('/')
-        }}
-        onSkip={() => {
-          setShowBiometricDialog(false)
-          setPendingBiometricCredentials(null)
-          router.push('/')
-        }}
-      />
     </div>
   )
 }

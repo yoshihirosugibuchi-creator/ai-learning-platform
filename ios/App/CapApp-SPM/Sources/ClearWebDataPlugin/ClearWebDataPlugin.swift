@@ -2,10 +2,10 @@ import Capacitor
 import Foundation
 import WebKit
 
-@objc(ClearWebDataPlugin)
-public class ClearWebDataPlugin: CAPPlugin, CAPBridgedPlugin {
-    public let identifier = "ClearWebDataPlugin"
-    public let jsName = "ClearWebDataPlugin"
+@objc(ALEClearWebData)
+public class ALEClearWebData: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "ALEClearWebData"
+    public let jsName = "ALEClearWebData"
     public let pluginMethods: [CAPPluginMethod] = [
         .init(#selector(clearAllData))
     ]

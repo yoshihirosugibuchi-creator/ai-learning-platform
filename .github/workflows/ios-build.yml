@@ -33,7 +33,7 @@ jobs:
             const fs = require('fs');
             const p = 'ios/App/App/capacitor.config.json';
             const c = JSON.parse(fs.readFileSync(p, 'utf8'));
-            ['ClearWebDataPlugin', 'SimpleStoragePlugin'].forEach(name => {
+            ['ALEClearWebData', 'ALESimpleStorage'].forEach(name => {
               if (!c.packageClassList.includes(name)) c.packageClassList.push(name);
             });
             fs.writeFileSync(p, JSON.stringify(c, null, '\t'));

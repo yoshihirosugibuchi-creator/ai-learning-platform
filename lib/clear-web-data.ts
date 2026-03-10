@@ -9,7 +9,7 @@ interface ClearWebDataPluginInterface {
   clearAllData(): Promise<{ cleared: boolean }>
 }
 
-const ClearWebDataPlugin = registerPlugin<ClearWebDataPluginInterface>('ClearWebDataPlugin')
+const ClearWebDataPlugin = registerPlugin<ClearWebDataPluginInterface>('ALEClearWebData')
 
 /** WKWebViewの全データをネイティブ側からクリア（ネイティブアプリのみ） */
 export async function clearAllWebViewData(): Promise<void> {

@@ -13,7 +13,7 @@ interface SimpleStorageInterface {
   clear(): Promise<void>
 }
 
-const SimpleStorage = registerPlugin<SimpleStorageInterface>('SimpleStoragePlugin')
+const SimpleStorage = registerPlugin<SimpleStorageInterface>('ALESimpleStorage')
 
 const KEYS = {
   REFRESH_TOKEN: 'refresh_token',
