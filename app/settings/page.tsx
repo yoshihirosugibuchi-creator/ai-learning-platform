@@ -39,11 +39,19 @@ export default function SettingsPage() {
     let mounted = true
     async function check() {
       try {
+        setBiometricDebug('importing modules...')
         const { checkBiometricAvailability, getBiometryLabel } = await import('@/lib/biometric-auth')
         const { isBiometricEnabled } = await import('@/lib/native-secure-storage')
+        if (!mounted) return
+        setBiometricDebug('modules loaded, calling checkBiometry...')
+
+        // タイムアウト付きでプラグイン呼び出し（ハング防止）
+        const timeout = <T,>(p: Promise<T>, ms: number, label: string): Promise<T> =>
+          Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error(`${label} timeout ${ms}ms`)), ms))])
+
         const [info, enabled] = await Promise.all([
-          checkBiometricAvailability(),
-          isBiometricEnabled().catch(() => false),
+          timeout(checkBiometricAvailability(), 5000, 'checkBiometry'),
+          timeout(isBiometricEnabled(), 5000, 'isBiometricEnabled').catch(() => false),
         ])
         if (!mounted) return
         setBiometricLabel(getBiometryLabel(info.biometryType))
