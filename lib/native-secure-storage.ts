@@ -1,82 +1,67 @@
 /**
- * iOS Keychainに認証トークン等を安全に保存するラッパー
+ * iOS UserDefaultsに認証トークン等を保存するラッパー
+ * カスタムCapacitorプラグイン（SimpleStoragePlugin）を使用
  * ネイティブアプリでのみ使用（ブラウザではno-op）
  */
 import { isNativeApp } from '@/lib/capacitor-utils'
+import { registerPlugin } from '@capacitor/core'
+
+interface SimpleStorageInterface {
+  setItem(options: { key: string; value: string }): Promise<void>
+  getItem(options: { key: string }): Promise<{ value: string | null }>
+  removeItem(options: { key: string }): Promise<void>
+  clear(): Promise<void>
+}
+
+const SimpleStorage = registerPlugin<SimpleStorageInterface>('SimpleStoragePlugin')
 
 const KEYS = {
-  REFRESH_TOKEN: 'ale_refresh_token',
-  USER_EMAIL: 'ale_user_email',
-  BIOMETRIC_ENABLED: 'ale_biometric_enabled',
+  REFRESH_TOKEN: 'refresh_token',
+  USER_EMAIL: 'user_email',
+  BIOMETRIC_ENABLED: 'biometric_enabled',
 } as const
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let storageInstance: any = null
-let initialized = false
-
-async function getStorage() {
-  if (!isNativeApp()) return null
-  if (!storageInstance) {
-    const mod = await import('@aparajita/capacitor-secure-storage')
-    storageInstance = mod.SecureStorage
-  }
-  if (!initialized) {
-    await storageInstance.setSynchronize(false)
-    initialized = true
-  }
-  return storageInstance
-}
-
-/** リフレッシュトークンをKeychainに保存 */
+/** リフレッシュトークンを保存 */
 export async function storeRefreshToken(token: string): Promise<void> {
-  const storage = await getStorage()
-  if (!storage) return
-  await storage.setItem(KEYS.REFRESH_TOKEN, token)
+  if (!isNativeApp()) return
+  await SimpleStorage.setItem({ key: KEYS.REFRESH_TOKEN, value: token })
 }
 
-/** Keychainからリフレッシュトークンを取得 */
+/** リフレッシュトークンを取得 */
 export async function getRefreshToken(): Promise<string | null> {
-  const storage = await getStorage()
-  if (!storage) return null
-  const result = await storage.getItem(KEYS.REFRESH_TOKEN)
-  return result
+  if (!isNativeApp()) return null
+  const { value } = await SimpleStorage.getItem({ key: KEYS.REFRESH_TOKEN })
+  return value
 }
 
-/** ユーザーのメールアドレスをKeychainに保存 */
+/** メールアドレスを保存 */
 export async function storeUserEmail(email: string): Promise<void> {
-  const storage = await getStorage()
-  if (!storage) return
-  await storage.setItem(KEYS.USER_EMAIL, email)
+  if (!isNativeApp()) return
+  await SimpleStorage.setItem({ key: KEYS.USER_EMAIL, value: email })
 }
 
-/** Keychainからメールアドレスを取得 */
+/** メールアドレスを取得 */
 export async function getUserEmail(): Promise<string | null> {
-  const storage = await getStorage()
-  if (!storage) return null
-  const result = await storage.getItem(KEYS.USER_EMAIL)
-  return result
+  if (!isNativeApp()) return null
+  const { value } = await SimpleStorage.getItem({ key: KEYS.USER_EMAIL })
+  return value
 }
 
-/** 生体認証の有効/無効をKeychainに保存 */
+/** 生体認証の有効/無効を保存 */
 export async function setBiometricEnabled(enabled: boolean): Promise<void> {
-  const storage = await getStorage()
-  if (!storage) return
-  await storage.setItem(KEYS.BIOMETRIC_ENABLED, enabled ? 'true' : 'false')
+  if (!isNativeApp()) return
+  await SimpleStorage.setItem({ key: KEYS.BIOMETRIC_ENABLED, value: enabled ? 'true' : 'false' })
 }
 
 /** 生体認証が有効かどうかを取得 */
 export async function isBiometricEnabled(): Promise<boolean> {
-  const storage = await getStorage()
-  if (!storage) return false
-  const result = await storage.getItem(KEYS.BIOMETRIC_ENABLED)
-  return result === 'true'
+  if (!isNativeApp()) return false
+  const { value } = await SimpleStorage.getItem({ key: KEYS.BIOMETRIC_ENABLED })
+  return value === 'true'
 }
 
-/** Keychain内の認証データをすべてクリア */
+/** 認証データをすべてクリア */
 export async function clearSecureStorage(): Promise<void> {
-  const storage = await getStorage()
-  if (!storage) return
-  await storage.removeItem(KEYS.REFRESH_TOKEN)
-  await storage.removeItem(KEYS.USER_EMAIL)
-  await storage.removeItem(KEYS.BIOMETRIC_ENABLED)
+  if (!isNativeApp()) return
+  await SimpleStorage.clear()
 }

@@ -519,34 +519,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    // 1. Supabaseセッション破棄
-    await supabase.auth.signOut()
-    // 2. React状態クリア
+    // 1. JS側ストレージを先にクリア（Supabaseセッションキーを確実に削除）
+    try {
+      // Supabaseの認証キーを直接削除
+      const supabaseKeys = Object.keys(localStorage).filter(
+        k => k.startsWith('sb-') || k.includes('supabase') || k.includes('auth-token')
+      )
+      supabaseKeys.forEach(k => localStorage.removeItem(k))
+      // 全クリア
+      sessionStorage.clear()
+      localStorage.clear()
+      // Cookie全クリア
+      document.cookie.split(';').forEach(cookie => {
+        const name = cookie.split('=')[0].trim()
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+      })
+    } catch {
+      // クリア失敗は無視
+    }
+
+    // 2. Supabaseセッション破棄（サーバー側トークン無効化）
+    try {
+      await supabase.auth.signOut()
+    } catch {
+      // ネットワークエラーでも続行
+    }
+
+    // 3. React状態クリア
     setUser(null)
     setProfile(null)
-    // 3. ネイティブアプリ: WKWebsiteDataStoreをネイティブ側から完全クリア
+
+    // 4. 再度ストレージクリア（signOutが再保存した可能性に対応）
+    try {
+      sessionStorage.clear()
+      localStorage.clear()
+    } catch {
+      // 無視
+    }
+
+    // 5. ネイティブアプリ: WKWebsiteDataStoreをネイティブ側から完全クリア
     try {
       const { clearAllWebViewData } = await import('@/lib/clear-web-data')
       await clearAllWebViewData()
     } catch {
       // プラグイン未対応時は無視
     }
-    // 4. JS側からもストレージクリア（ブラウザ/フォールバック）
+
+    // 6. Service Worker解除
     try {
-      sessionStorage.clear()
-      localStorage.clear()
-      document.cookie.split(';').forEach(cookie => {
-        const name = cookie.split('=')[0].trim()
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
-      })
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations()
         await Promise.all(registrations.map(r => r.unregister()))
       }
     } catch {
-      // ストレージクリア失敗は無視
+      // 無視
     }
-    // 5. ページを強制リロードしてセッション状態を完全にリセット
+
+    // 7. WKWebViewがストレージクリアを永続化するのを待つ
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // 8. ページを強制リロード
     window.location.href = '/login'
   }
 

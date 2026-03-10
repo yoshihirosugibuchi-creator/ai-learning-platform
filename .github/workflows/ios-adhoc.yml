@@ -30,10 +30,10 @@ jobs:
             const fs = require('fs');
             const p = 'ios/App/App/capacitor.config.json';
             const c = JSON.parse(fs.readFileSync(p, 'utf8'));
-            if (!c.packageClassList.includes('ClearWebDataPlugin')) {
-              c.packageClassList.push('ClearWebDataPlugin');
-              fs.writeFileSync(p, JSON.stringify(c, null, '\t'));
-            }
+            ['ClearWebDataPlugin', 'SimpleStoragePlugin'].forEach(name => {
+              if (!c.packageClassList.includes(name)) c.packageClassList.push(name);
+            });
+            fs.writeFileSync(p, JSON.stringify(c, null, '\t'));
           "
 
       - name: Setup Xcode
