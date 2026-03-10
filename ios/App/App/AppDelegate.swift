@@ -8,25 +8,53 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // ログアウトフラグがUserDefaultsにある場合、WKWebViewのデータをクリア
+        // ログアウトフラグがUserDefaultsにある場合、WKWebViewのデータを同期削除
         // WKWebViewはlocalStorage.clear()をディスクに書かずに終了することがあるため、
         // ネイティブ側でSupabaseセッションデータを確実に削除する
         let defaults = UserDefaults.standard
         if defaults.string(forKey: "ale_logged_out") == "true" {
-            NSLog("🚪 ALE: Logged out flag found in UserDefaults, clearing WKWebsiteDataStore")
-            defaults.removeObject(forKey: "ale_logged_out")
-            defaults.synchronize()
+            NSLog("🚪 ALE: Logged out flag found, deleting WebKit data files synchronously")
 
-            // WKWebsiteDataStore全クリア（localStorage, cookies, cache等）
-            // server.urlモードではリモートURLのロードにネットワーク遅延があるため、
-            // この非同期クリアはJS実行前に完了する
+            // ⚠️ フラグはAuthProviderが確認後に削除するため、ここでは残す
+
+            // 1. WebKitデータディレクトリを同期的にファイルシステムから削除
+            //    WKWebView作成前に実行されるため、localStorage復元を確実に防ぐ
+            let libraryPath = NSSearchPathForDirectoriesInDomains(.libraryDirectory, .userDomainMask, true).first!
+            let fileManager = FileManager.default
+
+            // WebKit/WebsiteData（localStorage, IndexedDB, cookies等）
+            let webkitDataPath = (libraryPath as NSString).appendingPathComponent("WebKit/WebsiteData")
+            if fileManager.fileExists(atPath: webkitDataPath) {
+                do {
+                    try fileManager.removeItem(atPath: webkitDataPath)
+                    NSLog("🚪 ALE: Deleted WebKit/WebsiteData")
+                } catch {
+                    NSLog("🚪 ALE: Failed to delete WebKit/WebsiteData: \(error)")
+                }
+            }
+
+            // Caches内のWebKitデータも削除
+            let cachesPath = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first!
+            let webkitCachePath = (cachesPath as NSString).appendingPathComponent("WebKit")
+            if fileManager.fileExists(atPath: webkitCachePath) {
+                do {
+                    try fileManager.removeItem(atPath: webkitCachePath)
+                    NSLog("🚪 ALE: Deleted Caches/WebKit")
+                } catch {
+                    NSLog("🚪 ALE: Failed to delete Caches/WebKit: \(error)")
+                }
+            }
+
+            // 2. 非同期WKWebsiteDataStoreクリアも念のため実行
             let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
             WKWebsiteDataStore.default().removeData(
                 ofTypes: dataTypes,
                 modifiedSince: Date(timeIntervalSince1970: 0)
             ) {
-                NSLog("🚪 ALE: WKWebsiteDataStore cleared successfully")
+                NSLog("🚪 ALE: WKWebsiteDataStore also cleared via API")
             }
+
+            NSLog("🚪 ALE: Synchronous WebKit data deletion complete")
         }
 
         return true

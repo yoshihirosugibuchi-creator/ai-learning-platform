@@ -132,26 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('🔍 AuthProvider: Getting initial session...')
         setIsHydrated(true)
 
-        // ネイティブアプリ: ログアウトフラグチェック（前回ログアウト後の再起動対応）
-        try {
-          const { checkAndClearLoggedOutFlag } = await import('@/lib/native-secure-storage')
-          const wasLoggedOut = await checkAndClearLoggedOutFlag()
-          if (wasLoggedOut) {
-            console.log('🚪 Logged out flag detected, clearing session...')
-            sessionStorage.clear()
-            localStorage.clear()
-            await supabase.auth.signOut().catch(() => {})
-            setUser(null)
-            setProfile(null)
-            setLoading(false)
-            clearTimeout(loadingTimeout)
-            window.location.href = '/login'
-            return
-          }
-        } catch {
-          // ブラウザ環境では無視
-        }
-
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
@@ -539,23 +519,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    // 1. ログアウトフラグを保存（localStorage + UserDefaults両方）
-    // WKWebViewはlocalStorage.clear()の結果を終了前にディスクに書かないことがあるため
-    // フラグを先に書いて、次回起動時にSupabase初期化前にセッションをクリアする
-    try {
-      localStorage.setItem('ale_logged_out', 'true')
-    } catch {
-      // 無視
-    }
-    try {
-      const { setLoggedOutFlag } = await import('@/lib/native-secure-storage')
-      await setLoggedOutFlag()
-    } catch {
-      // ブラウザ環境では無視
-    }
-
-    // 2. Supabaseセッション破棄（scope: 'global'でサーバー側トークンも無効化）
-    // WKWebViewがlocalStorageを復元しても、トークンが無効なのでセッション復活しない
+    // 1. Supabaseセッション破棄（scope: 'global'でサーバー側トークンも無効化）
+    // ネイティブアプリ: セッションはUserDefaults(ALESimpleStorage)に保存されており、
+    // signOutがストレージアダプター経由で確実に削除する
     try {
       await supabase.auth.signOut({ scope: 'global' })
     } catch {
@@ -567,21 +533,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // 3. React状態クリア
+    // 2. React状態クリア
     setUser(null)
     setProfile(null)
 
-    // 4. JS側ストレージ全クリア（フラグは残す）
+    // 3. JS側ストレージ全クリア（念のため）
     try {
       sessionStorage.clear()
-      const flag = localStorage.getItem('ale_logged_out')
       localStorage.clear()
-      if (flag) localStorage.setItem('ale_logged_out', flag)
     } catch {
       // 無視
     }
 
-    // 5. ページを強制リロード
+    // 4. ページを強制リロード
     window.location.href = '/login'
   }
 
