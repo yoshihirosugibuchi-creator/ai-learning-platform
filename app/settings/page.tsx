@@ -88,17 +88,27 @@ export default function SettingsPage() {
         setBiometricDebug(`認証失敗: ${authResult.error || 'キャンセル'}`)
         return
       }
-      // 2. 認証成功 → Keychainにトークン保存
-      setBiometricDebug('認証成功、トークン保存中...')
-      const { storeRefreshToken, storeUserEmail, setBiometricEnabled } = await import('@/lib/native-secure-storage')
+      // 2. 認証成功 → セッション情報取得
+      setBiometricDebug('認証成功、セッション取得中...')
       const refreshToken = await getSessionRefreshToken()
       if (!refreshToken || !user?.email) {
         setBiometricDebug('エラー: セッション情報が取得できません')
         return
       }
-      await storeRefreshToken(refreshToken)
-      await storeUserEmail(user.email)
-      await setBiometricEnabled(true)
+      // 3. Keychainに保存（各ステップにタイムアウト付き）
+      const withTimeout = <T,>(p: Promise<T>, ms: number, label: string): Promise<T> =>
+        Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error(`${label} timeout`)), ms))])
+
+      setBiometricDebug('Keychain保存: refreshToken...')
+      const { storeRefreshToken, storeUserEmail, setBiometricEnabled } = await import('@/lib/native-secure-storage')
+      await withTimeout(storeRefreshToken(refreshToken), 5000, 'storeRefreshToken')
+
+      setBiometricDebug('Keychain保存: email...')
+      await withTimeout(storeUserEmail(user.email), 5000, 'storeUserEmail')
+
+      setBiometricDebug('Keychain保存: biometricEnabled...')
+      await withTimeout(setBiometricEnabled(true), 5000, 'setBiometricEnabled')
+
       setBiometricStatus('enabled')
       setBiometricDebug('Face ID有効化完了')
     } catch (e) {

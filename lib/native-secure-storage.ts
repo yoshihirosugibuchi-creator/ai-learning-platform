@@ -10,17 +10,27 @@ const KEYS = {
   BIOMETRIC_ENABLED: 'ale_biometric_enabled',
 } as const
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let storageInstance: any = null
+let initialized = false
+
 async function getStorage() {
   if (!isNativeApp()) return null
-  const { SecureStorage } = await import('@aparajita/capacitor-secure-storage')
-  return SecureStorage
+  if (!storageInstance) {
+    const mod = await import('@aparajita/capacitor-secure-storage')
+    storageInstance = mod.SecureStorage
+  }
+  if (!initialized) {
+    await storageInstance.setSynchronize(false)
+    initialized = true
+  }
+  return storageInstance
 }
 
 /** リフレッシュトークンをKeychainに保存 */
 export async function storeRefreshToken(token: string): Promise<void> {
   const storage = await getStorage()
   if (!storage) return
-  await storage.setSynchronize(false)
   await storage.set(KEYS.REFRESH_TOKEN, token)
 }
 
@@ -28,7 +38,6 @@ export async function storeRefreshToken(token: string): Promise<void> {
 export async function getRefreshToken(): Promise<string | null> {
   const storage = await getStorage()
   if (!storage) return null
-  await storage.setSynchronize(false)
   const result = await storage.get(KEYS.REFRESH_TOKEN)
   return result != null ? String(result) : null
 }
@@ -37,7 +46,6 @@ export async function getRefreshToken(): Promise<string | null> {
 export async function storeUserEmail(email: string): Promise<void> {
   const storage = await getStorage()
   if (!storage) return
-  await storage.setSynchronize(false)
   await storage.set(KEYS.USER_EMAIL, email)
 }
 
@@ -45,7 +53,6 @@ export async function storeUserEmail(email: string): Promise<void> {
 export async function getUserEmail(): Promise<string | null> {
   const storage = await getStorage()
   if (!storage) return null
-  await storage.setSynchronize(false)
   const result = await storage.get(KEYS.USER_EMAIL)
   return result != null ? String(result) : null
 }
@@ -54,7 +61,6 @@ export async function getUserEmail(): Promise<string | null> {
 export async function setBiometricEnabled(enabled: boolean): Promise<void> {
   const storage = await getStorage()
   if (!storage) return
-  await storage.setSynchronize(false)
   await storage.set(KEYS.BIOMETRIC_ENABLED, enabled ? 'true' : 'false')
 }
 
@@ -62,7 +68,6 @@ export async function setBiometricEnabled(enabled: boolean): Promise<void> {
 export async function isBiometricEnabled(): Promise<boolean> {
   const storage = await getStorage()
   if (!storage) return false
-  await storage.setSynchronize(false)
   const result = await storage.get(KEYS.BIOMETRIC_ENABLED)
   return String(result) === 'true'
 }
@@ -71,10 +76,7 @@ export async function isBiometricEnabled(): Promise<boolean> {
 export async function clearSecureStorage(): Promise<void> {
   const storage = await getStorage()
   if (!storage) return
-  await storage.setSynchronize(false)
-  await Promise.all([
-    storage.remove(KEYS.REFRESH_TOKEN),
-    storage.remove(KEYS.USER_EMAIL),
-    storage.remove(KEYS.BIOMETRIC_ENABLED),
-  ])
+  await storage.remove(KEYS.REFRESH_TOKEN)
+  await storage.remove(KEYS.USER_EMAIL)
+  await storage.remove(KEYS.BIOMETRIC_ENABLED)
 }
