@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,7 +8,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // ログアウトフラグがUserDefaultsにある場合、WKWebViewのデータをクリア
+        // WKWebViewはlocalStorage.clear()をディスクに書かずに終了することがあるため、
+        // ネイティブ側でSupabaseセッションデータを確実に削除する
+        let defaults = UserDefaults.standard
+        if defaults.string(forKey: "ale_logged_out") == "true" {
+            NSLog("🚪 ALE: Logged out flag found in UserDefaults, clearing WKWebsiteDataStore")
+            defaults.removeObject(forKey: "ale_logged_out")
+            defaults.synchronize()
+
+            // WKWebsiteDataStore全クリア（localStorage, cookies, cache等）
+            // server.urlモードではリモートURLのロードにネットワーク遅延があるため、
+            // この非同期クリアはJS実行前に完了する
+            let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+            WKWebsiteDataStore.default().removeData(
+                ofTypes: dataTypes,
+                modifiedSince: Date(timeIntervalSince1970: 0)
+            ) {
+                NSLog("🚪 ALE: WKWebsiteDataStore cleared successfully")
+            }
+        }
+
         return true
     }
 
