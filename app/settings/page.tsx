@@ -74,32 +74,55 @@ export default function SettingsPage() {
     return () => { mounted = false }
   }, [])
 
+  const [biometricProcessing, setBiometricProcessing] = useState(false)
+
   const handleEnableBiometric = useCallback(async () => {
+    if (biometricProcessing) return
+    setBiometricProcessing(true)
     try {
+      setBiometricDebug('Face ID認証を開始...')
+      // 1. Face ID認証を実行（本人確認）
+      const { authenticateWithBiometric } = await import('@/lib/biometric-auth')
+      const authResult = await authenticateWithBiometric()
+      if (!authResult.success) {
+        setBiometricDebug(`認証失敗: ${authResult.error || 'キャンセル'}`)
+        return
+      }
+      // 2. 認証成功 → Keychainにトークン保存
+      setBiometricDebug('認証成功、トークン保存中...')
       const { storeRefreshToken, storeUserEmail, setBiometricEnabled } = await import('@/lib/native-secure-storage')
       const refreshToken = await getSessionRefreshToken()
-      if (refreshToken && user?.email) {
-        await Promise.all([
-          storeRefreshToken(refreshToken),
-          storeUserEmail(user.email),
-          setBiometricEnabled(true),
-        ])
-        setBiometricStatus('enabled')
+      if (!refreshToken || !user?.email) {
+        setBiometricDebug('エラー: セッション情報が取得できません')
+        return
       }
-    } catch {
-      // 失敗時は無視
+      await storeRefreshToken(refreshToken)
+      await storeUserEmail(user.email)
+      await setBiometricEnabled(true)
+      setBiometricStatus('enabled')
+      setBiometricDebug('Face ID有効化完了')
+    } catch (e) {
+      setBiometricDebug(`エラー: ${e instanceof Error ? e.message : String(e)}`)
+    } finally {
+      setBiometricProcessing(false)
     }
-  }, [user, getSessionRefreshToken])
+  }, [user, getSessionRefreshToken, biometricProcessing])
 
   const handleDisableBiometric = useCallback(async () => {
+    if (biometricProcessing) return
+    setBiometricProcessing(true)
     try {
+      setBiometricDebug('無効化中...')
       const { clearSecureStorage } = await import('@/lib/native-secure-storage')
       await clearSecureStorage()
       setBiometricStatus('available')
-    } catch {
-      // 失敗時は無視
+      setBiometricDebug('Face ID無効化完了')
+    } catch (e) {
+      setBiometricDebug(`エラー: ${e instanceof Error ? e.message : String(e)}`)
+    } finally {
+      setBiometricProcessing(false)
     }
-  }, [])
+  }, [biometricProcessing])
 
   const settingsMenuItems = [
     {
@@ -210,21 +233,23 @@ export default function SettingsPage() {
                   {biometricStatus === 'available' && (
                     <button
                       type="button"
-                      className="w-full py-3 text-sm font-medium text-white bg-indigo-600 rounded-lg active:bg-indigo-800"
-                      style={{ WebkitAppearance: 'none' }}
-                      onPointerUp={handleEnableBiometric}
+                      disabled={biometricProcessing}
+                      className="w-full py-3 text-sm font-medium text-white bg-indigo-600 rounded-lg transition-all duration-150 active:scale-95 active:bg-indigo-800 disabled:opacity-50"
+                      style={{ WebkitAppearance: 'none', WebkitTapHighlightColor: 'rgba(79,70,229,0.3)' }}
+                      onClick={handleEnableBiometric}
                     >
-                      {biometricLabel}を有効にする
+                      {biometricProcessing ? '処理中...' : `${biometricLabel}を有効にする`}
                     </button>
                   )}
                   {biometricStatus === 'enabled' && (
                     <button
                       type="button"
-                      className="w-full py-3 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg active:bg-gray-100"
-                      style={{ WebkitAppearance: 'none' }}
-                      onPointerUp={handleDisableBiometric}
+                      disabled={biometricProcessing}
+                      className="w-full py-3 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg transition-all duration-150 active:scale-95 active:bg-gray-200 disabled:opacity-50"
+                      style={{ WebkitAppearance: 'none', WebkitTapHighlightColor: 'rgba(0,0,0,0.1)' }}
+                      onClick={handleDisableBiometric}
                     >
-                      {biometricLabel}を無効にする
+                      {biometricProcessing ? '処理中...' : `${biometricLabel}を無効にする`}
                     </button>
                   )}
                 </div>

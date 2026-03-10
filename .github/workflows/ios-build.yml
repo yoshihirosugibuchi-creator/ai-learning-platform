@@ -27,6 +27,18 @@ jobs:
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
+      - name: Register inline plugins
+        run: |
+          node -e "
+            const fs = require('fs');
+            const p = 'ios/App/App/capacitor.config.json';
+            const c = JSON.parse(fs.readFileSync(p, 'utf8'));
+            if (!c.packageClassList.includes('ClearWebDataPlugin')) {
+              c.packageClassList.push('ClearWebDataPlugin');
+              fs.writeFileSync(p, JSON.stringify(c, null, '\t'));
+            }
+          "
+
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:

@@ -524,29 +524,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 2. React状態クリア
     setUser(null)
     setProfile(null)
-    // 3. WebView/ブラウザの全ストレージを明示的にクリア
+    // 3. ネイティブアプリ: WKWebsiteDataStoreをネイティブ側から完全クリア
+    try {
+      const { clearAllWebViewData } = await import('@/lib/clear-web-data')
+      await clearAllWebViewData()
+    } catch {
+      // プラグイン未対応時は無視
+    }
+    // 4. JS側からもストレージクリア（ブラウザ/フォールバック）
     try {
       sessionStorage.clear()
       localStorage.clear()
-      // Cookie全クリア
       document.cookie.split(';').forEach(cookie => {
         const name = cookie.split('=')[0].trim()
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`
       })
-      // IndexedDB全削除
-      if (window.indexedDB && typeof window.indexedDB.databases === 'function') {
-        const databases = await window.indexedDB.databases()
-        databases.forEach(db => {
-          if (db.name) window.indexedDB.deleteDatabase(db.name)
-        })
-      }
-      // Cache API全クリア
-      if ('caches' in window) {
-        const cacheNames = await caches.keys()
-        await Promise.all(cacheNames.map(name => caches.delete(name)))
-      }
-      // Service Worker解除（キャッシュからのセッション復元を防止）
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations()
         await Promise.all(registrations.map(r => r.unregister()))
@@ -554,7 +546,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // ストレージクリア失敗は無視
     }
-    // 4. ページを強制リロードしてセッション状態を完全にリセット
+    // 5. ページを強制リロードしてセッション状態を完全にリセット
     window.location.href = '/login'
   }
 
