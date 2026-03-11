@@ -19,7 +19,6 @@ const KEYS = {
   REFRESH_TOKEN: 'refresh_token',
   USER_EMAIL: 'user_email',
   BIOMETRIC_ENABLED: 'biometric_enabled',
-  LOGGED_OUT: 'logged_out',
   SESSION_ACTIVE: 'session_active',
 } as const
 
@@ -85,19 +84,6 @@ export async function isSessionActive(): Promise<boolean> {
   return value === 'true'
 }
 
-/** ログアウトフラグを設定（アプリ再起動時にチェック用） */
-export async function setLoggedOutFlag(): Promise<void> {
-  if (!isNativeApp()) return
-  await SimpleStorage.setItem({ key: KEYS.LOGGED_OUT, value: 'true' })
-}
-
-/** ログアウトフラグを確認＆クリア（trueなら未処理のログアウトあり） */
-export async function checkAndClearLoggedOutFlag(): Promise<boolean> {
-  if (!isNativeApp()) return false
-  const { value } = await SimpleStorage.getItem({ key: KEYS.LOGGED_OUT })
-  if (value === 'true') {
-    await SimpleStorage.removeItem({ key: KEYS.LOGGED_OUT })
-    return true
-  }
-  return false
-}
+// [不要] setLoggedOutFlag / checkAndClearLoggedOutFlag は削除済み（2026-03-11）
+// LOGGED_OUTフラグ方式はsession_activeフラグ方式に置き換え済み。
+// 詳細: setSessionActiveFlag / isSessionActive を使用。

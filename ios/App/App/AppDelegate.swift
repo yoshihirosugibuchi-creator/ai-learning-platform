@@ -1,6 +1,5 @@
 import UIKit
 import Capacitor
-import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -8,56 +7,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // セッションアクティブフラグをチェック
-        // ログイン中: ale_session_active = "true" → 何もしない
-        // ログアウト済/未ログイン: ale_session_active が無い → WebKitデータを削除
+        // [不要] 以下のWebKitファイル削除方式は効果なしと判明（2026-03-11）
+        // iOS新版ではWKWebViewデータは別プロセスが管理するため、
+        // アプリ側からファイルシステム経由で削除してもlocalStorageはクリアされない。
         //
-        // WKWebViewはlocalStorage.clear()をディスクに書かずに終了することがあるため、
-        // ネイティブ側（UserDefaults）のフラグで状態を管理し、
-        // フラグが無い場合はlocalStorageのセッションデータを同期削除する
-        let defaults = UserDefaults.standard
-        let sessionActive = defaults.string(forKey: "ale_session_active") == "true"
-
-        if !sessionActive {
-            NSLog("🚪 ALE: No active session flag, clearing WebKit data to prevent ghost sessions")
-
-            // 1. WebKitデータディレクトリを同期的にファイルシステムから削除
-            //    WKWebView作成前に実行されるため、localStorage復元を確実に防ぐ
-            let libraryPath = NSSearchPathForDirectoriesInDomains(.libraryDirectory, .userDomainMask, true).first!
-            let fileManager = FileManager.default
-
-            // WebKit/WebsiteData（localStorage, IndexedDB, cookies等）
-            let webkitDataPath = (libraryPath as NSString).appendingPathComponent("WebKit/WebsiteData")
-            if fileManager.fileExists(atPath: webkitDataPath) {
-                do {
-                    try fileManager.removeItem(atPath: webkitDataPath)
-                    NSLog("🚪 ALE: Deleted WebKit/WebsiteData")
-                } catch {
-                    NSLog("🚪 ALE: Failed to delete WebKit/WebsiteData: \(error)")
-                }
-            }
-
-            // Caches内のWebKitデータも削除
-            let cachesPath = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first!
-            let webkitCachePath = (cachesPath as NSString).appendingPathComponent("WebKit")
-            if fileManager.fileExists(atPath: webkitCachePath) {
-                do {
-                    try fileManager.removeItem(atPath: webkitCachePath)
-                    NSLog("🚪 ALE: Deleted Caches/WebKit")
-                } catch {
-                    NSLog("🚪 ALE: Failed to delete Caches/WebKit: \(error)")
-                }
-            }
-
-            // 2. 非同期WKWebsiteDataStoreクリアも念のため実行
-            let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
-            WKWebsiteDataStore.default().removeData(
-                ofTypes: dataTypes,
-                modifiedSince: Date(timeIntervalSince1970: 0)
-            ) {
-                NSLog("🚪 ALE: WKWebsiteDataStore also cleared via API")
-            }
-        }
+        // 実際に機能している方式:
+        //   JS側（AuthProvider.initializeAuth）でUserDefaultsのsession_activeフラグを確認し、
+        //   フラグが無い場合はsupabase.auth.signOut()でゴーストセッションを破棄する。
+        //   詳細: components/auth/AuthProvider.tsx, lib/native-secure-storage.ts
 
         return true
     }
