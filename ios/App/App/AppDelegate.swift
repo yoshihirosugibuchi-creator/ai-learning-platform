@@ -8,14 +8,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // ログアウトフラグがUserDefaultsにある場合、WKWebViewのデータを同期削除
+        // セッションアクティブフラグをチェック
+        // ログイン中: ale_session_active = "true" → 何もしない
+        // ログアウト済/未ログイン: ale_session_active が無い → WebKitデータを削除
+        //
         // WKWebViewはlocalStorage.clear()をディスクに書かずに終了することがあるため、
-        // ネイティブ側でSupabaseセッションデータを確実に削除する
+        // ネイティブ側（UserDefaults）のフラグで状態を管理し、
+        // フラグが無い場合はlocalStorageのセッションデータを同期削除する
         let defaults = UserDefaults.standard
-        if defaults.string(forKey: "ale_logged_out") == "true" {
-            NSLog("🚪 ALE: Logged out flag found, deleting WebKit data files synchronously")
+        let sessionActive = defaults.string(forKey: "ale_session_active") == "true"
 
-            // ⚠️ フラグはAuthProviderが確認後に削除するため、ここでは残す
+        if !sessionActive {
+            NSLog("🚪 ALE: No active session flag, clearing WebKit data to prevent ghost sessions")
 
             // 1. WebKitデータディレクトリを同期的にファイルシステムから削除
             //    WKWebView作成前に実行されるため、localStorage復元を確実に防ぐ
@@ -53,8 +57,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             ) {
                 NSLog("🚪 ALE: WKWebsiteDataStore also cleared via API")
             }
-
-            NSLog("🚪 ALE: Synchronous WebKit data deletion complete")
         }
 
         return true

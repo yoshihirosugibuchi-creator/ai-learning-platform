@@ -20,6 +20,7 @@ const KEYS = {
   USER_EMAIL: 'user_email',
   BIOMETRIC_ENABLED: 'biometric_enabled',
   LOGGED_OUT: 'logged_out',
+  SESSION_ACTIVE: 'session_active',
 } as const
 
 /** リフレッシュトークンを保存 */
@@ -65,6 +66,16 @@ export async function isBiometricEnabled(): Promise<boolean> {
 export async function clearSecureStorage(): Promise<void> {
   if (!isNativeApp()) return
   await SimpleStorage.clear()
+}
+
+/** セッションアクティブフラグを設定/解除（AppDelegateが起動時にチェック） */
+export async function setSessionActiveFlag(active: boolean): Promise<void> {
+  if (!isNativeApp()) return
+  if (active) {
+    await SimpleStorage.setItem({ key: KEYS.SESSION_ACTIVE, value: 'true' })
+  } else {
+    await SimpleStorage.removeItem({ key: KEYS.SESSION_ACTIVE })
+  }
 }
 
 /** ログアウトフラグを設定（アプリ再起動時にチェック用） */

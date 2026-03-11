@@ -519,9 +519,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    // 1. Supabaseセッション破棄（scope: 'global'でサーバー側トークンも無効化）
-    // ネイティブアプリ: セッションはUserDefaults(ALESimpleStorage)に保存されており、
-    // signOutがストレージアダプター経由で確実に削除する
+    // 1. ネイティブアプリ: UserDefaultsのセッションフラグを解除
+    // AppDelegateが次回起動時にこのフラグを見てWebKitデータを削除する
+    try {
+      const { setSessionActiveFlag } = await import('@/lib/native-secure-storage')
+      await setSessionActiveFlag(false)
+    } catch {
+      // ブラウザ環境では無視
+    }
+
+    // 2. Supabaseセッション破棄（scope: 'global'でサーバー側トークンも無効化）
     try {
       await supabase.auth.signOut({ scope: 'global' })
     } catch {
@@ -533,11 +540,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // 2. React状態クリア
+    // 3. React状態クリア
     setUser(null)
     setProfile(null)
 
-    // 3. JS側ストレージ全クリア（念のため）
+    // 4. JS側ストレージ全クリア
     try {
       sessionStorage.clear()
       localStorage.clear()
@@ -545,7 +552,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 無視
     }
 
-    // 4. ページを強制リロード
+    // 5. ページを強制リロード
     window.location.href = '/login'
   }
 

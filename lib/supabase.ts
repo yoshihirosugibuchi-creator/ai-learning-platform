@@ -10,72 +10,14 @@ if (process.env.NODE_ENV === 'development') {
   console.log('Supabase Key (first 10 chars):', supabaseAnonKey.substring(0, 10))
 }
 
-// ネイティブアプリ判定（Capacitor）
-const isCapacitorNative = typeof window !== 'undefined' &&
-  !!(window as unknown as Record<string, unknown>).Capacitor &&
-  (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } })
-    .Capacitor?.isNativePlatform?.() === true
-
-/**
- * ネイティブアプリ用ストレージアダプター
- * WKWebView の localStorage は終了時にディスクに書かれないことがあるため、
- * UserDefaults（ALESimpleStorage）に保存する
- */
-function createNativeStorage() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let pluginInstance: any = null
-
-  const getPlugin = async () => {
-    if (!pluginInstance) {
-      const { registerPlugin } = await import('@capacitor/core')
-      pluginInstance = registerPlugin('ALESimpleStorage')
-    }
-    return pluginInstance
-  }
-
-  return {
-    getItem: async (key: string): Promise<string | null> => {
-      try {
-        const plugin = await getPlugin()
-        const { value } = await plugin.getItem({ key })
-        return value ?? null
-      } catch {
-        // フォールバック: localStorage
-        return localStorage.getItem(key)
-      }
-    },
-    setItem: async (key: string, value: string): Promise<void> => {
-      try {
-        const plugin = await getPlugin()
-        await plugin.setItem({ key, value })
-      } catch {
-        // フォールバック: localStorage
-        localStorage.setItem(key, value)
-      }
-    },
-    removeItem: async (key: string): Promise<void> => {
-      try {
-        const plugin = await getPlugin()
-        await plugin.removeItem({ key })
-      } catch {
-        // フォールバック: localStorage
-        localStorage.removeItem(key)
-      }
-    },
-  }
-}
-
-// ストレージ選択: ネイティブ → UserDefaults、ブラウザ → localStorage（デフォルト）
-const storage = isCapacitorNative ? createNativeStorage() : undefined
-
-// Supabaseクライアントを作成（Database型あり）
+// Supabaseクライアントを作成（セッション保存先はデフォルトのlocalStorage）
+// ネイティブアプリのログアウト永続化はAppDelegate + UserDefaultsフラグで処理
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    flowType: 'pkce',
-    ...(storage ? { storage } : {}),
+    flowType: 'pkce'
   },
   global: {
     headers: {
@@ -94,6 +36,21 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 supabase.auth.onAuthStateChange((event, session) => {
   if (process.env.NODE_ENV === 'development') {
     console.log('🔐 Auth state change:', event, session?.user?.email || 'no user')
+  }
+
+  // ネイティブアプリ: UserDefaultsにセッション状態を同期
+  // ログアウト後アプリ再起動時に、AppDelegateがこのフラグを見て
+  // WKWebViewのlocalStorageを同期削除する
+  if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).Capacitor) {
+    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+      import('@/lib/native-secure-storage').then(({ setSessionActiveFlag }) => {
+        setSessionActiveFlag(true)
+      }).catch(() => {})
+    } else if (event === 'SIGNED_OUT') {
+      import('@/lib/native-secure-storage').then(({ setSessionActiveFlag }) => {
+        setSessionActiveFlag(false)
+      }).catch(() => {})
+    }
   }
 
   // Refresh Token エラーの処理
