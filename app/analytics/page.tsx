@@ -1,13 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import Header from '@/components/layout/Header'
-import MobileNav from '@/components/layout/MobileNav'
+import AppShell from '@/components/layout/AppShell'
 import { useAuth } from '@/components/auth/AuthProvider'
 import OptimizedAnalyticsPage from '@/components/analytics/OptimizedAnalyticsPage'
 
 export default function AnalyticsPage() {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { loading } = useAuth()
 
   // 認証ガード
@@ -16,13 +13,10 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)} />
-      <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-
-      <main className="container mx-auto px-4 py-8">
+    <AppShell>
+      <div className="container mx-auto px-4 py-8">
         <OptimizedAnalyticsPage />
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }

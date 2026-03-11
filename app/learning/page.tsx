@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { GraduationCap, BookOpen, Clock, TrendingUp, Star } from 'lucide-react'
-import Header from '@/components/layout/Header'
-import MobileNav from '@/components/layout/MobileNav'
+import AppShell from '@/components/layout/AppShell'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import CourseCard from '@/components/learning/CourseCard'
 import { getLearningCourses } from '@/lib/learning/data'
@@ -33,7 +32,6 @@ export default function LearningPage() {
     genres?: { categoryId: string; subcategoryId?: string; themes?: Array<{ subcategoryId?: string }> }[]
   }>>([])
   const [loading, setLoading] = useState(true)
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   // パフォーマンス監視
   useResourceMonitor()
@@ -229,11 +227,8 @@ export default function LearningPage() {
   // データエラー時のフォールバック
   if (!courses || courses.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)} />
-        <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-        
-        <main className="container mx-auto px-4 py-8">
+      <AppShell>
+        <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📚</div>
             <h2 className="text-2xl font-bold mb-2">コースが見つかりません</h2>
@@ -244,8 +239,8 @@ export default function LearningPage() {
               ページを再読み込み
             </Button>
           </div>
-        </main>
-      </div>
+        </div>
+      </AppShell>
     )
   }
 
@@ -253,17 +248,8 @@ export default function LearningPage() {
   const comingSoonCourses = courses.filter(course => course.status === 'coming_soon')
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header 
-        onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)}
-      />
-      
-      <MobileNav 
-        isOpen={mobileNavOpen}
-        onClose={() => setMobileNavOpen(false)}
-      />
-
-      <main className="container mx-auto px-4 py-6">
+    <AppShell>
+      <div className="container mx-auto px-4 py-6">
         <div className="space-y-8">
           {/* Header Section */}
           <div className="text-center space-y-4">
@@ -388,7 +374,7 @@ export default function LearningPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }

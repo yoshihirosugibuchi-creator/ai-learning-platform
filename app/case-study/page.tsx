@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Header from '@/components/layout/Header'
-import MobileNav from '@/components/layout/MobileNav'
+import AppShell from '@/components/layout/AppShell'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import CaseStudyList from '@/components/case-study/CaseStudyList'
 import CaseStudyCard from '@/components/case-study/CaseStudyCard'
@@ -39,7 +38,6 @@ interface DailyChallenge extends Problem {
 export default function CaseStudyPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [recommendations, setRecommendations] = useState<Problem[]>([])
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null)
@@ -131,11 +129,8 @@ export default function CaseStudyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)} />
-      <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-
-      <main className="container mx-auto px-4 py-6">
+    <AppShell>
+      <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold mb-2">ケーススタディ</h1>
           <p className="text-muted-foreground">
@@ -208,7 +203,7 @@ export default function CaseStudyPage() {
           </div>
           <CaseStudyList />
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }

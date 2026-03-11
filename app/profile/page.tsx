@@ -34,8 +34,7 @@ import {
   Settings,
   Bell
 } from 'lucide-react'
-import Header from '@/components/layout/Header'
-import MobileNav from '@/components/layout/MobileNav'
+import AppShell from '@/components/layout/AppShell'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { getUserStats } from '@/lib/supabase-quiz'
@@ -53,7 +52,6 @@ import ReviewSettingsModal from '@/components/profile/ReviewSettingsModal'
 export default function ProfilePage() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user, profile, loading, refreshProfile } = useAuth()
   const { toast } = useToast()
   const [activeTab, setActiveTab] = useState('basic')
@@ -404,11 +402,8 @@ export default function ProfilePage() {
   const learningStreak = xpStats?.user.learning_streak || 0
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)} />
-      <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-
-      <main className="container mx-auto px-4 py-6">
+    <AppShell>
+      <div className="container mx-auto px-4 py-6">
         {/* プロフィールヘッダー */}
         <div className="mb-8">
           <div className="flex items-start justify-between">
@@ -1306,23 +1301,23 @@ export default function ProfilePage() {
             </div>
           </TabsContent>
         </Tabs>
-      </main>
+      </div>
 
       {/* クイズ設定モーダル */}
-      <QuizSettingsModal 
-        isOpen={quizSettingsModalOpen} 
+      <QuizSettingsModal
+        isOpen={quizSettingsModalOpen}
         onClose={() => {
           setQuizSettingsModalOpen(false)
           // モーダル閉じた時はセッションストレージもクリア
           sessionStorage.removeItem('quiz-settings-modal-open')
-        }} 
+        }}
       />
 
       {/* 復習設定モーダル */}
-      <ReviewSettingsModal 
-        isOpen={reviewSettingsModalOpen} 
-        onClose={() => setReviewSettingsModalOpen(false)} 
+      <ReviewSettingsModal
+        isOpen={reviewSettingsModalOpen}
+        onClose={() => setReviewSettingsModalOpen(false)}
       />
-    </div>
+    </AppShell>
   )
 }

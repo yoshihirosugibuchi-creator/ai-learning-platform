@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import Header from '@/components/layout/Header'
-import MobileNav from '@/components/layout/MobileNav'
+import AppShell from '@/components/layout/AppShell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,7 +18,6 @@ import { isNativeApp } from '@/lib/capacitor-utils'
 import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function SettingsPage() {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const router = useRouter()
   const { user, getSessionRefreshToken } = useAuth()
 
@@ -192,13 +190,8 @@ export default function SettingsPage() {
   }, {} as Record<string, typeof settingsMenuItems>)
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header 
-        onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)}
-      />
-      <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-
-      <main className="container mx-auto px-4 py-6">
+    <AppShell>
+      <div className="container mx-auto px-4 py-6">
         <div className="space-y-6">
           {/* Page Header */}
           <div className="flex items-center space-x-4">
@@ -309,7 +302,7 @@ export default function SettingsPage() {
           ))}
 
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }

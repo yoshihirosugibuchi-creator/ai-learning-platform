@@ -1,15 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Header from '@/components/layout/Header'
-import MobileNav from '@/components/layout/MobileNav'
+import AppShell from '@/components/layout/AppShell'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import CategoryGrid from '@/components/categories/CategoryGrid'
 import { useAuth } from '@/components/auth/AuthProvider'
 
 export default function CategoriesPage() {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
 
@@ -38,11 +36,8 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)} />
-      <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-
-      <main className="container mx-auto px-4 py-6">
+    <AppShell>
+      <div className="container mx-auto px-4 py-6">
         <CategoryGrid
           title="学習カテゴリー"
           description="ALEで学ぶことができるスキルの一覧です"
@@ -51,7 +46,7 @@ export default function CategoriesPage() {
           showStats={false}
           onCategoryClick={handleCategoryClick}
         />
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }

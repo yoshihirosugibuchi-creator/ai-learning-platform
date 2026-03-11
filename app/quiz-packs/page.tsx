@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import Header from '@/components/layout/Header'
-import MobileNav from '@/components/layout/MobileNav'
+import AppShell from '@/components/layout/AppShell'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -56,7 +55,6 @@ export default function QuizPacksPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { user, loading: authLoading } = useAuth()
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<string | null>(null)
   const [packs, setPacks] = useState<QuizPack[]>([])
@@ -153,11 +151,8 @@ export default function QuizPacksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)} />
-      <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-
-      <main className="container mx-auto px-4 py-6">
+    <AppShell>
+      <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Package className="h-6 w-6" />
@@ -267,7 +262,7 @@ export default function QuizPacksPage() {
             ))}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }

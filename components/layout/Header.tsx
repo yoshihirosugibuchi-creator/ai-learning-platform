@@ -130,72 +130,65 @@ export default function Header({
                 <span className="text-muted-foreground">日連続</span>
               </div>
 
-              {/* Quick Actions */}
+              {/* Quick Actions - デスクトップ用ナビゲーション */}
               <div className="flex items-center space-x-1">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/" prefetch={true}>
-                    <Home className="h-4 w-4" />
-                    <span className="hidden md:inline ml-1">ホーム</span>
-                  </Link>
-                </Button>
-                
-                <Button variant="ghost" size="sm" asChild>
-                  <Link 
-                    href="/learning" 
-                    prefetch={true}
-                    onClick={() => {
-                      console.log('🔗 Header: Navigating to /learning')
-                      console.log('👤 Header: Current user state:', { 
-                        userId: user?.id, 
-                        email: user?.email, 
-                        loading 
-                      })
-                    }}
-                  >
-                    <GraduationCap className="h-4 w-4" />
-                    <span className="hidden md:inline ml-1">コース</span>
-                  </Link>
-                </Button>
-                
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/categories" prefetch={true}>
-                    <BookOpen className="h-4 w-4" />
-                    <span className="hidden md:inline ml-1">カテゴリー</span>
-                  </Link>
-                </Button>
+                {/* デスクトップのみ表示（モバイルはBottomNavに移動） */}
+                <div className="hidden md:flex items-center space-x-1">
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/" prefetch={true}>
+                      <Home className="h-4 w-4" />
+                      <span className="ml-1">ホーム</span>
+                    </Link>
+                  </Button>
 
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/case-study" prefetch={true}>
-                    <Briefcase className="h-4 w-4" />
-                    <span className="hidden md:inline ml-1">ケーススタディ</span>
-                  </Link>
-                </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/learning" prefetch={true}>
+                      <GraduationCap className="h-4 w-4" />
+                      <span className="ml-1">コース</span>
+                    </Link>
+                  </Button>
 
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/quiz-packs" prefetch={true}>
-                    <Package className="h-4 w-4" />
-                    <span className="hidden md:inline ml-1">クイズ</span>
-                  </Link>
-                </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/categories" prefetch={true}>
+                      <BookOpen className="h-4 w-4" />
+                      <span className="ml-1">カテゴリー</span>
+                    </Link>
+                  </Button>
 
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/profile" prefetch={true}>
-                    <User className="h-4 w-4" />
-                    <span className="hidden md:inline ml-1">マイページ</span>
-                  </Link>
-                </Button>
-                
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/case-study" prefetch={true}>
+                      <Briefcase className="h-4 w-4" />
+                      <span className="ml-1">ケーススタディ</span>
+                    </Link>
+                  </Button>
+
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/quiz-packs" prefetch={true}>
+                      <Package className="h-4 w-4" />
+                      <span className="ml-1">クイズ</span>
+                    </Link>
+                  </Button>
+
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/profile" prefetch={true}>
+                      <User className="h-4 w-4" />
+                      <span className="ml-1">マイページ</span>
+                    </Link>
+                  </Button>
+
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/analytics" prefetch={true}>
+                      <Brain className="h-4 w-4" />
+                      <span className="ml-1">分析</span>
+                    </Link>
+                  </Button>
+                </div>
+
+                {/* モバイル＋デスクトップ共通: コレクション・通知 */}
                 <Button variant="ghost" size="sm" asChild>
                   <Link href="/collection" prefetch={true}>
                     <Bookmark className="h-4 w-4" />
                     <span className="hidden md:inline ml-1">コレクション</span>
-                  </Link>
-                </Button>
-                
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/analytics" prefetch={true}>
-                    <Brain className="h-4 w-4" />
-                    <span className="hidden md:inline ml-1">分析</span>
                   </Link>
                 </Button>
                 
@@ -329,65 +322,66 @@ export default function Header({
                 </DropdownMenu>
               </div>
 
-              {/* User Info */}
+              {/* User Stats - デスクトップのみ */}
               <div className="hidden md:flex items-center space-x-3">
                 <div className="flex items-center space-x-1 text-sm">
                   <Trophy className="h-4 w-4 text-purple-500" />
                   <span className="font-medium">Lv.{currentLevel}</span>
                 </div>
-                
+
                 <div className="flex items-center space-x-1 text-sm">
                   <Zap className="h-4 w-4 text-blue-500" />
                   <span className="font-medium">{xpStats ? xpStats.user.total_xp.toLocaleString() : 0}</span>
                   <span className="text-muted-foreground">XP</span>
                 </div>
-                
+
                 <div className="flex items-center space-x-1 text-sm">
                   <Sparkles className="h-4 w-4 text-yellow-500" />
                   <span className="font-medium">{displaySKP}</span>
                   <span className="text-muted-foreground">SKP</span>
                 </div>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center space-x-2 h-auto p-2">
-                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
-                        {user.email?.charAt(0).toUpperCase() || 'U'}
-                      </div>
-                      <div className="flex flex-col text-left">
-                        <span className="text-sm font-medium">{user.email}</span>
-                      </div>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile" className="flex items-center">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>マイページ</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    {isAdmin && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin" className="flex items-center">
-                          <Shield className="mr-2 h-4 w-4" />
-                          <span>管理者</span>
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem asChild>
-                      <Link href="/settings" className="flex items-center">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>設定</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>ログアウト</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
+
+              {/* User Avatar Dropdown - モバイル＋デスクトップ共通 */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-2 h-auto p-2">
+                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
+                      {user.email?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <div className="hidden md:flex flex-col text-left">
+                      <span className="text-sm font-medium">{user.email}</span>
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>マイページ</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="flex items-center">
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>管理者</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="flex items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>設定</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>ログアウト</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <div className="flex items-center space-x-2">

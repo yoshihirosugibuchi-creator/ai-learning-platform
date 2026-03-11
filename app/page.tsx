@@ -22,8 +22,7 @@ import {
   GraduationCap,
   FileText
 } from 'lucide-react'
-import Header from '@/components/layout/Header'
-import MobileNav from '@/components/layout/MobileNav'
+import AppShell from '@/components/layout/AppShell'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useReviewQuickCheck } from '@/hooks/useReviewQuickCheck'
@@ -53,7 +52,7 @@ interface ContentCounts {
 export default function Home() {
   const router = useRouter()
   const { toast } = useToast()
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  // mobileNavOpen は AppShell 内部で管理
   const { user, loading } = useAuth()
   const { reviewStatus, isLoading: reviewLoading } = useReviewQuickCheck()
   const [challengeSettingsOpen, setChallengeSettingsOpen] = useState(false)
@@ -154,17 +153,8 @@ export default function Home() {
     <>
       {loading && <LoadingScreen />}
 
-      <div className="min-h-screen bg-background">
-        <Header
-          onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)}
-        />
-
-        <MobileNav
-          isOpen={mobileNavOpen}
-          onClose={() => setMobileNavOpen(false)}
-        />
-
-        <main className="container mx-auto px-4 py-4">
+      <AppShell>
+        <div className="container mx-auto px-4 py-4">
           {!user ? (
             <div className="text-center py-12">
               <h1 className="text-xl font-bold mb-4">AI Learning Enterprise</h1>
@@ -553,7 +543,7 @@ export default function Home() {
               )}
             </div>
           )}
-        </main>
+        </div>
 
         {/* 選ばれし課題設定モーダル */}
         <ChallengeSettingsModal
@@ -562,7 +552,7 @@ export default function Home() {
           onSave={fetchChallengeSelections}
           currentSelections={challengeSelections}
         />
-      </div>
+      </AppShell>
     </>
   )
 }

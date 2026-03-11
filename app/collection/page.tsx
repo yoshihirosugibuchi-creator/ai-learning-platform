@@ -18,8 +18,7 @@ import {
   BookOpen,
   Brain
 } from 'lucide-react'
-import Header from '@/components/layout/Header'
-import MobileNav from '@/components/layout/MobileNav'
+import AppShell from '@/components/layout/AppShell'
 import WisdomCard from '@/components/cards/WisdomCard'
 import KnowledgeCard from '@/components/cards/KnowledgeCard'
 import { useAuth } from '@/components/auth/AuthProvider'
@@ -48,7 +47,6 @@ const RARITIES = ['コモン', 'レア', 'エピック', 'レジェンダリー'
 
 export default function CollectionPage() {
   // すべてのState Hooksを最初に宣言
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [selectedRarity, setSelectedRarity] = useState<string>('all')
   const [selectedWisdomCategory, setSelectedWisdomCategory] = useState<string>('all')
   // selectedKnowledgeCategory removed - V2システムではカテゴリーフィルター不要
@@ -456,24 +454,19 @@ export default function CollectionPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)} />
-        <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-        <main className="container mx-auto px-4 py-6">
+      <AppShell>
+        <div className="container mx-auto px-4 py-6">
           <div className="text-center py-12">
             <p>ログインが必要です</p>
           </div>
-        </main>
-      </div>
+        </div>
+      </AppShell>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header onMobileMenuToggle={() => setMobileNavOpen(!mobileNavOpen)} />
-      <MobileNav isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-
-      <main className="container mx-auto px-4 py-6">
+    <AppShell>
+      <div className="container mx-auto px-4 py-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div className="mb-4 md:mb-0">
@@ -1095,7 +1088,7 @@ export default function CollectionPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }
