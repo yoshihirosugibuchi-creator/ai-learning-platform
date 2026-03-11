@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { GraduationCap, BookOpen, Clock, TrendingUp, Star } from 'lucide-react'
 import AppShell from '@/components/layout/AppShell'
+import PageHeader from '@/components/layout/PageHeader'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import CourseCard from '@/components/learning/CourseCard'
 import { getLearningCourses } from '@/lib/learning/data'
@@ -32,6 +33,7 @@ export default function LearningPage() {
     genres?: { categoryId: string; subcategoryId?: string; themes?: Array<{ subcategoryId?: string }> }[]
   }>>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // パフォーマンス監視
   useResourceMonitor()
@@ -244,23 +246,27 @@ export default function LearningPage() {
     )
   }
 
-  const availableCourses = courses.filter(course => course.status === 'available')
-  const comingSoonCourses = courses.filter(course => course.status === 'coming_soon')
+  const filterBySearch = (course: { title: string; description: string }) => {
+    if (!searchQuery) return true
+    const q = searchQuery.toLowerCase()
+    return course.title.toLowerCase().includes(q) || course.description.toLowerCase().includes(q)
+  }
+  const availableCourses = courses.filter(course => course.status === 'available' && filterBySearch(course))
+  const comingSoonCourses = courses.filter(course => course.status === 'coming_soon' && filterBySearch(course))
 
   return (
     <AppShell>
       <div className="container mx-auto px-4 py-6">
         <div className="space-y-8">
           {/* Header Section */}
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center space-x-3">
-              <GraduationCap className="h-8 w-8 text-primary" />
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">コース学習メニュー</h1>
-            </div>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              3分のマイクロラーニングで、ビジネススキルを体系的に身につけよう
-            </p>
-          </div>
+          <PageHeader
+            icon={GraduationCap}
+            title="コース学習メニュー"
+            description="3分のマイクロラーニングで、ビジネススキルを体系的に身につけよう"
+            searchValue={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchPlaceholder="コース名で検索..."
+          />
 
 
           {/* Available Courses */}

@@ -20,9 +20,11 @@ import {
   Dumbbell,
   HelpCircle,
   GraduationCap,
-  FileText
+  FileText,
+  Home as HomeIcon
 } from 'lucide-react'
 import AppShell from '@/components/layout/AppShell'
+import PageHeader from '@/components/layout/PageHeader'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useReviewQuickCheck } from '@/hooks/useReviewQuickCheck'
@@ -169,11 +171,10 @@ export default function Home() {
           ) : (
             <div className="space-y-6 max-w-4xl mx-auto">
               {/* ページタイトル */}
-              <div className="text-center">
-                <h1 className="text-lg font-bold text-foreground">
-                  マイセレクションダッシュボード
-                </h1>
-              </div>
+              <PageHeader
+                icon={HomeIcon}
+                title="ホーム"
+              />
 
               {/* ===== 日々の努力 ===== */}
               <section>

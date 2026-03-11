@@ -9,7 +9,8 @@ import CategoryCard from './CategoryCard'
 import { getCategories, getSkillLevels } from '@/lib/categories'
 import { MainCategory, IndustryCategory, SkillLevel, SkillLevelDefinition } from '@/lib/types/category'
 import { Question } from '@/lib/types'
-import { Search, Filter, Users, Building2, TrendingUp, BookOpen } from 'lucide-react'
+import { Search, Filter, Users, Building2, TrendingUp, BookOpen, Layers } from 'lucide-react'
+import PageHeader from '@/components/layout/PageHeader'
 import { useUserContext } from '@/contexts/UserContext'
 
 interface CategoryGridProps {
@@ -150,10 +151,7 @@ export default function CategoryGrid({
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="text-center">
-          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2">{title}</h1>
-          <p className="text-muted-foreground">{description}</p>
-        </div>
+        <PageHeader icon={Layers} title={title || 'カテゴリー'} description={description} />
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           <p className="text-muted-foreground mt-2">カテゴリーを読み込んでいます...</p>

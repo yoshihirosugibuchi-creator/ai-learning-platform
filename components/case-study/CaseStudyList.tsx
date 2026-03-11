@@ -33,6 +33,7 @@ export default function CaseStudyList({ initialProblems }: CaseStudyListProps) {
   const [keyword, setKeyword] = useState('')
   const [difficulty, setDifficulty] = useState<string>('all')
   const [industry, setIndustry] = useState<string>('all')
+  const [completionStatus, setCompletionStatus] = useState<string>('all')
   const [showFilters, setShowFilters] = useState(false)
 
   const fetchProblems = async () => {
@@ -119,6 +120,17 @@ export default function CaseStudyList({ initialProblems }: CaseStudyListProps) {
 
         {showFilters && (
           <div className="flex flex-col sm:flex-row gap-2">
+            <Select value={completionStatus} onValueChange={setCompletionStatus}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="進捗" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">すべて</SelectItem>
+                <SelectItem value="new">新規</SelectItem>
+                <SelectItem value="retry">再挑戦</SelectItem>
+              </SelectContent>
+            </Select>
+
             <Select value={difficulty} onValueChange={setDifficulty}>
               <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="難易度" />
@@ -150,17 +162,24 @@ export default function CaseStudyList({ initialProblems }: CaseStudyListProps) {
       </div>
 
       {/* 問題一覧 */}
-      {problems.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          該当する問題がありません
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {problems.map((problem) => (
-            <CaseStudyCard key={problem.id} problem={problem} />
-          ))}
-        </div>
-      )}
+      {(() => {
+        const filtered = completionStatus === 'all'
+          ? problems
+          : completionStatus === 'new'
+            ? problems.filter(p => !p.user_completed)
+            : problems.filter(p => p.user_completed)
+        return filtered.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            該当する問題がありません
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtered.map((problem) => (
+              <CaseStudyCard key={problem.id} problem={problem} />
+            ))}
+          </div>
+        )
+      })()}
     </div>
   )
 }

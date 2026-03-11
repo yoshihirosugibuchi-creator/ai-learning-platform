@@ -35,6 +35,7 @@ import {
   Bell
 } from 'lucide-react'
 import AppShell from '@/components/layout/AppShell'
+import PageHeader from '@/components/layout/PageHeader'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { getUserStats } from '@/lib/supabase-quiz'
@@ -404,6 +405,14 @@ export default function ProfilePage() {
   return (
     <AppShell>
       <div className="container mx-auto px-4 py-6">
+        {/* ページタイトル */}
+        <div className="mb-6">
+          <PageHeader
+            icon={User}
+            title="マイページ"
+          />
+        </div>
+
         {/* プロフィールヘッダー */}
         <div className="mb-8">
           <div className="flex items-start justify-between">
@@ -412,9 +421,9 @@ export default function ProfilePage() {
                 {(profileData.displayName || profileData.name || user.email)?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div className="space-y-1 min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 break-words word-break-all overflow-hidden">
+                <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 break-words word-break-all overflow-hidden">
                   {profileData.displayName || profileData.name || 'ユーザー'}
-                </h1>
+                </h2>
                 {profileData.industry && (
                   <p className="text-gray-600 flex items-center">
                     <Building2 className="h-4 w-4 mr-2" />

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import PageHeader from '@/components/layout/PageHeader'
 import { 
   Bookmark, 
   Trophy, 
@@ -468,16 +469,12 @@ export default function CollectionPage() {
     <AppShell>
       <div className="container mx-auto px-4 py-6">
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <div className="mb-4 md:mb-0">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold flex items-center space-x-2">
-              <Bookmark className="h-8 w-8 text-primary" />
-              <span>カードコレクション</span>
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              学習の成果として手に入れた知恵とスキル
-            </p>
-          </div>
+        <div className="mb-6">
+          <PageHeader
+            icon={Bookmark}
+            title="カードコレクション"
+            description="学習の成果として手に入れた知恵とスキル"
+          />
         </div>
 
         {/* Main Collection Tabs */}

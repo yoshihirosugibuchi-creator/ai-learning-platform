@@ -13,6 +13,7 @@ import XPStatsCard from '@/components/xp/XPStatsCard'
 import LearningQualityScoreCard from '@/components/analytics/LearningQualityScoreCard'
 import HourlyEfficiencyChart from '@/components/analytics/HourlyEfficiencyChart'
 import LearningPatternComparison from '@/components/analytics/LearningPatternComparison'
+import PageHeader from '@/components/layout/PageHeader'
 
 // タブごとのデータキャッシュ
 interface TabCache {
@@ -224,15 +225,18 @@ export default function OptimizedAnalyticsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">学習分析</h1>
-          <p className="text-gray-600 mt-2">あなたの学習進捗と成果を詳しく分析します</p>
+      <div className="space-y-4">
+        <PageHeader
+          icon={BarChart3}
+          title="学習分析"
+          description="あなたの学習進捗と成果を詳しく分析します"
+        />
+        <div className="flex justify-center">
+          <Button onClick={handleRefresh} disabled={isRefreshing} variant="outline" size="sm">
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? '更新中...' : '更新'}
+          </Button>
         </div>
-        <Button onClick={handleRefresh} disabled={isRefreshing} variant="outline">
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          {isRefreshing ? '更新中...' : '更新'}
-        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">

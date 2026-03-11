@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import AppShell from '@/components/layout/AppShell'
+import PageHeader from '@/components/layout/PageHeader'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -59,6 +60,7 @@ export default function QuizPacksPage() {
   const [starting, setStarting] = useState<string | null>(null)
   const [packs, setPacks] = useState<QuizPack[]>([])
   const [skillLevels, setSkillLevels] = useState<SkillLevel[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -154,25 +156,32 @@ export default function QuizPacksPage() {
     <AppShell>
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Package className="h-6 w-6" />
-            クイズ
-          </h1>
-          <p className="text-muted-foreground">
-            テーマ別のクイズパックで効率的に学習しましょう
-          </p>
+          <PageHeader
+            icon={Package}
+            title="クイズ"
+            description="テーマ別のクイズパックで効率的に学習しましょう"
+            searchValue={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchPlaceholder="パック名で検索..."
+          />
         </div>
 
-        {packs.length === 0 ? (
+        <h2 className="text-lg font-semibold mb-4">利用可能なクイズパック</h2>
+
+        {(() => {
+          const filteredPacks = searchQuery
+            ? packs.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description?.toLowerCase().includes(searchQuery.toLowerCase()))
+            : packs
+          return filteredPacks.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">利用可能なクイズパックがありません</p>
+              <p className="text-muted-foreground">{searchQuery ? '該当するクイズパックがありません' : '利用可能なクイズパックがありません'}</p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {packs.map((pack) => (
+            {filteredPacks.map((pack) => (
               <Card
                 key={pack.id}
                 className={`overflow-hidden border bg-gradient-to-br ${colorThemeClasses[pack.color_theme] || colorThemeClasses.primary}`}
@@ -261,7 +270,8 @@ export default function QuizPacksPage() {
               </Card>
             ))}
           </div>
-        )}
+        )
+        })()}
       </div>
     </AppShell>
   )

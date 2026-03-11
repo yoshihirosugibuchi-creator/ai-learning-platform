@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Fingerprint
 } from 'lucide-react'
+import PageHeader from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { isNativeApp } from '@/lib/capacitor-utils'
 import { useAuth } from '@/components/auth/AuthProvider'
@@ -194,17 +195,11 @@ export default function SettingsPage() {
       <div className="container mx-auto px-4 py-6">
         <div className="space-y-6">
           {/* Page Header */}
-          <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
-              <Settings className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">設定</h1>
-              <p className="text-muted-foreground">
-                アプリケーションの設定と管理オプション
-              </p>
-            </div>
-          </div>
+          <PageHeader
+            icon={Settings}
+            title="設定"
+            description="アプリケーションの設定と管理オプション"
+          />
 
           {/* Face ID / Touch ID（ネイティブアプリのみ表示） */}
           {isNative && (
