@@ -67,6 +67,13 @@ export async function clearSecureStorage(): Promise<void> {
   await SimpleStorage.clear()
 }
 
+/** 認証トークンのみクリア（biometric_enabledは保持） */
+export async function clearAuthTokens(): Promise<void> {
+  if (!isNativeApp()) return
+  await SimpleStorage.removeItem({ key: KEYS.REFRESH_TOKEN })
+  await SimpleStorage.removeItem({ key: KEYS.USER_EMAIL })
+}
+
 /** セッションアクティブフラグを設定/解除（AppDelegateとAuthProviderが起動時にチェック） */
 export async function setSessionActiveFlag(active: boolean): Promise<void> {
   if (!isNativeApp()) return

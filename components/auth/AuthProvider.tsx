@@ -555,11 +555,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    // 1. ネイティブアプリ: UserDefaultsのセッションフラグを解除
-    // AppDelegateが次回起動時にこのフラグを見てWebKitデータを削除する
+    // 1. ネイティブアプリ: セッションフラグ解除 + 古いトークンクリア
+    // biometric_enabledフラグは保持（再ログイン時にFace IDを使えるようにする）
     try {
-      const { setSessionActiveFlag } = await import('@/lib/native-secure-storage')
+      const { setSessionActiveFlag, clearAuthTokens } = await import('@/lib/native-secure-storage')
       await setSessionActiveFlag(false)
+      await clearAuthTokens()
     } catch {
       // ブラウザ環境では無視
     }

@@ -43,8 +43,18 @@ supabase.auth.onAuthStateChange((event, session) => {
   // WKWebViewのlocalStorageを同期削除する
   if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).Capacitor) {
     if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-      import('@/lib/native-secure-storage').then(({ setSessionActiveFlag }) => {
-        setSessionActiveFlag(true)
+      import('@/lib/native-secure-storage').then(async ({ setSessionActiveFlag, isBiometricEnabled, storeRefreshToken, storeUserEmail }) => {
+        await setSessionActiveFlag(true)
+        // Face ID有効なら新しいトークンを自動保存（再ログイン後も維持）
+        if (session.refresh_token) {
+          const enabled = await isBiometricEnabled()
+          if (enabled) {
+            await storeRefreshToken(session.refresh_token)
+            if (session.user?.email) {
+              await storeUserEmail(session.user.email)
+            }
+          }
+        }
       }).catch(() => {})
     } else if (event === 'SIGNED_OUT') {
       import('@/lib/native-secure-storage').then(({ setSessionActiveFlag }) => {

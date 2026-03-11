@@ -159,7 +159,7 @@ export default function QuizPacksPage() {
           <PageHeader
             icon={Package}
             title="クイズ"
-            description="テーマ別のクイズパックで効率的にスキル定着"
+            description="クイズパックで効率的にスキル定着"
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
             searchPlaceholder="パック名で検索..."
