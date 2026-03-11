@@ -229,7 +229,7 @@ export default function OptimizedAnalyticsPage() {
         <PageHeader
           icon={BarChart3}
           title="学習分析"
-          description="あなたの学習進捗と成果を詳しく分析します"
+          description="学習進捗と成果を詳しく分析"
         />
         <div className="flex justify-center">
           <Button onClick={handleRefresh} disabled={isRefreshing} variant="outline" size="sm">

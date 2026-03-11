@@ -26,7 +26,6 @@ export default function SettingsPage() {
   const [isNative, setIsNative] = useState(false)
   const [biometricStatus, setBiometricStatus] = useState<'loading' | 'unavailable' | 'available' | 'enabled'>('loading')
   const [biometricLabel, setBiometricLabel] = useState('Face ID')
-  const [biometricDebug, setBiometricDebug] = useState('')
 
   useEffect(() => {
     const native = isNativeApp()
@@ -38,11 +37,9 @@ export default function SettingsPage() {
     let mounted = true
     async function check() {
       try {
-        setBiometricDebug('importing modules...')
         const { checkBiometricAvailability, getBiometryLabel } = await import('@/lib/biometric-auth')
         const { isBiometricEnabled } = await import('@/lib/native-secure-storage')
         if (!mounted) return
-        setBiometricDebug('modules loaded, calling checkBiometry...')
 
         // タイムアウト付きでプラグイン呼び出し（ハング防止）
         const timeout = <T,>(p: Promise<T>, ms: number, label: string): Promise<T> =>
@@ -54,7 +51,6 @@ export default function SettingsPage() {
         ])
         if (!mounted) return
         setBiometricLabel(getBiometryLabel(info.biometryType))
-        setBiometricDebug(`available=${info.isAvailable}, type=${info.biometryType}, reason=${info.reason}, enabled=${enabled}`)
         if (enabled) {
           setBiometricStatus('enabled')
         } else if (info.isAvailable) {
@@ -62,10 +58,9 @@ export default function SettingsPage() {
         } else {
           setBiometricStatus('unavailable')
         }
-      } catch (e) {
+      } catch {
         if (mounted) {
           setBiometricStatus('unavailable')
-          setBiometricDebug(`error: ${e instanceof Error ? e.message : String(e)}`)
         }
       }
     }
@@ -79,39 +74,27 @@ export default function SettingsPage() {
     if (biometricProcessing) return
     setBiometricProcessing(true)
     try {
-      setBiometricDebug('Face ID認証を開始...')
       // 1. Face ID認証を実行（本人確認）
       const { authenticateWithBiometric } = await import('@/lib/biometric-auth')
       const authResult = await authenticateWithBiometric()
-      if (!authResult.success) {
-        setBiometricDebug(`認証失敗: ${authResult.error || 'キャンセル'}`)
-        return
-      }
+      if (!authResult.success) return
+
       // 2. 認証成功 → セッション情報取得
-      setBiometricDebug('認証成功、セッション取得中...')
       const refreshToken = await getSessionRefreshToken()
-      if (!refreshToken || !user?.email) {
-        setBiometricDebug('エラー: セッション情報が取得できません')
-        return
-      }
+      if (!refreshToken || !user?.email) return
+
       // 3. Keychainに保存（各ステップにタイムアウト付き）
       const withTimeout = <T,>(p: Promise<T>, ms: number, label: string): Promise<T> =>
         Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error(`${label} timeout`)), ms))])
 
-      setBiometricDebug('Keychain保存: refreshToken...')
       const { storeRefreshToken, storeUserEmail, setBiometricEnabled } = await import('@/lib/native-secure-storage')
       await withTimeout(storeRefreshToken(refreshToken), 5000, 'storeRefreshToken')
-
-      setBiometricDebug('Keychain保存: email...')
       await withTimeout(storeUserEmail(user.email), 5000, 'storeUserEmail')
-
-      setBiometricDebug('Keychain保存: biometricEnabled...')
       await withTimeout(setBiometricEnabled(true), 5000, 'setBiometricEnabled')
 
       setBiometricStatus('enabled')
-      setBiometricDebug('Face ID有効化完了')
-    } catch (e) {
-      setBiometricDebug(`エラー: ${e instanceof Error ? e.message : String(e)}`)
+    } catch {
+      // エラー時は何もしない
     } finally {
       setBiometricProcessing(false)
     }
@@ -121,13 +104,11 @@ export default function SettingsPage() {
     if (biometricProcessing) return
     setBiometricProcessing(true)
     try {
-      setBiometricDebug('無効化中...')
       const { clearSecureStorage } = await import('@/lib/native-secure-storage')
       await clearSecureStorage()
       setBiometricStatus('available')
-      setBiometricDebug('Face ID無効化完了')
-    } catch (e) {
-      setBiometricDebug(`エラー: ${e instanceof Error ? e.message : String(e)}`)
+    } catch {
+      // エラー時は何もしない
     } finally {
       setBiometricProcessing(false)
     }
@@ -221,11 +202,6 @@ export default function SettingsPage() {
                         {biometricStatus === 'available' && '次回から素早くログインできます'}
                         {biometricStatus === 'enabled' && '有効'}
                       </div>
-                      {biometricDebug && (
-                        <div className="text-xs text-muted-foreground mt-1 font-mono">
-                          {biometricDebug}
-                        </div>
-                      )}
                     </div>
                   </div>
                   {biometricStatus === 'available' && (

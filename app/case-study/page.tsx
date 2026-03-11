@@ -35,7 +35,7 @@ export default function CaseStudyPage() {
           <PageHeader
             icon={Briefcase}
             title="ケーススタディ"
-            description="実践的なビジネスケースで思考力を鍛えましょう"
+            description="実践的なビジネスケースで思考力強化"
           />
         </div>
 

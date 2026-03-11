@@ -40,7 +40,7 @@ export default function CategoriesPage() {
       <div className="container mx-auto px-4 py-6">
         <CategoryGrid
           title="学習カテゴリー"
-          description="ALEで学ぶことができるスキルの一覧です"
+          description="現在利用可能な学習カテゴリー"
           showSearch={false}
           showFilter={false}
           showStats={false}

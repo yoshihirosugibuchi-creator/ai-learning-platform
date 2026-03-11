@@ -261,8 +261,8 @@ export default function LearningPage() {
           {/* Header Section */}
           <PageHeader
             icon={GraduationCap}
-            title="コース学習メニュー"
-            description="3分のマイクロラーニングで、ビジネススキルを体系的に身につけよう"
+            title="コース"
+            description="ビジネススキルを体系的に学習"
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
             searchPlaceholder="コース名で検索..."

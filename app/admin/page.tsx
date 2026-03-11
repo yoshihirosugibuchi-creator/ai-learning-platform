@@ -22,16 +22,18 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useUserRole } from '@/hooks/useUserRole'
+import PageHeader from '@/components/layout/PageHeader'
 
 export default function AdminPage() {
   const { isSystemAdmin } = useUserRole()
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">管理者パネル</h1>
-        <p className="text-muted-foreground">システム管理とデータメンテナンス</p>
-      </div>
+      <PageHeader
+        icon={Shield}
+        title="管理者パネル"
+        description="システム管理とデータメンテナンス"
+      />
       
       {/* 管理者共通メニュー */}
       <div>
