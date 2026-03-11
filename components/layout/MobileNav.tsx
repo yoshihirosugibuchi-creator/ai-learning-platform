@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Home, User, Bookmark, Bell, X, BookOpen, GraduationCap, LogOut, Settings, Shield, Briefcase, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useUserContext } from '@/contexts/UserContext'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { useUserRole } from '@/hooks/useUserRole'
 
 interface MobileNavProps {
@@ -14,12 +14,12 @@ interface MobileNavProps {
 
 export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const router = useRouter()
-  const { logout } = useUserContext()
+  const { signOut } = useAuth()
   const { isAdmin } = useUserRole()
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
     onClose()
+    await signOut()
     router.push('/login')
   }
 
