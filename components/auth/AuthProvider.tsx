@@ -303,9 +303,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else if (event === 'SIGNED_OUT') {
           console.log('👋 User signed out')
-          // ネイティブアプリ: Keychainのデータをクリア
-          import('@/lib/native-secure-storage').then(({ clearSecureStorage }) => {
-            clearSecureStorage()
+          // ネイティブアプリ: トークンのみクリア（biometric_enabledは保持）
+          import('@/lib/native-secure-storage').then(({ clearAuthTokens }) => {
+            clearAuthTokens()
           }).catch(() => { /* ブラウザ環境では無視 */ })
         }
 
