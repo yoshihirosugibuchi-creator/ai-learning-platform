@@ -111,15 +111,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // ネイティブアプリ: initializeAuthのUserDefaultsチェックが完了するまで
+  // onAuthStateChangeがloading=falseにするのを防ぐフラグ
+  const nativeCheckDoneRef = useRef(false)
+
   useEffect(() => {
     let isMounted = true
-    
+
     console.log('🔧 AuthProvider: Initializing auth...')
-    
+    nativeCheckDoneRef.current = false
+
     // Set a shorter timeout to prevent long loading states
     const loadingTimeout = setTimeout(() => {
       if (isMounted) {
         console.warn('⚠️ Auth loading timeout - stopping loading state')
+        nativeCheckDoneRef.current = true
         setUser(null)
         setProfile(null)
         setLoading(false)
@@ -131,6 +137,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log('🔍 AuthProvider: Getting initial session...')
         setIsHydrated(true)
+
+        // ネイティブアプリ: UserDefaultsでセッション状態を確認
+        // ログアウト後はsession_activeフラグが無い → localStorageのゴーストセッションを破棄
+        if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).Capacitor) {
+          try {
+            const { isSessionActive } = await import('@/lib/native-secure-storage')
+            const active = await isSessionActive()
+            if (!active) {
+              console.log('🚪 No active session in UserDefaults, clearing ghost session')
+              await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
+              try { localStorage.clear() } catch { /* ignore */ }
+              nativeCheckDoneRef.current = true
+              setUser(null)
+              setProfile(null)
+              setLoading(false)
+              clearTimeout(loadingTimeout)
+              return
+            }
+          } catch {
+            // プラグインエラーは無視して通常フローへ
+          }
+        }
+        nativeCheckDoneRef.current = true
 
         const { data: { session }, error } = await supabase.auth.getSession()
         
@@ -253,7 +282,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔄 AuthProvider: Auth state change:', event, session?.user?.email || 'null')
-        
+
+        // ネイティブアプリ: UserDefaultsチェックが完了するまでINITIAL_SESSIONを無視
+        // WKWebViewがlocalStorageからゴーストセッションを復元する問題を防ぐ
+        if (event === 'INITIAL_SESSION' && !nativeCheckDoneRef.current) {
+          console.log('⏸️ Deferring INITIAL_SESSION until native check completes')
+          return
+        }
+
         // セッション期限切れを検知
         if (event === 'TOKEN_REFRESHED') {
           console.log('🔄 Token refreshed automatically')
@@ -272,22 +308,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             clearSecureStorage()
           }).catch(() => { /* ブラウザ環境では無視 */ })
         }
-        
+
         try {
           const user = session?.user ?? null
           setUser(user)
-          
+
           if (user) {
             // プロファイルの再読み込みが必要な条件をより厳密にチェック
             const needsReload = (
-              event === 'TOKEN_REFRESHED' || 
-              !profile || 
+              event === 'TOKEN_REFRESHED' ||
+              !profile ||
               (event === 'SIGNED_IN' && lastLoadedUserId !== user.id)
             )
-            
+
             // INITIAL_SESSIONは初期化で既に処理済みなのでスキップ
             const skipEvents = ['INITIAL_SESSION']
-            
+
             if (skipEvents.includes(event)) {
               console.log('⏭️ Skipping profile reload for skip event:', event)
             } else if (needsReload) {

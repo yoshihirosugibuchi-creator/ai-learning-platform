@@ -68,7 +68,7 @@ export async function clearSecureStorage(): Promise<void> {
   await SimpleStorage.clear()
 }
 
-/** セッションアクティブフラグを設定/解除（AppDelegateが起動時にチェック） */
+/** セッションアクティブフラグを設定/解除（AppDelegateとAuthProviderが起動時にチェック） */
 export async function setSessionActiveFlag(active: boolean): Promise<void> {
   if (!isNativeApp()) return
   if (active) {
@@ -76,6 +76,13 @@ export async function setSessionActiveFlag(active: boolean): Promise<void> {
   } else {
     await SimpleStorage.removeItem({ key: KEYS.SESSION_ACTIVE })
   }
+}
+
+/** セッションアクティブフラグを確認（フラグを消さない） */
+export async function isSessionActive(): Promise<boolean> {
+  if (!isNativeApp()) return true // ブラウザでは常にtrue（localStorage信頼可能）
+  const { value } = await SimpleStorage.getItem({ key: KEYS.SESSION_ACTIVE })
+  return value === 'true'
 }
 
 /** ログアウトフラグを設定（アプリ再起動時にチェック用） */
