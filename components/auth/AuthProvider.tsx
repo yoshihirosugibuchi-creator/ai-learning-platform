@@ -556,16 +556,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 1. ネイティブアプリ: セッションフラグ解除
     // biometric_enabledフラグとトークンは保持（再ログイン時にFace IDを使えるようにする）
     // ※ refresh_tokenを削除するとFace IDログインが不可能になるため、保持する
+    let useBiometric = false
     try {
-      const { setSessionActiveFlag } = await import('@/lib/native-secure-storage')
+      const { setSessionActiveFlag, isBiometricEnabled } = await import('@/lib/native-secure-storage')
       await setSessionActiveFlag(false)
+      useBiometric = await isBiometricEnabled()
     } catch {
       // ブラウザ環境では無視
     }
 
-    // 2. Supabaseセッション破棄（scope: 'global'でサーバー側トークンも無効化）
+    // 2. Supabaseセッション破棄
+    // Face ID有効時: scope:'local'（サーバー側トークンを保持し、再ログインに使用）
+    // それ以外: scope:'global'（サーバー側トークンも無効化）
     try {
-      await supabase.auth.signOut({ scope: 'global' })
+      const scope = useBiometric ? 'local' : 'global'
+      await supabase.auth.signOut({ scope })
     } catch {
       // ネットワークエラーでもローカルクリアは続行
       try {
