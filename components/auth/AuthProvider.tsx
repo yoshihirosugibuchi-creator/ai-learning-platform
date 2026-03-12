@@ -290,17 +290,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return
         }
 
-        // セッション期限切れを検知
-        if (event === 'TOKEN_REFRESHED') {
-          console.log('🔄 Token refreshed automatically')
-          // ネイティブアプリ: Keychainのリフレッシュトークンを更新
-          if (session?.refresh_token) {
-            import('@/lib/native-secure-storage').then(({ storeRefreshToken, isBiometricEnabled }) => {
-              isBiometricEnabled().then((enabled) => {
-                if (enabled) storeRefreshToken(session.refresh_token)
-              })
-            }).catch(() => { /* ブラウザ環境では無視 */ })
+        // ネイティブアプリ: トークン更新（SIGNED_IN + TOKEN_REFRESHED両方で保存）
+        if ((event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') && session?.refresh_token) {
+          if (event === 'TOKEN_REFRESHED') {
+            console.log('🔄 Token refreshed automatically')
           }
+          import('@/lib/native-secure-storage').then(({ storeRefreshToken, isBiometricEnabled }) => {
+            isBiometricEnabled().then((enabled) => {
+              if (enabled) storeRefreshToken(session.refresh_token)
+            })
+          }).catch(() => { /* ブラウザ環境では無視 */ })
         } else if (event === 'SIGNED_OUT') {
           console.log('👋 User signed out')
           // ネイティブアプリ: トークンは保持（Face IDログインで必要）
