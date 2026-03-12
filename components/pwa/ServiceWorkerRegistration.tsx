@@ -1,13 +1,10 @@
 'use client'
 
 import { useEffect } from 'react'
-import { isNativeApp } from '@/lib/capacitor-utils'
 
 export default function ServiceWorkerRegistration() {
   useEffect(() => {
-    // ネイティブアプリ内ではSW登録をスキップ（WebViewとの競合回避）
-    if (isNativeApp()) return
-
+    // ネイティブアプリでもSWを有効にする（オフラインキャッシュのため）
     if (
       process.env.NODE_ENV === 'production' &&
       'serviceWorker' in navigator
@@ -16,6 +13,21 @@ export default function ServiceWorkerRegistration() {
         .register('/sw.js')
         .then((registration) => {
           console.log('SW registered:', registration.scope)
+
+          // 新しいSWが見つかったら自動更新
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing
+            if (!newWorker) return
+
+            newWorker.addEventListener('statechange', () => {
+              if (
+                newWorker.state === 'activated' &&
+                navigator.serviceWorker.controller
+              ) {
+                console.log('SW updated, new content available')
+              }
+            })
+          })
         })
         .catch((error) => {
           console.error('SW registration failed:', error)

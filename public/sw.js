@@ -1,13 +1,39 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'ale-v1'
+const CACHE_NAME = 'ale-v2'
 const OFFLINE_URL = '/offline'
+
+// ユーザー向けページをプリキャッシュ（管理者ページは除外）
+const PRECACHE_URLS = [
+  '/',
+  '/login',
+  '/offline',
+  '/quiz',
+  '/quiz-packs',
+  '/learning',
+  '/case-study',
+  '/case-study/history',
+  '/collection',
+  '/analytics',
+  '/categories',
+  '/profile',
+  '/settings',
+  '/skp-history',
+  '/onboarding',
+]
 
 // Pre-cache on install
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([OFFLINE_URL])
+      // プリキャッシュは失敗してもインストールを続行
+      return Promise.allSettled(
+        PRECACHE_URLS.map((url) =>
+          cache.add(url).catch((err) => {
+            console.warn('SW: Failed to precache:', url, err)
+          })
+        )
+      )
     })
   )
   self.skipWaiting()
@@ -38,6 +64,9 @@ self.addEventListener('fetch', (event) => {
   // Skip API routes - always network
   if (url.pathname.startsWith('/api/')) return
 
+  // Skip sync API (WatermelonDB同期用、将来)
+  if (url.pathname.startsWith('/sync/')) return
+
   // Skip Supabase requests - always network
   if (url.hostname.includes('supabase')) return
 
@@ -65,11 +94,46 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Static assets (_next/static/, images) - Stale-while-revalidate
+  // Next.js chunks and static assets - Cache first, fallback to network
+  // チャンクファイルはハッシュ付きなのでキャッシュ優先で問題ない
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached
+        return fetch(request).then((response) => {
+          const responseClone = response.clone()
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone)
+          })
+          return response
+        })
+      })
+    )
+    return
+  }
+
+  // Next.js dynamic chunks (_next/data/) - Network first, fallback to cache
+  if (url.pathname.startsWith('/_next/data/')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const responseClone = response.clone()
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone)
+          })
+          return response
+        })
+        .catch(() => {
+          return caches.match(request)
+        })
+    )
+    return
+  }
+
+  // Static assets (icons, images, fonts) - Stale-while-revalidate
   if (
-    url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/icons/') ||
-    url.pathname.match(/\.(png|jpg|jpeg|svg|gif|webp|ico|woff2?)$/)
+    url.pathname.match(/\.(png|jpg|jpeg|svg|gif|webp|ico|woff2?|css)$/)
   ) {
     event.respondWith(
       caches.match(request).then((cached) => {
