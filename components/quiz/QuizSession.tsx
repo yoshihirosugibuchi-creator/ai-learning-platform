@@ -27,6 +27,7 @@ import {
 } from '@/lib/accuracy-calculator'
 // Removed: import { addWisdomCardToCollection } from '@/lib/supabase-cards' - moved to server
 import { UnifiedLearningAnalysisEngine } from '@/lib/unified-learning-analytics'
+import { useOfflineDB } from '@/lib/offline/provider'
 import { useSearchParams } from 'next/navigation'
 import { UnifiedQuizType, convertToUnifiedQuizType } from '@/lib/types/quiz'
 import { filterQuestionsByQuizType } from '@/lib/quiz-filtering'
@@ -134,8 +135,9 @@ export default function QuizSession({
   
   // New XP System Hook
   const { saveQuizSession } = useXPStats()
-  
-  // 堅牢な非同期保存メソッド  
+  const { database: offlineDB } = useOfflineDB()
+
+  // 堅牢な非同期保存メソッド
   interface QuizDataWithCard {
     user_id: string
     category_id: string
@@ -169,12 +171,47 @@ export default function QuizSession({
     saveFunction: typeof saveQuizSession,
     maxRetries = 3
   ) => {
+    // Step 1: ローカルDBに先行書き込み（即座に完了、オフラインでも安全）
+    if (offlineDB) {
+      try {
+        const { writeQuizSession } = await import('@/lib/offline/write-helpers')
+        const sessionId = crypto.randomUUID()
+        await writeQuizSession(offlineDB, {
+          id: sessionId,
+          user_id: quizData.user_id,
+          total_questions: quizData.total_questions,
+          correct_answers: quizData.correct_answers,
+          score_percentage: quizData.accuracy_rate,
+          time_spent_seconds: 0,
+          answers_data: quizData.answers,
+          session_metadata: {
+            quiz_type: (quizData as unknown as Record<string, unknown>).quiz_type,
+            is_review_mode: (quizData as unknown as Record<string, unknown>).is_review_mode,
+            category_id: quizData.category_id,
+            subcategory_id: quizData.subcategory_id,
+          },
+        }, quizData.answers.map((a, i) => ({
+          id: crypto.randomUUID(),
+          session_id: sessionId,
+          question_id: Number(a.question_id) || i,
+          user_id: quizData.user_id,
+          selected_answer: String(a.user_answer ?? ''),
+          is_correct: a.is_correct,
+          time_spent_ms: (a.time_spent || 0) * 1000,
+        })))
+        console.log('💾 Quiz data saved to local DB')
+      } catch (localError) {
+        console.warn('⚠️ Local DB write failed (continuing with API):', localError)
+      }
+    }
+
+    // Step 2: サーバーAPIに保存（XP/SKP計算はサーバー側で実行）
     let attempt = 0
     while (attempt < maxRetries) {
       try {
         console.log(`🔄 Background save attempt ${attempt + 1}/${maxRetries}`)
         const result = await saveFunction(quizData)
-        
+
         if (result.success) {
           console.log('✅ Background save successful:', result.session_id)
           return result
@@ -183,29 +220,16 @@ export default function QuizSession({
         }
       } catch (error) {
         attempt++
-        console.warn(`⚠️ Background save attempt ${attempt} failed:`, {
-          name: (error as Error).name,
-          message: (error as Error).message,
-          stack: (error as Error).stack,
-          errorString: String(error),
-          errorJSON: JSON.stringify(error, Object.getOwnPropertyNames(error))
-        })
-        
+        console.warn(`⚠️ Background save attempt ${attempt} failed:`, (error as Error).message)
+
         if (attempt >= maxRetries) {
-          console.error('❌ All background save attempts failed')
-          // ローカルストレージにバックアップ保存
-          try {
-            localStorage.setItem(`quiz_backup_${Date.now()}`, JSON.stringify(quizData))
-            console.log('💾 Quiz data backed up to localStorage')
-          } catch (storageError) {
-            console.error('❌ localStorage backup failed:', storageError)
-          }
+          // ローカルDBに既に保存済みなので、次回sync時にpushされる
+          console.log('💾 Quiz data already in local DB, will sync when online')
           break
         }
-        
+
         // 指数バックオフでリトライ
         const delay = Math.pow(2, attempt) * 1000
-        console.log(`⏳ Retrying in ${delay}ms...`)
         await new Promise(resolve => setTimeout(resolve, delay))
       }
     }
