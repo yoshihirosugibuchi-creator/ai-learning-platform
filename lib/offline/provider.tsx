@@ -43,6 +43,14 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
         setDatabase(db)
         console.log('✅ WatermelonDB initialized')
 
+        // localStorage quiz_backup_* の移行
+        try {
+          const { migrateLocalStorageBackups } = await import('./write-helpers')
+          await migrateLocalStorageBackups(db)
+        } catch (e) {
+          console.warn('⚠️ localStorage migration skipped:', e)
+        }
+
         // 初期同期（バックグラウンド）
         if (navigator.onLine) {
           setSyncing(true)
