@@ -16,18 +16,16 @@ import type { AuthError } from '@supabase/supabase-js'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { signIn, signUp, refreshSessionWithToken, getSessionRefreshToken } = useAuth()
+  const { signIn, signUp, refreshSessionWithToken } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
   const {
-    canUseBiometric,
     canLoginWithBiometric,
     biometryLabel,
     authenticating,
     loginWithBiometric,
-    enableBiometric,
   } = useBiometricAuth()
 
   // Setup debugging on component mount

@@ -303,10 +303,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else if (event === 'SIGNED_OUT') {
           console.log('👋 User signed out')
-          // ネイティブアプリ: トークンのみクリア（biometric_enabledは保持）
-          import('@/lib/native-secure-storage').then(({ clearAuthTokens }) => {
-            clearAuthTokens()
-          }).catch(() => { /* ブラウザ環境では無視 */ })
+          // ネイティブアプリ: トークンは保持（Face IDログインで必要）
+          // biometric_enabledもそのまま保持
         }
 
         try {
@@ -555,12 +553,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    // 1. ネイティブアプリ: セッションフラグ解除 + 古いトークンクリア
-    // biometric_enabledフラグは保持（再ログイン時にFace IDを使えるようにする）
+    // 1. ネイティブアプリ: セッションフラグ解除
+    // biometric_enabledフラグとトークンは保持（再ログイン時にFace IDを使えるようにする）
+    // ※ refresh_tokenを削除するとFace IDログインが不可能になるため、保持する
     try {
-      const { setSessionActiveFlag, clearAuthTokens } = await import('@/lib/native-secure-storage')
+      const { setSessionActiveFlag } = await import('@/lib/native-secure-storage')
       await setSessionActiveFlag(false)
-      await clearAuthTokens()
     } catch {
       // ブラウザ環境では無視
     }
