@@ -23,25 +23,11 @@ import AppShell from '@/components/layout/AppShell'
 import WisdomCard from '@/components/cards/WisdomCard'
 import KnowledgeCard from '@/components/cards/KnowledgeCard'
 import { useAuth } from '@/components/auth/AuthProvider'
-import { getCategoryDisplayName, WisdomCard as WisdomCardType, getAllWisdomCardsFromDB } from '@/lib/cards'
-import { 
-  getUserWisdomCards, 
-  getWisdomCardStats, 
-  hasWisdomCard, 
-  getWisdomCardCount,
-  WisdomCardCollection
-} from '@/lib/supabase-cards'
-import {
-  UserKnowledgeCard,
-  getKnowledgeCardStats,
-  getUserKnowledgeCollection
-} from '@/lib/knowledge-cards-v2'
-import {
-  UserKnowledgeCollectionV2
-} from '@/lib/types/knowledge-cards-v2'
+import { getCategoryDisplayName, WisdomCard as WisdomCardType } from '@/lib/cards'
 import { getUserBadges } from '@/lib/supabase-badges'
 import { UserBadge } from '@/lib/types/learning'
-import { supabase } from '@/lib/supabase'
+import { useOfflineDB } from '@/lib/offline/provider'
+import { loadCollectionData, WisdomCardWithStatus, KnowledgeCardWithStatus } from '@/lib/offline/queries/collection'
 
 // Define constants outside component to avoid re-creation
 const RARITIES = ['コモン', 'レア', 'エピック', 'レジェンダリー']
@@ -50,50 +36,30 @@ export default function CollectionPage() {
   // すべてのState Hooksを最初に宣言
   const [selectedRarity, setSelectedRarity] = useState<string>('all')
   const [selectedWisdomCategory, setSelectedWisdomCategory] = useState<string>('all')
-  // selectedKnowledgeCategory removed - V2システムではカテゴリーフィルター不要
   const [selectedBadgeStatus, setSelectedBadgeStatus] = useState<string>('all')
   const [activeTab, setActiveTab] = useState('wisdom')
   const { user } = useAuth()
+  const { database } = useOfflineDB()
 
-  // 格言カード（従来のカード）データ - Supabase版
+  // 格言カードデータ
   const [wisdomCollectionData, setWisdomCollectionData] = useState<{
-    collection: WisdomCardCollection[]
     stats: { totalObtained: number; totalCards: number; uniqueCards: number }
-    cardsWithStatus: Array<{ obtained: boolean; count: number; id: number; author: string; quote: string; categoryId: string; subcategoryId?: string; rarity: string; context: string; applicationArea: string }>
+    cardsWithStatus: WisdomCardWithStatus[]
   }>({
-    collection: [],
     stats: { totalObtained: 0, totalCards: 0, uniqueCards: 0 },
-    cardsWithStatus: [] // DB版データで初期化予定
+    cardsWithStatus: []
   })
   const [wisdomDataLoading, setWisdomDataLoading] = useState(true)
 
   // サブカテゴリーマスターデータ（subcategory_id → 日本語名の変換用）
   const [subcategories, setSubcategories] = useState<Array<{subcategory_id: string, name: string}>>([])
 
-
-  // 古いnewKnowledgeCards関連の状態は削除（knowledgeCollectionDataに統合）
-
-  // ナレッジカードコレクション表示用の型定義
-  interface KnowledgeCardWithStatus extends UserKnowledgeCard {
-    obtained: boolean
-    course_title?: string
-    genre_title?: string
-    display_order?: {
-      course: number
-      genre: number
-      theme: number
-    }
-    created_at?: string | null
-  }
-
-  // ナレッジカードデータ（学習コンテンツから獲得） - V2システム対応
+  // ナレッジカードデータ（学習コンテンツから獲得）
   const [knowledgeCollectionData, setKnowledgeCollectionData] = useState<{
-    collection: UserKnowledgeCollectionV2[]
-    stats: { totalObtained: number; totalCards: number; uniqueCards: number; totalReviews?: number }
+    stats: { totalObtained: number; totalCards: number; uniqueCards: number }
     cardsWithStatus: KnowledgeCardWithStatus[]
   }>({
-    collection: [],
-    stats: { totalObtained: 0, totalCards: 0, uniqueCards: 0, totalReviews: 0 },
+    stats: { totalObtained: 0, totalCards: 0, uniqueCards: 0 },
     cardsWithStatus: []
   })
 
@@ -102,82 +68,34 @@ export default function CollectionPage() {
   const [badgeLoading, setBadgeLoading] = useState(true)
   const [failedBadgeImages, setFailedBadgeImages] = useState<Set<string>>(new Set())
 
-  // すべてのuseEffectを一箇所に集約
+  // コレクションデータ一括読み込み（ローカルDB優先、N+1解消）
   useEffect(() => {
     if (user?.id) {
-      const loadWisdomCards = async () => {
+      const loadAllCards = async () => {
         try {
           setWisdomDataLoading(true)
+          const data = await loadCollectionData(user.id, database)
 
-          // サブカテゴリーマスターを取得（英語ID→日本語名変換用）
-          const { data: subcategoryData } = await supabase
-            .from('subcategories')
-            .select('subcategory_id, name')
-
-          if (subcategoryData) {
-            setSubcategories(subcategoryData)
-            console.log(`🏷️ [Collection] Loaded ${subcategoryData.length} subcategories for display name lookup`)
-          }
-
-          // 最初に基本データを取得
-          const [collection, stats] = await Promise.all([
-            getUserWisdomCards(user.id),
-            getWisdomCardStats(user.id)
-          ])
-
-          // 初期状態をセット（数値が確定してから表示）
-          setWisdomCollectionData(prev => ({
-            ...prev,
-            collection,
-            stats
-          }))
-
-          // DB版: 全カードを取得してから取得状況を並列取得
-          console.log('🎴 Loading wisdom cards from DB with fallback...')
-          const allWisdomCards = await getAllWisdomCardsFromDB()
-          
-          console.log(`🔍 [Collection] Loading wisdom cards for user ${user.id}...`)
-          const cardsWithStatus = await Promise.all(
-            allWisdomCards.map(async (card) => {
-              try {
-                const [obtained, count] = await Promise.all([
-                  hasWisdomCard(user.id, card.id),
-                  getWisdomCardCount(user.id, card.id)
-                ])
-                
-                const cardWithStatus = { ...card, obtained, count }
-                console.log(`🔍 [Collection] Card ${card.id} (${card.author}):`, {
-                  categoryId: cardWithStatus.categoryId,
-                  rarity: cardWithStatus.rarity,
-                  obtained: cardWithStatus.obtained,
-                  count: cardWithStatus.count
-                })
-                
-                return cardWithStatus
-              } catch (error) {
-                console.error(`Error loading card ${card.id}:`, error)
-                return { ...card, obtained: false, count: 0 }
-              }
-            })
-          )
-          console.log(`🔍 [Collection] Total cards loaded: ${cardsWithStatus.length}`)
-
-          // 最終データをセット
+          setSubcategories(data.subcategories)
           setWisdomCollectionData({
-            collection,
-            stats,
-            cardsWithStatus
+            stats: data.wisdomCards.stats,
+            cardsWithStatus: data.wisdomCards.cardsWithStatus,
+          })
+          setKnowledgeCollectionData({
+            stats: data.knowledgeCards.stats,
+            cardsWithStatus: data.knowledgeCards.cardsWithStatus,
           })
         } catch (error) {
-          console.error('Error loading wisdom cards:', error)
+          console.error('Error loading collection data:', error)
         } finally {
           setWisdomDataLoading(false)
         }
       }
 
-      loadWisdomCards()
+      loadAllCards()
     }
-  }, [user])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
 
   useEffect(() => {
     const fetchBadges = async () => {
@@ -196,194 +114,6 @@ export default function CollectionPage() {
 
     fetchBadges()
   }, [user?.id])
-
-  useEffect(() => {
-    if (user?.id) {
-      const loadKnowledgeCards = async () => {
-        try {
-          console.log(`🔄 LOADING KNOWLEDGE CARDS for user: ${user.id}`)
-          
-          // Step 1: Get user's acquired cards
-          const [userCollection, v2Stats] = await Promise.all([
-            getUserKnowledgeCollection(user.id),
-            getKnowledgeCardStats(user.id)
-          ])
-
-          // Adapt V2 stats to V1 format for compatibility
-          const stats = {
-            totalObtained: v2Stats.totalCards,
-            totalCards: v2Stats.totalCards,
-            uniqueCards: v2Stats.totalCards
-          }
-
-          console.log(`📚 USER COLLECTION LOADED for user ${user?.id}:`, userCollection)
-          console.log('📊 Knowledge card stats:', stats)
-          
-          // Step 2: Get ALL themes with simpler query to avoid complex JOIN errors
-          const { data: allThemes, error: themesError } = await supabase
-            .from('learning_themes')
-            .select('id, title, reward_card_data, genre_id, display_order')
-            .order('display_order', { ascending: true })
-          
-          if (themesError) {
-            console.error('❌ Failed to fetch all themes:', themesError)
-            console.error('Error details:', themesError)
-            return
-          }
-          
-          if (!allThemes || allThemes.length === 0) {
-            console.log('⚠️ No themes found in database')
-            setKnowledgeCollectionData({
-              collection: [],
-              stats,
-              cardsWithStatus: []
-            })
-            return
-          }
-          
-          console.log(`🗂️ ALL THEMES LOADED: ${allThemes?.length || 0} themes`)
-          
-          // Step 3: Get additional data for each theme and create cards with status
-          const cardsWithStatus = await Promise.all(
-            allThemes.map(async (theme) => {
-              try {
-                // Check if user has this card
-                const userCard = userCollection.find(card => card.theme_id === theme.id)
-                const isObtained = !!userCard
-                
-                const rewardCardData = (theme.reward_card_data as Record<string, unknown>) || {}
-                
-                // Get genre information separately for better error handling
-                const { data: genreInfo } = await supabase
-                  .from('learning_genres')
-                  .select('id, title, course_id, display_order')
-                  .eq('id', theme.genre_id)
-                  .single()
-                
-                // Get course information if genre exists
-                let courseInfo = null
-                if (genreInfo?.course_id) {
-                  const { data: courseData } = await supabase
-                    .from('learning_courses')
-                    .select('id, title, display_order')
-                    .eq('id', genreInfo.course_id)
-                    .single()
-                  courseInfo = courseData
-                }
-                
-                // Get first session for direct navigation
-                const { data: sessions } = await supabase
-                  .from('learning_sessions')
-                  .select('id, display_order')
-                  .eq('theme_id', theme.id)
-                  .order('display_order', { ascending: true })
-                  .limit(1)
-                
-                const firstSession = sessions?.[0] || null
-                
-                const courseId = genreInfo?.course_id || null
-                const courseTitle = courseInfo?.title || 'Unknown Course'
-                const genreTitle = genreInfo?.title || 'Unknown Genre'
-                
-                const enrichedCard: KnowledgeCardWithStatus = {
-                  id: userCard?.id || `placeholder_${theme.id}`,
-                  user_id: user.id,
-                  theme_id: theme.id,
-                  obtained_at: userCard?.obtained_at || null,
-                  created_at: userCard?.created_at || null,
-                  obtained: isObtained,
-                  card_data: {
-                    id: theme.id,
-                    title: (rewardCardData.title as string) || theme.title || 'ナレッジカード',
-                    summary: (rewardCardData.description as string) || (rewardCardData.summary as string) || 'テーマ完了により獲得',
-                    icon: (rewardCardData.icon as string) || '📚',
-                    color: (rewardCardData.color as string) || '#3B82F6',
-                    keyPoints: (rewardCardData.keyPoints as string[]) || (rewardCardData.key_points as string[]) || []
-                  },
-                  course_id: courseId || undefined,
-                  genre_id: theme.genre_id,
-                  theme_title: theme.title,
-                  first_session_id: firstSession?.id,
-                  // Display info
-                  course_title: courseTitle,
-                  genre_title: genreTitle,
-                  display_order: {
-                    course: courseInfo?.display_order || 999,
-                    genre: genreInfo?.display_order || 999,
-                    theme: theme.display_order || 999
-                  }
-                }
-                
-                return enrichedCard
-              } catch (enrichError) {
-                console.error(`❌ Error enriching theme ${theme.id}:`, enrichError)
-                return null
-              }
-            })
-          )
-          
-          const validCards = cardsWithStatus.filter((card): card is KnowledgeCardWithStatus => card !== null)
-          
-          // 階層ソート: コース > ジャンル > テーマの順番でソート
-          validCards.sort((a, b) => {
-            // 第1キー: コースの表示順
-            if (a.display_order!.course !== b.display_order!.course) {
-              return a.display_order!.course - b.display_order!.course
-            }
-            // 第2キー: ジャンルの表示順
-            if (a.display_order!.genre !== b.display_order!.genre) {
-              return a.display_order!.genre - b.display_order!.genre
-            }
-            // 第3キー: テーマの表示順
-            return a.display_order!.theme - b.display_order!.theme
-          })
-          
-          console.log('✨ All cards with status created and sorted:', validCards.length)
-          console.log('🎯 Sample card:', validCards[0])
-          console.log('🔢 Sort order sample:', validCards.slice(0, 3).map(card => ({ 
-            course: card.display_order?.course, 
-            genre: card.display_order?.genre, 
-            theme: card.display_order?.theme, 
-            title: card.card_data?.title 
-          })))
-
-          // 獲得済みカードをUserKnowledgeCollectionV2形式に変換
-          const obtainedCardsAsV2: UserKnowledgeCollectionV2[] = validCards
-            .filter(card => card.obtained)
-            .map(card => ({
-              id: card.id,
-              user_id: card.user_id,
-              theme_id: card.theme_id,
-              obtained_at: card.obtained_at,
-              created_at: card.created_at || null
-            }))
-
-          setKnowledgeCollectionData({
-            collection: obtainedCardsAsV2,
-            stats,
-            cardsWithStatus: validCards
-          })
-        } catch (error) {
-          console.error('❌ Error loading knowledge cards:', error)
-        }
-      }
-
-      loadKnowledgeCards()
-    }
-
-    // 新システムのデータ読み込みは上記のloadKnowledgeCardsに統合済み
-  }, [user])
-
-  // ナレッジカードデータのログ出力
-  useMemo(() => {
-    console.log('🎴 Processing enriched knowledge cards...')
-    console.log(`📊 Enriched cards loaded: ${knowledgeCollectionData.collection.length}`)
-    console.log(`📈 Collection stats:`, knowledgeCollectionData.stats)
-    console.log(`✅ Processed ${knowledgeCollectionData.collection.length} enriched knowledge cards`)
-    if (knowledgeCollectionData.collection.length > 0) {
-      console.log('🎯 Sample enriched card:', knowledgeCollectionData.collection[0])
-    }
-  }, [knowledgeCollectionData])
 
   // 格言カード用フィルタリング
   const filteredWisdomCards = useMemo(() => {
@@ -651,7 +381,7 @@ export default function CollectionPage() {
                   {filteredWisdomCards.map(card => (
                     <WisdomCard
                       key={card.id}
-                      card={card as WisdomCardType & { obtained?: boolean; count?: number }}
+                      card={card as unknown as WisdomCardType & { obtained?: boolean; count?: number }}
                       showDetails={true}
                       subcategories={subcategories}
                     />
@@ -664,7 +394,7 @@ export default function CollectionPage() {
                   {obtainedWisdomCards.map(card => (
                     <WisdomCard
                       key={card.id}
-                      card={card as WisdomCardType & { obtained?: boolean; count?: number }}
+                      card={card as unknown as WisdomCardType & { obtained?: boolean; count?: number }}
                       showDetails={true}
                       subcategories={subcategories}
                     />
@@ -684,7 +414,7 @@ export default function CollectionPage() {
                   {lockedWisdomCards.map(card => (
                     <WisdomCard
                       key={card.id}
-                      card={card as WisdomCardType & { obtained?: boolean; count?: number }}
+                      card={card as unknown as WisdomCardType & { obtained?: boolean; count?: number }}
                       showDetails={false}
                       subcategories={subcategories}
                     />
@@ -703,7 +433,7 @@ export default function CollectionPage() {
                   <div className="flex items-center space-x-2 mb-2">
                     <Brain className="h-4 w-4 text-blue-500" />
                     <div className="text-2xl font-bold">
-                      {knowledgeCollectionData.collection.length === 0 && knowledgeCollectionData.stats.totalObtained === 0 ? (
+                      {knowledgeCollectionData.cardsWithStatus.length === 0 && knowledgeCollectionData.stats.totalObtained === 0 ? (
                         <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
                       ) : (
                         `${knowledgeCollectionData.cardsWithStatus.length > 0 ? Math.round((obtainedKnowledgeCards.length / knowledgeCollectionData.cardsWithStatus.length) * 100) : 0}%`
@@ -720,7 +450,7 @@ export default function CollectionPage() {
                   <div className="flex flex-col items-center space-y-1">
                     <BookOpen className="h-4 w-4 text-green-500" />
                     <div className="text-2xl font-bold">
-                      {knowledgeCollectionData.collection.length === 0 && knowledgeCollectionData.stats.totalObtained === 0 ? (
+                      {knowledgeCollectionData.cardsWithStatus.length === 0 && knowledgeCollectionData.stats.totalObtained === 0 ? (
                         <div className="animate-pulse bg-gray-200 h-8 w-12 rounded mx-auto"></div>
                       ) : (
                         obtainedKnowledgeCards.length
