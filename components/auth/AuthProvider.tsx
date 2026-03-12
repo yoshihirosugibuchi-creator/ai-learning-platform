@@ -565,17 +565,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 2. Supabaseセッション破棄
-    // Face ID有効時: scope:'local'（サーバー側トークンを保持し、再ログインに使用）
-    // それ以外: scope:'global'（サーバー側トークンも無効化）
-    try {
-      const scope = useBiometric ? 'local' : 'global'
-      await supabase.auth.signOut({ scope })
-    } catch {
-      // ネットワークエラーでもローカルクリアは続行
+    if (useBiometric) {
+      // Face ID有効時: signOut()を呼ばない（サーバー側トークンを保持）
+      // signOut()はscope:'local'でも内部的にトークンを無効化する場合があるため、
+      // ローカルのセッション情報のみ手動でクリアする
+    } else {
+      // 通常ログアウト: サーバー側トークンも無効化
       try {
-        await supabase.auth.signOut({ scope: 'local' })
+        await supabase.auth.signOut({ scope: 'global' })
       } catch {
-        // 無視
+        try {
+          await supabase.auth.signOut({ scope: 'local' })
+        } catch {
+          // 無視
+        }
       }
     }
 
@@ -583,7 +586,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     setProfile(null)
 
-    // 4. JS側ストレージ全クリア
+    // 4. JS側ストレージ全クリア（Supabaseローカルセッション含む）
     try {
       sessionStorage.clear()
       localStorage.clear()
