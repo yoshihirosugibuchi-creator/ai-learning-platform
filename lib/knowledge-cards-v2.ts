@@ -44,7 +44,19 @@ export interface KnowledgeCardAcquisitionResult {
 export async function acquireKnowledgeCard(userId: string, themeId: string, isFirstCompletion: boolean = true): Promise<KnowledgeCardAcquisitionResult> {
   try {
     console.log(`🎴 Attempting to acquire knowledge card: ${themeId} for user ${userId.substring(0, 8)}... (isFirst: ${isFirstCompletion})`)
-    
+
+    // ローカルDBに先行書き込み（オフライン対応）
+    if (isFirstCompletion) {
+      try {
+        const { getDatabase } = await import('@/lib/offline/database')
+        const { writeKnowledgeCardAcquisition } = await import('@/lib/offline/write-helpers')
+        const db = getDatabase()
+        await writeKnowledgeCardAcquisition(db, { user_id: userId, theme_id: themeId })
+      } catch (localErr) {
+        console.warn('⚠️ Local DB write skipped:', localErr)
+      }
+    }
+
     // 1. クライアント側完了判定結果を確認
     if (!isFirstCompletion) {
       return {

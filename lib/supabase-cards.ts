@@ -302,10 +302,20 @@ export async function getUserWisdomCards(userId: string): Promise<WisdomCardColl
 
 export async function addWisdomCardToCollection(userId: string, cardId: number, authenticatedSupabase?: SupabaseClient): Promise<{ count: number; isNew: boolean }> {
   console.log('🔍 Starting addWisdomCardToCollection:', { userId: userId.substring(0, 8) + '...', cardId })
-  
+
+  // ローカルDBに先行書き込み（オフライン対応）
+  try {
+    const { getDatabase } = await import('@/lib/offline/database')
+    const { writeWisdomCardAcquisition } = await import('@/lib/offline/write-helpers')
+    const db = getDatabase()
+    await writeWisdomCardAcquisition(db, { user_id: userId, card_id: cardId })
+  } catch (localErr) {
+    console.warn('⚠️ Local DB write skipped:', localErr)
+  }
+
   // 認証付きクライアントを優先使用（グローバルクライアントはフォールバック）
   const client = authenticatedSupabase || supabase
-  
+
   // Check if card already exists
   const selectStartTime = performance.now()
   const { data: existing } = await client
