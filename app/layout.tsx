@@ -9,6 +9,7 @@ import ErrorBoundary from "@/components/auth/ErrorBoundary";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import ServiceWorkerRegistration from "@/components/pwa/ServiceWorkerRegistration";
 import NativeAppDetector from "@/components/native/NativeAppDetector";
+import { OfflineDBProvider } from "@/lib/offline/provider";
 
 // 開発環境でのみ認証エラー回復ヘルパーとコンソールフィルターを読み込み
 if (process.env.NODE_ENV === 'development') {
@@ -65,15 +66,17 @@ export default function RootLayout({
         <NativeAppDetector />
         <ErrorBoundary>
           <ClientOnly fallback={<div>Loading...</div>}>
-            <QueryProvider>
-              <AuthProvider>
-                <UserProvider>
-                  <ToastProvider>
-                    {children}
-                  </ToastProvider>
-                </UserProvider>
-              </AuthProvider>
-            </QueryProvider>
+            <OfflineDBProvider>
+              <QueryProvider>
+                <AuthProvider>
+                  <UserProvider>
+                    <ToastProvider>
+                      {children}
+                    </ToastProvider>
+                  </UserProvider>
+                </AuthProvider>
+              </QueryProvider>
+            </OfflineDBProvider>
           </ClientOnly>
         </ErrorBoundary>
       </body>
