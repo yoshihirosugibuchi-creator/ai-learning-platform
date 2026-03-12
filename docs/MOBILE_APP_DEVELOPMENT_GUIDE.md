@@ -12,8 +12,8 @@
 | **Step 1** | PWA化 | 完了 |
 | **Step 2** | Capacitor iOSアプリ + Face ID + GitHub Actions | 完了 |
 | **Step 3** | 実機テスト（AdHoc配布） | 完了（ログイン/ログアウト/Face ID確認済み） |
-| **Step 4** | ローカルデータベース化（オフライン対応） | 未着手 |
-| **Step 5** | React Native等による本格アプリ化（必要に応じて） | 未着手 |
+| **Step 4** | ローカルDB化（WatermelonDB + SW有効化） | 設計完了・実装未着手 |
+| **Step 5** | React Native移行（必要に応じて） | 未着手 |
 
 ---
 
@@ -620,71 +620,298 @@ TestFlightは審査が通らず、**AdHoc配布**で実機テストを実施。
 
 ---
 
-## Step 4: ローカルデータベース化 [未着手]
+## Step 4: ローカルデータベース化 [設計完了・実装未着手]
 
 ### 目的
-オフラインでも学習セッション・クイズを実行できるようにする。
+
+1. **オフライン対応**: ネットワーク切断時でもクイズ・学習・ケーススタディを実行可能にする
+2. **パフォーマンス改善**: コレクションページ等のN+1クエリ問題を解消（現状: 200+クエリ → ローカルJOIN 1発）
+3. **React Native移行準備**: データ層をWatermelonDBで構築し、将来のRN移行時にアダプタ切替のみで再利用
 
 ### 合わせて対応する項目（IPA再ビルド必要）
+
 - **SplashScreen**: `LaunchScreen.storyboard`にALEロゴ設定（Phase D参照）
 - **AppDelegate.swift整理**: 不要コメント除去（2026-03-11にWebKit削除コードを整理済み）
 
-### 想定技術
+### 技術選定
 
-| 方式 | メリット | デメリット |
-|------|---------|-----------|
-| **SQLite（Capacitor SQLiteプラグイン）** | RDB、サーバーDBと構造を揃えやすい | プラグイン依存 |
-| **IndexedDB** | ブラウザ標準、PWAでも使える | クエリが複雑 |
-| **WatermelonDB** | React Native対応、同期機能あり | 学習コスト |
+**WatermelonDB** を採用。
 
-### 同期設計（案）
+| 方式 | 判定 | 理由 |
+|------|------|------|
+| **WatermelonDB** | **採用** | 内部SQLite、同期プロトコル内蔵、Lazy Loading、RN移行時アダプタ切替のみ |
+| SQLite直接 | 不採用 | 同期・ORM・React連携を全て自作する必要がある |
+| IndexedDB | 不採用 | 複雑なクエリ・大量データに弱い、RN/Flutter非対応 |
+
+#### WatermelonDBの構造
 
 ```
-オフライン時:
-  学習進捗・クイズ回答 → ローカルDBに保存 → キューに追加
+WatermelonDB = SQLite + ORM + 同期プロトコル + React連携 + Lazy Loading
 
-オンライン復帰時:
-  キュー内のデータ → サーバーAPI → Supabase DB
-  → 競合解決（サーバー側優先 or タイムスタンプ比較）
+現環境（Capacitor WebView）: LokiJS + IndexedDB永続化アダプタ
+将来（React Native）:       Native SQLiteアダプタ（JSI経由、高速）
 ```
 
-### 対象データ（候補）
+#### 選定理由の詳細
 
-| データ | オフライン対応 | 同期方向 |
-|--------|--------------|---------|
-| 学習セッション進捗 | ローカル保存 | ローカル→サーバー |
-| クイズ回答 | ローカル保存 | ローカル→サーバー |
-| XP/SKP計算 | ローカル計算 | ローカル→サーバー（差分） |
-| コース構造データ | キャッシュ | サーバー→ローカル |
-| ユーザープロフィール | キャッシュ | サーバー→ローカル |
+- **同期プロトコル内蔵**: `synchronize()` でpull/push型の差分同期。自作不要
+- **Lazy Loading**: コレクション表示で効果大。表示分だけロード
+- **Observable queries**: データ変更時にReactコンポーネントが自動再描画
+- **RN移行パス**: モデル定義・クエリ・同期ロジックがそのまま使える
 
 ---
 
-## Step 5: 本格アプリ化 [未着手]
+### Phase 0: Service Worker有効化（アプリシェルのオフラインキャッシュ）
+
+#### 背景
+
+現在のアプリは `server.url` でVercelからすべて読み込むため、オフラインではアプリ画面自体が表示できない。Service Workerでアプリシェル（HTML/JS/CSS）をキャッシュし、オフラインでも画面表示を可能にする。
+
+#### キャッシュの動作
+
+```
+■ 初回起動（オンライン必須）
+  Vercelからアプリ全体をダウンロード → SWがキャッシュに保存
+
+■ 2回目以降の起動
+  オンライン時: Vercelから取得しつつ、キャッシュも更新
+  オフライン時: キャッシュから表示
+
+■ アプリ終了（キル）
+  キャッシュは保持される（消えない）
+
+■ アプリ削除 / iOSストレージ圧迫時
+  キャッシュは消える → 再度オンラインでの読み込みが必要
+```
+
+#### 実装内容
+
+1. `components/pwa/ServiceWorkerRegistration.tsx` — ネイティブアプリでのSWスキップを解除
+2. `public/sw.js` — プリキャッシュマニフェストを拡充（全ページ、JSチャンク、CSS）
+3. オフライン時のフォールバック表示の改善
+
+#### 注意点
+
+- WKWebViewでのSW動作は完全な保証はない（iOSバージョン依存）
+- 確実なオフラインアプリシェルはRN移行時に解決（アプリ自体がローカル）
+- Phase 0は「通常利用ではオフラインでも動く」レベルの対応
+
+---
+
+### Phase 1: WatermelonDB導入（マスタデータのローカル化）
+
+#### ローカル化対象テーブル（マスタデータ: サーバー→ローカル同期、読み取り専用）
+
+##### クイズ関連
+
+| テーブル | 内容 | 備考 |
+|---------|------|------|
+| `quiz_questions` | クイズ問題（問題文、選択肢4つ、正解、解説、ヒント3段階） | メインの問題プール |
+| `quiz_packs` | クイズパック定義（カテゴリ・難易度のフィルタ設定） | |
+| `session_quizzes` | コース内埋め込みクイズ | learning_sessionsに紐づく |
+
+##### ケーススタディ関連
+
+| テーブル | 内容 | 備考 |
+|---------|------|------|
+| `case_study_problems` | ケーススタディ問題（シナリオ本文、難易度、業界、テンプレート種別） | |
+| `case_study_steps` | 問題内ステップ定義（質問、選択肢、模範解答、スキル軸、配点） | problems に1:N |
+| `case_study_rubric_axes` | 18軸評価ルーブリック（スコアアンカー1-5） | 全問題共通 |
+| `case_study_options` | 設定オプション（テンプレート種別、業務フェーズ等の列挙値） | |
+| `case_study_course_links` | コースとの紐付け（どのセッション後に表示するか） | |
+
+##### 学習コンテンツ
+
+| テーブル | 内容 | 備考 |
+|---------|------|------|
+| `learning_courses` | コース | 最上位 |
+| `learning_genres` | ジャンル | courses に1:N |
+| `learning_themes` | テーマ（reward_card_data含む） | genres に1:N |
+| `learning_sessions` | セッション | themes に1:N |
+| `session_contents` | コンテンツ本文（Markdown） | sessions に1:N |
+
+##### デコード・lookup
+
+| テーブル | 内容 | 備考 |
+|---------|------|------|
+| `skill_levels` | スキルレベル（名前、色、表示順） | |
+| `categories` | カテゴリ | |
+| `subcategories` | サブカテゴリ | |
+| `xp_settings` | XP設定（計算パラメータ） | |
+| `wisdom_cards` | 格言カードマスタ（名言、著者、レアリティ等） | |
+
+**マスタデータ合計: 約16テーブル**
+
+#### 同期戦略（マスタデータ）
+
+```
+■ アプリ起動時（オンライン）
+  サーバーの updated_at と ローカルの最終同期日時を比較
+  → 差分があるテーブルのみ pull 同期
+  → WatermelonDB の synchronize() で実行
+
+■ アプリ起動時（オフライン）
+  ローカルDBのキャッシュをそのまま使用
+  → 次回オンライン時に同期
+
+■ 同期頻度
+  マスタデータ: アプリ起動時 + バックグラウンド復帰時
+  問題データが大量の場合: カテゴリ単位で差分同期
+```
+
+---
+
+### Phase 2: ユーザーデータのローカルキャッシュ＋書き込みキュー
+
+#### ローカル化対象テーブル（ユーザーデータ: ローカルキャッシュ＋サーバー送信）
+
+##### クイズ
+
+| テーブル | 内容 | 同期方向 |
+|---------|------|---------|
+| `quiz_sessions` | クイズセッション記録（スコア、正答率、所要時間） | ローカル→サーバー |
+| `quiz_answers` | 個別回答記録（正誤、獲得XP、ヒント使用） | ローカル→サーバー |
+
+##### ケーススタディ
+
+| テーブル | 内容 | 同期方向 |
+|---------|------|---------|
+| `case_study_sessions` | セッション記録（スコア、XP、SKP） | ローカル→サーバー |
+| `case_study_step_details` | ステップ別回答・採点 | ローカル→サーバー |
+| `case_study_thinking_logs` | 思考プロセスログ | ローカル→サーバー |
+
+##### コレクション
+
+| テーブル | 内容 | 同期方向 |
+|---------|------|---------|
+| `wisdom_card_collection` | 格言カード所持（card_id, count, obtained_at） | 双方向 |
+| `user_knowledge_collection_v2` | ナレッジカード所持（theme_id, obtained_at） | 双方向 |
+
+##### 統計・進捗
+
+| テーブル | 内容 | 同期方向 |
+|---------|------|---------|
+| `user_xp_stats_v2` | XP統計 | サーバー→ローカル（参照用） |
+| `course_session_completions` | コース完了記録 | ローカル→サーバー |
+
+**ユーザーデータ合計: 約9テーブル**
+
+#### 書き込みキュー設計
+
+```
+■ オンライン時
+  クイズ完了 → ローカルDB保存 + サーバーAPIに即送信
+  → 既存の saveQuizWithRetry() のリトライ機構を活用
+
+■ オフライン時
+  クイズ完了 → ローカルDB保存 + キューに追加
+  → ユーザーにはローカルの結果を即表示（楽観的UI）
+
+■ オンライン復帰時
+  キュー内の未送信データ → FIFO順でサーバーAPIに送信
+  → XP/SKP計算はサーバー側で実行（クライアント側では計算しない）
+  → 成功したらキューから削除
+
+■ 競合解決
+  クイズ結果・完了記録は append-only（INSERT）のため競合リスクは低い
+  コレクションデータはサーバー側タイムスタンプ優先
+```
+
+#### XP/SKP計算について
+
+**クライアント側でのXP計算は行わない。** 理由:
+- `xp_settings` テーブルの複雑な計算パラメータ
+- ストリークボーナス、ヒントペナルティ、時間効率計算
+- 複数テーブルへのアトミック更新（`user_xp_stats_v2`, `daily_xp_records` 等）
+- サーバー側でのみ整合性を保証
+
+---
+
+### ローカル化不要テーブル
+
+| テーブル | 理由 |
+|---------|------|
+| `quiz_questions_review` | 管理者QA画面専用 |
+| `quiz_review_history` / `quiz_review_batches` | QA監査ログ |
+| `case_study_generation_logs` | AI生成ログ（管理者用） |
+| `case_study_problem_stats` | ビュー（ローカルで集計可能） |
+| `precomputed_quiz_sets` | サーバー側キャッシュ（ローカルDBがあれば不要） |
+
+---
+
+### 実装順序
+
+```
+Phase 0（SW有効化）
+  1. ServiceWorkerRegistration.tsx のネイティブスキップ解除
+  2. sw.js のプリキャッシュ拡充
+  3. 動作確認（オフラインでアプリ画面表示）
+
+Phase 1（マスタデータのローカル化）
+  1. WatermelonDB インストール・初期設定
+  2. モデル定義（約16テーブル分のスキーマ）
+  3. 同期API構築（サーバー側: pull エンドポイント）
+  4. データフェッチ層の改修（ローカルDB優先 → フォールバックでサーバー）
+  5. コレクションページのパフォーマンス改善確認
+
+Phase 2（ユーザーデータ＋書き込みキュー）
+  1. ユーザーデータのモデル定義（約9テーブル）
+  2. 書き込みキュー実装
+  3. オンライン復帰時の同期処理
+  4. QuizSession.tsx の既存localStorage退避をWatermelonDB移行
+  5. オフラインでクイズ実行→復帰後同期のE2Eテスト
+
+品質チェック
+  npm run typecheck && npm run lint && npm run build
+```
+
+---
+
+### 現在のパフォーマンス問題（ローカル化で解消予定）
+
+#### コレクションページのN+1クエリ問題
+
+```
+■ ナレッジカード表示（現状）
+  50テーマ × 3クエリ（genre, course, session） = 150+ サーバークエリ
+
+■ 格言カード表示（現状）
+  100カード × 2クエリ（hasCard, getCount） = 200+ サーバークエリ
+
+■ ローカル化後
+  ローカルJOIN 1発 → 瞬時に全カード+所持状態を表示
+```
+
+---
+
+## Step 5: React Native移行 [未着手]
 
 ### 判断基準
 
-Step 3のFace IDテスト結果次第。以下の場合に検討:
+Step 4のローカル化完了後、WebViewのパフォーマンスを実機評価して判断。以下の場合に検討:
 - Capacitor WebView方式でパフォーマンスが不足
 - ネイティブUIが必要（リスト仮想化、ジェスチャー等）
-- オフライン同期が複雑すぎる場合
+- オフラインアプリシェルの確実性が必要
 
 ### 選択肢比較
 
 | 方式 | コード再利用 | ネイティブ性能 | 開発コスト | OTAアップデート |
 |------|------------|--------------|-----------|----------------|
 | **Capacitor継続** | 100%（現行コード） | 中（WebView） | 低 | Vercelデプロイで即反映 |
-| **React Native** | 一部（ロジック層） | 高 | 高（UI書き直し） | CodePush等で可能 |
-| **Expo** | 一部（ロジック層） | 高 | 中 | EAS Update対応 |
+| **React Native** | WatermelonDB層はそのまま | 高 | 中（UI書き直し） | CodePush等で可能 |
+| **Expo** | WatermelonDB層はそのまま | 高 | 中 | EAS Update対応 |
 | **Flutter** | 不可（Dart書き直し） | 高 | 最高 | Shorebird等で可能 |
 
 ### 現時点の推奨
 
-**Capacitor継続**が最もコスト効率が良い。理由:
-- 現行のNext.jsコードを100%再利用
-- Vercelデプロイでアプリ内容が即時更新（App Store審査不要）
-- Face ID・Keychain等の必要なネイティブ機能はプラグインで対応済み
-- パフォーマンス問題が顕在化してから移行を検討しても遅くない
+**Capacitor + WatermelonDB** で Step 4 を完了させ、実機パフォーマンスを評価する。RN移行時はWatermelonDBのアダプタ切替（LokiJS→Native SQLite）のみでデータ層を再利用。UI層のみ書き直し。
+
+```
+Capacitor WebView + WatermelonDB（LokiJSアダプタ）
+  ↓ パフォーマンス評価後、必要に応じて
+React Native + WatermelonDB（Native SQLiteアダプタ）
+  ↓ データ層そのまま、UI層のみ書き直し
+```
 
 ---
 
@@ -715,6 +942,17 @@ Step 3のFace IDテスト結果次第。以下の場合に検討:
 | `lib/native-secure-storage.ts` | iOS Keychainラッパー |
 | `components/native/NativeAppDetector.tsx` | ネイティブUI検出・設定 |
 | `components/native/BiometricEnableDialog.tsx` | Face ID有効化ダイアログ |
+
+### ローカルDB（Step 4で新規作成予定）
+| ファイル | 役割 |
+|---------|------|
+| `lib/offline/models/` | WatermelonDBモデル定義（約25テーブル） |
+| `lib/offline/sync.ts` | 同期ロジック（pull/push） |
+| `lib/offline/cache.ts` | キャッシュ管理・TTL制御 |
+| `lib/offline/queue.ts` | 書き込みキュー（オフライン時の未送信データ） |
+| `hooks/useNetworkStatus.ts` | オンライン/オフライン状態検出 |
+| `app/api/sync/pull/route.ts` | 同期API（サーバー→ローカル差分取得） |
+| `app/api/sync/push/route.ts` | 同期API（ローカル→サーバー送信） |
 
 ### CI/CD
 | ファイル | 役割 |
