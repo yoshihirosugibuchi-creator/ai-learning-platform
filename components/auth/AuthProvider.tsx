@@ -146,7 +146,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const active = await isSessionActive()
             if (!active) {
               console.log('🚪 No active session in UserDefaults, clearing ghost session')
-              await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
+              // signOut()は呼ばない（Face ID用のrefresh_tokenがサーバー側で無効化される恐れ）
+              // localStorageのクリアだけでゴーストセッションを除去
               try { localStorage.clear() } catch { /* ignore */ }
               nativeCheckDoneRef.current = true
               setUser(null)
