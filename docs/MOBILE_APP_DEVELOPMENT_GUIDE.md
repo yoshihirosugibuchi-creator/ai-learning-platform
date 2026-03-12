@@ -1,7 +1,7 @@
 # ALE学習 モバイルアプリ開発ガイド
 
 **プロジェクト**: AI Learning Enterprise (ALE学習)
-**最終更新**: 2026-03-11
+**最終更新**: 2026-03-12
 
 ---
 
@@ -287,6 +287,7 @@ Capacitor `server.url`モードでは、WKWebViewが別プロセスのVercel URL
 | AppDelegateで WebKit ディレクトリを直接削除 | iOS新版では別プロセス管理のため効果なし |
 | Supabase のカスタムストレージアダプタ（ALESimpleStorage → UserDefaults） | ログイン自体ができなくなった（Supabaseの内部動作と非互換） |
 | `supabase.auth.signOut({ scope: 'global' })` のみ | サーバー側トークン無効化はするが、access tokenは約1時間有効なまま。localStorage のセッションデータも残る |
+| `supabase.auth.signOut({ scope: 'local' })` | **ドキュメント上はローカルのみクリアとされるが、実際にはサーバー側のrefresh_tokenも無効化される**（2026-03-12確認）。Face ID用トークンが使えなくなる |
 
 ##### 最終解決策: UserDefaults `session_active` フラグ + JS側チェック
 
@@ -294,16 +295,18 @@ Capacitor `server.url`モードでは、WKWebViewが別プロセスのVercel URL
 ■ ログイン時:
   Supabase onAuthStateChange(SIGNED_IN)
   → UserDefaults に session_active = true を保存
+  → Face ID有効時: 最新のrefresh_tokenもUserDefaultsに保存
 
 ■ ログアウト時（AuthProvider.signOut）:
   1. UserDefaults の session_active を削除
-  2. supabase.auth.signOut({ scope: 'global' })
+  2. Face ID有効時: supabase.auth.signOut() を呼ばない（トークン保持）
+     Face ID無効時: supabase.auth.signOut({ scope: 'global' })
   3. localStorage.clear()
   4. React 状態クリア
 
 ■ アプリ再起動時（AuthProvider.initializeAuth）:
   1. UserDefaults の session_active をチェック
-  2. false の場合 → supabase.auth.signOut({ scope: 'local' }) + localStorage.clear()
+  2. false の場合 → localStorage.clear()のみ（signOut()は呼ばない）
   3. true の場合 → 通常のセッション復元フロー
 ```
 
@@ -337,7 +340,9 @@ nativeCheckDoneRef.current = true // チェック完了、以降のイベント�
    → session_active フラグ未解除 → 再起動時にホーム画面表示
 
 ✅ MobileNav で useAuth().signOut を使用
-   → setSessionActiveFlag(false) + supabase.auth.signOut({ scope: 'global' })
+   → setSessionActiveFlag(false) + localStorage.clear()
+   → Face ID有効時: signOut()スキップ（トークン保持）
+   → Face ID無効時: signOut({ scope: 'global' })
    → 正しくログアウト永続化
 ```
 
@@ -380,9 +385,14 @@ Face ID 成功 → Keychain から refresh_token 取得
   - UserDefaults に biometric_enabled = true を保存
 - 設定画面から ON/OFF 切り替え可能にする
 
-**3. Face ID 無効化・ログアウト時のクリーンアップ**
+**3. Face ID有効時のログアウトではトークンを削除しない（重要）**
 
-ログアウト時は `clearSecureStorage()` で Keychain の全データ（refresh_token, email, biometric_enabled）もクリアすること。session_active フラグの解除だけでは、次回ログイン時に古い refresh_token が残ってしまう。
+Face ID有効時のログアウトでは、UserDefaultsの`refresh_token`・`user_email`・`biometric_enabled`を**保持**する。`supabase.auth.signOut()`も呼ばない。理由:
+- `signOut()`は`scope: 'local'`でもサーバー側のrefresh_tokenを無効化する（2026-03-12確認）
+- トークンが無効化されるとFace IDログイン時の`refreshSession()`が「refresh token not found」で失敗する
+- `session_active`フラグのみ`false`にすることで、ログアウト状態の制御とトークン保持を両立
+
+Face IDを**無効化**する場合（設定画面からOFF）のみ`clearSecureStorage()`で全データクリアする。
 
 **4. Info.plist の `NSFaceIDUsageDescription` は必須**
 
@@ -602,6 +612,7 @@ TestFlightは審査が通らず、**AdHoc配布**で実機テストを実施。
 - [x] ログアウト → アプリキル → 再起動 → ログイン画面表示（ヘッダー・サイドメニュー両方）
 - [x] Face ID有効化ダイアログ表示 → 有効にする
 - [x] Face IDによる認証動作確認
+- [x] Face ID有効→ログアウト→Face IDで再ログイン成功（2026-03-12）
 - [x] ステータスバー表示（ダークスタイル）
 - [x] ノッチ/Dynamic Island周りのレイアウト
 - [ ] スプラッシュスクリーン表示（2秒 → 自動非表示）

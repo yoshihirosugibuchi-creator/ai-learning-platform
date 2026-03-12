@@ -129,12 +129,9 @@ export default function LoginPage() {
         return
       }
       // Supabaseセッション復元
-      console.log('🔑 Face ID: refreshSession呼び出し, token先頭:', result.refreshToken.substring(0, 10) + '...')
       const { error } = await refreshSessionWithToken(result.refreshToken)
       if (error) {
-        const errMsg = error instanceof Error ? error.message : JSON.stringify(error)
-        console.error('❌ Face ID: refreshSession失敗:', errMsg)
-        setError(`セッション復元失敗: ${errMsg}`)
+        setError('セッションの復元に失敗しました。メールアドレスでログインしてください。')
       } else {
         router.push('/')
       }
