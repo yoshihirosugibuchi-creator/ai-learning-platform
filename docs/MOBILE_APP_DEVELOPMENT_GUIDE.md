@@ -1,7 +1,7 @@
 # ALE学習 モバイルアプリ開発ガイド
 
 **プロジェクト**: AI Learning Enterprise (ALE学習)
-**最終更新**: 2026-03-12
+**最終更新**: 2026-03-12（Step 4 Phase 0-2 実装完了）
 
 ---
 
@@ -12,7 +12,7 @@
 | **Step 1** | PWA化 | 完了 |
 | **Step 2** | Capacitor iOSアプリ + Face ID + GitHub Actions | 完了 |
 | **Step 3** | 実機テスト（AdHoc配布） | 完了（ログイン/ログアウト/Face ID確認済み） |
-| **Step 4** | ローカルDB化（WatermelonDB + SW有効化） | 設計完了・実装未着手 |
+| **Step 4** | ローカルDB化（WatermelonDB + SW有効化） | **Phase 0-2 実装完了** |
 | **Step 5** | React Native移行（必要に応じて） | 未着手 |
 
 ---
@@ -62,16 +62,17 @@ Next.jsアプリをProgressive Web App化。ブラウザから「ホーム画面
 - **非GETリクエスト**: スキップ
 
 ```javascript
-const CACHE_NAME = 'ale-v1'
+const CACHE_NAME = 'ale-v2'  // Phase 0で更新
 const OFFLINE_URL = '/offline'
-// install時にオフラインページのみプリキャッシュ
+// install時に14ユーザーページをプリキャッシュ
 // activate時に古いキャッシュを削除
+// /sync/ ルートはキャッシュスキップ（WatermelonDB同期API用）
 ```
 
 ### SW登録 (`components/pwa/ServiceWorkerRegistration.tsx`)
 
 - 本番環境のみSW登録
-- ネイティブアプリ（Capacitor）内ではSW登録をスキップ（WebViewとの競合回避）
+- **ネイティブアプリ（Capacitor）内でもSW有効**（Phase 0で解除、オフラインアプリシェル用）
 
 ### レイアウト設定 (`app/layout.tsx`)
 
@@ -620,7 +621,7 @@ TestFlightは審査が通らず、**AdHoc配布**で実機テストを実施。
 
 ---
 
-## Step 4: ローカルデータベース化 [設計完了・実装未着手]
+## Step 4: ローカルデータベース化 [Phase 0-2 実装完了]
 
 ### 目的
 
@@ -661,7 +662,7 @@ WatermelonDB = SQLite + ORM + 同期プロトコル + React連携 + Lazy Loading
 
 ---
 
-### Phase 0: Service Worker有効化（アプリシェルのオフラインキャッシュ）
+### Phase 0: Service Worker有効化（アプリシェルのオフラインキャッシュ） [完了]
 
 #### 背景
 
@@ -684,11 +685,16 @@ WatermelonDB = SQLite + ORM + 同期プロトコル + React連携 + Lazy Loading
   キャッシュは消える → 再度オンラインでの読み込みが必要
 ```
 
-#### 実装内容
+#### 実装内容（完了）
 
-1. `components/pwa/ServiceWorkerRegistration.tsx` — ネイティブアプリでのSWスキップを解除
-2. `public/sw.js` — プリキャッシュマニフェストを拡充（全ページ、JSチャンク、CSS）
-3. オフライン時のフォールバック表示の改善
+1. `components/pwa/ServiceWorkerRegistration.tsx` — ネイティブアプリでのSWスキップを解除済み
+2. `public/sw.js` — キャッシュバージョン `ale-v2`、14ユーザーページをプリキャッシュ
+   - ナビゲーション: Network-first → キャッシュ → オフラインページ
+   - `_next/static/`: Cache-first
+   - `_next/data/`: Network-first
+   - アセット: Stale-while-revalidate
+   - `/sync/` ルート: キャッシュスキップ（WatermelonDB同期API用）
+3. SW更新検出リスナー追加
 
 #### 注意点
 
@@ -698,7 +704,48 @@ WatermelonDB = SQLite + ORM + 同期プロトコル + React連携 + Lazy Loading
 
 ---
 
-### Phase 1: WatermelonDB導入（マスタデータのローカル化）
+### Phase 1: WatermelonDB導入（マスタデータのローカル化） [完了]
+
+#### 実装済みファイル
+
+| ファイル | 役割 |
+|---------|------|
+| `lib/offline/schema.ts` | WatermelonDBスキーマ（25テーブル、500+行） |
+| `lib/offline/database.ts` | LokiJSアダプタ、シングルトンDB（IndexedDB `ale_learning_db`） |
+| `lib/offline/models/*.ts` | 全28モデルクラス（quiz, case-study, learning, collection, master, user-stats） |
+| `lib/offline/models/index.ts` | モデル一覧エクスポート |
+| `lib/offline/sync.ts` | クライアント同期ロジック（`syncDatabase()`, `syncTables()`） |
+| `lib/offline/provider.tsx` | `OfflineDBProvider`（初期化、自動同期、コンテキスト提供） |
+| `app/api/sync/pull/route.ts` | Pull同期API（全25テーブル、差分取得、行変換） |
+| `lib/offline/queries/collection.ts` | コレクションページ用バッチクエリ（N+1解消） |
+
+#### WatermelonDB設定
+
+```typescript
+// lib/offline/database.ts
+LokiJSAdapter({
+  schema,
+  useWebWorker: false,
+  useIncrementalIndexedDB: true,
+  dbName: 'ale_learning_db',
+})
+```
+
+- `tsconfig.json` に `experimentalDecorators: true` 追加（WatermelonDBデコレータ用）
+- `.npmrc` に `legacy-peer-deps=true` 追加（React 19互換）
+- `@nozbe/with-observables` は不使用・削除済み（組み込みhooksを使用）
+
+#### コレクションページN+1解消（実績）
+
+```
+■ 旧（250+クエリ）
+  Wisdom Cards: 50枚 × 2クエリ = 101クエリ
+  Knowledge Cards: 50テーマ × 3クエリ = 150+クエリ
+
+■ 新（8クエリ）
+  全データをバッチ取得 → メモリ内JOIN
+  ローカルDB使用時: 0ネットワーククエリ（全てメモリ）
+```
 
 #### ローカル化対象テーブル（マスタデータ: サーバー→ローカル同期、読み取り専用）
 
@@ -761,7 +808,73 @@ WatermelonDB = SQLite + ORM + 同期プロトコル + React連携 + Lazy Loading
 
 ---
 
-### Phase 2: ユーザーデータのローカルキャッシュ＋書き込みキュー
+### Phase 2: ユーザーデータのローカルキャッシュ＋書き込みキュー [完了]
+
+#### 実装済みファイル
+
+| ファイル | 役割 |
+|---------|------|
+| `app/api/sync/push/route.ts` | Push同期API（冪等insert/upsert、認証、テーブル別処理） |
+| `lib/offline/write-helpers.ts` | ローカルDB書き込みヘルパー（quiz, cards, course completion） |
+
+#### Push同期の設計
+
+```
+■ テーブル別処理
+  append-only（ON CONFLICT DO NOTHING）:
+    quiz_sessions, quiz_answers, case_study_sessions,
+    case_study_step_details, case_study_thinking_logs,
+    course_session_completions
+
+  upsert（キーベース統合）:
+    wisdom_card_collection（user_id + card_id）
+    user_knowledge_collection_v2（user_id + theme_id）
+
+  push対象外（サーバー計算のみ）:
+    user_xp_stats_v2, daily_xp_records
+    + 全マスタテーブル
+
+■ 行変換（WatermelonDB形式 → Supabase形式）
+  タイムスタンプ数値 → ISO文字列
+  JSON文字列 → オブジェクト
+  _status, _changed → スキップ
+
+■ セキュリティ
+  認証: Bearerトークン（開発環境: x-test-user-idバイパス）
+  user_id検証: 他ユーザーのデータ書き込み拒否
+```
+
+#### デュアルライト実装
+
+```
+■ クイズ完了時（QuizSession.tsx）
+  1. WatermelonDBに先行書き込み（即座完了、オフラインOK）
+  2. サーバーAPI（/api/xp-save/quiz）にリトライ送信（XP/SKP計算）
+  3. API全失敗時 → ローカルDBにデータ残存 → 次回sync時にpush
+  ※ localStorageフォールバック廃止（WatermelonDBに移行完了）
+
+■ 格言カード取得時（supabase-cards.ts addWisdomCardToCollection）
+  1. WatermelonDBに先行書き込み
+  2. Supabaseに通常書き込み（既存ロジック）
+
+■ ナレッジカード取得時（knowledge-cards-v2.ts acquireKnowledgeCard）
+  1. WatermelonDBに先行書き込み
+  2. Supabaseに通常書き込み（既存ロジック）
+
+■ localStorage quiz_backup_* 自動移行
+  アプリ起動時にOfflineDBProviderが自動検出・WatermelonDBに移行・削除
+```
+
+#### API動作テスト結果（2026-03-12実施）
+
+| テスト | 結果 |
+|--------|------|
+| Pull API - テーブル指定取得 | categories 33件、subcategories 193件取得 |
+| Push API - マスタテーブルスキップ | `skipped` 正常 |
+| Push API - 集計テーブルスキップ | `skipped` 正常 |
+| Push API - quiz_sessions書き込み | `success` count:1 |
+| Push API - 冪等性（同一ID再push） | `success` 重複エラーなし |
+| Push API - CHECK制約違反検出 | エラーメッセージ返却 |
 
 #### ローカル化対象テーブル（ユーザーデータ: ローカルキャッシュ＋サーバー送信）
 
@@ -839,48 +952,63 @@ WatermelonDB = SQLite + ORM + 同期プロトコル + React連携 + Lazy Loading
 
 ---
 
-### 実装順序
+### 実装順序と完了状況
 
 ```
-Phase 0（SW有効化）
-  1. ServiceWorkerRegistration.tsx のネイティブスキップ解除
-  2. sw.js のプリキャッシュ拡充
-  3. 動作確認（オフラインでアプリ画面表示）
+Phase 0（SW有効化） ✅ 完了
+  ✅ ServiceWorkerRegistration.tsx のネイティブスキップ解除
+  ✅ sw.js のプリキャッシュ拡充（ale-v2、14ページ）
+  ✅ /sync/ ルートのキャッシュスキップ設定
 
-Phase 1（マスタデータのローカル化）
-  1. WatermelonDB インストール・初期設定
-  2. モデル定義（約16テーブル分のスキーマ）
-  3. 同期API構築（サーバー側: pull エンドポイント）
-  4. データフェッチ層の改修（ローカルDB優先 → フォールバックでサーバー）
-  5. コレクションページのパフォーマンス改善確認
+Phase 1（マスタデータのローカル化） ✅ 完了
+  ✅ WatermelonDB インストール・初期設定（LokiJS + IndexedDB）
+  ✅ スキーマ・モデル定義（25テーブル、28モデルクラス）
+  ✅ Pull同期API構築（/api/sync/pull）
+  ✅ OfflineDBProvider統合（layout.tsx）
+  ✅ クライアント同期ロジック（syncDatabase, syncTables）
+  ✅ コレクションページN+1解消（250+→8クエリ）
 
-Phase 2（ユーザーデータ＋書き込みキュー）
-  1. ユーザーデータのモデル定義（約9テーブル）
-  2. 書き込みキュー実装
-  3. オンライン復帰時の同期処理
-  4. QuizSession.tsx の既存localStorage退避をWatermelonDB移行
-  5. オフラインでクイズ実行→復帰後同期のE2Eテスト
+Phase 2（ユーザーデータ＋書き込みキュー） ✅ 完了
+  ✅ Push同期API構築（/api/sync/push、冪等処理）
+  ✅ ローカル書き込みヘルパー（write-helpers.ts）
+  ✅ QuizSession.tsx デュアルライト（ローカルDB + API並行）
+  ✅ localStorageフォールバック廃止 → WatermelonDB移行
+  ✅ 格言カード・ナレッジカード ローカルファースト書き込み
+  ✅ localStorage quiz_backup_* 自動移行
+  ✅ Pull/Push API動作テスト完了
 
-品質チェック
-  npm run typecheck && npm run lint && npm run build
+今後の検討事項
+  - オフラインでクイズ実行→復帰後同期のE2Eテスト（実機）
+  - オフライン時のUI表示（同期状態インジケーター等）
+  - 実機パフォーマンス評価
 ```
 
 ---
 
-### 現在のパフォーマンス問題（ローカル化で解消予定）
+### パフォーマンス改善実績
 
-#### コレクションページのN+1クエリ問題
+#### コレクションページのN+1クエリ問題 [解消済み]
 
 ```
-■ ナレッジカード表示（現状）
-  50テーマ × 3クエリ（genre, course, session） = 150+ サーバークエリ
+■ 旧（250+クエリ）
+  ナレッジカード: 50テーマ × 3クエリ = 150+ サーバークエリ
+  格言カード: 50枚 × 2クエリ = 101 サーバークエリ
 
-■ 格言カード表示（現状）
-  100カード × 2クエリ（hasCard, getCount） = 200+ サーバークエリ
+■ 新（8クエリ / バッチ取得 + メモリ内JOIN）
+  loadCollectionData() で全テーブル一括取得
+  ローカルDB使用時: 0ネットワーククエリ
 
-■ ローカル化後
-  ローカルJOIN 1発 → 瞬時に全カード+所持状態を表示
+■ 実装: lib/offline/queries/collection.ts
+  ローカルDB優先 → Supabaseフォールバック（バッチ最適化版）
 ```
+
+#### 他ページの状況（2026-03-12調査）
+
+全ページをスキャン済み。コレクションページ以外にN+1問題なし:
+- ダッシュボード: 2並列APIコール（問題なし）
+- クイズ: バッチ取得済み
+- 学習: グローバルキャッシュ＋バッチ取得済み
+- SKP履歴: Promise.all 2クエリ（問題なし）
 
 ---
 
@@ -943,16 +1071,24 @@ React Native + WatermelonDB（Native SQLiteアダプタ）
 | `components/native/NativeAppDetector.tsx` | ネイティブUI検出・設定 |
 | `components/native/BiometricEnableDialog.tsx` | Face ID有効化ダイアログ |
 
-### ローカルDB（Step 4で新規作成予定）
+### ローカルDB（Step 4で実装済み）
 | ファイル | 役割 |
 |---------|------|
-| `lib/offline/models/` | WatermelonDBモデル定義（約25テーブル） |
-| `lib/offline/sync.ts` | 同期ロジック（pull/push） |
-| `lib/offline/cache.ts` | キャッシュ管理・TTL制御 |
-| `lib/offline/queue.ts` | 書き込みキュー（オフライン時の未送信データ） |
-| `hooks/useNetworkStatus.ts` | オンライン/オフライン状態検出 |
-| `app/api/sync/pull/route.ts` | 同期API（サーバー→ローカル差分取得） |
-| `app/api/sync/push/route.ts` | 同期API（ローカル→サーバー送信） |
+| `lib/offline/schema.ts` | WatermelonDBスキーマ定義（25テーブル） |
+| `lib/offline/database.ts` | DB初期化（LokiJS + IndexedDB、シングルトン） |
+| `lib/offline/models/quiz.ts` | クイズ関連モデル（5クラス） |
+| `lib/offline/models/case-study.ts` | ケーススタディ関連モデル（8クラス） |
+| `lib/offline/models/learning.ts` | 学習コンテンツ関連モデル（6クラス） |
+| `lib/offline/models/collection.ts` | コレクション関連モデル（3クラス） |
+| `lib/offline/models/master.ts` | マスタデータモデル（4クラス） |
+| `lib/offline/models/user-stats.ts` | ユーザー統計モデル（2クラス） |
+| `lib/offline/models/index.ts` | モデル一覧エクスポート |
+| `lib/offline/sync.ts` | クライアント同期ロジック（pull/push） |
+| `lib/offline/provider.tsx` | OfflineDBProvider（初期化、自動同期、コンテキスト） |
+| `lib/offline/write-helpers.ts` | ローカルDB書き込みヘルパー |
+| `lib/offline/queries/collection.ts` | コレクションページ用バッチクエリ |
+| `app/api/sync/pull/route.ts` | Pull同期API（サーバー→ローカル差分取得） |
+| `app/api/sync/push/route.ts` | Push同期API（ローカル→サーバー冪等送信） |
 
 ### CI/CD
 | ファイル | 役割 |
