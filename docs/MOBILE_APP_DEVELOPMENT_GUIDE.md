@@ -560,13 +560,11 @@ git push origin v1.0.1-ios
 - `NativeAppDetector`コンポーネント（`components/native/NativeAppDetector.tsx`）
 - `app/layout.tsx`に`<NativeAppDetector />`追加
 
-#### SplashScreen（スプラッシュ画面）について [保留]
+#### SplashScreen（スプラッシュ画面） [対応済み]
 
-**現状**: `capacitor.config.ts`にSplashScreen設定あり。`NativeAppDetector`で`SplashScreen.hide()`を呼んでいるが、**実機では表示されていない**。
+**対応内容**: `LaunchScreen.storyboard`をインディゴ背景(#4f46e5) + 「ALE」「学習」テキスト中央配置に変更。Capacitor SplashScreenプラグインではなくiOSネイティブのLaunchScreenで表示するため、WebView読み込みタイミングに依存しない。
 
-**原因**: `server.url`モード（Vercel URLをWebViewで読み込む方式）では、CapacitorのSplashScreenプラグインのJS制御がWebView読み込み完了前に間に合わない。一般的なネイティブアプリではローカルリソースの読み込み中にブランドロゴを表示する用途で使われる（LINE、メルカリ等）が、ALEのようなWebView方式ではプラグインではなく、Xcode側の`LaunchScreen.storyboard`にALEロゴを設定する方式が確実。
-
-**対応方針**: ローカルDB対応（Step 4）でネイティブ側の変更が増えるタイミングでまとめて対応予定。IPA再ビルドが必要。現状でも実用上の問題はない（起動→白画面→ページ表示、の流れで普通に使える）。
+**技術メモ**: `server.url`モード（Vercel URLをWebViewで読み込む方式）では、CapacitorのSplashScreenプラグインのJS制御がWebView読み込み完了前に間に合わない。LaunchScreen.storyboardによるネイティブ表示が確実。
 
 ---
 
@@ -629,10 +627,11 @@ TestFlightは審査が通らず、**AdHoc配布**で実機テストを実施。
 2. **パフォーマンス改善**: コレクションページ等のN+1クエリ問題を解消（現状: 200+クエリ → ローカルJOIN 1発）
 3. **React Native移行準備**: データ層をWatermelonDBで構築し、将来のRN移行時にアダプタ切替のみで再利用
 
-### 合わせて対応する項目（IPA再ビルド必要）
+### 合わせて対応した項目 ✅
 
-- **SplashScreen**: `LaunchScreen.storyboard`にALEロゴ設定（Phase D参照）
-- **AppDelegate.swift整理**: 不要コメント除去（2026-03-11にWebKit削除コードを整理済み）
+- **SplashScreen**: `LaunchScreen.storyboard`にALEロゴ設定済み（インディゴ背景 + テキスト中央配置）
+- **AppDelegate.swift整理**: 不要コメント・未使用ライフサイクルメソッド除去済み
+- **同期状態インジケーター**: `SyncStatusIndicator`コンポーネント追加（同期中/オフライン/エラー/完了を表示）
 
 ### 技術選定
 
@@ -977,9 +976,13 @@ Phase 2（ユーザーデータ＋書き込みキュー） ✅ 完了
   ✅ localStorage quiz_backup_* 自動移行
   ✅ Pull/Push API動作テスト完了
 
+追加対応 ✅
+  ✅ SplashScreen: LaunchScreen.storyboardにALEロゴ設定
+  ✅ AppDelegate.swift整理（不要コメント除去）
+  ✅ 同期状態インジケーター（SyncStatusIndicator）
+
 今後の検討事項
   - オフラインでクイズ実行→復帰後同期のE2Eテスト（実機）
-  - オフライン時のUI表示（同期状態インジケーター等）
   - 実機パフォーマンス評価
 ```
 
@@ -1089,6 +1092,7 @@ React Native + WatermelonDB（Native SQLiteアダプタ）
 | `lib/offline/queries/collection.ts` | コレクションページ用バッチクエリ |
 | `app/api/sync/pull/route.ts` | Pull同期API（サーバー→ローカル差分取得） |
 | `app/api/sync/push/route.ts` | Push同期API（ローカル→サーバー冪等送信） |
+| `components/ui/SyncStatusIndicator.tsx` | 同期状態インジケーター（同期中/オフライン/エラー/完了） |
 
 ### CI/CD
 | ファイル | 役割 |
