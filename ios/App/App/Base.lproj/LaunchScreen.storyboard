@@ -15,25 +15,18 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="ALE" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lbl-ale-title">
-                                <rect key="frame" x="87.5" y="270" width="200" height="50"/>
-                                <fontDescription key="fontDescription" type="boldSystem" pointSize="48"/>
-                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="学習" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lbl-ale-subtitle">
-                                <rect key="frame" x="137.5" y="325" width="100" height="36"/>
-                                <fontDescription key="fontDescription" type="system" weight="light" pointSize="28"/>
-                                <color key="textColor" white="1" alpha="0.8" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <nil key="highlightedColor"/>
-                            </label>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ALEAppLogo" translatesAutoresizingMaskIntoConstraints="NO" id="img-logo">
+                                <rect key="frame" x="117.5" y="263.5" width="140" height="140"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="140" id="cnst-logo-w"/>
+                                    <constraint firstAttribute="height" constant="140" id="cnst-logo-h"/>
+                                </constraints>
+                            </imageView>
                         </subviews>
                         <color key="backgroundColor" red="0.30980392156862746" green="0.27450980392156865" blue="0.89803921568627454" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="lbl-ale-title" firstAttribute="centerX" secondItem="main-view" secondAttribute="centerX" id="cnst-title-cx"/>
-                            <constraint firstItem="lbl-ale-title" firstAttribute="centerY" secondItem="main-view" secondAttribute="centerY" constant="-30" id="cnst-title-cy"/>
-                            <constraint firstItem="lbl-ale-subtitle" firstAttribute="centerX" secondItem="main-view" secondAttribute="centerX" id="cnst-sub-cx"/>
-                            <constraint firstItem="lbl-ale-subtitle" firstAttribute="top" secondItem="lbl-ale-title" secondAttribute="bottom" constant="4" id="cnst-sub-top"/>
+                            <constraint firstItem="img-logo" firstAttribute="centerX" secondItem="main-view" secondAttribute="centerX" id="cnst-logo-cx"/>
+                            <constraint firstItem="img-logo" firstAttribute="centerY" secondItem="main-view" secondAttribute="centerY" id="cnst-logo-cy"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -42,4 +35,7 @@
             <point key="canvasLocation" x="53" y="375"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="ALEAppLogo" width="1024" height="1024"/>
+    </resources>
 </document>

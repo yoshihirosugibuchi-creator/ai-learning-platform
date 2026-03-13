@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useOfflineDB } from '@/lib/offline/provider'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { RefreshCw, WifiOff, AlertTriangle, Check } from 'lucide-react'
 
 type SyncState = 'idle' | 'syncing' | 'error' | 'offline' | 'success'
 
 export function SyncStatusIndicator() {
   const { syncing, lastSyncError, triggerSync } = useOfflineDB()
+  const { user } = useAuth()
   const [isOnline, setIsOnline] = useState(true)
   const [state, setState] = useState<SyncState>('idle')
   const [showSuccess, setShowSuccess] = useState(false)
@@ -39,7 +41,6 @@ export function SyncStatusIndicator() {
       setState('error')
       setShowSuccess(false)
     } else if (state === 'syncing') {
-      // syncing → idle に変わった = 同期完了
       setState('success')
       setShowSuccess(true)
     }
@@ -56,8 +57,8 @@ export function SyncStatusIndicator() {
     return () => clearTimeout(timer)
   }, [showSuccess])
 
-  // idle状態では何も表示しない
-  if (state === 'idle') return null
+  // 未ログイン時またはidle状態では何も表示しない
+  if (!user || state === 'idle') return null
 
   const config = {
     syncing: {
