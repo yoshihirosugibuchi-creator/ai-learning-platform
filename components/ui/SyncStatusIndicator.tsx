@@ -8,7 +8,7 @@ import { RefreshCw, WifiOff, AlertTriangle, Check } from 'lucide-react'
 type SyncState = 'idle' | 'syncing' | 'error' | 'offline' | 'success'
 
 export function SyncStatusIndicator() {
-  const { syncing, lastSyncError, triggerSync } = useOfflineDB()
+  const { syncing, lastSyncError, triggerSync, isNative } = useOfflineDB()
   const { user } = useAuth()
   const [isOnline, setIsOnline] = useState(true)
   const [state, setState] = useState<SyncState>('idle')
@@ -16,6 +16,7 @@ export function SyncStatusIndicator() {
 
   // オンライン状態の監視
   useEffect(() => {
+    if (!isNative) return
     setIsOnline(navigator.onLine)
 
     const handleOnline = () => setIsOnline(true)
@@ -27,10 +28,11 @@ export function SyncStatusIndicator() {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [])
+  }, [isNative])
 
   // 状態の決定
   useEffect(() => {
+    if (!isNative) return
     if (!isOnline) {
       setState('offline')
       setShowSuccess(false)
@@ -45,7 +47,7 @@ export function SyncStatusIndicator() {
       setShowSuccess(true)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOnline, syncing, lastSyncError])
+  }, [isOnline, syncing, lastSyncError, isNative])
 
   // 同期完了表示を3秒で非表示
   useEffect(() => {
@@ -57,8 +59,8 @@ export function SyncStatusIndicator() {
     return () => clearTimeout(timer)
   }, [showSuccess])
 
-  // 未ログイン時またはidle状態では何も表示しない
-  if (!user || state === 'idle') return null
+  // PC・未ログイン・idle状態では何も表示しない
+  if (!isNative || !user || state === 'idle') return null
 
   const config = {
     syncing: {
@@ -73,8 +75,8 @@ export function SyncStatusIndicator() {
     },
     error: {
       icon: <AlertTriangle className="h-3.5 w-3.5" />,
-      text: `同期エラー: ${lastSyncError || ''}`.substring(0, 80),
-      className: 'bg-red-500/90 text-white cursor-pointer max-w-[90vw]',
+      text: '同期エラー',
+      className: 'bg-red-500/90 text-white cursor-pointer',
     },
     success: {
       icon: <Check className="h-3.5 w-3.5" />,

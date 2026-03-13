@@ -4,14 +4,16 @@ import { createContext, useContext, useEffect, useRef, useState, useCallback } f
 import type { Database } from '@nozbe/watermelondb'
 
 type OfflineDBContextType = {
-  /** データベースインスタンス */
+  /** データベースインスタンス（PCではnull） */
   database: Database | null
   /** 同期中フラグ */
   syncing: boolean
-  /** 最後の同期エラー（手動同期時のみセット） */
+  /** 最後の同期エラー */
   lastSyncError: string | null
   /** 手動同期トリガー */
   triggerSync: () => Promise<void>
+  /** ネイティブアプリかどうか */
+  isNative: boolean
 }
 
 const OfflineDBContext = createContext<OfflineDBContextType>({
@@ -19,6 +21,7 @@ const OfflineDBContext = createContext<OfflineDBContextType>({
   syncing: false,
   lastSyncError: null,
   triggerSync: async () => {},
+  isNative: false,
 })
 
 export function useOfflineDB() {
@@ -36,14 +39,25 @@ async function hasAuthSession(): Promise<boolean> {
   }
 }
 
+/** ネイティブアプリ判定（Capacitor） */
+async function checkIsNative(): Promise<boolean> {
+  try {
+    const { isNativeApp } = await import('@/lib/capacitor-utils')
+    return isNativeApp()
+  } catch {
+    return false
+  }
+}
+
 export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
   const [database, setDatabase] = useState<Database | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [lastSyncError, setLastSyncError] = useState<string | null>(null)
+  const [isNative, setIsNative] = useState(false)
   const initRef = useRef(false)
   const dbRef = useRef<Database | null>(null)
 
-  // バックグラウンド同期（エラーはログのみ、UIには表示しない）
+  // バックグラウンド同期
   const doBackgroundSync = useCallback(async () => {
     if (!dbRef.current || !navigator.onLine) return
     const authenticated = await hasAuthSession()
@@ -66,18 +80,26 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // DB初期化
+  // DB初期化（ネイティブアプリのみ）
   useEffect(() => {
     if (initRef.current) return
     initRef.current = true
 
     async function init() {
+      // PC（ブラウザ）ではWatermelonDB不要
+      const native = await checkIsNative()
+      setIsNative(native)
+      if (!native) {
+        console.log('🖥️ Browser detected - skipping WatermelonDB')
+        return
+      }
+
       try {
         const { getDatabase } = await import('./database')
         const db = getDatabase()
         setDatabase(db)
         dbRef.current = db
-        console.log('✅ WatermelonDB initialized')
+        console.log('✅ WatermelonDB initialized (native app)')
 
         // localStorage quiz_backup_* の移行
         try {
@@ -87,7 +109,7 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
           console.warn('⚠️ localStorage migration skipped:', e)
         }
 
-        // 認証済みの場合のみバックグラウンド同期
+        // 認証済みの場合のみ初期同期
         if (navigator.onLine) {
           const authenticated = await hasAuthSession()
           if (authenticated) {
@@ -97,6 +119,7 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
               const result = await syncDatabase()
               if (!result.success) {
                 console.warn('⚠️ Initial sync failed:', result.error)
+                setLastSyncError(result.error ?? 'Unknown sync error')
               }
             } catch (e) {
               console.warn('⚠️ Initial sync error:', e)
@@ -112,14 +135,15 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
     init()
   }, [])
 
-  // 認証状態変化でsyncトリガー（ログイン完了時）
+  // 認証状態変化でsyncトリガー（ログイン完了時、ネイティブのみ）
   useEffect(() => {
+    if (!isNative) return
     let unsubscribe: (() => void) | undefined
 
     import('@/lib/supabase').then(({ supabase }) => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
         if (event === 'SIGNED_IN' && dbRef.current) {
-          console.log('🔑 Signed in - triggering background sync')
+          console.log('🔑 Signed in - triggering sync')
           doBackgroundSync()
         }
       })
@@ -127,20 +151,22 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => unsubscribe?.()
-  }, [doBackgroundSync])
+  }, [doBackgroundSync, isNative])
 
-  // オンライン復帰時に自動同期（認証済みのみ）
+  // オンライン復帰時に自動同期（ネイティブのみ）
   useEffect(() => {
+    if (!isNative) return
+
     function handleOnline() {
-      console.log('🌐 Online - triggering background sync')
+      console.log('🌐 Online - triggering sync')
       doBackgroundSync()
     }
 
     window.addEventListener('online', handleOnline)
     return () => window.removeEventListener('online', handleOnline)
-  }, [doBackgroundSync])
+  }, [doBackgroundSync, isNative])
 
-  // 手動同期（エラーをUIに表示）
+  // 手動同期
   const triggerSync = useCallback(async () => {
     if (syncing || !dbRef.current) return
     const authenticated = await hasAuthSession()
@@ -163,7 +189,7 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
   }, [syncing])
 
   return (
-    <OfflineDBContext.Provider value={{ database, syncing, lastSyncError, triggerSync }}>
+    <OfflineDBContext.Provider value={{ database, syncing, lastSyncError, triggerSync, isNative }}>
       {children}
     </OfflineDBContext.Provider>
   )
