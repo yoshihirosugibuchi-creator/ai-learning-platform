@@ -54,10 +54,10 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
       const { syncDatabase } = await import('./sync')
       const result = await syncDatabase()
       if (!result.success) {
-        console.warn('⚠️ Background sync failed (will retry later):', result.error)
+        console.warn('⚠️ Background sync failed:', result.error)
+        setLastSyncError(result.error ?? 'Unknown sync error')
       } else {
         setLastSyncError(null)
-        console.log('✅ Background sync completed')
       }
     } catch (e) {
       console.warn('⚠️ Background sync error:', e)

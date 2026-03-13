@@ -31,9 +31,12 @@ export async function syncDatabase(): Promise<{ success: boolean; error?: string
     const database = getDatabase()
     const token = await getAuthToken()
 
+    console.log('🔄 Starting WatermelonDB sync...')
+
     await synchronize({
       database,
       pullChanges: async ({ lastPulledAt }) => {
+        console.log('📥 Pull: lastPulledAt =', lastPulledAt)
         const url = new URL(`${getSyncUrl()}/pull`)
         if (lastPulledAt) {
           url.searchParams.set('last_pulled_at', String(lastPulledAt))
@@ -49,22 +52,42 @@ export async function syncDatabase(): Promise<{ success: boolean; error?: string
         const response = await fetch(url.toString(), { headers })
 
         if (!response.ok) {
-          throw new Error(`Sync pull failed: ${response.status}`)
+          const text = await response.text()
+          throw new Error(`Sync pull failed: ${response.status} ${text.substring(0, 200)}`)
         }
 
         const { changes, timestamp } = await response.json()
+
+        // デバッグ: 各テーブルの件数をログ
+        const summary = Object.entries(changes).map(([t, c]) => {
+          const tc = c as { created: unknown[]; updated: unknown[]; deleted: unknown[] }
+          const total = tc.created.length + tc.updated.length + tc.deleted.length
+          return total > 0 ? `${t}:${tc.created.length}c/${tc.updated.length}u/${tc.deleted.length}d` : null
+        }).filter(Boolean)
+        console.log('📥 Pull response:', summary.join(', '))
+
         return { changes, timestamp }
       },
       pushChanges: async ({ changes }) => {
-        // Phase 2で実装（ユーザーデータのサーバー送信）
-        // 現時点ではマスタデータのpullのみ
         const hasChanges = Object.values(changes).some(
           (table) => {
             const t = table as { created: unknown[]; updated: unknown[]; deleted: unknown[] }
             return t.created.length > 0 || t.updated.length > 0 || t.deleted.length > 0
           }
         )
-        if (!hasChanges) return
+
+        if (!hasChanges) {
+          console.log('📤 Push: no local changes')
+          return
+        }
+
+        // デバッグ: push内容をログ
+        const pushSummary = Object.entries(changes).map(([t, c]) => {
+          const tc = c as { created: unknown[]; updated: unknown[]; deleted: unknown[] }
+          const total = tc.created.length + tc.updated.length + tc.deleted.length
+          return total > 0 ? `${t}:${tc.created.length}c/${tc.updated.length}u/${tc.deleted.length}d` : null
+        }).filter(Boolean)
+        console.log('📤 Push:', pushSummary.join(', '))
 
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
@@ -80,17 +103,24 @@ export async function syncDatabase(): Promise<{ success: boolean; error?: string
         })
 
         if (!response.ok) {
-          throw new Error(`Sync push failed: ${response.status}`)
+          const text = await response.text()
+          throw new Error(`Sync push failed: ${response.status} ${text.substring(0, 200)}`)
         }
+
+        const result = await response.json()
+        console.log('📤 Push result:', JSON.stringify(result).substring(0, 300))
       },
-      migrationsEnabledAtVersion: 1,
+      // migrationsEnabledAtVersion を削除 - マイグレーション定義未設定のため
     })
 
     console.log('✅ WatermelonDB sync completed')
     return { success: true }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
+    const stack = error instanceof Error ? error.stack : ''
     console.error('❌ WatermelonDB sync failed:', message)
+    console.error('❌ Full error:', error)
+    if (stack) console.error('❌ Stack:', stack)
     return { success: false, error: message }
   }
 }
@@ -128,7 +158,6 @@ export async function syncTables(tables: string[]): Promise<{ success: boolean; 
       pushChanges: async () => {
         // テーブル指定同期ではpushしない
       },
-      migrationsEnabledAtVersion: 1,
     })
 
     return { success: true }

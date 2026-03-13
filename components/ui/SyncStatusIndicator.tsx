@@ -73,8 +73,8 @@ export function SyncStatusIndicator() {
     },
     error: {
       icon: <AlertTriangle className="h-3.5 w-3.5" />,
-      text: '同期エラー',
-      className: 'bg-red-500/90 text-white cursor-pointer',
+      text: `同期エラー: ${lastSyncError || ''}`.substring(0, 80),
+      className: 'bg-red-500/90 text-white cursor-pointer max-w-[90vw]',
     },
     success: {
       icon: <Check className="h-3.5 w-3.5" />,
