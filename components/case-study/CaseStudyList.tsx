@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Search, Filter, RefreshCw } from 'lucide-react'
 import CaseStudyCard from './CaseStudyCard'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { useOfflineDB } from '@/lib/offline/provider'
 
 interface Problem {
   id: string
@@ -28,6 +29,7 @@ interface CaseStudyListProps {
 
 export default function CaseStudyList({ initialProblems }: CaseStudyListProps) {
   const { user } = useAuth()
+  const { database } = useOfflineDB()
   const [problems, setProblems] = useState<Problem[]>(initialProblems || [])
   const [loading, setLoading] = useState(!initialProblems)
   const [keyword, setKeyword] = useState('')
@@ -41,6 +43,27 @@ export default function CaseStudyList({ initialProblems }: CaseStudyListProps) {
 
     setLoading(true)
     try {
+      // モバイル: ローカルDB優先
+      if (database) {
+        try {
+          const { getCaseStudyProblemsLocal } = await import('@/lib/offline/queries/case-study')
+          const localProblems = await getCaseStudyProblemsLocal(database, user.id, {
+            keyword: keyword || undefined,
+            difficulty: difficulty !== 'all' ? difficulty : undefined,
+            industry: industry !== 'all' ? industry : undefined,
+            limit: 20,
+          })
+          if (localProblems.length > 0) {
+            setProblems(localProblems)
+            setLoading(false)
+            return
+          }
+        } catch (e) {
+          console.warn('⚠️ Local case study query failed, falling back to API:', e)
+        }
+      }
+
+      // PC / フォールバック: API経由
       const { supabase } = await import('@/lib/supabase')
       const { data: sessionData } = await supabase.auth.getSession()
       const token = sessionData.session?.access_token

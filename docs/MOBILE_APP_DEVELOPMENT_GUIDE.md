@@ -985,24 +985,30 @@ Phase 3（ローカルファースト読み取り） ✅ 主要パス完了（20
   ✅ Sub-Phase 3a: 基盤＋マスタデータ（data-source.ts, categories, questions, courses）
   ✅ Sub-Phase 3b: ユーザーデータ（格言カード抽選, XP統計, クイズ履歴クエリ）
   ✅ Sub-Phase 3c: precomputed_quiz_sets＋復習＋オフラインローカル生成
-  ✅ Sub-Phase 3d: コース進捗, 学習分析（ケーススタディは未対応）
+  ✅ Sub-Phase 3d: コース進捗, 学習分析, ケーススタディ一覧, クイズパック一覧
   ✅ Sub-Phase 3e: XP設定（バッジ・SKP残高はWMモデル未作成のため未対応）
 
-  ⚠️ 未対応項目（Phase 3残存）:
-  - 🔲 ケーススタディ読み取り（case_study_*テーブルのクエリ未作成）
-  - 🔲 スキルレベル（skill_levels）のローカル読み取り
-  - 🔲 クイズパック（quiz_packs）のローカル読み取り
+  ⚠️ 未対応項目（Phase 3残存 - WMモデル未作成でブロック）:
   - 🔲 バッジ（user_badgesテーブル: WMスキーマ/モデル未作成）
   - 🔲 SKP残高/トランザクション（skp_transactionsテーブル: WMスキーマ/モデル未作成）
-  - 🔲 supabase-learning.ts の各関数（getUserLearningSessions等 9関数）
-  - 🔲 supabase-cards.ts の補助関数（getUserWisdomCards等 5関数）
-  - 🔲 supabase-personalization.ts（6関数）
-  - 🔲 supabase-quiz.ts のクイズ結果取得（getUserQuizResults等 3関数）
+
+  ℹ️ 対応不要と判断した関数（理由付き）:
+  - getUserLearningSessions → 未使用（レガシー）
+  - getUserQuizResults(supabase版) → コンポーネントから未使用（localStorage版のみ）
+  - getUserDetailedQuizData → レガシー関数（空配列返却）
+  - getQuestionPerformanceStats → 未使用
+  - getWisdomCardCount/getKnowledgeCardCount → 未使用
+  - getLearningEfficiencyMetrics → 未使用
+  - personalization系(6関数) → localStorage経由（Supabase直接呼びなし）
+  - getUserLearningStreak → サーバーAPI内部のみ
+  - saveSKPTransaction → サーバーAPI内部のみ
+  - getUserWisdomCards/getWisdomCardsWithFallback → offline queriesで置き換え済み
+  - getUserKnowledgeCollection → collection.tsのoffline queryで置き換え済み
 
 今後の検討事項
   - オフラインでクイズ実行→復帰後同期のE2Eテスト（実機）
   - 実機パフォーマンス評価
-  - 残存未対応関数のローカルファースト化（優先度に応じて段階的に）
+  - user_badges/skp_transactionsのWMモデル作成（必要に応じて）
 ```
 
 ---
@@ -1299,7 +1305,8 @@ lib/offline/
 │   ├── user-stats.ts               ← ✅ XP・学習統計
 │   ├── wisdom-cards.ts             ← ✅ 格言カード抽選
 │   ├── quiz-history.ts             ← ✅ クイズ履歴・復習統計
-│   └── case-study.ts               ← 🔲 未作成（ケーススタディ）
+│   ├── case-study.ts               ← ✅ ケーススタディ問題一覧
+│   └── quiz-packs.ts              ← ✅ クイズパック一覧＋スキルレベル
 ```
 
 #### 実装フェーズ
@@ -1354,8 +1361,10 @@ lib/offline/
 | 3d-5 | `app/learning/.../[sessionId]/page.tsx` | useOfflineDB + database渡す | ✅ |
 | 3d-6 | `components/learning/LearningSession.tsx` | database渡す | ✅ |
 | 3d-7 | `components/analytics/OptimizedAnalyticsPage.tsx` | useOfflineDB + database渡す | ✅ |
-| 3d-8 | ケーススタディクエリ | `lib/offline/queries/case-study.ts` | 🔲 未作成 |
-| 3d-9 | スキルレベル/クイズパック | ローカル読み取り | 🔲 未対応 |
+| 3d-8 | ケーススタディクエリ | `lib/offline/queries/case-study.ts` | ✅ |
+| 3d-9 | クイズパック＋スキルレベル | `lib/offline/queries/quiz-packs.ts` | ✅ |
+| 3d-10 | CaseStudyList.tsx | useOfflineDB + ローカル優先 | ✅ |
+| 3d-11 | quiz-packs/page.tsx | useOfflineDB + ローカル優先 | ✅ |
 
 ##### Sub-Phase 3e: XP設定 ✅ 完了（バッジ・SKP未対応）
 

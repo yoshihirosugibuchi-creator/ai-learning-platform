@@ -22,6 +22,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import { DifficultyLabels, DifficultyColors } from '@/lib/types/learning'
+import { useOfflineDB } from '@/lib/offline/provider'
 
 interface QuizPack {
   id: string
@@ -56,6 +57,7 @@ export default function QuizPacksPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { user, loading: authLoading } = useAuth()
+  const { database } = useOfflineDB()
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<string | null>(null)
   const [packs, setPacks] = useState<QuizPack[]>([])
@@ -70,6 +72,23 @@ export default function QuizPacksPage() {
 
   const fetchPacks = useCallback(async () => {
     try {
+      // モバイル: ローカルDB優先
+      if (database && user) {
+        try {
+          const { getQuizPacksLocal } = await import('@/lib/offline/queries/quiz-packs')
+          const localData = await getQuizPacksLocal(database, user.id)
+          if (localData.packs.length > 0) {
+            setPacks(localData.packs)
+            setSkillLevels(localData.skillLevels)
+            setLoading(false)
+            return
+          }
+        } catch (e) {
+          console.warn('⚠️ Local quiz packs query failed, falling back to API:', e)
+        }
+      }
+
+      // PC / フォールバック: API経由
       const { data: sessionData } = await supabase.auth.getSession()
       const token = sessionData.session?.access_token
 
@@ -99,6 +118,7 @@ export default function QuizPacksPage() {
     } finally {
       setLoading(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast])
 
   useEffect(() => {
