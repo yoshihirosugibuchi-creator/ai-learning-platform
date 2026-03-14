@@ -468,6 +468,7 @@ export function getSubcategoryDisplayName(subcategoryId: string, subcategories?:
 // =============================================================================
 
 import { getWisdomCardsWithFallback, getUserWisdomCards, WisdomCardCollection } from './supabase-cards'
+import type { Database as WMDatabase } from '@nozbe/watermelondb'
 
 /**
  * パフォーマンス・未獲得状況別レアリティ重み付け取得
@@ -656,38 +657,51 @@ function selectWeightedRandom(weightedCards: Array<{card: WisdomCard, weight: nu
  * DB版: ランダム格言カード取得（重み付き + パーソナライズ対応）
  * @param percentage - クイズ正答率 (0-100)
  * @param userId - ユーザーID（オプショナル）
+ * @param database - WatermelonDBインスタンス（null=PC→サーバー直接、モバイル=ローカル優先）
  * @returns Promise<WisdomCard> - 既存インターフェース形式
  */
-export const getRandomWisdomCardFromDB = async (percentage: number, userId?: string): Promise<WisdomCard> => {
+export const getRandomWisdomCardFromDB = async (percentage: number, userId?: string, database?: WMDatabase | null): Promise<WisdomCard> => {
   try {
     console.log(`🎯 Getting random wisdom card from DB (performance: ${percentage}%, userId: ${userId ? userId.substring(0, 8) + '...' : 'none'})`)
-    
-    // DB版: 全カード取得（フォールバック対応）
-    const allDbCards = await getWisdomCardsWithFallback()
-    const activeCards = allDbCards.filter(card => card.is_active !== false) // is_active考慮
-    
-    if (activeCards.length === 0) {
+
+    // ローカルDB優先パターン: database指定時はローカル→サーバーフォールバック
+    let allCards: WisdomCard[]
+    let userCollection: WisdomCardCollection[] = []
+
+    if (database) {
+      const { getWisdomCardPool } = await import('@/lib/offline/queries/wisdom-cards')
+      const pool = await getWisdomCardPool(database, userId)
+      allCards = pool.cards
+      userCollection = pool.userCollection
+    } else {
+      // PC: サーバー直接アクセス（従来のロジック）
+      const allDbCards = await getWisdomCardsWithFallback()
+      const activeCards = allDbCards.filter(card => card.is_active !== false)
+
+      if (activeCards.length === 0) {
+        console.warn('⚠️ No active cards available, falling back to static cards')
+        return getRandomWisdomCard(percentage)
+      }
+
+      if (userId) {
+        try {
+          userCollection = await getUserWisdomCards(userId)
+          console.log(`📊 User collection: ${userCollection.length} unique cards`)
+        } catch (collectionError) {
+          console.warn('⚠️ Failed to get user collection, proceeding without personalization:', collectionError)
+        }
+      }
+
+      allCards = activeCards.map(convertWisdomCardMasterToLegacy)
+    }
+
+    if (allCards.length === 0) {
       console.warn('⚠️ No active cards available, falling back to static cards')
       return getRandomWisdomCard(percentage)
     }
     
-    // ユーザーのカードコレクション取得（パーソナライズ用）
-    let userCollection: WisdomCardCollection[] = []
-    if (userId) {
-      try {
-        userCollection = await getUserWisdomCards(userId)
-        console.log(`📊 User collection: ${userCollection.length} unique cards`)
-      } catch (collectionError) {
-        console.warn('⚠️ Failed to get user collection, proceeding without personalization:', collectionError)
-      }
-    }
-    
-    // カード配列を変換（未獲得分析用）
-    const allCards = activeCards.map(convertWisdomCardMasterToLegacy)
-    
     // 重み付きカードプール作成（新パフォーマンス・未獲得状況別ロジック）
-    const weightedCards = activeCards.map(dbCard => {
-      const card = convertWisdomCardMasterToLegacy(dbCard)
+    const weightedCards = allCards.map(card => {
       const rarityWeight = getRarityWeight(card.rarity, percentage, userCollection, allCards)
       const personalizationWeight = userId ? getPersonalizationWeight(card, userCollection, percentage) : 1.0
       const finalWeight = rarityWeight * personalizationWeight

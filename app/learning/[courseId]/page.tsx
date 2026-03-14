@@ -15,6 +15,7 @@ import { LearningCourse, LearningGenre, LearningTheme, LearningSession, Difficul
 import { getCategoryInfoForCourse, getCategoryInfoForGenre } from '@/lib/learning/category-integration'
 import { getCategories } from '@/lib/categories'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { useOfflineDB } from '@/lib/offline/provider'
 import { supabase } from '@/lib/supabase'
 import { MainCategory, IndustryCategory } from '@/lib/types/category'
 
@@ -32,6 +33,7 @@ export default function CourseDetailPage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const { user } = useAuth()
+  const { database } = useOfflineDB()
   const fromHome = searchParams.get('from') === 'home'
   const [course, setCourse] = useState<LearningCourse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -101,7 +103,7 @@ export default function CourseDetailPage() {
         await getCategories().catch(err => console.warn('Category pre-load warning:', err))
 
         // コースデータを取得
-        const courseData = await getLearningCourseDetails(courseId)
+        const courseData = await getLearningCourseDetails(courseId, database)
         
         if (!courseData) {
           console.error('❌ Course data not found for:', courseId)
@@ -128,6 +130,7 @@ export default function CourseDetailPage() {
     }
 
     loadCourseData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, user?.id, loadSessionCompletions])
 
   const handleStartSession = (genreId: string, themeId: string, sessionId: string) => {

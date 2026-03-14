@@ -1,3 +1,4 @@
+import type { Database as WMDatabase } from '@nozbe/watermelondb'
 import { supabase } from './supabase'
 import type { PostgrestSingleResponse } from '@supabase/supabase-js'
 
@@ -69,8 +70,60 @@ export interface WeeklyProgress {
 }
 
 // 学習分析データを取得
-export async function getLearningAnalytics(userId: string): Promise<LearningAnalytics> {
+// database: WMDBインスタンス（null/undefined=PC→サーバー直接、モバイル=ローカル優先）
+export async function getLearningAnalytics(userId: string, database?: WMDatabase | null): Promise<LearningAnalytics> {
   console.log('🔍 getLearningAnalytics called for user:', userId.substring(0, 8) + '...')
+
+  // モバイル: ローカルDB優先でXP統計+クイズ履歴取得
+  if (database) {
+    try {
+      const { getUserStatsData } = await import('@/lib/offline/queries/user-stats')
+      const { getQuizHistoryData } = await import('@/lib/offline/queries/quiz-history')
+      const [statsData, historyData] = await Promise.all([
+        getUserStatsData(database, userId),
+        getQuizHistoryData(database, userId),
+      ])
+
+      if (statsData.xpStats) {
+        const xp = statsData.xpStats
+        const totalSessions = xp.quiz_sessions_completed + xp.course_sessions_completed
+        const totalTimeSeconds = xp.total_learning_time_seconds || 0
+        const averageSessionTime = totalSessions > 0 ? Math.round(totalTimeSeconds / totalSessions / 60) : 0
+
+        // 学習日数
+        const uniqueDates = new Set(
+          historyData.sessions.map(s => s.created_at ? new Date(s.created_at).toDateString() : '')
+        )
+        uniqueDates.delete('')
+
+        // 最近のアクティビティ（日別レコードから）
+        const recentActivity: ActivityRecord[] = statsData.dailyRecords.slice(0, 7).map(d => ({
+          date: d.date,
+          sessionsCompleted: d.quiz_sessions + d.course_sessions,
+          quizScore: d.quiz_xp_earned,
+          timeSpent: d.total_time_seconds ? Math.round(d.total_time_seconds / 60) : d.study_time_minutes,
+        }))
+
+        console.log(`✅ Learning analytics loaded from local DB`)
+        return {
+          totalSessions,
+          completedSessions: totalSessions,
+          totalQuizQuestions: xp.quiz_questions_answered,
+          correctAnswers: xp.quiz_questions_correct,
+          accuracy: Math.round((xp.quiz_average_accuracy || 0) * 100) / 100,
+          learningDays: uniqueDates.size,
+          streak: 0,
+          averageSessionTime,
+          categoriesProgress: [],
+          recentActivity,
+          weeklyProgress: [],
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ Local DB analytics failed, falling back to server:', e)
+    }
+  }
+
   try {
     // XP統計から実際のデータを取得
     const { data: xpStats, error: xpStatsError }: PostgrestSingleResponse<UserXPStatsV2> = await supabase

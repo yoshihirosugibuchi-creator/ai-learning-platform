@@ -15,6 +15,7 @@ import {
 import { useXPStats } from '@/hooks/useXPStats'
 import { loadXPSettings } from '@/lib/xp-settings'
 import { useState, useEffect } from 'react'
+import { useOfflineDB } from '@/lib/offline/provider'
 
 interface XPStatsCardProps {
   showDetailedStats?: boolean
@@ -41,13 +42,14 @@ const formatLearningTime = (seconds: number): string => {
 
 export default function XPStatsCard({ showDetailedStats = false, className }: XPStatsCardProps) {
   const { stats, loading, error, refetch: _refetch } = useXPStats()
+  const { database } = useOfflineDB()
   const [levelThreshold, setLevelThreshold] = useState<number | null>(null) // テーブルベース設定
 
   // XP設定からレベル閾値を取得
   useEffect(() => {
     const loadLevelSettings = async () => {
       try {
-        const xpSettings = await loadXPSettings()
+        const xpSettings = await loadXPSettings(undefined, database)
         setLevelThreshold(xpSettings.level.overall_threshold)
       } catch (error) {
         console.error('レベル設定の読み込みに失敗:', error)
@@ -55,6 +57,7 @@ export default function XPStatsCard({ showDetailedStats = false, className }: XP
       }
     }
     loadLevelSettings()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (loading) {

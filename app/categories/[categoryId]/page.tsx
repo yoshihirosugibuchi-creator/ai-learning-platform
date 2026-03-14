@@ -17,6 +17,7 @@ import type { MainCategory, IndustryCategory, Subcategory } from '@/lib/types/ca
 import { Question } from '@/lib/types'
 import { getAllQuestions } from '@/lib/questions'
 import { useUserContext } from '@/contexts/UserContext'
+import { useOfflineDB } from '@/lib/offline/provider'
 import { getUserCardCollection } from '@/lib/storage'
 import {
   BookOpen,
@@ -31,6 +32,7 @@ export default function CategoryDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { user } = useUserContext()
+  const { database } = useOfflineDB()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [questions, setQuestions] = useState<Question[]>([])
   const [category, setCategory] = useState<MainCategory | IndustryCategory | null>(null)
@@ -49,7 +51,7 @@ export default function CategoryDetailPage() {
         const [categoryData, subcategoriesData, questionsData] = await Promise.all([
           getCategoryById(categoryId),
           getSubcategories(categoryId),
-          getAllQuestions()
+          getAllQuestions(database)
         ])
 
         setCategory(categoryData || null)
@@ -65,6 +67,7 @@ export default function CategoryDetailPage() {
     if (categoryId) {
       loadData()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryId])
 
   // ローディング中の表示

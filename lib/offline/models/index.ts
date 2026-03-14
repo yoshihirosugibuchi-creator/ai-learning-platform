@@ -2,7 +2,7 @@
  * WatermelonDB モデル一覧
  * database.ts の modelClasses に渡す
  */
-import { QuizQuestion, QuizPack, SessionQuiz, QuizSession, QuizAnswer } from './quiz'
+import { QuizQuestion, QuizPack, SessionQuiz, PrecomputedQuizSet, QuizSession, QuizAnswer } from './quiz'
 import {
   CaseStudyProblem,
   CaseStudyStep,
@@ -51,6 +51,7 @@ export const models = [
   // マスタデータ: コレクション
   WisdomCard,
   // ユーザーデータ: クイズ
+  PrecomputedQuizSet,
   QuizSession,
   QuizAnswer,
   // ユーザーデータ: ケーススタディ
@@ -72,6 +73,7 @@ export {
   QuizQuestion,
   QuizPack,
   SessionQuiz,
+  PrecomputedQuizSet,
   QuizSession,
   QuizAnswer,
   // ケーススタディ

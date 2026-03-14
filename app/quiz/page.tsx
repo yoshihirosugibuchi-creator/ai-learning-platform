@@ -11,6 +11,7 @@ import SettingsPromptModal from '@/components/quiz/SettingsPromptModal'
 import { Question } from '@/lib/types'
 import { getAllQuestions } from '@/lib/questions'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { useOfflineDB } from '@/lib/offline/provider'
 import { getUserQuizSettings, isDefaultSettings } from '@/lib/user-quiz-settings'
 import { initializeSubcategoryCache } from '@/lib/subcategory-cache'
 
@@ -18,6 +19,7 @@ export default function QuizPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { user, profile, loading: authLoading } = useAuth()
+  const { database } = useOfflineDB()
   const mode = searchParams.get('mode') as UnifiedQuizType | null
   const categoryParam = searchParams.get('category')
   const difficultiesParam = searchParams.get('difficulties')
@@ -76,57 +78,72 @@ export default function QuizPage() {
           }
           
           // 復習モードの場合は復習問題を取得
-          // 既存のSupabaseクライアントを使用（新しいクライアント作成を避ける）
-          const { supabase } = await import('@/lib/supabase')
-          
-          const { data: sessionData } = await supabase.auth.getSession()
-          const token = sessionData.session?.access_token
-          
-          if (!token) {
-            console.warn('No auth token available for review questions')
-            throw new Error('Authentication required')
+          let reviewQuestionsResult: unknown[] | null = null
+
+          // モバイル: ローカルDBから復習問題を取得（precomputed→ローカル生成）
+          if (database) {
+            try {
+              const { getPrecomputedSets, resolveSetQuestions, getSetByType } = await import('@/lib/offline/queries/precomputed-sets')
+              const sets = await getPrecomputedSets(database, user!.id, 'review')
+              const validSet = getSetByType(sets, 'review')
+
+              if (validSet && validSet.question_ids.length > 0) {
+                reviewQuestionsResult = await resolveSetQuestions(database, validSet.question_ids)
+                console.log('✅ [REVIEW MODE] Local precomputed set:', reviewQuestionsResult?.length, 'questions')
+              }
+
+              if (!reviewQuestionsResult || reviewQuestionsResult.length === 0) {
+                const { generateReviewQuizLocally } = await import('@/lib/offline/queries/offline-quiz-generator')
+                reviewQuestionsResult = await generateReviewQuizLocally(database, user!.id)
+                console.log('✅ [REVIEW MODE] Locally generated:', reviewQuestionsResult?.length, 'questions')
+              }
+            } catch (localErr) {
+              console.warn('⚠️ [REVIEW MODE] Local DB failed:', localErr)
+            }
           }
 
-          // ユーザー設定に基づいた問題数で復習問題を取得（countパラメータなし）
-          console.log('🔄 [REVIEW MODE] Fetching review questions with token:', token ? 'available' : 'missing')
-          const response = await fetch('/api/review/questions', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+          // PC or fallback: API経由で復習問題取得
+          if (!reviewQuestionsResult || reviewQuestionsResult.length === 0) {
+            const { supabase } = await import('@/lib/supabase')
+            const { data: sessionData } = await supabase.auth.getSession()
+            const token = sessionData.session?.access_token
+
+            if (!token) {
+              console.warn('No auth token available for review questions')
+              throw new Error('Authentication required')
             }
-          })
-          console.log('🔄 [REVIEW MODE] API response status:', response.status)
-          if (response.ok) {
-            const data = await response.json()
-            console.log('🔄 [REVIEW MODE] Received data:', {
-              success: data.success,
-              questionsCount: data.questions?.length || 0,
-              reviewReasonsAnalyzed: data.reviewReasonsAnalyzed,
-              sampleQuestion: data.questions?.[0] ? {
-                id: data.questions[0].id,
-                hasReviewReason: !!data.questions[0].reviewReason
-              } : null
+
+            console.log('🔄 [REVIEW MODE] Fetching review questions from API')
+            const response = await fetch('/api/review/questions', {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
             })
-            if (data.success && data.questions && data.questions.length > 0) {
-              console.log('🔄 [REVIEW MODE] Setting review questions, count:', data.questions.length)
-              setReviewQuestions(data.questions)
-              console.log('🔄 [REVIEW MODE] Review questions set successfully')
-              console.log('🔄 [REVIEW MODE] Setting loading to false and returning')
-              // 復習モードの場合はここで読み込み完了
-              setLoading(false)
-              return // early return で finally ブロックの setLoading(false) を回避
+            console.log('🔄 [REVIEW MODE] API response status:', response.status)
+            if (response.ok) {
+              const data = await response.json()
+              if (data.success && data.questions && data.questions.length > 0) {
+                reviewQuestionsResult = data.questions
+              }
             } else {
-              // 復習問題がない場合はホームにリダイレクト
-              console.log('ℹ️ No review questions available - redirecting to home')
-              router.push('/?message=no-review-questions')
-              return
+              throw new Error('Failed to fetch review questions')
             }
+          }
+
+          if (reviewQuestionsResult && reviewQuestionsResult.length > 0) {
+            console.log('🔄 [REVIEW MODE] Setting review questions, count:', reviewQuestionsResult.length)
+            setReviewQuestions(reviewQuestionsResult as Question[])
+            setLoading(false)
+            return
           } else {
-            throw new Error('Failed to fetch review questions')
+            console.log('ℹ️ No review questions available - redirecting to home')
+            router.push('/?message=no-review-questions')
+            return
           }
         } else {
           // 通常モードの場合は全問題を取得
-          const questionsData = await getAllQuestions()
+          const questionsData = await getAllQuestions(database)
           setQuestions(questionsData)
           
           // セルフパーソナライズクイズの場合、設定をチェック（ユーザーがスキップしていない場合のみ）

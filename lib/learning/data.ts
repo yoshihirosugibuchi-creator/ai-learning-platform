@@ -1,3 +1,4 @@
+import type { Database as WMDatabase } from '@nozbe/watermelondb'
 import { LearningCourse } from '@/lib/types/learning'
 // Server-side cache implementation (separate from client-side)
 class ServerCache {
@@ -42,7 +43,8 @@ import type { Database } from '@/lib/database-types-official'
 const USE_DATABASE = true // true: DB, false: JSON
 
 // コース一覧の取得（カテゴリー情報含む）- DB API使用版 with JSONフォールバック
-export async function getLearningCourses(): Promise<{ 
+// database: WMDBインスタンス（null/undefined=PC→サーバー直接、モバイル=ローカル優先）
+export async function getLearningCourses(database?: WMDatabase | null): Promise<{
   id: string
   title: string
   description: string
@@ -56,8 +58,33 @@ export async function getLearningCourses(): Promise<{
   status: 'available' | 'coming_soon' | 'draft'
   genres?: unknown[]
 }[]> {
+  // モバイル: ローカルDB優先
+  if (database) {
+    try {
+      const { getCoursesData, enrichCoursesWithCounts } = await import('@/lib/offline/queries/courses')
+      const data = await getCoursesData(database)
+      const enriched = enrichCoursesWithCounts(data.courses, data.genres, data.themes)
+      console.log(`✅ Learning courses loaded from local DB: ${enriched.length} courses`)
+      return enriched.map(c => ({
+        id: c.id,
+        title: c.title,
+        description: c.description,
+        estimatedDays: c.estimated_days,
+        difficulty: c.difficulty as 'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert',
+        icon: c.icon,
+        color: c.color,
+        displayOrder: c.display_order,
+        genreCount: c.genreCount,
+        themeCount: c.themeCount,
+        status: c.status as 'available' | 'coming_soon' | 'draft',
+      }))
+    } catch (e) {
+      console.warn('⚠️ Local DB courses failed, falling back:', e)
+    }
+  }
+
   const cacheKey = 'learning_courses_db'
-  
+
   // キャッシュチェック（5分間）
   const cached = serverCache.get(cacheKey)
   if (cached) {
@@ -227,9 +254,93 @@ async function processLegacyCoursesData(data: Record<string, unknown>): Promise<
 }
 
 // 特定コースの詳細データ取得 - DB API使用版 with JSONフォールバック
-export async function getLearningCourseDetails(courseId: string): Promise<LearningCourse | null> {
+// database: WMDBインスタンス（null/undefined=PC→サーバー直接、モバイル=ローカル優先）
+export async function getLearningCourseDetails(courseId: string, database?: WMDatabase | null): Promise<LearningCourse | null> {
+  // モバイル: ローカルDB優先
+  if (database) {
+    try {
+      const { getCourseDetailData, buildCourseHierarchy } = await import('@/lib/offline/queries/courses')
+      const data = await getCourseDetailData(database)
+      const hierarchy = buildCourseHierarchy(courseId, data)
+      if (hierarchy) {
+        console.log(`✅ Course details loaded from local DB: ${courseId}`)
+        // LearningCourse型に変換
+        const badgeData = (genre: { badge_data: unknown }) => {
+          const bd = genre.badge_data as Record<string, unknown> | null
+          return {
+            id: String(bd?.id || ''),
+            title: String(bd?.title || ''),
+            description: String(bd?.description || ''),
+            icon: String(bd?.icon || '📚'),
+            color: String(bd?.color || '#7C3AED'),
+            difficulty: String(bd?.difficulty || 'intermediate') as 'basic' | 'intermediate' | 'advanced' | 'expert',
+          }
+        }
+        const rewardData = (theme: { reward_card_data: unknown }) => {
+          const rd = theme.reward_card_data as Record<string, unknown> | null
+          return {
+            id: String(rd?.id || ''),
+            title: String(rd?.title || ''),
+            summary: String(rd?.summary || ''),
+            keyPoints: (Array.isArray(rd?.keyPoints) ? rd.keyPoints : []) as string[],
+            icon: String(rd?.icon || '📖'),
+            color: String(rd?.color || '#7C3AED'),
+          }
+        }
+        return {
+          id: hierarchy.course.id,
+          title: hierarchy.course.title,
+          description: hierarchy.course.description,
+          difficulty: hierarchy.course.difficulty as LearningCourse['difficulty'],
+          icon: hierarchy.course.icon,
+          color: hierarchy.course.color,
+          displayOrder: hierarchy.course.display_order,
+          estimatedDays: hierarchy.course.estimated_days,
+          genres: hierarchy.genres.map(genre => ({
+            id: genre.id,
+            title: genre.title,
+            description: genre.description,
+            displayOrder: genre.display_order,
+            estimatedDays: genre.estimated_days,
+            categoryId: genre.category_id,
+            subcategoryId: genre.subcategory_id || undefined,
+            badge: badgeData(genre),
+            themes: genre.themes.map(theme => ({
+              id: theme.id,
+              title: theme.title,
+              description: theme.description,
+              displayOrder: theme.display_order,
+              estimatedMinutes: theme.estimated_minutes,
+              subcategoryId: theme.subcategory_id || undefined,
+              rewardCard: rewardData(theme),
+              sessions: theme.sessions.map(session => ({
+                id: session.id,
+                title: session.title,
+                displayOrder: session.display_order,
+                estimatedMinutes: session.estimated_minutes,
+                type: (session.session_type === 'practice' || session.session_type === 'case_study'
+                  ? session.session_type : 'knowledge') as 'knowledge' | 'practice' | 'case_study',
+                content: session.contents.map(content => ({
+                  id: content.id,
+                  title: content.title || undefined,
+                  content: content.content,
+                  type: content.content_type as 'text' | 'image' | 'video' | 'example' | 'key_points',
+                  displayOrder: content.display_order,
+                  duration: content.duration || undefined,
+                })),
+                quiz: [], // セッションクイズは別途取得が必要な場合あり
+              })),
+            })),
+          })),
+        } as LearningCourse
+      }
+    } catch (e) {
+      console.warn('⚠️ Local DB course details failed, falling back:', e)
+    }
+  }
+
   const cacheKey = `course_details_db_${courseId}`
-  
+
   // キャッシュチェック（10分間）
   const cached = serverCache.get(cacheKey)
   if (cached) {
@@ -356,14 +467,37 @@ export async function saveLearningProgress(_userId: string, _courseId: string, _
 }
 
 // 学習統計の計算（XPシステム統合版）
-export async function calculateLearningStats(userId: string): Promise<{
+// database: WMDBインスタンス（null/undefined=PC→サーバー直接、モバイル=ローカル優先）
+export async function calculateLearningStats(userId: string, database?: WMDatabase | null): Promise<{
   totalSessionsCompleted: number
   totalAvailableSessions: number
   totalTimeSpent: number
   currentStreak: number
   lastLearningDate: Date | null
 }> {
-  // console.log('🔍 DEBUG: calculateLearningStats called for user:', userId.substring(0, 8) + '...')
+  // モバイル: ローカルDB優先でXP統計取得
+  if (database) {
+    try {
+      const { getUserStatsData } = await import('@/lib/offline/queries/user-stats')
+      const statsData = await getUserStatsData(database, userId)
+      if (statsData.xpStats) {
+        const xp = statsData.xpStats
+        const totalAvailableSessions = await getTotalAvailableSessions()
+        const totalSessionsCompleted = xp.course_sessions_completed
+        const totalTimeSpent = (xp.quiz_sessions_completed + xp.course_sessions_completed) * 3
+        return {
+          totalSessionsCompleted,
+          totalAvailableSessions,
+          totalTimeSpent,
+          currentStreak: 0, // ストリーク計算は簡略化（ローカルでは日別レコードから計算可能だが複雑）
+          lastLearningDate: xp.last_activity_at ? new Date(xp.last_activity_at) : null,
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ Local DB calculateLearningStats failed:', e)
+    }
+  }
+
   try {
     // Supabaseから直接XP統計を取得
     const { supabase } = await import('@/lib/supabase')

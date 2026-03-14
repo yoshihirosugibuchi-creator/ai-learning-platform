@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { loadXPSettings, type XPSettings } from '@/lib/xp-settings'
+import { useOfflineDB } from '@/lib/offline/provider'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -97,18 +98,20 @@ interface IndustryData {
 export function CachedLearningDashboard({ userId, className }: CachedLearningDashboardProps) {
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d')
   const [xpSettings, setXpSettings] = useState<XPSettings | null>(null)
-  
+  const { database } = useOfflineDB()
+
   // XP設定をロード
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const settings = await loadXPSettings()
+        const settings = await loadXPSettings(undefined, database)
         setXpSettings(settings)
       } catch (error) {
         console.error('XP設定のロードに失敗:', error)
       }
     }
     loadSettings()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   
   const { 

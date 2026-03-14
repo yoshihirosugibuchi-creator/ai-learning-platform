@@ -88,6 +88,19 @@ export class QuizSession extends Model {
   @date('updated_at') updatedAtDate!: Date | null
 }
 
+/** 事前生成クイズセット（ユーザーデータ） */
+export class PrecomputedQuizSet extends Model {
+  static table = 'precomputed_quiz_sets'
+
+  @text('user_id') userId!: string
+  @text('quiz_type') quizType!: string
+  @json('question_ids', sanitize) questionIds!: number[]
+  @json('analysis_data', sanitize) analysisData!: unknown
+  @date('used_at') usedAt!: Date | null
+  @date('expires_at') expiresAt!: Date | null
+  @readonly @date('created_at') createdAt!: Date | null
+}
+
 /** クイズ回答（ユーザーデータ） */
 export class QuizAnswer extends Model {
   static table = 'quiz_answers'

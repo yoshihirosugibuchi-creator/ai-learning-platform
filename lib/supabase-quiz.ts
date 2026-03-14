@@ -1,3 +1,4 @@
+import type { Database as WMDatabase } from '@nozbe/watermelondb'
 import { supabase } from './supabase'
 
 export interface QuizResult {
@@ -202,7 +203,20 @@ export async function getCategoryQuizResults(userId: string, categoryId: string)
 // この関数は完全に非推奨です。新しいシステム（user_category_xp_stats_v2）を直接使用してください。
 
 // ユーザーの総合統計を取得（v2統計システムベース）
-export async function getUserStats(userId: string) {
+// database: WMDBインスタンス（null/undefined=PC→サーバー直接、モバイル=ローカル優先）
+export async function getUserStats(userId: string, database?: WMDatabase | null) {
+  // ローカルDB優先パターン: database指定時はローカル→サーバーフォールバック
+  if (database) {
+    try {
+      const { getUserStatsData, computeQuizSummary } = await import('@/lib/offline/queries/user-stats')
+      const statsData = await getUserStatsData(database, userId)
+      return computeQuizSummary(statsData.xpStats)
+    } catch (e) {
+      console.warn('⚠️ Local DB getUserStats failed, falling back to server:', e)
+    }
+  }
+
+  // PC: サーバー直接アクセス（従来のロジック）
   // user_xp_stats_v2から統合統計を取得
   const { data: userStats, error: userStatsError } = await supabase
     .from('user_xp_stats_v2')

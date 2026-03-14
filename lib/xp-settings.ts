@@ -1,3 +1,4 @@
+import type { Database as WMDatabase } from '@nozbe/watermelondb'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './database-types-official'
 
@@ -156,13 +157,54 @@ function recordFallback(reason: string, errorMessage?: string, settingsCount: nu
  * XP設定をデータベースから取得 (動的フォールバック機能付き)
  * ハードコード削除: 動的に生成されたフォールバック設定を使用
  */
-export async function loadXPSettings(supabaseClient?: SupabaseClient<Database>): Promise<XPSettings> {
+export async function loadXPSettings(supabaseClient?: SupabaseClient<Database>, database?: WMDatabase | null): Promise<XPSettings> {
   try {
     // キャッシュチェック
     const now = Date.now()
     if (settingsCache && (now - cacheTimestamp) < CACHE_DURATION) {
       console.log('🚀 Using cached XP settings')
       return settingsCache
+    }
+
+    // モバイル: ローカルDB優先
+    if (database) {
+      try {
+        const raw = await database.get('xp_level_skp_settings').query().fetch()
+        if (raw.length > 0) {
+          const loadedSettings: Record<string, Record<string, number>> = {
+            xp_quiz: {}, xp_course: {}, xp_bonus: {}, level: {}, skp: {}, hint: {}
+          }
+          for (const record of raw) {
+            const r = (record as { _raw: Record<string, unknown> })._raw
+            if (r.is_active === false) continue
+            const cat = String(r.setting_category || '')
+            const key = String(r.setting_key || '')
+            const val = Number(r.setting_value) || 0
+            if (loadedSettings[cat]) loadedSettings[cat][key] = val
+          }
+
+          const missingCategories = validateSettingsCompleteness(loadedSettings)
+          if (missingCategories.length === 0) {
+            const fallbackForHint = await loadDynamicFallbackSettings()
+            const localSettings: XPSettings = {
+              xp_quiz: loadedSettings.xp_quiz as XPSettings['xp_quiz'],
+              xp_course: loadedSettings.xp_course as XPSettings['xp_course'],
+              xp_bonus: loadedSettings.xp_bonus as XPSettings['xp_bonus'],
+              level: loadedSettings.level as XPSettings['level'],
+              skp: loadedSettings.skp as XPSettings['skp'],
+              hint: Object.keys(loadedSettings.hint || {}).length > 0
+                ? loadedSettings.hint as XPSettings['hint']
+                : fallbackForHint.hint,
+            }
+            settingsCache = localSettings
+            cacheTimestamp = now
+            console.log('✅ XP settings loaded from local DB')
+            return localSettings
+          }
+        }
+      } catch (localErr) {
+        console.warn('⚠️ Local DB XP settings read failed:', localErr)
+      }
     }
 
     console.log('🔄 Loading XP settings from database...')

@@ -12,12 +12,14 @@ import LoadingScreen from '@/components/layout/LoadingScreen'
 import CourseCard from '@/components/learning/CourseCard'
 import { getLearningCourses } from '@/lib/learning/data'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { useOfflineDB } from '@/lib/offline/provider'
 import { globalCache, useResourceMonitor } from '@/lib/performance-optimizer'
 import { getCategories } from '@/lib/categories'
 
 export default function LearningPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
+  const { database } = useOfflineDB()
   const [courses, setCourses] = useState<Array<{
     id: string
     title: string
@@ -131,7 +133,7 @@ export default function LearningPage() {
         
         // バックグラウンドでフレッシュデータを取得（タイムアウト付き）
         console.log('📡 Fetching fresh courses...')
-        const coursesPromise = getLearningCourses()
+        const coursesPromise = getLearningCourses(database)
         const coursesTimeout = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Courses fetch timeout')), 15000)
         )
@@ -191,6 +193,7 @@ export default function LearningPage() {
     }
 
     loadData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, user?.email, authLoading, router, user])
 
   const handleStartCourse = async (courseId: string) => {
@@ -200,7 +203,7 @@ export default function LearningPage() {
     try {
       const { getLearningCourseDetails } = await import('@/lib/learning/data')
       console.log('📦 Preloading course data...')
-      await getLearningCourseDetails(courseId)
+      await getLearningCourseDetails(courseId, database)
       console.log('✅ Course data preloaded for:', courseId)
     } catch (error) {
       console.warn('⚠️ Failed to preload course data:', error)

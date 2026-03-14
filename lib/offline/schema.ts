@@ -547,6 +547,20 @@ export const schema = appSchema({
       ],
     }),
 
+    // 事前生成クイズセット
+    tableSchema({
+      name: 'precomputed_quiz_sets',
+      columns: [
+        { name: 'user_id', type: 'string' },
+        { name: 'quiz_type', type: 'string' }, // 'business-ai' | 'self-personalized' | 'review'
+        { name: 'question_ids', type: 'string' }, // JSON array of numeric IDs
+        { name: 'analysis_data', type: 'string', isOptional: true }, // JSON
+        { name: 'used_at', type: 'number', isOptional: true },
+        { name: 'expires_at', type: 'number', isOptional: true },
+        { name: 'created_at', type: 'number', isOptional: true },
+      ],
+    }),
+
     // 日別XP記録
     tableSchema({
       name: 'daily_xp_records',

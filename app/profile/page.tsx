@@ -46,6 +46,7 @@ import { updateUserProfile } from '@/lib/supabase-user'
 import { getSubcategories, getCategories, clearCategoriesCache, mainCategories as staticMainCategories, industryCategories as staticIndustryCategories } from '@/lib/categories'
 import type { Subcategory, IndustryCategory, MainCategory } from '@/lib/types/category'
 import { useXPStats } from '@/hooks/useXPStats'
+import { useOfflineDB } from '@/lib/offline/provider'
 import ProfileEditModal from '@/components/profile/ProfileEditModal'
 import QuizSettingsModal from '@/components/profile/QuizSettingsModal'
 import ReviewSettingsModal from '@/components/profile/ReviewSettingsModal'
@@ -55,6 +56,7 @@ export default function ProfilePage() {
   const router = useRouter()
   const { user, profile, loading, refreshProfile } = useAuth()
   const { toast } = useToast()
+  const { database } = useOfflineDB()
   const [activeTab, setActiveTab] = useState('basic')
   
   // カテゴリーデータ状態
@@ -89,13 +91,14 @@ export default function ProfilePage() {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const settings = await loadXPSettings()
+        const settings = await loadXPSettings(undefined, database)
         setXpSettings(settings)
       } catch (error) {
         console.error('XP設定のロードに失敗:', error)
       }
     }
     loadSettings()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // クエリパラメータ処理（クイズ設定誘導）
@@ -224,7 +227,7 @@ export default function ProfilePage() {
       loadSubcategories()
       
       // クイズ統計を取得
-      getUserStats(user.id).then(stats => {
+      getUserStats(user.id, database).then(stats => {
         setQuizStats(stats)
       }).catch(error => {
         console.error('Error fetching quiz stats:', error)
@@ -339,6 +342,7 @@ export default function ProfilePage() {
       
       loadProfileData()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, profile])
 
   // Profile edit handler for new modal

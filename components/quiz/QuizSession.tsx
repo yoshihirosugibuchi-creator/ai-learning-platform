@@ -523,7 +523,36 @@ export default function QuizSession({
     token: string
   ): Promise<Question[]> => {
     console.log(`📦 [Precomputed Quiz] ${quizType} instant start`)
-    
+
+    // モバイル: ローカルDB優先（precomputedセット→オフライン生成→APIフォールバック）
+    if (offlineDB) {
+      try {
+        const { getPrecomputedSets, resolveSetQuestions, getSetByType } = await import('@/lib/offline/queries/precomputed-sets')
+        const sets = await getPrecomputedSets(offlineDB, user.id, quizType)
+        const validSet = getSetByType(sets, quizType)
+
+        if (validSet && validSet.question_ids.length > 0) {
+          const localQuestions = await resolveSetQuestions(offlineDB, validSet.question_ids)
+          if (localQuestions.length > 0) {
+            console.log(`✅ [Precomputed Quiz] Local DB: ${localQuestions.length} questions from precomputed set`)
+            return localQuestions
+          }
+        }
+
+        // セット枯渇時: オフラインクイズ生成
+        console.log(`⚠️ [Precomputed Quiz] No valid local sets, generating locally...`)
+        const { generateQuizLocally } = await import('@/lib/offline/queries/offline-quiz-generator')
+        const localGenerated = await generateQuizLocally(offlineDB, user.id, quizType, { count: 10 })
+        if (localGenerated.length > 0) {
+          console.log(`✅ [Precomputed Quiz] Locally generated: ${localGenerated.length} questions`)
+          return localGenerated
+        }
+      } catch (localError) {
+        console.warn('⚠️ [Precomputed Quiz] Local DB failed, falling back to API:', localError)
+      }
+    }
+
+    // PC or fallback: APIアクセス
     try {
       const response = await fetch('/api/quiz/quick-start', {
         method: 'POST',
@@ -536,23 +565,23 @@ export default function QuizSession({
           count: 10
         })
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         console.error(`❌ [Quick Start API] Error ${response.status}:`, errorData)
         throw new Error(errorData.error || errorData.details || `API error: ${response.status}`)
       }
-      
+
       const data = await response.json()
-      
+
       console.log(`✅ [Precomputed Quiz] ${data.metadata.selection_method} - ${data.questions.length} questions`)
       return data.questions
-      
+
     } catch (error) {
       console.error(`❌ [Precomputed Quiz] ${quizType} failed:`, error)
       throw error
     }
-  }, [])
+  }, [offlineDB, user.id])
 
   // 🚀 Optimized Quiz Initialization with Pre-computation System
   const initializeQuizOptimized = useCallback(async (): Promise<Question[]> => {
@@ -896,7 +925,7 @@ export default function QuizSession({
                 // DB版カード選択（フォールバック対応）
                 try {
                   const { getRandomWisdomCardFromDB } = await import('@/lib/cards')
-                  selectedCard = await getRandomWisdomCardFromDB(accuracyRate)
+                  selectedCard = await getRandomWisdomCardFromDB(accuracyRate, user?.id, offlineDB)
                   isNewCard = true // デフォルトで新規扱い
                   cardCount = 1
                   console.log('⚡ CLIENT: Card selected from DB (with fallback):', {

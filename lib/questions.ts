@@ -1,10 +1,22 @@
 import { Question } from './types'
 import { globalCache } from './performance-optimizer'
+import type { Database as WMDatabase } from '@nozbe/watermelondb'
 
 // DB API使用版 - JSONフォールバック付き
-export async function getAllQuestions(): Promise<Question[]> {
+// database引数: null=PC（サーバー直接）、Database=モバイル（ローカルDB優先）
+export async function getAllQuestions(database?: WMDatabase | null): Promise<Question[]> {
+  // モバイル: ローカルDB優先
+  if (database) {
+    try {
+      const { getAllQuestionsLocal } = await import('./offline/queries/questions')
+      return await getAllQuestionsLocal(database)
+    } catch (e) {
+      console.warn('⚠️ Local questions load failed, falling back to server:', e)
+    }
+  }
+
   const cacheKey = 'all_questions_db'
-  
+
   // キャッシュチェック（5分間）
   const cached = globalCache.get(cacheKey)
   if (cached) {
@@ -15,24 +27,24 @@ export async function getAllQuestions(): Promise<Question[]> {
   try {
     console.log('📡 Fetching questions from DB API')
     const response = await fetch('/api/questions')
-    
+
     if (!response.ok) {
       throw new Error(`API request failed: ${response.status}`)
     }
-    
+
     const data = await response.json()
     const questions = data.questions || []
-    
+
     // キャッシュに保存（5分間）
     globalCache.set(cacheKey, questions, 5 * 60 * 1000)
-    
+
     console.log(`✅ Questions loaded from DB: ${questions.length} questions`)
     return questions
-    
+
   } catch (error) {
     console.error('❌ Error loading questions from DB:', error)
     console.log('🔄 Falling back to JSON file...')
-    
+
     // JSONフォールバック
     return await loadQuestionsFromJSON()
   }

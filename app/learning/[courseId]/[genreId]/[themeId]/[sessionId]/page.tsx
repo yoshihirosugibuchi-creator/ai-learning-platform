@@ -9,11 +9,13 @@ import LearningSession from '@/components/learning/LearningSession'
 import { getLearningCourseDetails } from '@/lib/learning/data'
 import { LearningCourse, LearningSession as LearningSessionType } from '@/lib/types/learning'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { useOfflineDB } from '@/lib/offline/provider'
 
 export default function SessionPage() {
   const router = useRouter()
   const params = useParams()
   const { user } = useAuth()
+  const { database } = useOfflineDB()
   const [course, setCourse] = useState<LearningCourse | null>(null)
   const [currentSession, setCurrentSession] = useState<LearningSessionType | null>(null)
   const [loading, setLoading] = useState(true)
@@ -46,7 +48,7 @@ export default function SessionPage() {
       }
       
       try {
-        const courseData = await getLearningCourseDetails(courseId)
+        const courseData = await getLearningCourseDetails(courseId, database)
         if (!courseData) {
           throw new Error('Course not found')
         }
@@ -98,6 +100,7 @@ export default function SessionPage() {
     }
 
     loadSessionData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, router, courseId, genreId, themeId, sessionId])
 
   const handleSessionComplete = (completedSessionId: string) => {

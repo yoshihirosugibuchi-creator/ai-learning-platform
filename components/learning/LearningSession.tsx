@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { LearningSession as LearningSessionType, SessionTypeLabels, UserBadge, LearningCourse } from '@/lib/types/learning'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { useOfflineDB } from '@/lib/offline/provider'
 import MarkdownContent from '@/components/ui/markdown-content'
 import { useXPStats } from '@/hooks/useXPStats'
 import { supabase } from '@/lib/supabase'
@@ -87,6 +88,7 @@ export default function LearningSession({
 }: LearningSessionProps) {
   const _router = useRouter()
   const { user } = useAuth()
+  const { database } = useOfflineDB()
   const { saveCourseSession: _saveCourseSession } = useXPStats()
   const [viewState, setViewState] = useState<ViewState>('content')
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0)
@@ -124,7 +126,7 @@ export default function LearningSession({
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
-        const courseDetails = await getLearningCourseDetails(courseId)
+        const courseDetails = await getLearningCourseDetails(courseId, database)
         if (courseDetails) {
           setCourseName(courseDetails.title)
           setCourseData(courseDetails)
@@ -162,6 +164,7 @@ export default function LearningSession({
       }
     }
     fetchCourseData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, user?.id])
 
   // 初回完了判定
@@ -534,8 +537,8 @@ export default function LearningSession({
           const { mapDifficultyToEnglish } = await import('@/lib/xp-level-system')
           
           // Load XP settings from same source as API
-          const xpSettings = await loadXPSettings()
-          
+          const xpSettings = await loadXPSettings(undefined, database)
+
           // Get course difficulty (same logic as API)
           const courseDifficulty = courseData?.difficulty || 'basic'
           const unifiedDifficulty = mapDifficultyToEnglish(courseDifficulty)
@@ -613,8 +616,8 @@ export default function LearningSession({
           
           // Use same XP settings already loaded above
           const { loadXPSettings } = await import('@/lib/xp-settings')
-          const xpSettings = await loadXPSettings()
-          
+          const xpSettings = await loadXPSettings(undefined, database)
+
           // Course completion bonus from same settings as API
           predictedBonusXP = xpSettings.xp_bonus.course_completion || 0
           setCourseCompletionBonusXP(predictedBonusXP)

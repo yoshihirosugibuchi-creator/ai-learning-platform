@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, BarChart3, Brain, Lightbulb, TrendingUp, Target, Clock, Activity } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { useOfflineDB } from '@/lib/offline/provider'
 import { getLearningAnalytics, LearningAnalytics } from '@/lib/supabase-analytics'
 import { aiAnalytics, LearningPattern, OptimalLearningTime, PersonalizedHints } from '@/lib/ai-analytics'
 import IndustryAnalysisPage from '@/components/analytics/IndustryAnalysisPage'
@@ -47,7 +48,8 @@ export default function OptimizedAnalyticsPage() {
   const [showAllGeneralTips, setShowAllGeneralTips] = useState(false)
   const [showAllPerformanceTips, setShowAllPerformanceTips] = useState(false)
   const { user, loading } = useAuth()
-  
+  const { database } = useOfflineDB()
+
   // タブごとのキャッシュ状態
   const [tabCache, setTabCache] = useState<TabCache>({
     overview: { analytics: null, loaded: false, lastRefresh: 0 },
@@ -76,7 +78,7 @@ export default function OptimizedAnalyticsPage() {
     if (!user?.id || (!force && isCacheValid('overview'))) return
     
     try {
-      const analytics = await getLearningAnalytics(user.id)
+      const analytics = await getLearningAnalytics(user.id, database)
       setTabCache(prev => ({
         ...prev,
         overview: {
