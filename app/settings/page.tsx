@@ -11,7 +11,8 @@ import {
   Bell,
   Palette,
   ChevronRight,
-  Fingerprint
+  Fingerprint,
+  Database
 } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/badge'
@@ -160,7 +161,16 @@ export default function SettingsPage() {
       href: '/settings/coming-soon',
       category: '基本設定',
       available: false
-    }
+    },
+    ...(isNative ? [{
+      id: 'sync-debug',
+      title: '同期診断',
+      description: 'ローカルDB状態・テーブル件数・同期エラー確認',
+      icon: <Database className="h-5 w-5" />,
+      href: '/settings/sync-debug',
+      category: '開発者ツール',
+      available: true
+    }] : [])
   ]
 
   const groupedSettings = settingsMenuItems.reduce((acc, item) => {

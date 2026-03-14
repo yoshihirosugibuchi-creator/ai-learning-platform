@@ -5,6 +5,7 @@
  */
 import { synchronize } from '@nozbe/watermelondb/sync'
 import { getDatabase } from './database'
+import { setLastDiagnostic, getTableType, type TableSyncStatus, type SyncDiagnosticResult } from './sync-diagnostics'
 
 /** 同期APIのベースURL */
 function getSyncUrl(): string {
@@ -25,8 +26,14 @@ async function getAuthToken(): Promise<string | null> {
   }
 }
 
-/** 同期を実行 */
+/** 同期を実行（診断情報付き） */
 export async function syncDatabase(): Promise<{ success: boolean; error?: string }> {
+  const startedAt = Date.now()
+  let pullDuration = 0
+  let pushDuration = 0
+  const tableStatuses: TableSyncStatus[] = []
+  let serverTableErrors: Record<string, string> = {}
+
   try {
     const database = getDatabase()
     const token = await getAuthToken()
@@ -36,6 +43,7 @@ export async function syncDatabase(): Promise<{ success: boolean; error?: string
     await synchronize({
       database,
       pullChanges: async ({ lastPulledAt }) => {
+        const pullStart = Date.now()
         console.log('📥 Pull: lastPulledAt =', lastPulledAt)
         const url = new URL(`${getSyncUrl()}/pull`)
         if (lastPulledAt) {
@@ -56,7 +64,27 @@ export async function syncDatabase(): Promise<{ success: boolean; error?: string
           throw new Error(`Sync pull failed: ${response.status} ${text.substring(0, 200)}`)
         }
 
-        const { changes, timestamp } = await response.json()
+        const json = await response.json()
+        const { changes, timestamp, tableErrors } = json
+        serverTableErrors = tableErrors || {}
+        pullDuration = Date.now() - pullStart
+
+        // テーブル単位の診断情報を記録
+        for (const [table, c] of Object.entries(changes)) {
+          const tc = c as { created: unknown[]; updated: unknown[]; deleted: unknown[] }
+          const status: TableSyncStatus = {
+            table,
+            type: getTableType(table),
+            localCount: 0, // 同期後に更新
+            pullCreated: tc.created.length,
+            pullUpdated: tc.updated.length,
+            pullDeleted: tc.deleted.length,
+            status: serverTableErrors[table] ? 'error' : 'success',
+            error: serverTableErrors[table],
+            lastSyncAt: Date.now(),
+          }
+          tableStatuses.push(status)
+        }
 
         // デバッグ: 各テーブルの件数をログ
         const summary = Object.entries(changes).map(([t, c]) => {
@@ -66,9 +94,14 @@ export async function syncDatabase(): Promise<{ success: boolean; error?: string
         }).filter(Boolean)
         console.log('📥 Pull response:', summary.join(', '))
 
+        if (Object.keys(serverTableErrors).length > 0) {
+          console.warn('⚠️ Server table errors:', serverTableErrors)
+        }
+
         return { changes, timestamp }
       },
       pushChanges: async ({ changes }) => {
+        const pushStart = Date.now()
         const hasChanges = Object.values(changes).some(
           (table) => {
             const t = table as { created: unknown[]; updated: unknown[]; deleted: unknown[] }
@@ -78,6 +111,7 @@ export async function syncDatabase(): Promise<{ success: boolean; error?: string
 
         if (!hasChanges) {
           console.log('📤 Push: no local changes')
+          pushDuration = Date.now() - pushStart
           return
         }
 
@@ -108,10 +142,33 @@ export async function syncDatabase(): Promise<{ success: boolean; error?: string
         }
 
         const result = await response.json()
+        pushDuration = Date.now() - pushStart
         console.log('📤 Push result:', JSON.stringify(result).substring(0, 300))
       },
-      // migrationsEnabledAtVersion を削除 - マイグレーション定義未設定のため
     })
+
+    // 同期後のローカル件数を取得
+    try {
+      const { getLocalTableCounts } = await import('./sync-diagnostics')
+      const counts = await getLocalTableCounts(database)
+      for (const ts of tableStatuses) {
+        ts.localCount = counts[ts.table] ?? 0
+      }
+    } catch (e) {
+      console.warn('⚠️ Failed to get local counts:', e)
+    }
+
+    const totalError = tableStatuses.filter(t => t.status === 'error').length
+    const diagnostic: SyncDiagnosticResult = {
+      tables: tableStatuses,
+      overallStatus: totalError === 0 ? 'success' : 'partial',
+      startedAt,
+      completedAt: Date.now(),
+      pullDuration,
+      pushDuration,
+      totalError,
+    }
+    setLastDiagnostic(diagnostic)
 
     console.log('✅ WatermelonDB sync completed')
     return { success: true }
@@ -121,6 +178,20 @@ export async function syncDatabase(): Promise<{ success: boolean; error?: string
     console.error('❌ WatermelonDB sync failed:', message)
     console.error('❌ Full error:', error)
     if (stack) console.error('❌ Stack:', stack)
+
+    // エラー時も診断情報を保存
+    const diagnostic: SyncDiagnosticResult = {
+      tables: tableStatuses,
+      overallStatus: 'error',
+      startedAt,
+      completedAt: Date.now(),
+      pullDuration,
+      pushDuration,
+      totalError: tableStatuses.filter(t => t.status === 'error').length,
+      errorMessage: message,
+    }
+    setLastDiagnostic(diagnostic)
+
     return { success: false, error: message }
   }
 }

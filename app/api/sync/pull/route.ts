@@ -164,11 +164,19 @@ export async function GET(request: NextRequest) {
       ? tablesParam.split(',').filter((t) => allTables.includes(t))
       : allTables
 
-    // 全テーブルを並列で取得
+    // 全テーブルを並列で取得（エラー情報も収集）
+    const tableErrors: Record<string, string> = {}
     const results = await Promise.all(
       targetTables.map(async (table) => {
-        const changes = await pullTable(table, lastPulledAt, userId)
-        return [table, changes] as const
+        try {
+          const changes = await pullTable(table, lastPulledAt, userId)
+          return [table, changes] as const
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e)
+          console.error(`Sync pull exception for ${table}:`, msg)
+          tableErrors[table] = msg
+          return [table, { created: [] as Record<string, unknown>[], updated: [] as Record<string, unknown>[], deleted: [] as string[] }] as const
+        }
       })
     )
 
@@ -180,6 +188,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       changes,
       timestamp: Date.now(),
+      ...(Object.keys(tableErrors).length > 0 && { tableErrors }),
     })
   } catch (error) {
     console.error('Sync pull error:', error)

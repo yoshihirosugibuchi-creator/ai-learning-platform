@@ -1,7 +1,7 @@
 # ALE学習 モバイルアプリ開発ガイド
 
 **プロジェクト**: AI Learning Enterprise (ALE学習)
-**最終更新**: 2026-03-12（Step 4 Phase 0-2 実装完了）
+**最終更新**: 2026-03-15（Step 4 Phase 3a-3e 実装完了反映）
 
 ---
 
@@ -12,7 +12,7 @@
 | **Step 1** | PWA化 | 完了 |
 | **Step 2** | Capacitor iOSアプリ + Face ID + GitHub Actions | 完了 |
 | **Step 3** | 実機テスト（AdHoc配布） | 完了（ログイン/ログアウト/Face ID確認済み） |
-| **Step 4** | ローカルDB化（WatermelonDB + SW有効化） | **Phase 0-2 実装完了** |
+| **Step 4** | ローカルDB化（WatermelonDB + SW有効化） | **Phase 0-3e 完了（主要読み取りパス実装済み、一部未対応あり）** |
 | **Step 5** | React Native移行（必要に応じて） | 未着手 |
 
 ---
@@ -947,7 +947,7 @@ LokiJSAdapter({
 | `quiz_review_history` / `quiz_review_batches` | QA監査ログ |
 | `case_study_generation_logs` | AI生成ログ（管理者用） |
 | `case_study_problem_stats` | ビュー（ローカルで集計可能） |
-| `precomputed_quiz_sets` | サーバー側キャッシュ（ローカルDBがあれば不要） |
+| `precomputed_quiz_sets` | Phase 3でローカル読み取り対象（生成はサーバー側、sync経由でローカルに反映） |
 
 ---
 
@@ -981,10 +981,404 @@ Phase 2（ユーザーデータ＋書き込みキュー） ✅ 完了
   ✅ AppDelegate.swift整理（不要コメント除去）
   ✅ 同期状態インジケーター（SyncStatusIndicator）
 
+Phase 3（ローカルファースト読み取り） ✅ 主要パス完了（2026-03-15）
+  ✅ Sub-Phase 3a: 基盤＋マスタデータ（data-source.ts, categories, questions, courses）
+  ✅ Sub-Phase 3b: ユーザーデータ（格言カード抽選, XP統計, クイズ履歴クエリ）
+  ✅ Sub-Phase 3c: precomputed_quiz_sets＋復習＋オフラインローカル生成
+  ✅ Sub-Phase 3d: コース進捗, 学習分析（ケーススタディは未対応）
+  ✅ Sub-Phase 3e: XP設定（バッジ・SKP残高はWMモデル未作成のため未対応）
+
+  ⚠️ 未対応項目（Phase 3残存）:
+  - 🔲 ケーススタディ読み取り（case_study_*テーブルのクエリ未作成）
+  - 🔲 スキルレベル（skill_levels）のローカル読み取り
+  - 🔲 クイズパック（quiz_packs）のローカル読み取り
+  - 🔲 バッジ（user_badgesテーブル: WMスキーマ/モデル未作成）
+  - 🔲 SKP残高/トランザクション（skp_transactionsテーブル: WMスキーマ/モデル未作成）
+  - 🔲 supabase-learning.ts の各関数（getUserLearningSessions等 9関数）
+  - 🔲 supabase-cards.ts の補助関数（getUserWisdomCards等 5関数）
+  - 🔲 supabase-personalization.ts（6関数）
+  - 🔲 supabase-quiz.ts のクイズ結果取得（getUserQuizResults等 3関数）
+
 今後の検討事項
   - オフラインでクイズ実行→復帰後同期のE2Eテスト（実機）
   - 実機パフォーマンス評価
+  - 残存未対応関数のローカルファースト化（優先度に応じて段階的に）
 ```
+
+---
+
+### Phase 3: ローカルファースト読み取り（全データアクセスのローカルDB対応） [主要パス完了]
+
+Phase 1-2でWatermelonDBへの書き込み・同期は完了。Phase 3では全データ読み取りをローカルDB優先に変換。**Sub-Phase 3a〜3eの主要読み取りパスは実装済み**（2026-03-15）。一部の補助関数・ケーススタディ・バッジ/SKPは未対応。
+
+#### 実装済みローカルファースト関数（7個のlib関数 + 9個のoffline queryモジュール）
+
+| 関数 | ファイル | ローカルDBテーブル |
+|------|--------|------------------|
+| `getAllQuestions(database)` | `lib/questions.ts` | `quiz_questions` |
+| `getLearningCourses(database)` | `lib/learning/data.ts` | `learning_courses/genres/themes` |
+| `getLearningCourseDetails(courseId, database)` | `lib/learning/data.ts` | `learning_sessions`, `session_contents` |
+| `calculateLearningStats(userId, database)` | `lib/learning/data.ts` | `user_xp_stats_v2` |
+| `getUserStats(userId, database)` | `lib/supabase-quiz.ts` | `user_xp_stats_v2`, `daily_xp_records` |
+| `getLearningAnalytics(userId, database)` | `lib/supabase-analytics.ts` | multiple |
+| `loadXPSettings(undefined, database)` | `lib/xp-settings.ts` | `xp_level_skp_settings` |
+| `getRandomWisdomCardFromDB(%, userId, database)` | `lib/cards.ts` | `wisdom_cards`, `wisdom_card_collection` |
+| `loadCollectionData(userId, database)` | `lib/offline/queries/collection.ts` | wisdom_cards, wisdom_card_collection, user_knowledge_collection_v2 |
+
+#### useOfflineDB使用コンポーネント（12個）
+
+| コンポーネント | 渡す先の関数 |
+|--------------|------------|
+| `app/quiz/page.tsx` | `getAllQuestions`, precomputed sets, review quiz |
+| `app/learning/page.tsx` | `getLearningCourses`, `getLearningCourseDetails` |
+| `app/learning/[courseId]/page.tsx` | `getLearningCourseDetails` |
+| `app/learning/[courseId]/.../[sessionId]/page.tsx` | `getLearningCourseDetails` |
+| `app/categories/[categoryId]/page.tsx` | `getAllQuestions` |
+| `app/profile/page.tsx` | `getUserStats`, `loadXPSettings` |
+| `app/collection/page.tsx` | `loadCollectionData` |
+| `components/quiz/QuizSession.tsx` | precomputed sets, offline generation, wisdom cards |
+| `components/learning/LearningSession.tsx` | `getLearningCourseDetails`, `loadXPSettings` |
+| `components/analytics/OptimizedAnalyticsPage.tsx` | `getLearningAnalytics` |
+| `components/analytics/CachedLearningDashboard.tsx` | `loadXPSettings` |
+| `components/analytics/RealLearningAnalyticsDashboard.tsx` | `loadXPSettings` |
+| `components/xp/XPStatsCard.tsx` | `loadXPSettings` |
+
+#### 未対応関数一覧（Supabase直接アクセスのまま）
+
+**高優先度:**
+| 関数 | ファイル | 理由 |
+|------|--------|------|
+| `getUserQuizResults()` | `lib/supabase-quiz.ts` | クイズ履歴表示に使用 |
+| `getCategoryQuizResults()` | `lib/supabase-quiz.ts` | カテゴリー別クイズ結果 |
+
+**中優先度:**
+| 関数 | ファイル | 理由 |
+|------|--------|------|
+| `getUserLearningSessions()` | `lib/supabase-learning.ts` | 学習進捗 |
+| `getCategoryProgress()` | `lib/supabase-learning.ts` | カテゴリー進捗 |
+| `getPersonalizationSettings()` | `lib/supabase-personalization.ts` | ユーザー設定 |
+| `getUserWisdomCards()` | `lib/supabase-cards.ts` | カード一覧（collection.tsで代替可能） |
+| `getUserKnowledgeCollection()` | `lib/supabase-cards.ts` | ナレッジカード一覧 |
+| ケーススタディ関連 | API経由 | case_study_*テーブルのクエリ未作成 |
+| スキルレベル | `lib/skill-levels.ts` | skill_levelsテーブル |
+| クイズパック | API経由 | quiz_packsテーブル |
+
+**低優先度（WMモデル未作成でブロック）:**
+| 関数 | ファイル | ブロッカー |
+|------|--------|----------|
+| `getUserBadges()` | `lib/supabase-badges.ts` | `user_badges`テーブルのWMスキーマ/モデルなし |
+| `getUserSKPBalance()` | `lib/supabase-learning.ts` | `skp_transactions`テーブルのWMスキーマ/モデルなし |
+
+#### 要求仕様
+
+##### プラットフォーム別動作要件
+
+| 項目 | PC（ブラウザ） | モバイル（Capacitor） |
+|------|--------------|-------------------|
+| データソース | Supabase直接（現行通り） | WatermelonDB（ローカル）優先 |
+| フォールバック | JSON静的ファイル | Supabase → JSON静的ファイル |
+| 同期 | なし | WatermelonDB ↔ Supabase双方向同期 |
+| オフライン | 非対応 | ローカルDBから読み取り可能 |
+| WatermelonDB | 初期化しない | 初期化＋定期同期 |
+
+##### 設計原則
+
+1. **処理ロジック共通化**: データ取得後の加工・フィルタリング・集計ロジックはPC/モバイル共通関数で実装。データソースのみ切り替える
+2. **既存コード非破壊**: PC側のSupabase読み取りコードは一切変更しない。モバイル時のみローカルDB読み取りを追加する分岐構造
+3. **段階的移行**: 機能単位で移行し、各段階でビルド・動作検証を実施
+
+#### 共通アーキテクチャ
+
+```
+[コンポーネント]
+    ↓ 呼び出し
+[データアクセス関数] ← 処理ロジック共通（フィルタ・集計・変換）
+    ↓ database引数で判定
+    ├─ database=null（PC）:     loadFromServer()  → Supabase直接
+    └─ database=Database（モバイル）: loadFromLocalDB() → 失敗時 loadFromServer()
+```
+
+##### 共通データアクセス関数（`lib/offline/data-source.ts`に新規作成）
+
+```typescript
+type DataSource<T> = {
+  loadFromLocal: (db: Database) => Promise<T | null>
+  loadFromServer: (userId?: string) => Promise<T>
+}
+
+async function resolveData<T>(
+  source: DataSource<T>,
+  database: Database | null,  // null = PC
+  userId?: string
+): Promise<T> {
+  if (!database) return source.loadFromServer(userId)
+
+  try {
+    const local = await source.loadFromLocal(database)
+    if (local) return local
+  } catch (e) {
+    console.warn('Local DB read failed, falling back to server:', e)
+  }
+  return source.loadFromServer(userId)
+}
+```
+
+##### コンポーネント側の呼び出しパターン
+
+```typescript
+const { database } = useOfflineDB()  // PC: null, モバイル: Database instance
+
+useEffect(() => {
+  getCategoryData(database).then(data => {
+    const filtered = filterVisibleCategories(data)  // ← 共通処理ロジック
+    setCategories(filtered)
+  })
+}, [database])
+```
+
+##### 各クエリファイルの実装パターン
+
+```typescript
+// 例: lib/offline/queries/categories.ts
+
+// ① 共通型定義（PC/モバイル共通）
+export type CategoryData = { categories: Category[]; subcategories: Subcategory[] }
+
+// ② 共通処理ロジック（データソースに依存しない純粋関数）
+export function filterVisibleCategories(data: CategoryData): CategoryData { ... }
+export function getCategoryName(id: string, categories: Category[]): string { ... }
+
+// ③ データソース: ローカルDB
+async function loadFromLocalDB(db: Database): Promise<CategoryData | null> {
+  const cats = await db.get('categories').query().fetch()
+  if (cats.length === 0) return null  // 未同期時はnull→サーバーフォールバック
+  return { categories: cats.map(toCategory), ... }
+}
+
+// ④ データソース: サーバー（既存のSupabase/APIクエリをそのまま使用）
+async function loadFromServer(): Promise<CategoryData> { ... }
+
+// ⑤ エントリポイント（コンポーネントから呼ばれる唯一の関数）
+export async function getCategoryData(database: Database | null): Promise<CategoryData> {
+  return resolveData({ loadFromLocal: loadFromLocalDB, loadFromServer }, database)
+}
+```
+
+#### 変換対象一覧
+
+##### マスタデータ（user_idなし・読み取り専用）
+
+| # | 機能 | 現在の読み取り元 | 対象テーブル | 優先度 |
+|---|------|----------------|------------|--------|
+| M1 | カテゴリー取得 | `/api/categories` → Supabase | `categories`, `subcategories` | 高 |
+| M2 | クイズ問題取得 | `/api/questions` → Supabase | `quiz_questions` | 高 |
+| M3 | コース一覧 | `lib/learning/data.ts` → API | `learning_courses`, `learning_genres`, `learning_themes` | 高 |
+| M4 | コース詳細 | `lib/learning/supabase-data.ts` | `learning_sessions`, `session_contents` | 高 |
+| M5 | スキルレベル | `lib/skill-levels.ts` → Supabase | `skill_levels` | 中 |
+| M6 | クイズパック | `/api/quiz-packs` → Supabase | `quiz_packs`, `session_quizzes` | 中 |
+| M7 | ケーススタディ問題一覧 | `/api/case-study/problems` | `case_study_problems`, `case_study_course_links` | 中 |
+| M8 | ケーススタディ問題詳細 | `/api/case-study/problems/[id]` | `case_study_steps`, `case_study_rubric_axes`, `case_study_options` | 中 |
+| M9 | XPレベル設定 | Supabase直接 | `xp_level_skp_settings` | 低 |
+
+##### ユーザーデータ（user_idあり）
+
+| # | 機能 | 現在の読み取り元 | 対象テーブル | 優先度 |
+|---|------|----------------|------------|--------|
+| U1 | コレクション表示 | **ローカルDB対応済み** | `wisdom_cards`, `wisdom_card_collection`, `user_knowledge_collection_v2` 他 | 完了 |
+| U2 | 格言カード抽選 | `lib/cards.ts` → Supabase | `wisdom_cards`, `wisdom_card_collection` | 高 |
+| U3 | XP統計 | `/api/xp-stats` → Supabase | `user_xp_stats_v2`, `daily_xp_records` | 高 |
+| U4 | クイズ履歴 | `lib/supabase-quiz.ts` → Supabase | `quiz_sessions`, `quiz_answers` | 高 |
+| U5 | コース進捗 | `lib/supabase-learning.ts` | `course_session_completions` | 中 |
+| U6 | 学習分析ダッシュボード | `/api/learning-analytics/*` | `quiz_sessions`, `quiz_answers`, `daily_xp_records` | 中 |
+| U7 | プリコンピュート済みクイズ | `/api/quiz/quick-start` | `precomputed_quiz_sets` | 特別対応 |
+| U8 | 復習クイズ統計 | `/api/review/stats` | `quiz_sessions`, `quiz_answers` | 特別対応 |
+| U9 | ケーススタディ履歴 | `/api/case-study/history` | `case_study_sessions`, `case_study_step_details` | 中 |
+| U10 | バッジ | `lib/supabase-badges.ts` | `user_badges` | 低 |
+| U11 | SKP残高 | `lib/supabase-learning.ts` | `skp_transactions` | 低 |
+
+#### precomputed_quiz_sets の設計方針
+
+##### 現行の仕組み（変更なし）
+
+- クイズ完了時にサーバー側（`/api/xp-save/quiz` → `lib/precomputed-quiz-engine.ts`）で次回用の問題セットを事前生成
+- 3種類生成: `business-ai`（3セット×10問）、`self-personalized`（2セット×10問）、`review`（1-2セット）
+- 72時間有効期限、生成時に既存セット削除→新規生成
+- 各セットは`question_ids`（数値配列、10個のID）のみ保存 → 問題数が増加してもセットサイズは一定
+
+##### モバイルでの読み取り方式
+
+```
+クイズ開始
+  ↓ isNative判定
+  ├─ PC: /api/quiz/quick-start → サーバー処理（現行通り）
+  └─ モバイル:
+      ↓
+      Step 1: ローカルDB precomputed_quiz_sets 参照
+        → used_at=null かつ expires_at>now のセット検索
+      Step 2: セットあり
+        → question_ids でローカルDB quiz_questions から問題取得
+      Step 3: セットなし（全使用済み or 期限切れ）
+        ├─ オンライン → /api/quiz/quick-start にフォールバック
+        └─ オフライン → ローカル簡易生成（下記参照）
+```
+
+##### オフライン時のローカル簡易生成
+
+precomputedセットが枯渇した場合、ローカルDBのデータのみでクイズセットを生成する。
+
+| タイプ | オフライン対応 | 理由 |
+|--------|-------------|------|
+| business-ai | 可能 | quiz_questions + categories から選択可能 |
+| self-personalized | 可能 | quiz_questions + user_settings（ローカル同期済み）から選択可能 |
+| review | 不可 | review_neededフラグはサーバー側で設定。precomputed済み復習セットがあればそちらを使用 |
+
+ローカル簡易生成ロジック（`lib/offline/queries/quiz-sets.ts`に実装）:
+
+```typescript
+async function generateLocalQuizSet(
+  db: Database,
+  quizType: 'business-ai' | 'self-personalized',
+  count: number = 10
+): Promise<QuizQuestion[]> {
+  // 1. 全問題をローカルDBから取得
+  const allQuestions = await db.get('quiz_questions').query().fetch()
+
+  // 2. カテゴリフィルタ
+  //    business-ai: メインカテゴリの問題を使用
+  //    self-personalized: user_settingsのカテゴリ設定で絞り込み
+  const filtered = filterByQuizType(allQuestions, quizType, userSettings)
+
+  // 3. 直近出題済みを除外（ローカルDB quiz_answers 直近30件のquestion_id）
+  const recentIds = await getRecentQuestionIds(db)
+  const candidates = filtered.filter(q => !recentIds.has(q.questionId))
+
+  // 4. カテゴリバランス＋難易度分散でcount問選択
+  return selectBalanced(candidates, count)
+}
+```
+
+**サーバー版との差異**:
+- サーバー版（`lib/precomputed-quiz-engine.ts`）: 忘却曲線重み付け、ユーザー正答率ベース難易度分布、新問題ブースト
+- ローカル版: カテゴリ均等配分＋難易度分散＋出題済み除外（シンプル版）
+- オフライン時のフォールバック用途のため、完全一致は不要
+- サーバー側の`precomputed-quiz-engine.ts`は変更しない
+
+##### 問題数増加への影響
+
+precomputedセットは`question_ids`配列（10個のID）のみ保存のため、問題数増加でセットサイズは変わらない。ローカル簡易生成は全問題をメモリ読み込みするが、1,000問程度であればモバイルでも問題ない（1問あたり約1KB → 合計1MB以下）。
+
+#### 復習クイズシステムの設計方針
+
+##### 現行の仕組み
+
+1. クイズ回答保存時に`determineReviewReasonForDB()`で`review_needed`フラグを設定（サーバー側）
+2. 判定基準: 不正解、ヒント使用（≥2段階）、低確信度（≤2）、時間超過（>80%制限時間）
+3. `precomputed-quiz-engine.ts`の`getReviewTargetQuestions()`が`review_needed=true`かつ`reviewed_at=null`かつ作成から3日以上経過した回答を検索
+4. 忘却曲線に基づく重み付けで復習セットを生成 → `precomputed_quiz_sets`（type='review'）に保存
+
+##### モバイルでの動作
+
+- **復習セット**: precomputed_quiz_sets（type='review'）をローカルDBから読み取り（precomputed_quiz_setsと同じ方式）
+- **復習統計**: quiz_answersのローカルデータから集計（`reviewed_at`の有無、正答率変化）
+- **review_neededフラグ**: quiz_answers保存時にサーバー側で設定 → sync経由でローカルに反映
+
+**結論**: 復習クイズも判定・生成はサーバー側維持、読み取りのみローカル化。毎回quiz_answersを走査して復習対象を探すことはしない。
+
+#### Phase 3で作成されたファイル
+
+```
+lib/offline/
+├── data-source.ts                  ← ✅ resolveData() 汎用関数
+├── queries/
+│   ├── collection.ts               ← ✅ 既存（参照実装、Phase 2で作成）
+│   ├── categories.ts               ← ✅ カテゴリー・サブカテゴリー取得
+│   ├── questions.ts                ← ✅ クイズ問題取得（ID型変換含む）
+│   ├── courses.ts                  ← ✅ コース一覧・詳細・セッション取得
+│   ├── precomputed-sets.ts         ← ✅ precomputed_quiz_sets読み取り＋有効期限チェック
+│   ├── offline-quiz-generator.ts   ← ✅ オフラインクイズ生成（business-ai, self-personalized, review）
+│   ├── user-stats.ts               ← ✅ XP・学習統計
+│   ├── wisdom-cards.ts             ← ✅ 格言カード抽選
+│   ├── quiz-history.ts             ← ✅ クイズ履歴・復習統計
+│   └── case-study.ts               ← 🔲 未作成（ケーススタディ）
+```
+
+#### 実装フェーズ
+
+##### Sub-Phase 3a: 基盤＋高優先度マスタデータ（M1-M4） ✅ 完了
+
+カテゴリー、クイズ問題、コース一覧・詳細
+
+| 作業 | ファイル | 内容 | 状態 |
+|------|--------|------|------|
+| 3a-1 | `lib/offline/data-source.ts` | `resolveData()`汎用関数作成 | ✅ |
+| 3a-2 | `lib/offline/queries/categories.ts` | カテゴリー＋サブカテゴリー取得 | ✅ |
+| 3a-3 | `lib/offline/queries/questions.ts` | クイズ問題取得（ID型変換含む） | ✅ |
+| 3a-4 | `lib/offline/queries/courses.ts` | コース一覧・詳細・セッション取得 | ✅ |
+| 3a-5 | 既存コンポーネント | `database`パラメータ追加、ローカル優先分岐 | ✅ |
+
+##### Sub-Phase 3b: 高優先度ユーザーデータ（U2-U4） ✅ 完了
+
+格言カード抽選、XP統計、クイズ履歴クエリ
+
+| 作業 | ファイル | 内容 | 状態 |
+|------|--------|------|------|
+| 3b-1 | `lib/offline/queries/wisdom-cards.ts` | 格言カード抽選のローカル読み取り | ✅ |
+| 3b-2 | `lib/offline/queries/user-stats.ts` | XP統計・デイリーレコード | ✅ |
+| 3b-3 | `lib/offline/queries/quiz-history.ts` | クイズセッション・回答履歴 | ✅ |
+| 3b-4 | `lib/cards.ts` | `getRandomWisdomCardFromDB()`にdatabaseパラメータ追加 | ✅ |
+| 3b-5 | `lib/supabase-quiz.ts` | `getUserStats()`にdatabaseパラメータ追加 | ✅ |
+| 3b-6 | `app/profile/page.tsx` | useOfflineDB追加、getUserStats/loadXPSettingsに渡す | ✅ |
+| 3b-7 | `components/quiz/QuizSession.tsx` | 格言カード抽選にofflineDB渡す | ✅ |
+
+##### Sub-Phase 3c: precomputed_quiz_sets＋復習（U7-U8） ✅ 完了
+
+クイズ開始時のプリコンピュートセット読み取り、復習統計、オフラインクイズ生成
+
+| 作業 | ファイル | 内容 | 状態 |
+|------|--------|------|------|
+| 3c-1 | `lib/offline/queries/precomputed-sets.ts` | ローカルからのセット読み取り＋有効期限チェック | ✅ |
+| 3c-2 | `lib/offline/queries/offline-quiz-generator.ts` | オフラインクイズ生成（business-ai, self-personalized, review） | ✅ |
+| 3c-3 | `lib/offline/schema.ts` | precomputed_quiz_setsテーブルスキーマ追加 | ✅ |
+| 3c-4 | `lib/offline/models/quiz.ts` | PrecomputedQuizSetモデル追加 | ✅ |
+| 3c-5 | `components/quiz/QuizSession.tsx` | ローカルセット→オフライン生成→APIフォールバック | ✅ |
+| 3c-6 | `app/quiz/page.tsx` | 復習モードのローカル優先読み取り | ✅ |
+
+##### Sub-Phase 3d: コース進捗・学習分析 ✅ 完了（ケーススタディ未対応）
+
+| 作業 | ファイル | 内容 | 状態 |
+|------|--------|------|------|
+| 3d-1 | `lib/learning/data.ts` | getLearningCourses/Details/Statsにdatabase追加 | ✅ |
+| 3d-2 | `lib/supabase-analytics.ts` | getLearningAnalyticsにdatabase追加 | ✅ |
+| 3d-3 | `app/learning/page.tsx` | useOfflineDB + database渡す | ✅ |
+| 3d-4 | `app/learning/[courseId]/page.tsx` | useOfflineDB + database渡す | ✅ |
+| 3d-5 | `app/learning/.../[sessionId]/page.tsx` | useOfflineDB + database渡す | ✅ |
+| 3d-6 | `components/learning/LearningSession.tsx` | database渡す | ✅ |
+| 3d-7 | `components/analytics/OptimizedAnalyticsPage.tsx` | useOfflineDB + database渡す | ✅ |
+| 3d-8 | ケーススタディクエリ | `lib/offline/queries/case-study.ts` | 🔲 未作成 |
+| 3d-9 | スキルレベル/クイズパック | ローカル読み取り | 🔲 未対応 |
+
+##### Sub-Phase 3e: XP設定 ✅ 完了（バッジ・SKP未対応）
+
+| 作業 | ファイル | 内容 | 状態 |
+|------|--------|------|------|
+| 3e-1 | `lib/xp-settings.ts` | loadXPSettingsにdatabaseパラメータ追加 | ✅ |
+| 3e-2 | `app/profile/page.tsx` | loadXPSettings(undefined, database) | ✅ |
+| 3e-3 | `components/xp/XPStatsCard.tsx` | useOfflineDB + database渡す | ✅ |
+| 3e-4 | `components/analytics/CachedLearningDashboard.tsx` | useOfflineDB + database渡す | ✅ |
+| 3e-5 | `components/analytics/RealLearningAnalyticsDashboard.tsx` | useOfflineDB + database渡す | ✅ |
+| 3e-6 | `components/learning/LearningSession.tsx` | 2箇所のloadXPSettingsにdatabase渡す | ✅ |
+| 3e-7 | バッジ（user_badges） | WMスキーマ/モデル未作成 | 🔲 ブロック中 |
+| 3e-8 | SKP残高（skp_transactions） | WMスキーマ/モデル未作成 | 🔲 ブロック中 |
+
+#### リスクと対策
+
+| リスク | 対策 |
+|--------|------|
+| ローカルDBにデータ未同期でnull返却 | `resolveData()`でサーバーフォールバック保証 |
+| quiz_questionsのID型不一致（DB:数値, WatermelonDB:文字列） | 変換関数を`loadFromLocalDB`内で統一適用 |
+| precomputed_quiz_sets有効期限切れ | ローカルでexpires_atチェック→切れていればサーバーフォールバック |
+| 同期タイミングずれ（最新データ未反映） | セット使用時にused_atをpush → 次回syncでサーバーに反映 |
+| PC側のコード破壊 | `database`パラメータはオプショナル（null時=サーバー直接）、既存コード変更なし |
 
 ---
 
