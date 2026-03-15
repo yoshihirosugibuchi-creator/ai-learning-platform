@@ -7,6 +7,9 @@ import { synchronize } from '@nozbe/watermelondb/sync'
 import { getDatabase } from './database'
 import { setLastDiagnostic, getTableType, type TableSyncStatus, type SyncDiagnosticResult } from './sync-diagnostics'
 
+/** 同期ロック（WatermelonDBは concurrent synchronize を禁止） */
+let syncLock = false
+
 /** 同期APIのベースURL */
 function getSyncUrl(): string {
   if (typeof window !== 'undefined') {
@@ -28,6 +31,12 @@ async function getAuthToken(): Promise<string | null> {
 
 /** 同期を実行（診断情報付き） */
 export async function syncDatabase(): Promise<{ success: boolean; error?: string }> {
+  if (syncLock) {
+    console.log('⏳ Sync already in progress, skipping')
+    return { success: true } // 既に同期中なのでエラーにしない
+  }
+  syncLock = true
+
   const startedAt = Date.now()
   let pullDuration = 0
   let pushDuration = 0
@@ -193,11 +202,19 @@ export async function syncDatabase(): Promise<{ success: boolean; error?: string
     setLastDiagnostic(diagnostic)
 
     return { success: false, error: message }
+  } finally {
+    syncLock = false
   }
 }
 
 /** 特定テーブルのみ同期（軽量） */
 export async function syncTables(tables: string[]): Promise<{ success: boolean; error?: string }> {
+  if (syncLock) {
+    console.log('⏳ Sync already in progress, skipping table sync')
+    return { success: true }
+  }
+  syncLock = true
+
   try {
     const database = getDatabase()
     const token = await getAuthToken()
@@ -236,5 +253,7 @@ export async function syncTables(tables: string[]): Promise<{ success: boolean; 
     const message = error instanceof Error ? error.message : String(error)
     console.error('❌ Sync tables failed:', message)
     return { success: false, error: message }
+  } finally {
+    syncLock = false
   }
 }
