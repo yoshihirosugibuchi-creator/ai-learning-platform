@@ -1,6 +1,7 @@
 /**
  * シンプルなカテゴリー・サブカテゴリーキャッシュシステム
  * 同期版・非同期版の両方を提供
+ * モバイル時はローカルDB（WatermelonDB）から優先取得
  */
 
 import { createClient } from '@supabase/supabase-js'
@@ -14,6 +15,54 @@ let supabaseClient: ReturnType<typeof createClient> | null = null
 
 if (supabaseUrl && supabaseKey) {
   supabaseClient = createClient(supabaseUrl, supabaseKey)
+}
+
+/** ローカルDBからカテゴリーを取得（モバイル用） */
+async function loadCategoriesFromLocalDB(): Promise<Map<string, string> | null> {
+  try {
+    const { isNativeApp } = await import('./capacitor-utils')
+    if (!isNativeApp()) return null
+
+    const { getDatabase } = await import('./offline/database')
+    const db = getDatabase()
+    const records = await db.get('categories').query().fetch()
+    if (records.length === 0) return null
+
+    const map = new Map<string, string>()
+    for (const r of records) {
+      const raw = (r as { _raw: Record<string, unknown> })._raw
+      const id = String(raw.category_id || raw.id || '')
+      const name = String(raw.name || '')
+      if (id && name) map.set(id, name)
+    }
+    return map.size > 0 ? map : null
+  } catch {
+    return null
+  }
+}
+
+/** ローカルDBからサブカテゴリーを取得（モバイル用） */
+async function loadSubcategoriesFromLocalDB(): Promise<Map<string, string> | null> {
+  try {
+    const { isNativeApp } = await import('./capacitor-utils')
+    if (!isNativeApp()) return null
+
+    const { getDatabase } = await import('./offline/database')
+    const db = getDatabase()
+    const records = await db.get('subcategories').query().fetch()
+    if (records.length === 0) return null
+
+    const map = new Map<string, string>()
+    for (const r of records) {
+      const raw = (r as { _raw: Record<string, unknown> })._raw
+      const id = String(raw.subcategory_id || raw.id || '')
+      const name = String(raw.name || '')
+      if (id && name) map.set(id, name)
+    }
+    return map.size > 0 ? map : null
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -39,6 +88,16 @@ class SimpleCache {
   }
 
   private async doLoadCategories(): Promise<void> {
+    // ローカルDB優先（モバイル）
+    const localMap = await loadCategoriesFromLocalDB()
+    if (localMap) {
+      this.categories = localMap
+      this.categoriesLoaded = true
+      console.log(`✅ Loaded ${localMap.size} categories from local DB`)
+      return
+    }
+
+    // サーバー
     try {
       if (supabaseClient) {
         const { data, error } = await supabaseClient
@@ -51,12 +110,12 @@ class SimpleCache {
             this.categories.set(item.category_id, item.name)
           }
           this.categoriesLoaded = true
-          console.log(`✅ Loaded ${data.length} categories from DB`)
+          console.log(`✅ Loaded ${data.length} categories from server`)
           return
         }
       }
     } catch (_error) {
-      console.warn('Failed to load categories from DB, using fallback')
+      console.warn('Failed to load categories from server, using fallback')
     }
 
     // フォールバック
@@ -78,6 +137,16 @@ class SimpleCache {
   }
 
   private async doLoadSubcategories(): Promise<void> {
+    // ローカルDB優先（モバイル）
+    const localMap = await loadSubcategoriesFromLocalDB()
+    if (localMap) {
+      this.subcategories = localMap
+      this.subcategoriesLoaded = true
+      console.log(`✅ Loaded ${localMap.size} subcategories from local DB`)
+      return
+    }
+
+    // サーバー
     try {
       if (supabaseClient) {
         const { data, error } = await supabaseClient
@@ -90,12 +159,12 @@ class SimpleCache {
             this.subcategories.set(item.subcategory_id, item.name)
           }
           this.subcategoriesLoaded = true
-          console.log(`✅ Loaded ${data.length} subcategories from DB`)
+          console.log(`✅ Loaded ${data.length} subcategories from server`)
           return
         }
       }
     } catch (_error) {
-      console.warn('Failed to load subcategories from DB, using fallback')
+      console.warn('Failed to load subcategories from server, using fallback')
     }
 
     // フォールバック
