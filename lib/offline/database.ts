@@ -5,6 +5,7 @@
 import { Database } from '@nozbe/watermelondb'
 import LokiJSAdapter from '@nozbe/watermelondb/adapters/lokijs'
 import { schema } from './schema'
+import { migrations } from './migrations'
 import { models } from './models'
 
 let database: Database | null = null
@@ -14,6 +15,7 @@ export function getDatabase(): Database {
 
   const adapter = new LokiJSAdapter({
     schema,
+    migrations,
     useWebWorker: false,
     useIncrementalIndexedDB: true,
     dbName: 'ale_learning_db',
