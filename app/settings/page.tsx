@@ -183,8 +183,8 @@ export default function SettingsPage() {
 
   return (
     <AppShell>
-      <div className="container mx-auto px-4 py-6">
-        <div className="space-y-6">
+      <div style={{ maxWidth: '100vw', overflow: 'hidden' }}>
+        <div className="px-4 py-6 space-y-6">
           {/* Page Header */}
           <PageHeader
             icon={Settings}
@@ -199,14 +199,14 @@ export default function SettingsPage() {
                 <CardTitle className="text-lg">セキュリティ</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="p-4 space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-2 rounded-lg bg-muted">
+                <div className="p-4 space-y-4" style={{ overflow: 'hidden' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted shrink-0">
                       <Fingerprint className="h-5 w-5" />
                     </div>
-                    <div className="flex-1">
-                      <div className="font-medium">{biometricLabel}</div>
-                      <div className="text-sm text-muted-foreground">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{biometricLabel}</div>
+                      <div className="text-sm text-muted-foreground" style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                         {biometricStatus === 'loading' && '確認中...'}
                         {biometricStatus === 'unavailable' && 'この端末では利用できません'}
                         {biometricStatus === 'available' && '次回から素早くログインできます'}
@@ -247,33 +247,34 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle className="text-lg">{category}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-2" style={{ overflow: 'hidden' }}>
                 {items.map((item) => (
                   <Button
                     key={item.id}
                     variant="ghost"
                     className={`w-full justify-start h-auto p-4 ${!item.available ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    style={{ maxWidth: '100%', overflow: 'hidden' }}
                     onClick={() => router.push(item.href)}
                   >
-                    <div className="flex items-center space-x-4 flex-1">
-                      <div className="p-2 rounded-lg bg-muted">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="p-2 rounded-lg bg-muted shrink-0">
                         {item.icon}
                       </div>
-                      <div className="flex-1 text-left">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">{item.title}</span>
+                      <div className="flex-1 text-left min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium truncate">{item.title}</span>
                           {!item.available && (
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" className="text-xs shrink-0">
                               準備中
                             </Badge>
                           )}
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-sm text-muted-foreground" style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                           {item.description}
                         </div>
                       </div>
                       {item.available && (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                       )}
                     </div>
                   </Button>

@@ -108,7 +108,6 @@ export default function SyncDebugPage() {
 
   const handleFullSync = async () => {
     await triggerSync()
-    // loadDataは syncingのuseEffectで自動呼び出し
   }
 
   const handleSyncTable = async (table: string) => {
@@ -147,7 +146,7 @@ export default function SyncDebugPage() {
   if (!isNative) {
     return (
       <AppShell>
-        <div className="container mx-auto px-4 py-8">
+        <div className="px-4 py-8">
           <div className="text-center py-12">
             <Database className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-xl font-bold mb-2">PC版では利用できません</h2>
@@ -172,127 +171,117 @@ export default function SyncDebugPage() {
 
   return (
     <AppShell>
-      <div className="container mx-auto px-4 py-6 space-y-6 max-w-2xl overflow-x-hidden">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              同期診断
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              ローカルDB テーブル状態・同期エラー確認
-            </p>
-          </div>
-        </div>
-
-        {/* Overview Card */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">概要</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <HardDrive className="h-4 w-4 text-blue-500" />
-                <span>テーブル数: <strong>{tables.length}</strong></span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Server className="h-4 w-4 text-green-500" />
-                <span>総レコード: <strong>{totalLocal.toLocaleString()}</strong></span>
-              </div>
-              <div className="flex items-center gap-2">
-                {errorTables.length > 0 ? (
-                  <XCircle className="h-4 w-4 text-red-500" />
-                ) : (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                )}
-                <span>エラー: <strong className={errorTables.length > 0 ? 'text-red-500' : ''}>{errorTables.length}</strong></span>
-              </div>
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                <span>空テーブル: <strong>{emptyTables.length}</strong></span>
-              </div>
+      <div style={{ maxWidth: '100vw', overflow: 'hidden' }}>
+        <div className="px-4 py-6 space-y-4">
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => router.back()}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-lg font-bold flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                同期診断
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                ローカルDB状態・同期エラー確認
+              </p>
             </div>
+          </div>
 
-            {/* 最終同期情報 */}
-            {diagnostic && (
-              <div className="mt-3 pt-3 border-t text-xs text-muted-foreground space-y-1">
-                <div className="flex justify-between">
-                  <span>最終同期:</span>
-                  <span>{new Date(diagnostic.completedAt).toLocaleString('ja-JP')}</span>
+          {/* Overview */}
+          <Card>
+            <CardContent className="pt-4 pb-3">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <HardDrive className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                  <span>テーブル: <strong>{tables.length}</strong></span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Pull所要時間:</span>
-                  <span>{(diagnostic.pullDuration / 1000).toFixed(1)}秒</span>
+                <div className="flex items-center gap-1.5">
+                  <Server className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                  <span>レコード: <strong>{totalLocal.toLocaleString()}</strong></span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Push所要時間:</span>
-                  <span>{(diagnostic.pushDuration / 1000).toFixed(1)}秒</span>
+                <div className="flex items-center gap-1.5">
+                  {errorTables.length > 0 ? (
+                    <XCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />
+                  ) : (
+                    <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                  )}
+                  <span>エラー: <strong className={errorTables.length > 0 ? 'text-red-500' : ''}>{errorTables.length}</strong></span>
                 </div>
-                <div className="flex justify-between">
-                  <span>ステータス:</span>
-                  <Badge
-                    variant={diagnostic.overallStatus === 'success' ? 'default' : diagnostic.overallStatus === 'partial' ? 'secondary' : 'destructive'}
-                    className="text-xs"
-                  >
-                    {diagnostic.overallStatus === 'success' ? '成功' : diagnostic.overallStatus === 'partial' ? '一部エラー' : 'エラー'}
-                  </Badge>
+                <div className="flex items-center gap-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 text-yellow-500 shrink-0" />
+                  <span>空: <strong>{emptyTables.length}</strong></span>
                 </div>
               </div>
-            )}
 
-            {/* 同期エラー */}
-            {(lastSyncError || diagnostic?.errorMessage) && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 overflow-hidden">
-                <div className="font-medium mb-1">同期エラー詳細:</div>
-                <div className="break-all font-mono text-[10px] line-clamp-4">{lastSyncError || diagnostic?.errorMessage}</div>
+              {/* 最終同期 */}
+              {diagnostic && (
+                <div className="mt-2 pt-2 border-t text-[10px] text-muted-foreground space-y-0.5">
+                  <div className="flex justify-between">
+                    <span>最終同期</span>
+                    <span>{new Date(diagnostic.completedAt).toLocaleString('ja-JP')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Pull/Push</span>
+                    <span>{(diagnostic.pullDuration / 1000).toFixed(1)}s / {(diagnostic.pushDuration / 1000).toFixed(1)}s</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>状態</span>
+                    <Badge
+                      variant={diagnostic.overallStatus === 'success' ? 'default' : diagnostic.overallStatus === 'partial' ? 'secondary' : 'destructive'}
+                      className="text-[10px] px-1.5 py-0"
+                    >
+                      {diagnostic.overallStatus === 'success' ? '成功' : diagnostic.overallStatus === 'partial' ? '一部エラー' : 'エラー'}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+
+              {/* エラー詳細 */}
+              {(lastSyncError || diagnostic?.errorMessage) && (
+                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-[10px] text-red-700">
+                  <div className="font-medium">エラー:</div>
+                  <div className="break-all leading-tight mt-0.5" style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                    {(lastSyncError || diagnostic?.errorMessage || '').slice(0, 200)}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <Button
+              onClick={handleFullSync}
+              disabled={syncing}
+              className="flex-1 text-xs h-9"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? '同期中...' : '全テーブル同期'}
+            </Button>
+            <Button variant="outline" onClick={loadData} disabled={loading} className="h-9 w-9 p-0">
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleResetDB}
+              disabled={resetting || syncing}
+              className="h-9 w-9 p-0"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          {/* Master Tables */}
+          <Card>
+            <CardHeader className="pb-2 pt-3 px-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm">マスタ ({masterTables.length})</CardTitle>
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">読み取り専用</Badge>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <Button
-            onClick={handleFullSync}
-            disabled={syncing}
-            className="flex-1"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? '同期中...' : '全テーブル同期'}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={loadData}
-            disabled={loading}
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
-          <Button
-            variant="destructive"
-            size="icon"
-            onClick={handleResetDB}
-            disabled={resetting || syncing}
-            title="DBリセット"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Master Tables */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center justify-between">
-              <span>マスタテーブル ({masterTables.length})</span>
-              <Badge variant="secondary" className="text-xs">読み取り専用</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 overflow-hidden">
-            <div className="divide-y">
+            </CardHeader>
+            <CardContent className="p-0">
               {masterTables.map(t => (
                 <TableRow
                   key={t.table}
@@ -301,20 +290,18 @@ export default function SyncDebugPage() {
                   isSyncing={syncingTable === t.table}
                 />
               ))}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* User Tables */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center justify-between">
-              <span>ユーザーテーブル ({userTables.length})</span>
-              <Badge variant="outline" className="text-xs">双方向同期</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 overflow-hidden">
-            <div className="divide-y">
+          {/* User Tables */}
+          <Card>
+            <CardHeader className="pb-2 pt-3 px-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm">ユーザー ({userTables.length})</CardTitle>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">双方向同期</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
               {userTables.map(t => (
                 <TableRow
                   key={t.table}
@@ -323,20 +310,14 @@ export default function SyncDebugPage() {
                   isSyncing={syncingTable === t.table}
                 />
               ))}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* ユーザー情報 */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">デバッグ情報</CardTitle>
-          </CardHeader>
-          <CardContent className="text-[10px] text-muted-foreground space-y-1 font-mono overflow-hidden">
-            <div className="truncate">UID: {user?.id || 'N/A'}</div>
-            <div>Native: {isNative ? 'Yes' : 'No'} | DB: {database ? 'OK' : 'null'} | Online: {typeof navigator !== 'undefined' ? (navigator.onLine ? 'Yes' : 'No') : 'N/A'}</div>
-          </CardContent>
-        </Card>
+          {/* Debug Info */}
+          <div className="text-[10px] text-muted-foreground px-1" style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+            UID: {user?.id || 'N/A'} | Native: {isNative ? 'Y' : 'N'} | DB: {database ? 'OK' : '-'} | Online: {typeof navigator !== 'undefined' ? (navigator.onLine ? 'Y' : 'N') : '-'}
+          </div>
+        </div>
       </div>
     </AppShell>
   )
@@ -349,46 +330,54 @@ function TableRow({ info, onSync, isSyncing }: { info: TableInfo; onSync: () => 
   const hasChanges = syncStatus && (syncStatus.pullCreated > 0 || syncStatus.pullUpdated > 0 || syncStatus.pullDeleted > 0)
 
   return (
-    <div className={`px-3 py-2.5 ${isError ? 'bg-red-50' : ''}`}>
-      <div className="flex items-center gap-2">
-        <div className="flex-1 min-w-0 overflow-hidden">
-          <div className="flex items-center gap-1.5">
-            {isError ? (
-              <XCircle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
-            ) : isEmpty ? (
-              <AlertTriangle className="h-3.5 w-3.5 text-yellow-500 flex-shrink-0" />
-            ) : (
-              <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-            )}
-            <span className="text-sm font-medium truncate">{displayName}</span>
-            <span className={`text-xs font-bold flex-shrink-0 ${isEmpty ? 'text-yellow-600' : 'text-blue-600'}`}>
-              {localCount >= 0 ? localCount.toLocaleString() : 'ERR'}件
+    <div
+      className={`border-t first:border-t-0 px-3 py-2 ${isError ? 'bg-red-50' : ''}`}
+      style={{ overflow: 'hidden' }}
+    >
+      <div className="flex items-center gap-1.5">
+        {/* Icon */}
+        {isError ? (
+          <XCircle className="h-3 w-3 text-red-500 shrink-0" />
+        ) : isEmpty ? (
+          <AlertTriangle className="h-3 w-3 text-yellow-500 shrink-0" />
+        ) : (
+          <CheckCircle className="h-3 w-3 text-green-500 shrink-0" />
+        )}
+
+        {/* Name + count */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-1">
+            <span className="text-xs font-medium truncate block">{displayName}</span>
+            <span className={`text-[10px] font-bold shrink-0 ${isEmpty ? 'text-yellow-600' : 'text-blue-600'}`}>
+              {localCount >= 0 ? localCount.toLocaleString() : 'ERR'}
             </span>
-          </div>
-          <div className="text-[10px] text-muted-foreground mt-0.5 ml-5 flex items-center gap-2 overflow-hidden">
-            <span className="font-mono truncate">{table}</span>
             {hasChanges && (
-              <span className="text-green-600 flex-shrink-0">
-                +{syncStatus.pullCreated}c/{syncStatus.pullUpdated}u/{syncStatus.pullDeleted}d
+              <span className="text-[10px] text-green-600 shrink-0">
+                +{syncStatus.pullCreated}/{syncStatus.pullUpdated}/{syncStatus.pullDeleted}
               </span>
             )}
           </div>
-          {isError && syncStatus?.error && (
-            <div className="text-[10px] text-red-600 mt-1 ml-5 break-all line-clamp-2">
-              {syncStatus.error}
-            </div>
-          )}
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 flex-shrink-0"
+
+        {/* Sync button */}
+        <button
           onClick={onSync}
           disabled={isSyncing}
+          className="shrink-0 p-1 rounded hover:bg-muted disabled:opacity-50"
         >
-          <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
-        </Button>
+          <RefreshCw className={`h-3 w-3 text-muted-foreground ${isSyncing ? 'animate-spin' : ''}`} />
+        </button>
       </div>
+
+      {/* Error message */}
+      {isError && syncStatus?.error && (
+        <div
+          className="text-[10px] text-red-600 mt-0.5 pl-4 leading-tight"
+          style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}
+        >
+          {syncStatus.error.slice(0, 120)}
+        </div>
+      )}
     </div>
   )
 }
