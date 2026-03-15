@@ -54,6 +54,7 @@ export async function getLocalTableCounts(database: Database): Promise<Record<st
     'case_study_sessions', 'case_study_step_details', 'case_study_thinking_logs',
     'wisdom_card_collection', 'user_knowledge_collection_v2',
     'user_xp_stats_v2', 'course_session_completions', 'daily_xp_records',
+    'user_challenge_selections',
   ]
 
   const counts: Record<string, number> = {}
@@ -78,6 +79,7 @@ export function getTableType(table: string): 'master' | 'user' {
     'case_study_sessions', 'case_study_step_details', 'case_study_thinking_logs',
     'wisdom_card_collection', 'user_knowledge_collection_v2',
     'user_xp_stats_v2', 'course_session_completions', 'daily_xp_records',
+    'user_challenge_selections',
   ])
   return userTables.has(table) ? 'user' : 'master'
 }
@@ -114,6 +116,7 @@ export function getTableDisplayName(table: string): string {
     user_xp_stats_v2: 'XP統計',
     course_session_completions: 'コース完了記録',
     daily_xp_records: 'デイリー記録',
+    user_challenge_selections: '選ばれし課題',
   }
   return names[table] || table
 }

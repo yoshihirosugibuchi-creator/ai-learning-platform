@@ -29,6 +29,7 @@ import LoadingScreen from '@/components/layout/LoadingScreen'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useReviewQuickCheck } from '@/hooks/useReviewQuickCheck'
 import ChallengeSettingsModal from '@/components/dashboard/ChallengeSettingsModal'
+import { useOfflineDB } from '@/lib/offline/provider'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
 
@@ -54,6 +55,7 @@ interface ContentCounts {
 export default function Home() {
   const router = useRouter()
   const { toast } = useToast()
+  const { database } = useOfflineDB()
   // mobileNavOpen は AppShell 内部で管理
   const { user, loading } = useAuth()
   const { reviewStatus, isLoading: reviewLoading } = useReviewQuickCheck()
@@ -66,8 +68,22 @@ export default function Home() {
   const [startingQuizPack, setStartingQuizPack] = useState(false)
   const [contentCounts, setContentCounts] = useState<ContentCounts | null>(null)
 
-  // コンテンツ統計を取得
+  // コンテンツ統計を取得（ローカルDB優先）
   const fetchContentCounts = useCallback(async () => {
+    // ローカルDB優先
+    if (database) {
+      try {
+        const { getContentCountsLocal } = await import('@/lib/offline/queries/home')
+        const localCounts = await getContentCountsLocal(database)
+        if (localCounts) {
+          setContentCounts(localCounts)
+          return
+        }
+      } catch (e) {
+        console.warn('Local content counts failed:', e)
+      }
+    }
+    // サーバーフォールバック
     try {
       const response = await fetch('/api/stats/content-counts')
       if (response.ok) {
@@ -79,7 +95,7 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to fetch content counts:', error)
     }
-  }, [])
+  }, [database])
 
   // クイズパックを直接開始
   const startQuizPack = useCallback(async (packId: string) => {
@@ -115,10 +131,25 @@ export default function Home() {
     }
   }, [user, router, toast])
 
-  // 選ばれし課題の選択を取得
+  // 選ばれし課題の選択を取得（ローカルDB優先）
   const fetchChallengeSelections = useCallback(async () => {
     if (!user) return
 
+    // ローカルDB優先（即表示）
+    if (database) {
+      try {
+        const { getChallengeSelectionsLocal } = await import('@/lib/offline/queries/home')
+        const localSelections = await getChallengeSelectionsLocal(database)
+        if (localSelections) {
+          setChallengeSelections(localSelections)
+          return
+        }
+      } catch (e) {
+        console.warn('Local challenge selections failed:', e)
+      }
+    }
+
+    // サーバーフォールバック
     try {
       const { data: sessionData } = await supabase.auth.getSession()
       const token = sessionData.session?.access_token
@@ -138,7 +169,7 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to fetch challenge selections:', error)
     }
-  }, [user])
+  }, [user, database])
 
   useEffect(() => {
     if (loading) return

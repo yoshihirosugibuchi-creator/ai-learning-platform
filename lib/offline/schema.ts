@@ -547,6 +547,20 @@ export const schema = appSchema({
       ],
     }),
 
+    // 選ばれし課題（ユーザーのダッシュボード選択）
+    tableSchema({
+      name: 'user_challenge_selections',
+      columns: [
+        { name: 'user_id', type: 'string' },
+        { name: 'slot_type', type: 'string' }, // 'course' | 'quiz_pack' | 'case_study'
+        { name: 'content_id', type: 'string' },
+        { name: 'content_name', type: 'string', isOptional: true },
+        { name: 'selected_by', type: 'string', isOptional: true },
+        { name: 'created_at', type: 'number', isOptional: true },
+        { name: 'updated_at', type: 'number', isOptional: true },
+      ],
+    }),
+
     // 事前生成クイズセット
     tableSchema({
       name: 'precomputed_quiz_sets',

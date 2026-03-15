@@ -25,6 +25,7 @@ const APPENDABLE_TABLES = new Set([
 const UPSERT_TABLES = new Set([
   'wisdom_card_collection',
   'user_knowledge_collection_v2',
+  'user_challenge_selections',
 ])
 
 // Push対象外テーブル（サーバー計算 or マスタ）
@@ -161,6 +162,17 @@ async function pushUpsert(
 
       if (error) {
         errors.push(`${table} [${transformed.theme_id}]: ${error.message}`)
+      } else {
+        upserted++
+      }
+    } else if (table === 'user_challenge_selections') {
+      // user_challenge_selectionsは user_id + slot_type でupsert
+      const { error } = await supabaseAdmin
+        .from(table)
+        .upsert(transformed, { onConflict: 'user_id,slot_type' })
+
+      if (error) {
+        errors.push(`${table} [${transformed.slot_type}]: ${error.message}`)
       } else {
         upserted++
       }

@@ -24,6 +24,7 @@ import {
 import { WisdomCard, WisdomCardCollection, UserKnowledgeCollectionV2 } from './collection'
 import { SkillLevel, Category, Subcategory, XpLevelSkpSetting } from './master'
 import { UserXpStatsV2, DailyXpRecord } from './user-stats'
+import { UserChallengeSelection } from './challenge'
 
 // Database.modelClasses に渡す配列
 export const models = [
@@ -61,6 +62,8 @@ export const models = [
   // ユーザーデータ: コレクション
   WisdomCardCollection,
   UserKnowledgeCollectionV2,
+  // ユーザーデータ: ダッシュボード
+  UserChallengeSelection,
   // ユーザーデータ: 統計・進捗
   UserXpStatsV2,
   DailyXpRecord,
@@ -101,6 +104,8 @@ export {
   Category,
   Subcategory,
   XpLevelSkpSetting,
+  // ダッシュボード
+  UserChallengeSelection,
   // 統計
   UserXpStatsV2,
   DailyXpRecord,

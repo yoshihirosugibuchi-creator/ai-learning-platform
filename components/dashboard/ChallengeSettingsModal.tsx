@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search, Check, BookOpen, Package, Briefcase, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
+import { useOfflineDB } from '@/lib/offline/provider'
 
 interface ContentItem {
   id: string
@@ -87,6 +88,7 @@ export default function ChallengeSettingsModal({
   currentSelections
 }: ChallengeSettingsModalProps) {
   const { toast } = useToast()
+  const { database } = useOfflineDB()
   const [selections, setSelections] = useState<Record<SlotType, ContentItem | null>>({
     course: null,
     quiz_pack: null,
@@ -129,11 +131,26 @@ export default function ChallengeSettingsModal({
     }
   }, [currentSelections, isOpen])
 
-  // 検索実行
+  // 検索実行（ローカルDB優先）
   const performSearch = useCallback(async (type: SlotType, query: string) => {
     setLoading(prev => ({ ...prev, [type]: true }))
 
     try {
+      // ローカルDB優先
+      if (database) {
+        try {
+          const { searchContentLocal } = await import('@/lib/offline/queries/home')
+          const localResults = await searchContentLocal(database, type, query)
+          if (localResults.length > 0) {
+            setSearchResults(prev => ({ ...prev, [type]: localResults }))
+            return
+          }
+        } catch (e) {
+          console.warn('Local search failed:', e)
+        }
+      }
+
+      // サーバーフォールバック
       const { data: sessionData } = await supabase.auth.getSession()
       const token = sessionData.session?.access_token
 
@@ -153,7 +170,7 @@ export default function ChallengeSettingsModal({
     } finally {
       setLoading(prev => ({ ...prev, [type]: false }))
     }
-  }, [])
+  }, [database])
 
   // 初期読み込み（全タイプ）
   useEffect(() => {
