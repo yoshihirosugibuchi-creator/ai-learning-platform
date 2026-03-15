@@ -98,14 +98,12 @@ export default function LearningPage() {
       console.log('👤 User state:', { userId: user?.id, userEmail: user?.email })
 
       try {
-        // カテゴリーキャッシュを事前に初期化（サブカテゴリー表示のため）
-        console.log('📂 Pre-loading categories cache...')
-        await Promise.all([
+        // カテゴリーキャッシュをバックグラウンドで初期化（コース読み込みをブロックしない）
+        Promise.all([
           getCategories().catch(err => console.warn('Category pre-load warning:', err)),
-          // CourseCardのgetSubcategoryDisplayNameSyncが初回レンダーで日本語を返すように
           getCategoryDisplayNameAsync('_preload_').catch(() => {}),
           getSubcategoryDisplayNameAsync('_preload_').catch(() => {}),
-        ])
+        ]).catch(() => {})
 
         // 全体のタイムアウト設定（30秒）
         const dataTimeout = setTimeout(() => {
