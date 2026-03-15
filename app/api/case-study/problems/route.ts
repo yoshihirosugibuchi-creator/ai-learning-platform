@@ -145,13 +145,12 @@ export async function GET(request: Request) {
       .select('*')
       .in('id', problemIds)
 
-    // 業界カテゴリー名を取得
+    // 業界カテゴリー名を取得（typeフィルタなしで全カテゴリーから検索）
     const industryIds = [...new Set(problems?.map(p => p.industry).filter(Boolean) || [])]
     const { data: industryCategories } = await supabaseAdmin
       .from('categories')
       .select('category_id, name')
       .in('category_id', industryIds)
-      .eq('type', 'industry')
 
     const industryMap = new Map(industryCategories?.map(c => [c.category_id, c.name]) || [])
 

@@ -134,25 +134,38 @@ export async function GET(
       .eq('id', problemId)
       .single()
 
-    // 業界カテゴリー名を取得
-    let industryName = problem.industry
-    if (problem.industry) {
-      const { data: industryCategory } = await supabaseAdmin
+    // カテゴリー名・サブカテゴリー名・業界名を一括解決
+    const lookupIds = [
+      problem.industry,
+      problem.primary_category_id,
+    ].filter(Boolean) as string[]
+
+    const categoryNameMap = new Map<string, string>()
+    if (lookupIds.length > 0) {
+      const { data: cats } = await supabaseAdmin
         .from('categories')
+        .select('category_id, name')
+        .in('category_id', lookupIds)
+      cats?.forEach(c => categoryNameMap.set(c.category_id, c.name))
+    }
+
+    let subcategoryName: string | null = null
+    if (problem.primary_subcategory_id) {
+      const { data: sub } = await supabaseAdmin
+        .from('subcategories')
         .select('name')
-        .eq('category_id', problem.industry)
-        .eq('type', 'industry')
+        .eq('subcategory_id', problem.primary_subcategory_id)
         .single()
-      if (industryCategory) {
-        industryName = industryCategory.name
-      }
+      if (sub) subcategoryName = sub.name
     }
 
     return NextResponse.json({
       success: true,
       problem: {
         ...problem,
-        industry_name: industryName,
+        industry_name: problem.industry ? (categoryNameMap.get(problem.industry) || problem.industry) : null,
+        category_name: problem.primary_category_id ? (categoryNameMap.get(problem.primary_category_id) || null) : null,
+        subcategory_name: subcategoryName,
         // ケース本文は概要のみ（500文字まで）
         case_text_preview: problem.case_text.substring(0, 500) + (problem.case_text.length > 500 ? '...' : '')
       },

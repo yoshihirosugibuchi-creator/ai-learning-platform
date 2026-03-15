@@ -23,6 +23,8 @@ interface Problem {
   difficulty: 'basic' | 'intermediate' | 'advanced' | 'expert'
   industry: string | null
   industry_name?: string | null
+  category_name?: string | null
+  subcategory_name?: string | null
   scenario_type: string | null
   estimated_minutes: number
   step_count: number
@@ -230,7 +232,8 @@ export default function CaseStudyDetailPage({
             <div className="flex flex-wrap gap-2 mb-2">
               <Badge style={{ backgroundColor: difficultyColor, color: 'white' }}>{difficultyLabel}</Badge>
               {(problem.industry_name || problem.industry) && <Badge variant="outline">{problem.industry_name || problem.industry}</Badge>}
-              {problem.scenario_type && <Badge variant="secondary">{problem.scenario_type}</Badge>}
+              {problem.category_name && <Badge variant="secondary">{problem.category_name}</Badge>}
+              {problem.subcategory_name && <Badge variant="secondary">{problem.subcategory_name}</Badge>}
             </div>
             <CardTitle className="text-xl">{problem.title}</CardTitle>
           </CardHeader>
