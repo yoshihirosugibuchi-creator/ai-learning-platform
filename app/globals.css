@@ -214,3 +214,61 @@
   max-width: 100%;
   height: auto;
 }
+
+/* ==== Markdown モバイル最適化 (768px以下) ==== */
+@media (max-width: 768px) {
+  /* コードブロック: フォントを小さく、横スクロールバー常時表示 */
+  .md-code-block {
+    font-size: 0.7rem !important;
+    line-height: 1.5 !important;
+    padding: 0.75rem !important;
+  }
+  .md-code-scroll {
+    scrollbar-width: thin;
+  }
+  .md-code-scroll::-webkit-scrollbar {
+    height: 6px;
+  }
+  .md-code-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 3px;
+  }
+
+  /* テーブル: 小フォント、横スクロールバー表示 */
+  .md-table {
+    font-size: 0.8rem;
+  }
+  .md-table-scroll {
+    scrollbar-width: thin;
+  }
+  .md-table-scroll::-webkit-scrollbar {
+    height: 6px;
+  }
+  .md-table-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2);
+    border-radius: 3px;
+  }
+
+  /* Mermaid図: ピンチズーム + 横スクロール */
+  .mermaid-container {
+    padding: 0.5rem !important;
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+  .mermaid-container .mermaid-svg-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mermaid-container .mermaid-svg-wrapper svg {
+    min-width: 280px;
+  }
+
+  /* 画像: ピンチズーム対応 */
+  .md-img-wrapper {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+  .md-img-wrapper img {
+    min-width: 200px;
+  }
+}

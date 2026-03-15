@@ -250,6 +250,7 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
     <div
       ref={containerRef}
       className={`mermaid-container bg-white border border-gray-200 rounded-lg p-4 overflow-x-auto ${className}`}
+      style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
     >
       <style>{`
         .mermaid-svg-wrapper foreignObject {
@@ -267,7 +268,7 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
       `}</style>
       <div
         className="mermaid-svg-wrapper"
-        style={{ minWidth: 0 }}
+        style={{ minWidth: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}
         dangerouslySetInnerHTML={{ __html: svg }}
       />
     </div>

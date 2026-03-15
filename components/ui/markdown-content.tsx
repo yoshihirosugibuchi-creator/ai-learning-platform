@@ -16,9 +16,10 @@ interface MarkdownContentProps {
 
 /**
  * Markdownコンテンツをレンダリングするコンポーネント
- * - コードブロック: シンタックスハイライト付き表示
- * - Mermaid図表: MermaidRendererで表示
- * - インラインコード: 背景色付きで表示
+ * - コードブロック: シンタックスハイライト付き表示（モバイル: 小フォント+横スクロール）
+ * - Mermaid図表: MermaidRendererで表示（モバイル: ピンチズーム対応）
+ * - テーブル: 横スクロール対応
+ * - 画像: ピンチズーム対応
  * - GFM（GitHub Flavored Markdown）対応
  */
 function MarkdownContentBase({ content, className = '', compact = false }: MarkdownContentProps) {
@@ -60,14 +61,18 @@ function MarkdownContentBase({ content, className = '', compact = false }: Markd
             }
 
             // 通常のコードブロック（シンタックスハイライト付き）
+            // モバイル: 小フォント + 横スクロールバー表示
             return (
-              <div className="my-4 rounded-lg overflow-hidden max-w-full">
+              <div className="my-4 rounded-lg overflow-hidden" style={{ maxWidth: '100%' }}>
                 {language && (
-                  <div className="bg-gray-700 text-gray-300 text-xs px-4 py-1 font-mono">
+                  <div className="bg-gray-700 text-gray-300 text-xs px-3 py-1 font-mono">
                     {language}
                   </div>
                 )}
-                <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+                <div
+                  className="overflow-x-auto md-code-scroll"
+                  style={{ WebkitOverflowScrolling: 'touch' }}
+                >
                   <SyntaxHighlighter
                     style={oneDark}
                     language={language || 'text'}
@@ -75,8 +80,10 @@ function MarkdownContentBase({ content, className = '', compact = false }: Markd
                     customStyle={{
                       margin: 0,
                       borderRadius: language ? '0 0 0.5rem 0.5rem' : '0.5rem',
-                      fontSize: compact ? '0.75rem' : '0.875rem',
+                      fontSize: compact ? '0.7rem' : undefined, // compact時は固定小サイズ
+                      padding: undefined, // CSSで制御
                     }}
+                    className="md-code-block"
                   >
                     {codeString}
                   </SyntaxHighlighter>
@@ -130,11 +137,11 @@ function MarkdownContentBase({ content, className = '', compact = false }: Markd
               </blockquote>
             )
           },
-          // テーブル
+          // テーブル（モバイル: 横スクロール + 小フォント）
           table({ children }) {
             return (
-              <div className="my-4 overflow-x-auto">
-                <table className="min-w-full border-collapse border border-gray-300">
+              <div className="my-4 overflow-x-auto md-table-scroll" style={{ WebkitOverflowScrolling: 'touch' }}>
+                <table className="border-collapse border border-gray-300 md-table">
                   {children}
                 </table>
               </div>
@@ -144,10 +151,24 @@ function MarkdownContentBase({ content, className = '', compact = false }: Markd
             return <thead className="bg-gray-100">{children}</thead>
           },
           th({ children }) {
-            return <th className="border border-gray-300 px-4 py-2 text-left font-semibold">{children}</th>
+            return <th className="border border-gray-300 px-3 py-1.5 text-left font-semibold text-sm md:px-4 md:py-2 md:text-base whitespace-nowrap">{children}</th>
           },
           td({ children }) {
-            return <td className="border border-gray-300 px-4 py-2">{children}</td>
+            return <td className="border border-gray-300 px-3 py-1.5 text-sm md:px-4 md:py-2 md:text-base">{children}</td>
+          },
+          // 画像（モバイル: ピンチズーム対応ラッパー）
+          img({ src, alt }) {
+            return (
+              <span className="block my-4 md-img-wrapper">
+                <img
+                  src={src}
+                  alt={alt || ''}
+                  className="max-w-full h-auto rounded"
+                  loading="lazy"
+                  style={{ touchAction: 'pinch-zoom' }}
+                />
+              </span>
+            )
           },
           // 水平線
           hr() {
