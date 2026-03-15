@@ -332,8 +332,8 @@ export default function SyncDebugPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base">デバッグ情報</CardTitle>
           </CardHeader>
-          <CardContent className="text-xs text-muted-foreground space-y-1 font-mono">
-            <div>User ID: {user?.id || 'N/A'}</div>
+          <CardContent className="text-xs text-muted-foreground space-y-1 font-mono overflow-hidden">
+            <div className="truncate">User ID: {user?.id || 'N/A'}</div>
             <div>Native: {isNative ? 'Yes' : 'No'}</div>
             <div>Database: {database ? 'Initialized' : 'null'}</div>
             <div>Online: {typeof navigator !== 'undefined' ? (navigator.onLine ? 'Yes' : 'No') : 'N/A'}</div>
@@ -351,10 +351,10 @@ function TableRow({ info, onSync, isSyncing }: { info: TableInfo; onSync: () => 
   const hasChanges = syncStatus && (syncStatus.pullCreated > 0 || syncStatus.pullUpdated > 0 || syncStatus.pullDeleted > 0)
 
   return (
-    <div className={`px-4 py-3 ${isError ? 'bg-red-50' : ''}`}>
-      <div className="flex items-center justify-between">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+    <div className={`px-3 py-2.5 ${isError ? 'bg-red-50' : ''}`}>
+      <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex items-center gap-1.5">
             {isError ? (
               <XCircle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
             ) : isEmpty ? (
@@ -363,20 +363,20 @@ function TableRow({ info, onSync, isSyncing }: { info: TableInfo; onSync: () => 
               <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
             )}
             <span className="text-sm font-medium truncate">{displayName}</span>
-          </div>
-          <div className="text-xs text-muted-foreground mt-0.5 ml-5.5 flex gap-3">
-            <span className="font-mono">{table}</span>
-            <span className={`font-bold ${isEmpty ? 'text-yellow-600' : 'text-blue-600'}`}>
+            <span className={`text-xs font-bold flex-shrink-0 ${isEmpty ? 'text-yellow-600' : 'text-blue-600'}`}>
               {localCount >= 0 ? localCount.toLocaleString() : 'ERR'}件
             </span>
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-0.5 ml-5 flex items-center gap-2 overflow-hidden">
+            <span className="font-mono truncate">{table}</span>
             {hasChanges && (
-              <span className="text-green-600">
+              <span className="text-green-600 flex-shrink-0">
                 +{syncStatus.pullCreated}c/{syncStatus.pullUpdated}u/{syncStatus.pullDeleted}d
               </span>
             )}
           </div>
           {isError && syncStatus?.error && (
-            <div className="text-xs text-red-600 mt-1 ml-5.5 break-all">
+            <div className="text-[10px] text-red-600 mt-1 ml-5 break-all line-clamp-2">
               {syncStatus.error}
             </div>
           )}
@@ -384,11 +384,11 @@ function TableRow({ info, onSync, isSyncing }: { info: TableInfo; onSync: () => 
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 flex-shrink-0"
+          className="h-7 w-7 flex-shrink-0"
           onClick={onSync}
           disabled={isSyncing}
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
         </Button>
       </div>
     </div>

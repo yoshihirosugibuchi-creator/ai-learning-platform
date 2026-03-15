@@ -16,6 +16,7 @@ export interface CaseStudyProblemRecord {
 }
 
 export interface CaseStudyProblemWithStatus extends CaseStudyProblemRecord {
+  industry_name: string | null
   step_count: number
   user_completed: boolean
   user_best_score: number | null
@@ -28,6 +29,20 @@ export async function getCaseStudyProblemsLocal(
   userId?: string,
   options?: { keyword?: string; difficulty?: string; industry?: string; limit?: number }
 ): Promise<CaseStudyProblemWithStatus[]> {
+  // カテゴリー名マップ（industry解決用）
+  const categoryNameMap = new Map<string, string>()
+  try {
+    const catRecords = await database.get('categories').query().fetch()
+    for (const r of catRecords) {
+      const raw = (r as { _raw: Record<string, unknown> })._raw
+      const id = String(raw.category_id || raw.id || '')
+      const name = String(raw.name || '')
+      if (id && name) categoryNameMap.set(id, name)
+    }
+  } catch {
+    // カテゴリーテーブルがなくても続行
+  }
+
   // 問題マスタ
   const problemsRaw = await database.get('case_study_problems').query().fetch()
   let problems = problemsRaw.map(r => {
@@ -98,6 +113,7 @@ export async function getCaseStudyProblemsLocal(
   // 結合
   let result: CaseStudyProblemWithStatus[] = problems.map(p => ({
     ...p,
+    industry_name: p.industry ? (categoryNameMap.get(p.industry) || p.industry) : null,
     step_count: stepCounts[p.id] || 0,
     user_completed: userSessions[p.id]?.completed || false,
     user_best_score: userSessions[p.id]?.bestScore ?? null,

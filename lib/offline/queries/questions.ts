@@ -78,15 +78,42 @@ function parseJsonArray(value: unknown): string[] {
 }
 
 async function loadFromLocalDB(db: WMDatabase): Promise<Question[] | null> {
-  const records = await db.get('quiz_questions').query().fetch()
+  // 問題 + カテゴリー/サブカテゴリーを並行取得
+  const [records, catRecords, subRecords] = await Promise.all([
+    db.get('quiz_questions').query().fetch(),
+    db.get('categories').query().fetch(),
+    db.get('subcategories').query().fetch(),
+  ])
   if (records.length === 0) return null
+
+  // カテゴリー名マップを構築
+  const categoryNameMap = new Map<string, string>()
+  for (const r of catRecords) {
+    const raw = (r as { _raw: Record<string, unknown> })._raw
+    const id = String(raw.category_id || raw.id || '')
+    const name = String(raw.name || '')
+    if (id && name) categoryNameMap.set(id, name)
+  }
+
+  // サブカテゴリー名マップを構築
+  const subcategoryNameMap = new Map<string, string>()
+  for (const r of subRecords) {
+    const raw = (r as { _raw: Record<string, unknown> })._raw
+    const id = String(raw.subcategory_id || raw.id || '')
+    const name = String(raw.name || '')
+    if (id && name) subcategoryNameMap.set(id, name)
+  }
 
   const questions = records.map(record => {
     const raw = (record as { _raw: Record<string, unknown> })._raw
-    return toQuestion(raw)
+    const q = toQuestion(raw)
+    // 日本語名を解決
+    q.category_name = categoryNameMap.get(q.category) || q.category
+    q.subcategory_name = subcategoryNameMap.get(q.subcategory_id || q.subcategory) || q.subcategory
+    return q
   })
 
-  console.log(`✅ Local DB: ${questions.length} quiz questions loaded`)
+  console.log(`✅ Local DB: ${questions.length} quiz questions loaded (with ${categoryNameMap.size} categories, ${subcategoryNameMap.size} subcategories)`)
   return questions
 }
 

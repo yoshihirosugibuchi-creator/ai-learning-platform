@@ -115,18 +115,33 @@ async function pullTable(
     query = query.or(`updated_at.gt.${sinceDate},created_at.gt.${sinceDate}`)
   }
 
-  const { data, error } = await query.limit(10000)
+  // Supabaseは1リクエストあたり最大1000行。ページネーションで全件取得
+  const PAGE_SIZE = 1000
+  const allData: Record<string, unknown>[] = []
+  let from = 0
 
-  if (error) {
-    console.error(`Sync pull error for ${table}:`, error.message)
+  while (true) {
+    const { data, error } = await query.range(from, from + PAGE_SIZE - 1)
+
+    if (error) {
+      console.error(`Sync pull error for ${table}:`, error.message)
+      return { created: [], updated: [], deleted: [] }
+    }
+
+    if (!data || data.length === 0) break
+
+    allData.push(...(data as Record<string, unknown>[]))
+
+    // 取得数がPAGE_SIZE未満なら最終ページ
+    if (data.length < PAGE_SIZE) break
+    from += PAGE_SIZE
+  }
+
+  if (allData.length === 0) {
     return { created: [], updated: [], deleted: [] }
   }
 
-  if (!data || data.length === 0) {
-    return { created: [], updated: [], deleted: [] }
-  }
-
-  const rows = data.map((row) => transformRow(table, row as Record<string, unknown>))
+  const rows = allData.map((row) => transformRow(table, row))
 
   // 初回同期（lastPulledAt=null）は全てcreated
   // 差分同期はupdatedとして扱う（WatermelonDBが重複を処理）

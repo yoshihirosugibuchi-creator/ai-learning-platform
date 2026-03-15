@@ -57,7 +57,7 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
   const initRef = useRef(false)
   const dbRef = useRef<Database | null>(null)
 
-  // バックグラウンド同期
+  // バックグラウンド同期（エラーはログのみ、ユーザーに表示しない）
   const doBackgroundSync = useCallback(async () => {
     if (!dbRef.current || !navigator.onLine) return
     const authenticated = await hasAuthSession()
@@ -69,7 +69,7 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
       const result = await syncDatabase()
       if (!result.success) {
         console.warn('⚠️ Background sync failed:', result.error)
-        setLastSyncError(result.error ?? 'Unknown sync error')
+        // バックグラウンド同期のエラーはユーザーに表示しない（transient failureの可能性）
       } else {
         setLastSyncError(null)
       }
@@ -109,7 +109,7 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
           console.warn('⚠️ localStorage migration skipped:', e)
         }
 
-        // 認証済みの場合のみ初期同期
+        // 認証済みの場合のみ初期同期（エラーはログのみ）
         if (navigator.onLine) {
           const authenticated = await hasAuthSession()
           if (authenticated) {
@@ -119,7 +119,7 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
               const result = await syncDatabase()
               if (!result.success) {
                 console.warn('⚠️ Initial sync failed:', result.error)
-                setLastSyncError(result.error ?? 'Unknown sync error')
+                // 初期同期のエラーはユーザーに表示しない（ローカルDBで動作可能）
               }
             } catch (e) {
               console.warn('⚠️ Initial sync error:', e)

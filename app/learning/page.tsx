@@ -15,6 +15,7 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import { useOfflineDB } from '@/lib/offline/provider'
 import { globalCache, useResourceMonitor } from '@/lib/performance-optimizer'
 import { getCategories } from '@/lib/categories'
+import { getCategoryDisplayNameAsync, getSubcategoryDisplayNameAsync } from '@/lib/category-cache-simple'
 
 export default function LearningPage() {
   const router = useRouter()
@@ -99,7 +100,12 @@ export default function LearningPage() {
       try {
         // カテゴリーキャッシュを事前に初期化（サブカテゴリー表示のため）
         console.log('📂 Pre-loading categories cache...')
-        await getCategories().catch(err => console.warn('Category pre-load warning:', err))
+        await Promise.all([
+          getCategories().catch(err => console.warn('Category pre-load warning:', err)),
+          // CourseCardのgetSubcategoryDisplayNameSyncが初回レンダーで日本語を返すように
+          getCategoryDisplayNameAsync('_preload_').catch(() => {}),
+          getSubcategoryDisplayNameAsync('_preload_').catch(() => {}),
+        ])
 
         // 全体のタイムアウト設定（30秒）
         const dataTimeout = setTimeout(() => {
