@@ -89,6 +89,26 @@ function transformRow(table: string, row: Record<string, unknown>): Record<strin
   return result
 }
 
+/** ベースクエリを毎回再構築（Supabaseクエリビルダーはミュータブルなので再利用不可） */
+function buildBaseQuery(
+  table: string,
+  isUserTable: boolean,
+  userId?: string,
+  sinceDate?: string | null
+) {
+  let query = supabaseAdmin.from(table).select('*')
+
+  if (isUserTable && userId) {
+    query = query.eq('user_id', userId)
+  }
+
+  if (sinceDate) {
+    query = query.or(`updated_at.gt.${sinceDate},created_at.gt.${sinceDate}`)
+  }
+
+  return query
+}
+
 /** テーブルの変更分を取得 */
 async function pullTable(
   table: string,
@@ -96,24 +116,7 @@ async function pullTable(
   userId?: string
 ): Promise<{ created: Record<string, unknown>[]; updated: Record<string, unknown>[]; deleted: string[] }> {
   const isUserTable = (USER_TABLES as readonly string[]).includes(table)
-
-  // user_xp_stats_v2はidカラムがない特殊テーブル
-  const selectColumns = table === 'user_xp_stats_v2' ? '*' : '*'
-
-  let query = supabaseAdmin.from(table).select(selectColumns)
-
-  // ユーザーテーブルはuser_idでフィルタ
-  if (isUserTable && userId) {
-    query = query.eq('user_id', userId)
-  }
-
-  // updated_atがあるテーブルは差分取得
   const sinceDate = lastPulledAt ? new Date(lastPulledAt).toISOString() : null
-
-  if (sinceDate) {
-    // updated_atまたはcreated_atで差分フィルタ
-    query = query.or(`updated_at.gt.${sinceDate},created_at.gt.${sinceDate}`)
-  }
 
   // Supabaseは1リクエストあたり最大1000行。ページネーションで全件取得
   const PAGE_SIZE = 1000
@@ -121,6 +124,8 @@ async function pullTable(
   let from = 0
 
   while (true) {
+    // 毎回新しいクエリを構築（.range()がクエリビルダーを変更するため）
+    const query = buildBaseQuery(table, isUserTable, userId, sinceDate)
     const { data, error } = await query.range(from, from + PAGE_SIZE - 1)
 
     if (error) {
@@ -140,6 +145,8 @@ async function pullTable(
   if (allData.length === 0) {
     return { created: [], updated: [], deleted: [] }
   }
+
+  console.log(`📥 ${table}: ${allData.length} rows fetched${allData.length > PAGE_SIZE ? ` (${Math.ceil(allData.length / PAGE_SIZE)} pages)` : ''}`)
 
   const rows = allData.map((row) => transformRow(table, row))
 

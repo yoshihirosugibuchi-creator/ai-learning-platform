@@ -262,8 +262,12 @@ export async function getLearningCourseDetails(courseId: string, database?: WMDa
       const { getCourseDetailData, buildCourseHierarchy } = await import('@/lib/offline/queries/courses')
       const data = await getCourseDetailData(database)
       const hierarchy = buildCourseHierarchy(courseId, data)
-      if (hierarchy) {
-        console.log(`✅ Course details loaded from local DB: ${courseId}`)
+      // コンテンツが1件もない場合はsync不完全とみなしてサーバーにフォールバック
+      const totalContents = hierarchy?.genres.reduce((sum, g) =>
+        sum + g.themes.reduce((ts, t) =>
+          ts + t.sessions.reduce((ss, s) => ss + s.contents.length, 0), 0), 0) ?? 0
+      if (hierarchy && totalContents > 0) {
+        console.log(`✅ Course details loaded from local DB: ${courseId} (${totalContents} contents)`)
         // LearningCourse型に変換
         const badgeData = (genre: { badge_data: unknown }) => {
           const bd = genre.badge_data as Record<string, unknown> | null

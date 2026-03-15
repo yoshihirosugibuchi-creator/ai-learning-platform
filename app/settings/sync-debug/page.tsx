@@ -172,7 +172,7 @@ export default function SyncDebugPage() {
 
   return (
     <AppShell>
-      <div className="container mx-auto px-4 py-6 space-y-6 max-w-2xl">
+      <div className="container mx-auto px-4 py-6 space-y-6 max-w-2xl overflow-x-hidden">
         {/* Header */}
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -247,9 +247,9 @@ export default function SyncDebugPage() {
 
             {/* 同期エラー */}
             {(lastSyncError || diagnostic?.errorMessage) && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 overflow-hidden">
                 <div className="font-medium mb-1">同期エラー詳細:</div>
-                <div className="break-all font-mono">{lastSyncError || diagnostic?.errorMessage}</div>
+                <div className="break-all font-mono text-[10px] line-clamp-4">{lastSyncError || diagnostic?.errorMessage}</div>
               </div>
             )}
           </CardContent>
@@ -291,7 +291,7 @@ export default function SyncDebugPage() {
               <Badge variant="secondary" className="text-xs">読み取り専用</Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-hidden">
             <div className="divide-y">
               {masterTables.map(t => (
                 <TableRow
@@ -313,7 +313,7 @@ export default function SyncDebugPage() {
               <Badge variant="outline" className="text-xs">双方向同期</Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-hidden">
             <div className="divide-y">
               {userTables.map(t => (
                 <TableRow
@@ -332,11 +332,9 @@ export default function SyncDebugPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base">デバッグ情報</CardTitle>
           </CardHeader>
-          <CardContent className="text-xs text-muted-foreground space-y-1 font-mono overflow-hidden">
-            <div className="truncate">User ID: {user?.id || 'N/A'}</div>
-            <div>Native: {isNative ? 'Yes' : 'No'}</div>
-            <div>Database: {database ? 'Initialized' : 'null'}</div>
-            <div>Online: {typeof navigator !== 'undefined' ? (navigator.onLine ? 'Yes' : 'No') : 'N/A'}</div>
+          <CardContent className="text-[10px] text-muted-foreground space-y-1 font-mono overflow-hidden">
+            <div className="truncate">UID: {user?.id || 'N/A'}</div>
+            <div>Native: {isNative ? 'Yes' : 'No'} | DB: {database ? 'OK' : 'null'} | Online: {typeof navigator !== 'undefined' ? (navigator.onLine ? 'Yes' : 'No') : 'N/A'}</div>
           </CardContent>
         </Card>
       </div>
