@@ -242,7 +242,7 @@ export default function SyncDebugPage() {
               {(lastSyncError || diagnostic?.errorMessage) && (
                 <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-[10px] text-red-700">
                   <div className="font-medium">エラー:</div>
-                  <div className="break-all leading-tight mt-0.5" style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                  <div className="leading-tight mt-0.5" style={{ whiteSpace: 'normal', overflowWrap: 'break-word', wordWrap: 'break-word' }}>
                     {(lastSyncError || diagnostic?.errorMessage || '').slice(0, 200)}
                   </div>
                 </div>
@@ -314,7 +314,7 @@ export default function SyncDebugPage() {
           </Card>
 
           {/* Debug Info */}
-          <div className="text-[10px] text-muted-foreground px-1" style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+          <div className="text-[10px] text-muted-foreground px-1" style={{ whiteSpace: 'normal', overflowWrap: 'break-word', wordWrap: 'break-word' }}>
             UID: {user?.id || 'N/A'} | Native: {isNative ? 'Y' : 'N'} | DB: {database ? 'OK' : '-'} | Online: {typeof navigator !== 'undefined' ? (navigator.onLine ? 'Y' : 'N') : '-'}
           </div>
         </div>
@@ -347,7 +347,7 @@ function TableRow({ info, onSync, isSyncing }: { info: TableInfo; onSync: () => 
         {/* Name + count */}
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-1">
-            <span className="text-xs font-medium truncate block">{displayName}</span>
+            <span className="text-xs font-medium" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>{displayName}</span>
             <span className={`text-[10px] font-bold shrink-0 ${isEmpty ? 'text-yellow-600' : 'text-blue-600'}`}>
               {localCount >= 0 ? localCount.toLocaleString() : 'ERR'}
             </span>
@@ -373,7 +373,7 @@ function TableRow({ info, onSync, isSyncing }: { info: TableInfo; onSync: () => 
       {isError && syncStatus?.error && (
         <div
           className="text-[10px] text-red-600 mt-0.5 pl-4 leading-tight"
-          style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}
+          style={{ whiteSpace: 'normal', overflowWrap: 'break-word', wordWrap: 'break-word' }}
         >
           {syncStatus.error.slice(0, 120)}
         </div>

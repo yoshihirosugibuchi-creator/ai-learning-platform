@@ -205,8 +205,8 @@ export default function SettingsPage() {
                       <Fingerprint className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{biometricLabel}</div>
-                      <div className="text-sm text-muted-foreground" style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                      <div className="font-medium">{biometricLabel}</div>
+                      <div className="text-sm text-muted-foreground" style={{ whiteSpace: 'normal', overflowWrap: 'break-word' }}>
                         {biometricStatus === 'loading' && '確認中...'}
                         {biometricStatus === 'unavailable' && 'この端末では利用できません'}
                         {biometricStatus === 'available' && '次回から素早くログインできます'}
@@ -253,28 +253,28 @@ export default function SettingsPage() {
                     key={item.id}
                     variant="ghost"
                     className={`w-full justify-start h-auto p-4 ${!item.available ? 'opacity-60 cursor-not-allowed' : ''}`}
-                    style={{ maxWidth: '100%', overflow: 'hidden' }}
+                    style={{ whiteSpace: 'normal' }}
                     onClick={() => router.push(item.href)}
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div className="p-2 rounded-lg bg-muted shrink-0">
                         {item.icon}
                       </div>
                       <div className="flex-1 text-left min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium truncate">{item.title}</span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium">{item.title}</span>
                           {!item.available && (
                             <Badge variant="secondary" className="text-xs shrink-0">
                               準備中
                             </Badge>
                           )}
                         </div>
-                        <div className="text-sm text-muted-foreground" style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                        <div className="text-sm text-muted-foreground" style={{ whiteSpace: 'normal', overflowWrap: 'break-word' }}>
                           {item.description}
                         </div>
                       </div>
                       {item.available && (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
                       )}
                     </div>
                   </Button>
