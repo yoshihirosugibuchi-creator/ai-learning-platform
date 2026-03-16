@@ -193,6 +193,13 @@
   word-break: break-word !important;
 }
 
+/* 全画面ビューア内のMermaid: 元サイズで表示 */
+.mermaid-zoom-view svg {
+  max-width: none !important;
+  width: auto !important;
+  height: auto !important;
+}
+
 /* MarkdownコンテンツのレスポンシブCSS（モバイル対応） */
 .markdown-content {
   max-width: 100%;
@@ -268,14 +275,6 @@
   }
   .mermaid-container .mermaid-svg-wrapper svg {
     min-width: 280px;
-  }
-
-  /* Mermaid拡大表示: 元サイズで表示しスクロール+ピンチズーム */
-  .mermaid-zoom-view svg {
-    max-width: none !important;
-    width: auto !important;
-    height: auto !important;
-    min-width: 500px;
   }
 
   /* 画像: ピンチズーム対応 */

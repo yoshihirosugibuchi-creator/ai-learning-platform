@@ -1,17 +1,113 @@
 'use client'
 
-import React, { memo } from 'react'
+import React, { memo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
+import { ZoomIn } from 'lucide-react'
 import MermaidRenderer from '@/components/learning/MermaidRenderer'
+import FullscreenViewer from '@/components/ui/fullscreen-viewer'
 
 interface MarkdownContentProps {
   content: string
   className?: string
   /** コンパクト表示モード（クイズ選択肢など向け） */
   compact?: boolean
+}
+
+/** テーブル拡大表示ラッパー（モバイル向け） */
+function ZoomableTable({ children }: { children: React.ReactNode }) {
+  const [isZoomed, setIsZoomed] = useState(false)
+
+  return (
+    <>
+      <div className="my-4 overflow-x-auto md-table-scroll relative" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <button
+          onClick={() => setIsZoomed(true)}
+          className="absolute top-1 right-1 p-1.5 bg-gray-200/80 hover:bg-gray-300 rounded-md z-10 md:hidden"
+          aria-label="テーブルを拡大表示"
+        >
+          <ZoomIn className="h-3.5 w-3.5 text-gray-600" />
+        </button>
+        <table className="border-collapse border border-gray-300 md-table">
+          {children}
+        </table>
+      </div>
+
+      <FullscreenViewer isOpen={isZoomed} onClose={() => setIsZoomed(false)} title="テーブル">
+        <table className="border-collapse border border-gray-300" style={{ fontSize: '0.9rem' }}>
+          {children}
+        </table>
+      </FullscreenViewer>
+    </>
+  )
+}
+
+/** コードブロック拡大表示ラッパー（モバイル向け） */
+function ZoomableCodeBlock({ language, codeString, compact }: { language: string; codeString: string; compact: boolean }) {
+  const [isZoomed, setIsZoomed] = useState(false)
+
+  return (
+    <>
+      <div className="my-4 rounded-lg overflow-hidden relative" style={{ maxWidth: '100%' }}>
+        {language && (
+          <div className="bg-gray-700 text-gray-300 text-xs px-3 py-1 font-mono">
+            {language}
+          </div>
+        )}
+        {/* 拡大ボタン（モバイル向け） */}
+        <button
+          onClick={() => setIsZoomed(true)}
+          className="absolute top-1 right-1 p-1.5 bg-black/40 hover:bg-black/60 rounded-md z-10 md:hidden"
+          aria-label="コードを拡大表示"
+        >
+          <ZoomIn className="h-3.5 w-3.5 text-white" />
+        </button>
+        <div
+          className="overflow-x-auto md-code-scroll"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          <SyntaxHighlighter
+            style={oneDark}
+            language={language || 'text'}
+            PreTag="div"
+            customStyle={{
+              margin: 0,
+              borderRadius: language ? '0 0 0.5rem 0.5rem' : '0.5rem',
+              fontSize: compact ? '0.7rem' : undefined,
+              padding: undefined,
+            }}
+            className="md-code-block"
+          >
+            {codeString}
+          </SyntaxHighlighter>
+        </div>
+      </div>
+
+      <FullscreenViewer isOpen={isZoomed} onClose={() => setIsZoomed(false)} title={language ? `${language} コード` : 'コード'}>
+        <div className="rounded-lg overflow-hidden">
+          {language && (
+            <div className="bg-gray-700 text-gray-300 text-xs px-3 py-1 font-mono">
+              {language}
+            </div>
+          )}
+          <SyntaxHighlighter
+            style={oneDark}
+            language={language || 'text'}
+            PreTag="div"
+            customStyle={{
+              margin: 0,
+              borderRadius: language ? '0 0 0.5rem 0.5rem' : '0.5rem',
+              fontSize: '0.85rem',
+            }}
+          >
+            {codeString}
+          </SyntaxHighlighter>
+        </div>
+      </FullscreenViewer>
+    </>
+  )
 }
 
 /**
@@ -60,35 +156,13 @@ function MarkdownContentBase({ content, className = '', compact = false }: Markd
               )
             }
 
-            // 通常のコードブロック（シンタックスハイライト付き）
-            // モバイル: 小フォント + 横スクロールバー表示
+            // 通常のコードブロック（シンタックスハイライト付き + モバイル拡大ボタン）
             return (
-              <div className="my-4 rounded-lg overflow-hidden" style={{ maxWidth: '100%' }}>
-                {language && (
-                  <div className="bg-gray-700 text-gray-300 text-xs px-3 py-1 font-mono">
-                    {language}
-                  </div>
-                )}
-                <div
-                  className="overflow-x-auto md-code-scroll"
-                  style={{ WebkitOverflowScrolling: 'touch' }}
-                >
-                  <SyntaxHighlighter
-                    style={oneDark}
-                    language={language || 'text'}
-                    PreTag="div"
-                    customStyle={{
-                      margin: 0,
-                      borderRadius: language ? '0 0 0.5rem 0.5rem' : '0.5rem',
-                      fontSize: compact ? '0.7rem' : undefined, // compact時は固定小サイズ
-                      padding: undefined, // CSSで制御
-                    }}
-                    className="md-code-block"
-                  >
-                    {codeString}
-                  </SyntaxHighlighter>
-                </div>
-              </div>
+              <ZoomableCodeBlock
+                language={language}
+                codeString={codeString}
+                compact={compact}
+              />
             )
           },
           // 段落
@@ -137,15 +211,9 @@ function MarkdownContentBase({ content, className = '', compact = false }: Markd
               </blockquote>
             )
           },
-          // テーブル（モバイル: 横スクロール + 小フォント）
+          // テーブル（モバイル: 横スクロール + 小フォント + 拡大ボタン）
           table({ children }) {
-            return (
-              <div className="my-4 overflow-x-auto md-table-scroll" style={{ WebkitOverflowScrolling: 'touch' }}>
-                <table className="border-collapse border border-gray-300 md-table">
-                  {children}
-                </table>
-              </div>
-            )
+            return <ZoomableTable>{children}</ZoomableTable>
           },
           thead({ children }) {
             return <thead className="bg-gray-100">{children}</thead>

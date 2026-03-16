@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { ZoomIn, X } from 'lucide-react'
+import { ZoomIn } from 'lucide-react'
+import FullscreenViewer from '@/components/ui/fullscreen-viewer'
 
 interface MermaidRendererProps {
   chart: string
@@ -284,33 +285,13 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
         />
       </div>
 
-      {/* 全画面拡大モーダル */}
-      {isZoomed && (
+      {/* 全画面拡大ビューア */}
+      <FullscreenViewer isOpen={isZoomed} onClose={() => setIsZoomed(false)} title="図を拡大表示">
         <div
-          className="fixed inset-0 z-50 bg-white flex flex-col"
-          style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
-        >
-          <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
-            <span className="text-sm font-medium text-gray-700">図を拡大表示</span>
-            <button
-              onClick={() => setIsZoomed(false)}
-              className="p-2 hover:bg-gray-200 rounded-full"
-              aria-label="閉じる"
-            >
-              <X className="h-5 w-5 text-gray-600" />
-            </button>
-          </div>
-          <div
-            className="flex-1 overflow-auto p-4"
-            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y pinch-zoom' }}
-          >
-            <div
-              className="mermaid-svg-wrapper mermaid-zoom-view"
-              dangerouslySetInnerHTML={{ __html: svg }}
-            />
-          </div>
-        </div>
-      )}
+          className="mermaid-svg-wrapper mermaid-zoom-view"
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+      </FullscreenViewer>
     </>
   )
 }
