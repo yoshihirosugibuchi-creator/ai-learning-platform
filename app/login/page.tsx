@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Brain, Mail, Lock, User, ArrowRight, Sparkles, Fingerprint } from 'lucide-react'
+import { Brain, Mail, Lock, User, ArrowRight, Sparkles, Fingerprint, Shield } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { logAuthDebugInfo, debugLoginAttempt, setupGlobalErrorHandling } from '@/lib/debug-auth'
 import { useBiometricAuth } from '@/hooks/useBiometricAuth'
@@ -18,6 +18,8 @@ export default function LoginPage() {
   const router = useRouter()
   const { signIn, signUp, refreshSessionWithToken } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
+  const [biometricLoading, setBiometricLoading] = useState(false)
+  const [biometricStep, setBiometricStep] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -117,28 +119,36 @@ export default function LoginPage() {
   // 生体認証ログイン処理
   const handleBiometricLogin = async () => {
     setError('')
-    setIsLoading(true)
+    setBiometricLoading(true)
+    setBiometricStep('認証中...')
     try {
       const result = await loginWithBiometric()
       if (!result.success) {
         setError(result.error ?? '生体認証に失敗しました')
+        setBiometricLoading(false)
         return
       }
       if (!result.refreshToken) {
         setError('保存済みの認証情報が見つかりません')
+        setBiometricLoading(false)
         return
       }
+
+      // Face ID成功 → ログイン画面へのステップ表示
+      setBiometricStep('認証成功 セッションを復元中...')
+
       // Supabaseセッション復元
       const { error } = await refreshSessionWithToken(result.refreshToken)
       if (error) {
         setError('セッションの復元に失敗しました。メールアドレスでログインしてください。')
+        setBiometricLoading(false)
       } else {
+        setBiometricStep('ログイン完了 ホームに移動中...')
         router.push('/')
       }
     } catch {
       setError('生体認証ログインに失敗しました')
-    } finally {
-      setIsLoading(false)
+      setBiometricLoading(false)
     }
   }
 
@@ -226,6 +236,26 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // 生体認証ローディング画面
+  if (biometricLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="text-center space-y-6">
+          <div className="relative inline-block">
+            <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center mx-auto">
+              <Shield className="h-10 w-10 text-indigo-600" />
+            </div>
+            <div className="absolute inset-0 w-20 h-20 mx-auto rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-gray-800">ログイン中</h2>
+            <p className="text-sm text-gray-500">{biometricStep}</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
