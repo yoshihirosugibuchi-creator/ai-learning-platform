@@ -62,6 +62,17 @@ export interface SessionContentRecord {
   duration: number | null
 }
 
+export interface SessionQuizRecord {
+  id: string
+  session_id: string
+  question: string
+  correct_answer: number
+  options: unknown
+  explanation: string
+  display_order: number
+  quiz_type: string
+}
+
 export interface CoursesData {
   courses: CourseRecord[]
   genres: GenreRecord[]
@@ -71,6 +82,7 @@ export interface CoursesData {
 
 export interface CourseDetailData extends CoursesData {
   sessionContents: SessionContentRecord[]
+  sessionQuizzes: SessionQuizRecord[]
 }
 
 // ========== 共通処理ロジック ==========
@@ -102,7 +114,7 @@ export function buildCourseHierarchy(
   course: CourseRecord
   genres: (GenreRecord & {
     themes: (ThemeRecord & {
-      sessions: (SessionRecord & { contents: SessionContentRecord[] })[]
+      sessions: (SessionRecord & { contents: SessionContentRecord[]; quizzes: SessionQuizRecord[] })[]
     })[]
   })[]
 } | null {
@@ -127,6 +139,9 @@ export function buildCourseHierarchy(
         ...session,
         contents: data.sessionContents
           .filter(c => c.session_id === session.id)
+          .sort((a, b) => a.display_order - b.display_order),
+        quizzes: data.sessionQuizzes
+          .filter(q => q.session_id === session.id)
           .sort((a, b) => a.display_order - b.display_order),
       }))
 
@@ -172,12 +187,18 @@ async function loadCourseDetailFromLocalDB(db: WMDatabase): Promise<CourseDetail
   const base = await loadCoursesFromLocalDB(db)
   if (!base) return null
 
-  const contentsRaw = await db.get('session_contents').query().fetch()
+  const [contentsRaw, quizzesRaw] = await Promise.all([
+    db.get('session_contents').query().fetch(),
+    db.get('session_quizzes').query().fetch(),
+  ])
   const sessionContents = contentsRaw.map(r => toRecord<SessionContentRecord>((r as { _raw: Record<string, unknown> })._raw, [
     'id', 'session_id', 'title', 'content', 'content_type', 'display_order', 'duration',
   ]))
+  const sessionQuizzes = quizzesRaw.map(r => toRecord<SessionQuizRecord>((r as { _raw: Record<string, unknown> })._raw, [
+    'id', 'session_id', 'question', 'correct_answer', 'options', 'explanation', 'display_order', 'quiz_type',
+  ]))
 
-  return { ...base, sessionContents }
+  return { ...base, sessionContents, sessionQuizzes }
 }
 
 // ========== データソース: サーバー ==========
@@ -241,7 +262,10 @@ async function loadCourseDetailFromServer(): Promise<CourseDetailData> {
   const base = await loadCoursesFromServer()
   const { supabase } = await import('@/lib/supabase')
 
-  const contentsResult = await supabase.from('session_contents').select('*').order('display_order')
+  const [contentsResult, quizzesResult] = await Promise.all([
+    supabase.from('session_contents').select('*').order('display_order'),
+    supabase.from('session_quizzes').select('*').order('display_order'),
+  ])
 
   const sessionContents: SessionContentRecord[] = (contentsResult.data ?? []).map(row => ({
     id: row.id,
@@ -253,7 +277,18 @@ async function loadCourseDetailFromServer(): Promise<CourseDetailData> {
     duration: row.duration ?? null,
   }))
 
-  return { ...base, sessionContents }
+  const sessionQuizzes: SessionQuizRecord[] = (quizzesResult.data ?? []).map(row => ({
+    id: row.id,
+    session_id: row.session_id,
+    question: row.question ?? '',
+    correct_answer: row.correct_answer ?? 0,
+    options: typeof row.options === 'string' ? (() => { try { return JSON.parse(row.options) } catch { return row.options } })() : row.options,
+    explanation: row.explanation ?? '',
+    display_order: row.display_order ?? 0,
+    quiz_type: row.quiz_type ?? 'multiple_choice',
+  }))
+
+  return { ...base, sessionContents, sessionQuizzes }
 }
 
 // ========== エントリポイント ==========
@@ -288,7 +323,7 @@ function toRecord<T>(raw: Record<string, unknown>, fields: string[]): T {
   for (const field of fields) {
     let value = raw[field]
     // JSON文字列をパース
-    if ((field === 'badge_data' || field === 'reward_card_data') && typeof value === 'string') {
+    if ((field === 'badge_data' || field === 'reward_card_data' || field === 'options') && typeof value === 'string') {
       try { value = JSON.parse(value) } catch { /* keep string */ }
     }
     result[field] = value ?? null

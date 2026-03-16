@@ -332,7 +332,19 @@ export async function getLearningCourseDetails(courseId: string, database?: WMDa
                   displayOrder: content.display_order,
                   duration: content.duration || undefined,
                 })),
-                quiz: [], // セッションクイズは別途取得が必要な場合あり
+                quiz: (session.quizzes || []).map(quiz => {
+                  const options = typeof quiz.options === 'string'
+                    ? (() => { try { return JSON.parse(quiz.options as string) } catch { return quiz.options } })()
+                    : quiz.options
+                  return {
+                    id: quiz.id,
+                    question: quiz.question,
+                    options: options,
+                    correct: quiz.correct_answer,
+                    explanation: quiz.explanation,
+                    type: quiz.quiz_type,
+                  }
+                }),
               })),
             })),
           })),
