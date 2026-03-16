@@ -12,7 +12,7 @@ import MobileNav from '@/components/layout/MobileNav'
 import LoadingScreen from '@/components/layout/LoadingScreen'
 import { getLearningCourseDetails } from '@/lib/learning/data'
 import { LearningCourse, LearningGenre, LearningTheme, LearningSession, DifficultyLabels, SessionTypeLabels } from '@/lib/types/learning'
-import { getCategoryInfoForCourse, getCategoryInfoForGenre } from '@/lib/learning/category-integration'
+import { getCategoryInfoForCourseAsync, getCategoryInfoForGenre } from '@/lib/learning/category-integration'
 import { getCategories } from '@/lib/categories'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useOfflineDB } from '@/lib/offline/provider'
@@ -99,12 +99,12 @@ export default function CourseDetailPage() {
       try {
         console.log('📚 Loading course data for:', courseId)
 
-        // カテゴリーキャッシュを事前に初期化（サブカテゴリー表示のため）
+        // カテゴリーキャッシュを事前に初期化
         await getCategories().catch(err => console.warn('Category pre-load warning:', err))
 
         // コースデータを取得
         const courseData = await getLearningCourseDetails(courseId, database)
-        
+
         if (!courseData) {
           console.error('❌ Course data not found for:', courseId)
           setLoading(false)
@@ -114,8 +114,8 @@ export default function CourseDetailPage() {
         console.log('✅ Course data loaded:', courseData.title)
         setCourse(courseData)
 
-        // カテゴリー情報を取得（同期処理）
-        const catInfo = getCategoryInfoForCourse(courseData)
+        // カテゴリー情報を取得（非同期版: サブカテゴリーキャッシュ確実にロード後に解決）
+        const catInfo = await getCategoryInfoForCourseAsync(courseData)
         setCategoryInfo(catInfo)
 
         // 完了状態データの読み込み

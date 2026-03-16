@@ -127,11 +127,10 @@ export default function FullscreenViewer({ isOpen, onClose, title = '拡大表�
       >
         <div
           ref={contentRef}
-          className="p-4 origin-top-left"
+          className="p-4 inline-block min-w-full"
           style={{
             transform: `scale(${scale})`,
             transformOrigin: 'top left',
-            width: `${100 / scale}%`,
           }}
         >
           {children}

@@ -8,7 +8,7 @@ import { MainCategory, IndustryCategory } from '@/lib/types/category'
 
 // メインカテゴリーまたは業界カテゴリー（表示に必要なプロパティは同じ）
 type DisplayCategory = MainCategory | IndustryCategory
-import { getSubcategoryDisplayNameSync } from '@/lib/category-cache-simple'
+import { getSubcategoryDisplayNameSync, getSubcategoryDisplayNameAsync } from '@/lib/category-cache-simple'
 
 // ジャンルからカテゴリー情報を取得
 // キャッシュ優先（DB→JSON→静的フォールバック）
@@ -164,6 +164,96 @@ export function getCategoryInfoForCourse<T extends { genres?: CategoryReference[
   }
 
   // カテゴリー + サブカテゴリーの組み合わせで重複排除
+  const uniqueCategories = Array.from(
+    new Map(
+      categories
+        .map(cat => {
+          const key = `${cat.mainCategory?.id || 'unknown'}-${cat.subcategory || ''}`
+          return [key, cat] as const
+        })
+    ).values()
+  )
+
+  const uniqueMainCategories = Array.from(
+    new Map(
+      uniqueCategories
+        .filter(cat => cat.mainCategory)
+        .map(cat => [cat.mainCategory!.id, cat.mainCategory!])
+    ).values()
+  )
+
+  return {
+    categories: uniqueCategories,
+    uniqueMainCategories
+  }
+}
+
+// getCategoryInfoForCourseの非同期版（確実にキャッシュロード後に表示名を解決）
+export async function getCategoryInfoForCourseAsync<T extends { genres?: CategoryReference[] }>(course: T): Promise<{
+  categories: Array<{
+    genreId: string
+    genreTitle: string
+    mainCategory: DisplayCategory | null
+    subcategory: string | null
+  }>
+  uniqueMainCategories: DisplayCategory[]
+}> {
+  if (!course.genres) {
+    return { categories: [], uniqueMainCategories: [] }
+  }
+
+  const categories: Array<{
+    genreId: string
+    genreTitle: string
+    mainCategory: DisplayCategory | null
+    subcategory: string | null
+  }> = []
+
+  for (const genre of course.genres) {
+    const category = getCategoryByIdSync(genre.categoryId)
+    const mainCategory = category ? category as DisplayCategory : null
+
+    if (genre.subcategoryId) {
+      categories.push({
+        genreId: genre.id || genre.categoryId,
+        genreTitle: genre.title || genre.categoryId,
+        mainCategory,
+        subcategory: await getSubcategoryDisplayNameAsync(genre.subcategoryId)
+      })
+    } else if (genre.themes && genre.themes.length > 0) {
+      const themeSubcategoryIds = [...new Set(
+        genre.themes
+          .map(t => t.subcategoryId)
+          .filter((id): id is string => Boolean(id))
+      )]
+
+      if (themeSubcategoryIds.length > 0) {
+        for (const subId of themeSubcategoryIds) {
+          categories.push({
+            genreId: genre.id || genre.categoryId,
+            genreTitle: genre.title || genre.categoryId,
+            mainCategory,
+            subcategory: await getSubcategoryDisplayNameAsync(subId)
+          })
+        }
+      } else {
+        categories.push({
+          genreId: genre.id || genre.categoryId,
+          genreTitle: genre.title || genre.categoryId,
+          mainCategory,
+          subcategory: null
+        })
+      }
+    } else {
+      categories.push({
+        genreId: genre.id || genre.categoryId,
+        genreTitle: genre.title || genre.categoryId,
+        mainCategory,
+        subcategory: null
+      })
+    }
+  }
+
   const uniqueCategories = Array.from(
     new Map(
       categories

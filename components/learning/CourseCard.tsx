@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Clock, BookOpen, Play, Lock, Tag } from 'lucide-react'
 import { DifficultyLabels, DifficultyColors } from '@/lib/types/learning'
-import { getCategoryInfoForCourse } from '@/lib/learning/category-integration'
+import { getCategoryInfoForCourseAsync } from '@/lib/learning/category-integration'
 import { useState, useEffect } from 'react'
 import { getSkillLevels } from '@/lib/categories'
 import { SkillLevelDefinition } from '@/lib/types/category'
@@ -70,8 +70,14 @@ export default function CourseCard({ course, progress, onStartCourse }: CourseCa
     }
   }
 
-  // カテゴリー情報を取得
-  const categoryInfo = course.genres ? getCategoryInfoForCourse(course) : null
+  // カテゴリー情報を非同期取得（サブカテゴリーキャッシュ確実にロード後に解決）
+  const [categoryInfo, setCategoryInfo] = useState<Awaited<ReturnType<typeof getCategoryInfoForCourseAsync>> | null>(null)
+  useEffect(() => {
+    if (course.genres) {
+      getCategoryInfoForCourseAsync(course).then(setCategoryInfo).catch(() => {})
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [course.id])
 
   // スキルレベルのラベルと色を取得（DB優先、フォールバック付き）
   const getDifficultyDisplay = () => {
