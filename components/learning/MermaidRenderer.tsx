@@ -153,16 +153,19 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
           flowchart: {
             useMaxWidth: true,
             htmlLabels: true,
-            padding: 20,
-            nodeSpacing: 40,
-            rankSpacing: 50,
-            wrappingWidth: 200,
+            padding: 15,
+            nodeSpacing: 60,
+            rankSpacing: 60,
+            wrappingWidth: 400,
           },
           sequence: {
             useMaxWidth: true,
           },
           state: {
             useMaxWidth: true,
+            padding: 15,
+            nodeSpacing: 60,
+            rankSpacing: 60,
           },
           er: {
             useMaxWidth: true,
