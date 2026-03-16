@@ -15,6 +15,7 @@ interface FullscreenViewerProps {
  * - ピンチズーム対応（CSS transform）
  * - スクロールで全体を閲覧可能
  * - ズームイン/アウト/リセットボタン付き
+ * - 上部・下部に閉じるボタン配置（操作性向上）
  */
 export default function FullscreenViewer({ isOpen, onClose, title = '拡大表示', children }: FullscreenViewerProps) {
   const [scale, setScale] = useState(1)
@@ -37,9 +38,7 @@ export default function FullscreenViewer({ isOpen, onClose, title = '拡大表�
     }
   }, [isOpen])
 
-  const handleClose = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleClose = useCallback(() => {
     onClose()
   }, [onClose])
 
@@ -78,38 +77,43 @@ export default function FullscreenViewer({ isOpen, onClose, title = '拡大表�
 
   return (
     <div className="fixed inset-0 z-[9999] bg-white flex flex-col">
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-50 shrink-0">
-        <span className="text-sm font-medium text-gray-700 truncate mr-2">{title}</span>
-        <div className="flex items-center gap-1 shrink-0">
+      {/* ヘッダー（safe-area対応） */}
+      <div
+        className="flex items-center justify-between px-3 py-2 border-b bg-gray-50 shrink-0"
+        style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0px))' }}
+      >
+        {/* 閉じるボタン（左側・大きめ） */}
+        <button
+          onClick={handleClose}
+          className="flex items-center gap-1 px-3 py-2 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 rounded-lg shrink-0"
+        >
+          <X className="h-4 w-4 text-gray-700" />
+          <span className="text-sm font-medium text-gray-700">閉じる</span>
+        </button>
+
+        {/* ズームコントロール（右側） */}
+        <div className="flex items-center gap-0.5 shrink-0">
           <button
-            onPointerDown={handleZoomOut}
-            className="p-2 hover:bg-gray-200 rounded-full active:bg-gray-300"
+            onClick={handleZoomOut}
+            className="p-2.5 hover:bg-gray-200 rounded-full active:bg-gray-300"
             aria-label="縮小"
           >
             <ZoomOut className="h-5 w-5 text-gray-600" />
           </button>
           <span className="text-xs text-gray-500 min-w-[3rem] text-center">{Math.round(scale * 100)}%</span>
           <button
-            onPointerDown={handleZoomIn}
-            className="p-2 hover:bg-gray-200 rounded-full active:bg-gray-300"
+            onClick={handleZoomIn}
+            className="p-2.5 hover:bg-gray-200 rounded-full active:bg-gray-300"
             aria-label="拡大"
           >
             <ZoomIn className="h-5 w-5 text-gray-600" />
           </button>
           <button
-            onPointerDown={handleReset}
-            className="p-2 hover:bg-gray-200 rounded-full active:bg-gray-300"
+            onClick={handleReset}
+            className="p-2.5 hover:bg-gray-200 rounded-full active:bg-gray-300"
             aria-label="リセット"
           >
             <RotateCcw className="h-4 w-4 text-gray-600" />
-          </button>
-          <button
-            onPointerDown={handleClose}
-            className="p-2 hover:bg-gray-200 rounded-full active:bg-gray-300 ml-1"
-            aria-label="閉じる"
-          >
-            <X className="h-5 w-5 text-gray-600" />
           </button>
         </div>
       </div>
@@ -132,6 +136,19 @@ export default function FullscreenViewer({ isOpen, onClose, title = '拡大表�
         >
           {children}
         </div>
+      </div>
+
+      {/* フッター閉じるボタン（safe-area対応） */}
+      <div
+        className="shrink-0 border-t bg-gray-50 px-4 py-2 flex justify-center"
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}
+      >
+        <button
+          onClick={handleClose}
+          className="w-full max-w-xs py-3 bg-gray-800 hover:bg-gray-900 active:bg-black text-white rounded-lg font-medium text-sm"
+        >
+          閉じる
+        </button>
       </div>
     </div>
   )
