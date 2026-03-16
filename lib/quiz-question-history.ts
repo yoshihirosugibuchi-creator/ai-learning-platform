@@ -80,6 +80,16 @@ export async function getUserAskedQuestions(userId: string): Promise<QuestionHis
  * @param count 必要な問題数
  * @returns 選択された問題リスト
  */
+/** Fisher-Yatesシャッフル（均一なランダム順序を保証） */
+function shuffle<T>(array: T[]): T[] {
+  const shuffled = [...array]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
 export function selectQuestionsWithPriority<T extends { id: number }>(
   questions: T[],
   history: QuestionHistory,
@@ -87,73 +97,54 @@ export function selectQuestionsWithPriority<T extends { id: number }>(
 ): T[] {
   const { recentQuestions, totalQuestions } = history
 
-  // 問題を3つのカテゴリに分類
-  const neverAskedQuestions = questions.filter(q => !totalQuestions.has(q.id))
-  const oldAskedQuestions = questions.filter(q => totalQuestions.has(q.id) && !recentQuestions.has(q.id))
-  const recentlyAskedQuestions = questions.filter(q => recentQuestions.has(q.id))
+  // 候補問題のID重複排除（DB側で同一IDが複数返る可能性への防御）
+  const uniqueQuestions = Array.from(new Map(questions.map(q => [q.id, q])).values())
+
+  // 問題を3つのカテゴリに分類（排他的）
+  const neverAskedQuestions = uniqueQuestions.filter(q => !totalQuestions.has(q.id))
+  const oldAskedQuestions = uniqueQuestions.filter(q => totalQuestions.has(q.id) && !recentQuestions.has(q.id))
+  const recentlyAskedQuestions = uniqueQuestions.filter(q => recentQuestions.has(q.id))
 
   console.log(`📊 [selectQuestionsWithPriority] Question categorization:`)
-  console.log(`  - Total available: ${questions.length}`)
+  console.log(`  - Total available: ${uniqueQuestions.length} (deduplicated from ${questions.length})`)
   console.log(`  - Never asked: ${neverAskedQuestions.length}`)
   console.log(`  - Old (8-30 days): ${oldAskedQuestions.length}`)
   console.log(`  - Recent (7 days): ${recentlyAskedQuestions.length}`)
 
+  const selectedIds = new Set<number>()
   const selectedQuestions: T[] = []
 
-  // Priority 1: 未出題問題 (70%目標)
-  const targetNeverAsked = Math.min(Math.ceil(count * 0.7), neverAskedQuestions.length)
-  if (targetNeverAsked > 0) {
-    const selected = neverAskedQuestions
-      .sort(() => Math.random() - 0.5)
-      .slice(0, targetNeverAsked)
-    selectedQuestions.push(...selected)
-    console.log(`✅ Selected ${selected.length} never-asked questions`)
-  }
-
-  // Priority 2: 過去出題で7日以上経過 (忘却曲線対応)
-  let remainingSlots = count - selectedQuestions.length
-  if (remainingSlots > 0 && oldAskedQuestions.length > 0) {
-    const targetOld = Math.min(remainingSlots, oldAskedQuestions.length)
-    const selected = oldAskedQuestions
-      .sort(() => Math.random() - 0.5)
-      .slice(0, targetOld)
-    selectedQuestions.push(...selected)
-    console.log(`✅ Selected ${selected.length} old questions (forgetting curve)`)
-  }
-
-  // Priority 3: 直近7日の問題 (最後の手段)
-  remainingSlots = count - selectedQuestions.length
-  if (remainingSlots > 0 && recentlyAskedQuestions.length > 0) {
-    const targetRecent = Math.min(remainingSlots, recentlyAskedQuestions.length)
-    const selected = recentlyAskedQuestions
-      .sort(() => Math.random() - 0.5)
-      .slice(0, targetRecent)
-    selectedQuestions.push(...selected)
-    console.log(`⚠️ Selected ${selected.length} recent questions (last resort)`)
-  }
-
-  // Priority 4: まだ枠が残っていれば、未出題問題から追加選択
-  remainingSlots = count - selectedQuestions.length
-  if (remainingSlots > 0) {
-    // 既に選択済みのIDを除外
-    const selectedIds = new Set(selectedQuestions.map(q => q.id))
-    const remainingNeverAsked = neverAskedQuestions.filter(q => !selectedIds.has(q.id))
-
-    if (remainingNeverAsked.length > 0) {
-      const targetRemaining = Math.min(remainingSlots, remainingNeverAsked.length)
-      const selected = remainingNeverAsked
-        .sort(() => Math.random() - 0.5)
-        .slice(0, targetRemaining)
-      selectedQuestions.push(...selected)
-      console.log(`✅ Selected ${selected.length} additional never-asked questions (fill remaining)`)
+  const addQuestions = (pool: T[], maxCount: number, label: string) => {
+    const available = pool.filter(q => !selectedIds.has(q.id))
+    const target = Math.min(maxCount, available.length)
+    if (target > 0) {
+      const selected = shuffle(available).slice(0, target)
+      for (const q of selected) {
+        selectedIds.add(q.id)
+        selectedQuestions.push(q)
+      }
+      console.log(`✅ Selected ${selected.length} ${label}`)
     }
   }
 
+  // Priority 1: 未出題問題 (70%目標)
+  addQuestions(neverAskedQuestions, Math.ceil(count * 0.7), 'never-asked questions')
+
+  // Priority 2: 過去出題で7日以上経過 (忘却曲線対応)
+  addQuestions(oldAskedQuestions, count - selectedQuestions.length, 'old questions (forgetting curve)')
+
+  // Priority 3: 直近7日の問題 (最後の手段)
+  addQuestions(recentlyAskedQuestions, count - selectedQuestions.length, 'recent questions (last resort)')
+
+  // Priority 4: まだ枠が残っていれば、未出題問題から追加選択
+  addQuestions(neverAskedQuestions, count - selectedQuestions.length, 'additional never-asked questions')
+
   // シャッフルして返す
-  const finalSelection = selectedQuestions.sort(() => Math.random() - 0.5)
+  const finalSelection = shuffle(selectedQuestions)
 
   console.log(`📋 [selectQuestionsWithPriority] Final selection:`)
   console.log(`  - Total selected: ${finalSelection.length}/${count}`)
+  console.log(`  - Unique IDs: ${new Set(finalSelection.map(q => q.id)).size}`)
   console.log(`  - Never asked: ${finalSelection.filter(q => !totalQuestions.has(q.id)).length}`)
   console.log(`  - Old: ${finalSelection.filter(q => totalQuestions.has(q.id) && !recentQuestions.has(q.id)).length}`)
   console.log(`  - Recent: ${finalSelection.filter(q => recentQuestions.has(q.id)).length}`)
