@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { ZoomIn, X } from 'lucide-react'
 
 interface MermaidRendererProps {
   chart: string
@@ -129,6 +130,7 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
   const [svg, setSvg] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isZoomed, setIsZoomed] = useState(false)
 
   const renderChart = useCallback(async () => {
     if (!chart.trim()) {
@@ -247,31 +249,69 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
   }
 
   return (
-    <div
-      ref={containerRef}
-      className={`mermaid-container bg-white border border-gray-200 rounded-lg p-4 overflow-x-auto ${className}`}
-      style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
-    >
-      <style>{`
-        .mermaid-svg-wrapper foreignObject {
-          overflow: visible !important;
-        }
-        .mermaid-svg-wrapper .nodeLabel {
-          white-space: normal !important;
-          word-break: break-word !important;
-          overflow-wrap: break-word !important;
-          line-height: 1.4 !important;
-        }
-        .mermaid-svg-wrapper .label {
-          overflow: visible !important;
-        }
-      `}</style>
+    <>
       <div
-        className="mermaid-svg-wrapper"
-        style={{ minWidth: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}
-        dangerouslySetInnerHTML={{ __html: svg }}
-      />
-    </div>
+        ref={containerRef}
+        className={`mermaid-container bg-white border border-gray-200 rounded-lg p-4 overflow-x-auto relative ${className}`}
+        style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
+      >
+        <style>{`
+          .mermaid-svg-wrapper foreignObject {
+            overflow: visible !important;
+          }
+          .mermaid-svg-wrapper .nodeLabel {
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            line-height: 1.4 !important;
+          }
+          .mermaid-svg-wrapper .label {
+            overflow: visible !important;
+          }
+        `}</style>
+        {/* 拡大ボタン（モバイル向け） */}
+        <button
+          onClick={() => setIsZoomed(true)}
+          className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white border border-gray-300 rounded-md shadow-sm z-10 md:hidden"
+          aria-label="図を拡大表示"
+        >
+          <ZoomIn className="h-4 w-4 text-gray-600" />
+        </button>
+        <div
+          className="mermaid-svg-wrapper"
+          style={{ minWidth: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+      </div>
+
+      {/* 全画面拡大モーダル */}
+      {isZoomed && (
+        <div
+          className="fixed inset-0 z-50 bg-white flex flex-col"
+          style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
+        >
+          <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
+            <span className="text-sm font-medium text-gray-700">図を拡大表示</span>
+            <button
+              onClick={() => setIsZoomed(false)}
+              className="p-2 hover:bg-gray-200 rounded-full"
+              aria-label="閉じる"
+            >
+              <X className="h-5 w-5 text-gray-600" />
+            </button>
+          </div>
+          <div
+            className="flex-1 overflow-auto p-4"
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y pinch-zoom' }}
+          >
+            <div
+              className="mermaid-svg-wrapper mermaid-zoom-view"
+              dangerouslySetInnerHTML={{ __html: svg }}
+            />
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

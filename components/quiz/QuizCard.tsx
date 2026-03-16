@@ -268,7 +268,7 @@ export default function QuizCard({
     : 0
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-2xl mx-auto overflow-hidden">
       <CardHeader className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -296,7 +296,7 @@ export default function QuizCard({
           <Progress value={progressPercentage} className="flex-1" />
         </div>
         
-        <div className="text-lg leading-relaxed font-semibold">
+        <div className="text-lg leading-relaxed font-semibold overflow-hidden" style={{ maxWidth: '100%' }}>
           <MarkdownContent content={question.question} />
         </div>
         
@@ -320,7 +320,7 @@ export default function QuizCard({
               <span className="mr-3 font-semibold flex-shrink-0">
                 {String.fromCharCode(65 + index)}.
               </span>
-              <span className="flex-1">
+              <span className="flex-1 min-w-0 overflow-hidden">
                 <MarkdownContent content={option} compact />
               </span>
             </Button>

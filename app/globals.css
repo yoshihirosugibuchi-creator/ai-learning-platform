@@ -198,6 +198,7 @@
   max-width: 100%;
   overflow-wrap: break-word;
   word-break: break-word;
+  overflow-x: hidden;
 }
 
 .markdown-content pre {
@@ -208,6 +209,13 @@
 
 .markdown-content code {
   word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+/* markdown-content内の全子要素のはみ出し防止 */
+.markdown-content > * {
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .markdown-content img {
@@ -260,6 +268,14 @@
   }
   .mermaid-container .mermaid-svg-wrapper svg {
     min-width: 280px;
+  }
+
+  /* Mermaid拡大表示: 元サイズで表示しスクロール+ピンチズーム */
+  .mermaid-zoom-view svg {
+    max-width: none !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 500px;
   }
 
   /* 画像: ピンチズーム対応 */
