@@ -543,13 +543,45 @@ export async function POST(request: Request) {
         }
 
         // テーマ完了処理（recordThemeCompletion内で重複チェック済み）
+        // サーバー側で全セッション完了を検出した場合は常に記録（クライアント判定漏れを補完）
         if (clientThemeCompleted || serverThemeCompleted) {
           themeCompleted = await recordThemeCompletion(supabase, userId, body, xpSettings)
+        } else if (isFirstCompletion && themeSessionIds.length > 0) {
+          // クライアント・サーバー両方falseでも、念のため再チェック
+          // （セッションINSERT直後のため、上のチェック時にはまだ反映されていない可能性）
+          const { data: recheck } = await supabase
+            .from('course_session_completions')
+            .select('session_id')
+            .eq('user_id', userId)
+            .eq('course_id', body.course_id)
+            .eq('is_first_completion', true)
+            .in('session_id', themeSessionIds)
+
+          const recheckIds = new Set((recheck || []).map(c => c.session_id))
+          const recheckCompleted = themeSessionIds.every(sid => recheckIds.has(sid))
+          if (recheckCompleted) {
+            console.log('🔄 Theme completion detected on recheck (post-insert)')
+            themeCompleted = await recordThemeCompletion(supabase, userId, body, xpSettings)
+          }
         }
 
         // コース完了処理（recordCourseCompletion内で重複チェック済み）
         if (clientCourseCompleted || serverCourseCompleted) {
           courseCompleted = await recordCourseCompletion(supabase, userId, body, xpSettings)
+        } else if (isFirstCompletion && allCourseSessionIds.length > 0) {
+          const { data: recheckCourse } = await supabase
+            .from('course_session_completions')
+            .select('session_id')
+            .eq('user_id', userId)
+            .eq('course_id', body.course_id)
+            .eq('is_first_completion', true)
+
+          const recheckCourseIds = new Set((recheckCourse || []).map(c => c.session_id))
+          const recheckCourseCompleted = allCourseSessionIds.every(sid => recheckCourseIds.has(sid))
+          if (recheckCourseCompleted) {
+            console.log('🔄 Course completion detected on recheck (post-insert)')
+            courseCompleted = await recordCourseCompletion(supabase, userId, body, xpSettings)
+          }
         }
       } else {
         // コース詳細が取得できない場合はクライアント判定にフォールバック
@@ -1105,8 +1137,47 @@ async function recordThemeCompletion(
       // ✅ course_themes_completed統計は実際のレコード数ベースで自動計算されるため個別更新不要
       console.log('📊 Theme completion statistics will be auto-calculated from actual records')
 
-      // 4. ナレッジカード処理は統合V2システムで管理
-      // user_knowledge_collection_v2への記録はクライアント側で完了済み
+      // 4. ナレッジカード付与（サーバー側でも確実に記録）
+      try {
+        const { data: existingCard } = await supabase
+          .from('user_knowledge_collection_v2')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('theme_id', body.theme_id)
+          .single()
+
+        if (!existingCard) {
+          const { error: cardError } = await supabase
+            .from('user_knowledge_collection_v2')
+            .insert({
+              user_id: userId,
+              theme_id: body.theme_id,
+              obtained_at: new Date().toISOString(),
+            })
+          if (cardError && cardError.code !== '23505') {
+            console.error('❌ Knowledge card insert error:', cardError)
+          } else {
+            console.log('✅ Knowledge card awarded (server-side) for theme:', body.theme_id)
+            // knowledge_cards_totalを更新
+            const { data: xpData } = await supabase
+              .from('user_xp_stats_v2')
+              .select('knowledge_cards_total')
+              .eq('user_id', userId)
+              .single()
+            if (xpData) {
+              await supabase
+                .from('user_xp_stats_v2')
+                .update({ knowledge_cards_total: (xpData.knowledge_cards_total || 0) + 1 })
+                .eq('user_id', userId)
+              console.log('✅ knowledge_cards_total incremented')
+            }
+          }
+        } else {
+          console.log('ℹ️ Knowledge card already exists for theme:', body.theme_id)
+        }
+      } catch (cardErr) {
+        console.warn('⚠️ Knowledge card server-side award failed:', cardErr)
+      }
 
       console.log('✅ Theme completion recorded')
       return true
