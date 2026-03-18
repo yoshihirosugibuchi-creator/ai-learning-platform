@@ -36,6 +36,7 @@ export default function CollectionPage() {
   // すべてのState Hooksを最初に宣言
   const [selectedRarity, setSelectedRarity] = useState<string>('all')
   const [selectedWisdomCategory, setSelectedWisdomCategory] = useState<string>('all')
+  const [selectedKnowledgeCourse, setSelectedKnowledgeCourse] = useState<string>('all')
   const [selectedBadgeStatus, setSelectedBadgeStatus] = useState<string>('all')
   const [activeTab, setActiveTab] = useState('wisdom')
   const { user } = useAuth()
@@ -124,11 +125,30 @@ export default function CollectionPage() {
     })
   }, [wisdomCollectionData.cardsWithStatus, selectedRarity, selectedWisdomCategory])
 
-  // ナレッジカード用フィルタリング（格言カードと同様の仕組み）
-  const filteredKnowledgeCards = useMemo(() => {
-    // cardsWithStatusを使用（全てのカード：取得済み・未取得含む）
-    return knowledgeCollectionData.cardsWithStatus
+  // ナレッジカード：コース一覧を抽出（表示順でソート）
+  const knowledgeCourses = useMemo(() => {
+    const courseMap = new Map<string, { id: string; title: string; order: number }>()
+    for (const card of knowledgeCollectionData.cardsWithStatus) {
+      if (card.course_id && card.course_title && !courseMap.has(card.course_id)) {
+        courseMap.set(card.course_id, {
+          id: card.course_id,
+          title: card.course_title,
+          order: card.display_order?.course ?? 999,
+        })
+      }
+    }
+    return Array.from(courseMap.values()).sort((a, b) => a.order - b.order)
   }, [knowledgeCollectionData.cardsWithStatus])
+
+  // ナレッジカード用フィルタリング
+  const filteredKnowledgeCards = useMemo(() => {
+    if (selectedKnowledgeCourse === 'all') {
+      return knowledgeCollectionData.cardsWithStatus
+    }
+    return knowledgeCollectionData.cardsWithStatus.filter(
+      card => card.course_id === selectedKnowledgeCourse
+    )
+  }, [knowledgeCollectionData.cardsWithStatus, selectedKnowledgeCourse])
 
   const obtainedWisdomCards = filteredWisdomCards.filter(card => card.obtained)
   const lockedWisdomCards = filteredWisdomCards.filter(card => !card.obtained)
@@ -463,7 +483,34 @@ export default function CollectionPage() {
 
             </div>
 
-            {/* V2システムではカテゴリーフィルターは不要 */}
+            {/* コースフィルター（横スクロールチップ） */}
+            {knowledgeCourses.length > 1 && (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+                <button
+                  onClick={() => setSelectedKnowledgeCourse('all')}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    selectedKnowledgeCourse === 'all'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  全コース
+                </button>
+                {knowledgeCourses.map(course => (
+                  <button
+                    key={course.id}
+                    onClick={() => setSelectedKnowledgeCourse(course.id)}
+                    className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      selectedKnowledgeCourse === course.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                  >
+                    {course.title}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Knowledge Cards Collection */}
             <Tabs defaultValue="all" className="space-y-6">
