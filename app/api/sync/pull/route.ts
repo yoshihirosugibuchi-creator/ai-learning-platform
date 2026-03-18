@@ -42,8 +42,8 @@ const USER_TABLES = [
   'quiz_sessions', 'quiz_answers', 'precomputed_quiz_sets',
   'case_study_sessions', 'case_study_step_details', 'case_study_thinking_logs',
   'wisdom_card_collection', 'user_knowledge_collection_v2',
-  'user_xp_stats_v2', 'course_session_completions', 'daily_xp_records',
-  'user_challenge_selections',
+  'user_xp_stats_v2', 'course_session_completions', 'course_theme_completions',
+  'daily_xp_records', 'user_challenge_selections',
 ] as const
 
 /** Supabase行をWatermelonDB形式に変換 */

@@ -98,3 +98,21 @@ export class CourseSessionCompletion extends Model {
   @date('session_end_time') sessionEndTime!: Date | null
   @readonly @date('created_at') createdAt!: Date | null
 }
+
+/** コーステーマ完了記録（ユーザーデータ） */
+export class CourseThemeCompletion extends Model {
+  static table = 'course_theme_completions'
+
+  @text('user_id') userId!: string
+  @text('course_id') courseId!: string
+  @text('genre_id') genreId!: string
+  @text('theme_id') themeId!: string
+  @text('category_id') categoryId!: string
+  @text('subcategory_id') subcategoryId!: string
+  @field('completed_sessions') completedSessions!: number
+  @field('total_sessions') totalSessions!: number
+  @field('completion_rate') completionRate!: number
+  @field('knowledge_cards_awarded') knowledgeCardsAwarded!: number | null
+  @date('first_completion_time') firstCompletionTime!: Date
+  @readonly @date('created_at') createdAt!: Date | null
+}

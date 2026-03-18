@@ -24,5 +24,28 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      // version 2 → 3: course_theme_completions テーブル追加
+      toVersion: 3,
+      steps: [
+        createTable({
+          name: 'course_theme_completions',
+          columns: [
+            { name: 'user_id', type: 'string' },
+            { name: 'course_id', type: 'string' },
+            { name: 'genre_id', type: 'string' },
+            { name: 'theme_id', type: 'string' },
+            { name: 'category_id', type: 'string' },
+            { name: 'subcategory_id', type: 'string' },
+            { name: 'completed_sessions', type: 'number' },
+            { name: 'total_sessions', type: 'number' },
+            { name: 'completion_rate', type: 'number' },
+            { name: 'knowledge_cards_awarded', type: 'number', isOptional: true },
+            { name: 'first_completion_time', type: 'number' },
+            { name: 'created_at', type: 'number', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 })

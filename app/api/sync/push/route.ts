@@ -32,6 +32,7 @@ const UPSERT_TABLES = new Set([
 const SKIP_TABLES = new Set([
   'user_xp_stats_v2',
   'daily_xp_records',
+  'course_theme_completions',
   // マスタテーブルは全てスキップ
   'quiz_questions', 'quiz_packs', 'session_quizzes',
   'case_study_problems', 'case_study_steps', 'case_study_rubric_axes',

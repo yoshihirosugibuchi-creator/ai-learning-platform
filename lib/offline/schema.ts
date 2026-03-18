@@ -5,7 +5,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export const schema = appSchema({
-  version: 2,
+  version: 3,
   tables: [
     // ==============================
     // マスタデータ（サーバー→ローカル同期、読み取り専用）
@@ -543,6 +543,25 @@ export const schema = appSchema({
         { name: 'completion_time', type: 'number' },
         { name: 'session_start_time', type: 'number', isOptional: true },
         { name: 'session_end_time', type: 'number', isOptional: true },
+        { name: 'created_at', type: 'number', isOptional: true },
+      ],
+    }),
+
+    // コーステーマ完了記録（ユーザーデータ）
+    tableSchema({
+      name: 'course_theme_completions',
+      columns: [
+        { name: 'user_id', type: 'string' },
+        { name: 'course_id', type: 'string' },
+        { name: 'genre_id', type: 'string' },
+        { name: 'theme_id', type: 'string' },
+        { name: 'category_id', type: 'string' },
+        { name: 'subcategory_id', type: 'string' },
+        { name: 'completed_sessions', type: 'number' },
+        { name: 'total_sessions', type: 'number' },
+        { name: 'completion_rate', type: 'number' },
+        { name: 'knowledge_cards_awarded', type: 'number', isOptional: true },
+        { name: 'first_completion_time', type: 'number' },
         { name: 'created_at', type: 'number', isOptional: true },
       ],
     }),

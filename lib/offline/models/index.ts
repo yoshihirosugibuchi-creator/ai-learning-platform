@@ -20,6 +20,7 @@ import {
   LearningSession,
   SessionContent,
   CourseSessionCompletion,
+  CourseThemeCompletion,
 } from './learning'
 import { WisdomCard, WisdomCardCollection, UserKnowledgeCollectionV2 } from './collection'
 import { SkillLevel, Category, Subcategory, XpLevelSkpSetting } from './master'
@@ -68,6 +69,7 @@ export const models = [
   UserXpStatsV2,
   DailyXpRecord,
   CourseSessionCompletion,
+  CourseThemeCompletion,
 ]
 
 // 名前付きエクスポート
@@ -95,6 +97,7 @@ export {
   LearningSession,
   SessionContent,
   CourseSessionCompletion,
+  CourseThemeCompletion,
   // コレクション
   WisdomCard,
   WisdomCardCollection,

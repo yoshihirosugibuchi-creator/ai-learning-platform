@@ -63,29 +63,54 @@ export default function CourseDetailPage() {
     window.scrollTo(0, 0)
   }, [courseId])
 
-  // 新設計: course_session_completions テーブルから完了状態を取得
+  // ローカルDB優先: course_session_completions テーブルから完了状態を取得
   const loadSessionCompletions = useCallback(async (userId: string) => {
     try {
-      console.log('📊 Loading session completions from course_session_completions table...')
-      
+      // ローカルDB（WatermelonDB）から取得を試みる
+      if (database) {
+        try {
+          const { Q } = await import('@nozbe/watermelondb')
+          const collection = database.get('course_session_completions')
+          const localRecords = await collection.query(
+            Q.where('user_id', userId),
+            Q.where('course_id', courseId),
+            Q.where('is_first_completion', true)
+          ).fetch()
+
+          if (localRecords.length > 0) {
+            const completions: SessionCompletion[] = localRecords.map((r: { _raw: Record<string, unknown> }) => ({
+              session_id: r._raw.session_id as string,
+              theme_id: r._raw.theme_id as string,
+              genre_id: r._raw.genre_id as string,
+              is_first_completion: true,
+              created_at: r._raw.created_at ? new Date(r._raw.created_at as number).toISOString() : null,
+            }))
+            setSessionCompletions(completions)
+            return
+          }
+        } catch (e) {
+          console.warn('ローカルDB読み取り失敗、サーバーにフォールバック:', e)
+        }
+      }
+
+      // フォールバック: サーバーから取得
       const { data: completions, error } = await supabase
         .from('course_session_completions')
         .select('session_id, theme_id, genre_id, is_first_completion, created_at')
         .eq('user_id', userId)
         .eq('course_id', courseId)
-        .eq('is_first_completion', true) // 初回完了のみ
+        .eq('is_first_completion', true)
 
       if (error) {
         console.error('❌ Error loading session completions:', error)
         return
       }
 
-      console.log('✅ Session completions loaded:', completions?.length || 0)
       setSessionCompletions(completions || [])
     } catch (error) {
       console.error('❌ Error in loadSessionCompletions:', error)
     }
-  }, [courseId])
+  }, [courseId, database])
 
   // 新設計: セッション完了状態の判定
   const isSessionCompleted = (sessionId: string): boolean => {
