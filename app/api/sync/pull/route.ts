@@ -90,6 +90,19 @@ function transformRow(table: string, row: Record<string, unknown>): Record<strin
   return result
 }
 
+// updated_atカラムを持つテーブル（存在しないテーブルではcreated_atのみでフィルタ）
+const TABLES_WITH_UPDATED_AT = new Set([
+  'quiz_questions', 'quiz_packs', 'session_quizzes',
+  'case_study_problems', 'case_study_steps', 'case_study_rubric_axes',
+  'case_study_options', 'case_study_course_links',
+  'learning_courses', 'learning_genres', 'learning_themes',
+  'learning_sessions', 'session_contents',
+  'skill_levels', 'categories', 'subcategories',
+  'xp_level_skp_settings', 'wisdom_cards',
+  'quiz_sessions', 'case_study_sessions',
+  'user_xp_stats_v2', 'user_challenge_selections',
+])
+
 /** ベースクエリを毎回再構築（Supabaseクエリビルダーはミュータブルなので再利用不可） */
 function buildBaseQuery(
   table: string,
@@ -104,7 +117,11 @@ function buildBaseQuery(
   }
 
   if (sinceDate) {
-    query = query.or(`updated_at.gt.${sinceDate},created_at.gt.${sinceDate}`)
+    if (TABLES_WITH_UPDATED_AT.has(table)) {
+      query = query.or(`updated_at.gt.${sinceDate},created_at.gt.${sinceDate}`)
+    } else {
+      query = query.gt('created_at', sinceDate)
+    }
   }
 
   return query
