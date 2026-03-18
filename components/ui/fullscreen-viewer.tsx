@@ -17,7 +17,7 @@ interface FullscreenViewerProps {
  * - ズームイン/アウト/リセットボタン付き
  * - 上部・下部に閉じるボタン配置（操作性向上）
  */
-export default function FullscreenViewer({ isOpen, onClose, title = '拡大表示', children }: FullscreenViewerProps) {
+export default function FullscreenViewer({ isOpen, onClose, title: _title = '拡大表示', children }: FullscreenViewerProps) {
   const [scale, setScale] = useState(1)
   const contentRef = useRef<HTMLDivElement>(null)
   const lastTouchDistance = useRef<number | null>(null)

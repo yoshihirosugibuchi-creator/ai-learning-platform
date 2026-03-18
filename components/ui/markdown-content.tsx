@@ -228,6 +228,7 @@ function MarkdownContentBase({ content, className = '', compact = false }: Markd
           img({ src, alt }) {
             return (
               <span className="block my-4 md-img-wrapper">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={src}
                   alt={alt || ''}

@@ -325,7 +325,7 @@ export default function SyncDebugPage() {
 }
 
 function TableRow({ info, onSync, isSyncing }: { info: TableInfo; onSync: () => void; isSyncing: boolean }) {
-  const { table, displayName, localCount, syncStatus } = info
+  const { displayName, localCount, syncStatus } = info
   const isError = syncStatus?.status === 'error'
   const isEmpty = localCount === 0
   const hasChanges = syncStatus && (syncStatus.pullCreated > 0 || syncStatus.pullUpdated > 0 || syncStatus.pullDeleted > 0)

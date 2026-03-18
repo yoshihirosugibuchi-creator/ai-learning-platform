@@ -22,6 +22,7 @@ import {
 import AppShell from '@/components/layout/AppShell'
 import WisdomCard from '@/components/cards/WisdomCard'
 import KnowledgeCard from '@/components/cards/KnowledgeCard'
+import CourseFilterCombobox from '@/components/ui/course-filter-combobox'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { getCategoryDisplayName, WisdomCard as WisdomCardType } from '@/lib/cards'
 import { getUserBadges } from '@/lib/supabase-badges'
@@ -483,33 +484,13 @@ export default function CollectionPage() {
 
             </div>
 
-            {/* コースフィルター（横スクロールチップ） */}
+            {/* コースフィルター（PC: Popover / モバイル: ボトムシート） */}
             {knowledgeCourses.length > 1 && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
-                <button
-                  onClick={() => setSelectedKnowledgeCourse('all')}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    selectedKnowledgeCourse === 'all'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  全コース
-                </button>
-                {knowledgeCourses.map(course => (
-                  <button
-                    key={course.id}
-                    onClick={() => setSelectedKnowledgeCourse(course.id)}
-                    className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                      selectedKnowledgeCourse === course.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    }`}
-                  >
-                    {course.title}
-                  </button>
-                ))}
-              </div>
+              <CourseFilterCombobox
+                courses={knowledgeCourses}
+                value={selectedKnowledgeCourse}
+                onValueChange={setSelectedKnowledgeCourse}
+              />
             )}
 
             {/* Knowledge Cards Collection */}
