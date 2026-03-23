@@ -3,7 +3,8 @@ import { getCurrentUserRole } from '@/lib/auth-helpers'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { randomUUID } from 'crypto'
 import { contentPromptBuilder } from '@/lib/ai-course-generation/content-prompt-builder'
-import type { CourseGenerationWorkflow } from '@/lib/ai-course-generation/types'
+import type { CourseGenerationWorkflow, CustomInstructions } from '@/lib/ai-course-generation/types'
+import type { Json } from '@/lib/database-types-official'
 import type { SessionContentRequest } from '@/lib/ai-course-generation/content-prompt-builder'
 
 
@@ -43,10 +44,12 @@ export async function POST(
       ai_response?: string
       theme_id?: string
       genre_id?: string
+      custom_instructions?: CustomInstructions
     } = {} as {
       ai_response?: string
       theme_id?: string
       genre_id?: string
+      custom_instructions?: CustomInstructions
     }
     
     if (request.headers.get('content-type')?.includes('application/json')) {
@@ -60,10 +63,11 @@ export async function POST(
       }
     }
     
-    const { 
+    const {
       ai_response,      // AIレスポンス（process_response時）
       theme_id: bodyThemeId,  // ボディからも取得可能
-      genre_id: bodyGenreId   // ボディからも取得可能
+      genre_id: bodyGenreId,  // ボディからも取得可能
+      custom_instructions: bodyCustomInstructions  // カスタム指示
     } = body
 
     // ワークフローデータ取得
@@ -114,11 +118,12 @@ export async function POST(
 
     if (action === 'generate_prompt') {
       return await handleGeneratePrompt(
-        workflowData, 
+        workflowData,
         sessionId || undefined,
         themeId || undefined,
         genreId || undefined,
-        batchMode || undefined
+        batchMode || undefined,
+        bodyCustomInstructions
       )
     } else if (action === 'process_response') {
       return await handleProcessResponse(
@@ -158,7 +163,8 @@ async function handleGeneratePrompt(
   sessionId?: string,
   themeId?: string,
   genreId?: string,
-  batchMode?: string
+  batchMode?: string,
+  customInstructions?: CustomInstructions
 ) {
   try {
     // コースが公開済みか確認（published_course_idの存在チェック）
@@ -174,6 +180,46 @@ async function handleGeneratePrompt(
 
     console.log(`📋 [GeneratePrompt] DBからデータ取得: courseId=${courseId}`)
 
+    // カスタム指示をbuilder向けにフラット化するヘルパー
+    // by_genre/by_themeの該当指示をglobalに統合し、by_sessionはそのまま渡す
+    const flattenInstructions = (
+      ci: CustomInstructions | undefined,
+      opts: { genreId?: string; themeId?: string }
+    ): CustomInstructions | undefined => {
+      if (!ci) return undefined
+      const globalParts: string[] = []
+      if (ci.global?.trim()) globalParts.push(ci.global.trim())
+      if (opts.genreId && ci.by_genre?.[opts.genreId]?.trim()) {
+        globalParts.push(ci.by_genre[opts.genreId].trim())
+      }
+      if (opts.themeId && ci.by_theme?.[opts.themeId]?.trim()) {
+        globalParts.push(ci.by_theme[opts.themeId].trim())
+      }
+      const hasGlobal = globalParts.length > 0
+      const hasSession = ci.by_session && Object.values(ci.by_session).some(v => v?.trim())
+      if (!hasGlobal && !hasSession) return undefined
+      return {
+        global: hasGlobal ? globalParts.join('\n\n') : undefined,
+        by_session: ci.by_session
+      }
+    }
+
+    // カスタム指示をworkflowに保存
+    if (customInstructions) {
+      const currentContentData = (workflow.content_data as Record<string, unknown>) || {}
+      const updatedContentData = {
+        ...currentContentData,
+        custom_instructions: JSON.parse(JSON.stringify(customInstructions))
+      }
+      await supabaseAdmin
+        .from('ai_course_workflows')
+        .update({
+          content_data: updatedContentData as Json,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', workflow.id!)
+    }
+
     // ジャンル単位生成
     if (batchMode === 'genre' && genreId) {
       const sessionRequests = await extractGenreSessionRequestsFromDB(courseId, genreId)
@@ -185,10 +231,12 @@ async function handleGeneratePrompt(
       }
 
       const genreInfo = await findGenreInfoFromDB(courseId, genreId)
+      const flatCI = flattenInstructions(customInstructions, { genreId })
       const promptResult = contentPromptBuilder.buildGenreContentPrompt(
         workflow,
         genreInfo?.title || '',
-        sessionRequests
+        sessionRequests,
+        flatCI
       )
 
       return NextResponse.json({
@@ -214,10 +262,12 @@ async function handleGeneratePrompt(
       }
 
       const themeInfo = await findThemeInfoFromDB(courseId, themeId)
+      const flatCI = flattenInstructions(customInstructions, { themeId })
       const promptResult = contentPromptBuilder.buildThemeContentPrompt(
         workflow,
         themeInfo?.title || '',
-        sessionRequests
+        sessionRequests,
+        flatCI
       )
 
       return NextResponse.json({
@@ -242,9 +292,11 @@ async function handleGeneratePrompt(
         )
       }
 
+      const flatCI = flattenInstructions(customInstructions, {})
       const promptResult = contentPromptBuilder.buildSessionContentPrompt(
         workflow,
-        sessionRequest
+        sessionRequest,
+        flatCI
       )
 
       return NextResponse.json({

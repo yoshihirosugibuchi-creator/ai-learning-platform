@@ -3,7 +3,7 @@
  * アウトライン承認後の詳細コンテンツ・クイズ生成用
  */
 
-import type { CourseGenerationWorkflow } from './types'
+import type { CourseGenerationWorkflow, CustomInstructions } from './types'
 
 export interface SessionContentRequest {
   sessionId: string
@@ -204,11 +204,55 @@ ${this.getDiagramGuidance(diagramStyle)}
   }
 
   /**
+   * カスタム指示をプロンプト用テキストにフォーマット
+   *
+   * API側で該当スコープの指示をglobalに統合済みの状態で渡されることを想定。
+   * global: 全体方針（ジャンル・テーマへの指示も統合される）
+   * by_session: セッション個別の指示
+   */
+  private formatCustomInstructions(
+    customInstructions: CustomInstructions | undefined,
+    context: {
+      sessionIds?: string[]
+      sessionTitleMap?: Record<string, string>
+    }
+  ): string {
+    if (!customInstructions) return ''
+
+    const parts: string[] = []
+
+    // グローバル指示（全体方針 + ジャンル/テーマ指示が統合されている）
+    if (customInstructions.global?.trim()) {
+      parts.push(`### 全体方針\n${customInstructions.global.trim()}`)
+    }
+
+    // セッション個別指示
+    if (context.sessionIds && customInstructions.by_session) {
+      const sessionParts: string[] = []
+      for (const sid of context.sessionIds) {
+        const instr = customInstructions.by_session[sid]?.trim()
+        if (instr) {
+          const title = context.sessionTitleMap?.[sid] || sid
+          sessionParts.push(`- **${title}**: ${instr}`)
+        }
+      }
+      if (sessionParts.length > 0) {
+        parts.push(`### セッション個別への指示\n${sessionParts.join('\n')}`)
+      }
+    }
+
+    if (parts.length === 0) return ''
+
+    return `\n## コンテンツ生成者からの追加指示（最優先で反映）\n\n${parts.join('\n\n')}\n`
+  }
+
+  /**
    * セッション別詳細コンテンツ生成プロンプト作成
    */
   buildSessionContentPrompt(
     workflow: CourseGenerationWorkflow,
-    sessionRequest: SessionContentRequest
+    sessionRequest: SessionContentRequest,
+    customInstructions?: CustomInstructions
   ): ContentGenerationPrompt {
     
     const { course_basic_info, generation_preferences } = workflow
@@ -263,7 +307,10 @@ ${courseContext}
 ${generationSettings}
 
 ${this.getContentTypeGuidance(diagramStyle)}
-
+${this.formatCustomInstructions(customInstructions, {
+  sessionIds: [sessionRequest.sessionId],
+  sessionTitleMap: { [sessionRequest.sessionId]: sessionRequest.sessionTitle }
+})}
 ## 今回生成対象セッション
 **セッションID**: \`${sessionRequest.sessionId}\`
 **セッション名**: ${sessionRequest.sessionTitle}
@@ -403,7 +450,8 @@ ${includeQuizzes ? `### クイズ設計（1セッション1問制限・single_ch
   buildThemeContentPrompt(
     workflow: CourseGenerationWorkflow,
     themeTitle: string,
-    sessionRequests: SessionContentRequest[]
+    sessionRequests: SessionContentRequest[],
+    customInstructions?: CustomInstructions
   ): ContentGenerationPrompt {
     
     const { course_basic_info, generation_preferences } = workflow
@@ -438,7 +486,10 @@ ${sessionList}
 - **クイズ生成**: ${includeQuizzes ? '各セッションに1問・4択形式' : 'なし'}
 
 ${this.getContentTypeGuidance(diagramStyle)}
-
+${this.formatCustomInstructions(customInstructions, {
+  sessionIds: sessionRequests.map(s => s.sessionId),
+  sessionTitleMap: Object.fromEntries(sessionRequests.map(s => [s.sessionId, s.sessionTitle]))
+})}
 ## 出力要求
 
 各セッションごとに、前述の形式でコンテンツを生成してください。
@@ -497,7 +548,8 @@ ${sessionRequests.map(s => `    {
   buildGenreContentPrompt(
     workflow: CourseGenerationWorkflow,
     genreTitle: string,
-    sessionRequests: SessionContentRequest[]
+    sessionRequests: SessionContentRequest[],
+    customInstructions?: CustomInstructions
   ): ContentGenerationPrompt {
 
     const { course_basic_info, generation_preferences } = workflow
@@ -544,7 +596,10 @@ ${themeList}
 - **クイズ生成**: ${includeQuizzes ? '各セッションに1問・4択形式' : 'なし'}
 
 ${this.getContentTypeGuidance(diagramStyle)}
-
+${this.formatCustomInstructions(customInstructions, {
+  sessionIds: sessionRequests.map(s => s.sessionId),
+  sessionTitleMap: Object.fromEntries(sessionRequests.map(s => [s.sessionId, s.sessionTitle]))
+})}
 ## 出力要求
 
 ジャンル全体の学習の流れを意識し、基礎から応用へ段階的に深まるようにコンテンツを生成してください。

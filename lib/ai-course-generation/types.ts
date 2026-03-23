@@ -3,6 +3,14 @@
  * 完全なワークフロー型定義とデータ構造
  */
 
+// カスタム指示（コンテンツ生成プロンプト追記用）
+export interface CustomInstructions {
+  global?: string                        // 全体指示（選択範囲全体に適用）
+  by_genre?: Record<string, string>      // ジャンルID → 指示
+  by_theme?: Record<string, string>      // テーマID → 指示
+  by_session?: Record<string, string>    // セッションID → 指示
+}
+
 // アウトラインデータの型定義
 export interface OutlineData {
   course?: {
@@ -216,6 +224,7 @@ export interface CourseGenerationWorkflow {
     generated_at?: string
     ai_response_raw?: string
     generated_sessions?: string[] // 生成済みセッションID一覧
+    custom_instructions?: CustomInstructions // カスタム指示（プロンプト追記用）
   }
   
   // Step 5 公開時に設定（設計書 published_course_id）

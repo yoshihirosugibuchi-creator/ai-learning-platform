@@ -15,6 +15,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import type { CustomInstructions } from '@/lib/ai-course-generation/types'
 import {
   Brain,
   Copy,
@@ -33,7 +35,9 @@ import {
   BookOpen,
   Package,
   FileCode,
-  HelpCircle
+  HelpCircle,
+  PenLine,
+  Info
 } from 'lucide-react'
 import MarkdownContent from '@/components/ui/markdown-content'
 
@@ -116,6 +120,7 @@ interface ContentGenerationStepProps {
     }
     content_data?: {
       generated_sessions?: string[]
+      custom_instructions?: CustomInstructions
       [key: string]: unknown
     }
     // AIレスポンス（フォールバック用）
@@ -155,6 +160,17 @@ export function ContentGenerationStep({
   const [selectedThemeId, setSelectedThemeId] = useState<string>('')
   const [selectedSessionId, setSelectedSessionId] = useState<string>('')
   
+  // カスタム指示
+  const [globalInstruction, setGlobalInstruction] = useState<string>('')
+  const [perItemInstructions, setPerItemInstructions] = useState<Record<string, string>>({})
+  const [isGuideOpen, setIsGuideOpen] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('content-gen-guide-seen') !== 'true'
+    }
+    return true
+  })
+  const [instructionExpandedThemes, setInstructionExpandedThemes] = useState<Set<string>>(new Set())
+
   // UI状態
   const [expandedGenres, setExpandedGenres] = useState<Set<string>>(new Set())
   const [expandedThemes, setExpandedThemes] = useState<Set<string>>(new Set())
@@ -171,6 +187,20 @@ export function ContentGenerationStep({
   const [reviewExpandedGenres, setReviewExpandedGenres] = useState<Set<string>>(new Set())
   const [reviewExpandedThemes, setReviewExpandedThemes] = useState<Set<string>>(new Set())
   const [reviewExpandedSessions, setReviewExpandedSessions] = useState<Set<string>>(new Set())
+
+  // 保存済みカスタム指示の読み込み
+  useEffect(() => {
+    const saved = workflow.content_data?.custom_instructions
+    if (saved) {
+      setGlobalInstruction(saved.global || '')
+      setPerItemInstructions({
+        ...(saved.by_genre || {}),
+        ...(saved.by_theme || {}),
+        ...(saved.by_session || {})
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflow.id])
 
   // コンポーネント初期化時に最新のワークフローデータを取得
   useEffect(() => {
@@ -486,12 +516,54 @@ export function ContentGenerationStep({
         params.append('batch_mode', 'genre')
       }
 
+      // カスタム指示の構築
+      const customInstructions: CustomInstructions = {}
+      if (globalInstruction.trim()) {
+        customInstructions.global = globalInstruction.trim()
+      }
+
+      if (generationMode === 'genre' && genre) {
+        // ジャンル自体への指示
+        if (perItemInstructions[genre.id]?.trim()) {
+          customInstructions.by_genre = { [genre.id]: perItemInstructions[genre.id] }
+        }
+        // テーマ・セッション個別指示
+        const themeInstr: Record<string, string> = {}
+        const sessInstr: Record<string, string> = {}
+        genre.themes.forEach(t => {
+          if (perItemInstructions[t.id]?.trim()) themeInstr[t.id] = perItemInstructions[t.id]
+          t.sessions.forEach(s => {
+            if (perItemInstructions[s.id]?.trim()) sessInstr[s.id] = perItemInstructions[s.id]
+          })
+        })
+        if (Object.keys(themeInstr).length) customInstructions.by_theme = themeInstr
+        if (Object.keys(sessInstr).length) customInstructions.by_session = sessInstr
+      } else if (generationMode === 'theme' && theme) {
+        // テーマ自体への指示
+        if (perItemInstructions[theme.id]?.trim()) {
+          customInstructions.by_theme = { [theme.id]: perItemInstructions[theme.id] }
+        }
+        // セッション個別指示
+        const sessInstr: Record<string, string> = {}
+        theme.sessions.forEach(s => {
+          if (perItemInstructions[s.id]?.trim()) sessInstr[s.id] = perItemInstructions[s.id]
+        })
+        if (Object.keys(sessInstr).length) customInstructions.by_session = sessInstr
+      } else if (generationMode === 'session' && session) {
+        if (perItemInstructions[session.id]?.trim()) {
+          customInstructions.by_session = { [session.id]: perItemInstructions[session.id] }
+        }
+      }
+
+      const hasCustomInstructions = Object.keys(customInstructions).length > 0
+
       const response = await fetch(`/api/ai-course-generation/workflows/${workflow.id}/generate-content?${params}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authSession.access_token}`
-        }
+        },
+        body: JSON.stringify(hasCustomInstructions ? { custom_instructions: customInstructions } : {})
       })
 
       const data = await response.json()
@@ -1159,9 +1231,180 @@ export function ContentGenerationStep({
             </CardContent>
           </Card>
 
+          {/* カスタム指示 */}
+          {(() => {
+            const { genre, theme, session } = getSelectedItems()
+            const hasSelection = (generationMode === 'genre' && genre) ||
+                                 (generationMode === 'theme' && theme) ||
+                                 (generationMode === 'session' && session)
+            if (!hasSelection) return null
+
+            return (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <PenLine className="h-4 w-4" />
+                    カスタム指示（任意）
+                  </CardTitle>
+                  <CardDescription>
+                    AI生成に反映したい詳細な指示を追記できます
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* ガイドパネル */}
+                  <Collapsible open={isGuideOpen} onOpenChange={(open) => {
+                    setIsGuideOpen(open)
+                    if (!open && typeof window !== 'undefined') {
+                      localStorage.setItem('content-gen-guide-seen', 'true')
+                    }
+                  }}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-1 text-xs text-muted-foreground p-0 h-auto hover:bg-transparent">
+                        <Info className="h-3 w-3" />
+                        <span>使い方ガイド</span>
+                        {isGuideOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-800 space-y-3">
+                        {generationMode !== 'session' && (
+                          <div>
+                            <p className="font-semibold mb-1">全体への指示:</p>
+                            <p className="text-amber-700">選択した{generationMode === 'genre' ? 'ジャンル' : 'テーマ'}全体に適用される方針です。</p>
+                            <ul className="mt-1 ml-4 list-disc space-y-0.5 text-amber-700">
+                              <li>トーン: 「初学者向けにやさしい言葉で」「実務者向けに簡潔に」</li>
+                              <li>事例: 「金融業界の具体例を中心に」「製造業のケースで説明」</li>
+                              <li>共通制約: 「専門用語は初出時に必ず定義を添える」</li>
+                              <li>全体構成: 「前半で基礎、後半で応用に展開する流れに」</li>
+                            </ul>
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold mb-1">セッション個別への指示:</p>
+                          <p className="text-amber-700">特定のセッションだけに適用される具体的な指示です。空欄はAIが自動判断します。</p>
+                          <ul className="mt-1 ml-4 list-disc space-y-0.5 text-amber-700">
+                            <li>キーワード: 「CNN, RNN, Transformer を必ず扱う」</li>
+                            <li>図式: 「ニューラルネットワークの構造を図示」</li>
+                            <li>具体例: 「チャットボットの実装例を使って説明」</li>
+                            <li>深掘り: 「セキュリティリスクについて重点的に」</li>
+                            <li>他セッションとの関連: 「前セッションの用語を前提に進める」</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* 全体指示（テーマ・ジャンルモード時のみ） */}
+                  {generationMode !== 'session' && (
+                    <div>
+                      <label className="text-sm font-medium mb-1.5 block">
+                        全体への指示
+                      </label>
+                      <Textarea
+                        value={globalInstruction}
+                        onChange={(e) => setGlobalInstruction(e.target.value)}
+                        placeholder={generationMode === 'genre'
+                          ? '例: このジャンル全体を通して、実務で使える具体例を多く含めてください。専門用語は都度解説を入れてください。'
+                          : '例: このテーマでは金融業界の事例を中心に構成し、初学者にもわかりやすい言葉で説明してください。'}
+                        className="min-h-[80px] text-sm"
+                      />
+                    </div>
+                  )}
+
+                  {/* セッション個別指示 */}
+                  {generationMode === 'session' && session && (
+                    <div>
+                      <label className="text-sm font-medium mb-1.5 block">
+                        「{session.title}」への指示
+                      </label>
+                      <Textarea
+                        value={perItemInstructions[session.id] || ''}
+                        onChange={(e) => setPerItemInstructions(prev => ({
+                          ...prev,
+                          [session.id]: e.target.value
+                        }))}
+                        placeholder="例: CNN, RNN, Transformer を必ず扱い、それぞれの違いを比較表で示してください。"
+                        className="min-h-[80px] text-sm"
+                      />
+                    </div>
+                  )}
+
+                  {generationMode === 'theme' && theme && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium block">セッション個別への指示</label>
+                      {theme.sessions.map(s => (
+                        <div key={s.id} className="space-y-1">
+                          <label className="text-xs text-gray-600 flex items-center gap-1.5">
+                            <FileText className="h-3 w-3" />
+                            {s.title}
+                          </label>
+                          <Textarea
+                            value={perItemInstructions[s.id] || ''}
+                            onChange={(e) => setPerItemInstructions(prev => ({
+                              ...prev,
+                              [s.id]: e.target.value
+                            }))}
+                            placeholder="このセッション固有の指示（空欄ならAI任せ）"
+                            className="min-h-[60px] text-xs"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {generationMode === 'genre' && genre && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium block">テーマ・セッション個別への指示</label>
+                      {genre.themes.map(t => (
+                        <Collapsible
+                          key={t.id}
+                          open={instructionExpandedThemes.has(t.id)}
+                          onOpenChange={(open) => {
+                            setInstructionExpandedThemes(prev => {
+                              const next = new Set(prev)
+                              if (open) next.add(t.id)
+                              else next.delete(t.id)
+                              return next
+                            })
+                          }}
+                        >
+                          <CollapsibleTrigger className="flex items-center gap-2 text-sm w-full text-left p-2 hover:bg-gray-50 rounded border">
+                            {instructionExpandedThemes.has(t.id) ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                            <BookOpen className="h-3.5 w-3.5 text-blue-600" />
+                            <span>{t.title}</span>
+                            <span className="text-xs text-gray-500">({t.sessions.length}セッション)</span>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="pl-4 pt-2 space-y-2">
+                            {t.sessions.map(s => (
+                              <div key={s.id} className="space-y-1">
+                                <label className="text-xs text-gray-600 flex items-center gap-1.5">
+                                  <FileText className="h-3 w-3" />
+                                  {s.title}
+                                </label>
+                                <Textarea
+                                  value={perItemInstructions[s.id] || ''}
+                                  onChange={(e) => setPerItemInstructions(prev => ({
+                                    ...prev,
+                                    [s.id]: e.target.value
+                                  }))}
+                                  placeholder="このセッション固有の指示（空欄ならAI任せ）"
+                                  className="min-h-[60px] text-xs"
+                                />
+                              </div>
+                            ))}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })()}
+
           {/* 生成ボタン */}
           <div className="flex justify-center">
-            <Button 
+            <Button
               onClick={handleGeneratePrompt}
               disabled={isGenerating}
               size="lg"
