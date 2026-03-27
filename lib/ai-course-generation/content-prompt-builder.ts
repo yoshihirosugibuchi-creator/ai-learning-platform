@@ -40,10 +40,12 @@ export class ContentPromptBuilder {
 ### 図表・ダイアグラムについて（Mermaid形式）
 
 **Mermaid記法を使用すること**:
-- フローチャート、シーケンス図、クラス図などを表現する場合、必ずMermaid記法を使用してください
+- 図解・ダイアグラムは必ずMermaid記法を使用してください
 - ASCIIアートやテキストベースの図は禁止です
 
-**Mermaid記法の例**:
+#### 図タイプの選び方（内容に最適なタイプを選択すること）
+
+**flowchart / graph** — プロセス・フロー・因果関係:
 \`\`\`mermaid
 graph TD
     A["開始"] --> B{"条件分岐"}
@@ -53,33 +55,143 @@ graph TD
     D --> E
 \`\`\`
 
+**mindmap** — 概念の全体像・要素の関連:
 \`\`\`mermaid
-graph LR
-    subgraph input ["📥 入力層"]
-        A["データ取得"]
-    end
-    subgraph process ["⚙️ 処理層"]
-        B["変換処理"]
-    end
-    A --> B
+mindmap
+  root(("習慣形成"))
+    きっかけ
+      時間
+      場所
+      感情
+    ルーティン
+      小さく始める
+      既存習慣に紐付け
+    報酬
+      達成感
+      可視化
 \`\`\`
 
-**使用可能なMermaidダイアグラム**:
-- graph / flowchart（フローチャート）
-- sequenceDiagram（シーケンス図）
-- classDiagram（クラス図）
-- stateDiagram-v2（状態遷移図）
-- pie（円グラフ）
+**timeline** — 時系列・段階・フェーズ:
+\`\`\`mermaid
+timeline
+    title キャリア成長ステージ
+    入社1年目 : 基礎スキル習得 : OJT中心
+    2-3年目 : 専門性の確立 : プロジェクトリード
+    4-5年目 : マネジメント : チーム育成
+\`\`\`
 
-**重要な構文ルール**:
+**quadrantChart** — 2軸の分類・マトリクス:
+\`\`\`mermaid
+quadrantChart
+    title 時間管理マトリクス
+    x-axis "緊急でない" --> "緊急"
+    y-axis "重要でない" --> "重要"
+    quadrant-1 "第1領域: 即対応"
+    quadrant-2 "第2領域: 計画的投資"
+    quadrant-3 "第3領域: 委任検討"
+    quadrant-4 "第4領域: 削減対象"
+\`\`\`
+
+**stateDiagram-v2** — 状態変化・遷移:
+\`\`\`mermaid
+stateDiagram-v2
+    [*] --> 無意識的無能 : 知らないことを知らない
+    無意識的無能 --> 意識的無能 : 気づき
+    意識的無能 --> 意識的有能 : 練習
+    意識的有能 --> 無意識的有能 : 習慣化
+\`\`\`
+
+**sequenceDiagram** — 対話・やり取り・コミュニケーション:
+\`\`\`mermaid
+sequenceDiagram
+    participant M as メンター
+    participant L as 学習者
+    L->>M: 課題の相談
+    M->>L: 問いかけで気づきを促す
+    L->>L: 内省・自己分析
+    L->>M: 行動計画の共有
+    M->>L: フィードバック
+\`\`\`
+
+**pie** — 比率・構成:
+\`\`\`mermaid
+pie title 行動の構成要素
+    "習慣（自動）" : 45
+    "意思決定（意識的）" : 30
+    "環境の影響" : 25
+\`\`\`
+
+**block-beta** — 自由度の高いブロックレイアウト:
+\`\`\`mermaid
+block-beta
+    columns 2
+    A["成長型マインドセット"]:2
+    B["努力は成長の過程"] C["失敗は学習機会"]
+    D["挑戦を歓迎"] E["フィードバック活用"]
+\`\`\`
+
+#### ノードの形状バリエーション（flowchart内で使用）
+
+- \`A["四角"]\` — 標準ノード
+- \`A("丸角")\` — ソフトな印象
+- \`A(("円形"))\` — 中心概念・キーワード
+- \`A{"ひし形"}\` — 判断・分岐
+- \`A{{"六角形"}}\` — 特別な要素
+- \`A[/"平行四辺形"/]\` — 入出力
+
+#### 矢印バリエーション
+
+- \`A --> B\` — 実線（標準）
+- \`A -.-> B\` — 点線（弱い関係・影響）
+- \`A ==> B\` — 太線（強い関係・重要）
+- \`A <--> B\` — 双方向
+- \`A -->|ラベル| B\` — 説明付き
+
+#### 配色・スタイリング
+
+ノードごとに色を指定し、意味を視覚的に伝えること:
+\`\`\`
+style A fill:#e8f5e9,stroke:#4CAF50,color:#1B5E20
+style B fill:#fff3e0,stroke:#FF9800
+style C fill:#ffebee,stroke:#F44336
+style D fill:#e3f2fd,stroke:#2196F3
+\`\`\`
+
+推奨カラーパレット:
+- 緑系 \`#e8f5e9,#4CAF50\` — ポジティブ・達成・成長
+- 青系 \`#e3f2fd,#2196F3\` — 情報・プロセス・知識
+- オレンジ系 \`#fff3e0,#FF9800\` — 注意・重要ポイント
+- 赤系 \`#ffebee,#F44336\` — 課題・リスク・NG例
+- 紫系 \`#f3e5f5,#9C27B0\` — 概念・抽象的要素
+- グレー系 \`#f5f5f5,#9E9E9E\` — 補足・背景
+
+#### 重要な構文ルール
+
 - コンテンツ内で図を使う場合は、必ず\`\`\`mermaid ... \`\`\`の形式で記述
 - **subgraph名は英語ID + ラベル形式を使用**:
-  - ❌ \`subgraph 予測系\` （日本語直接は禁止）
-  - ✅ \`subgraph prediction ["📊 予測系"]\` （英語ID + 日本語ラベル）
+  - ❌ \`subgraph 予測系\`（日本語直接は禁止）
+  - ✅ \`subgraph prediction ["予測系"]\`（英語ID + 日本語ラベル）
 - **ノードラベル内で改行（\\n）は使用禁止**:
   - ❌ \`A["項目1\\n項目2"]\`
-  - ✅ \`A["項目1 項目2"]\` （スペースで区切る）
-- 絵文字は使用OK（📊、⚙️、📋等でわかりやすく）
+  - ✅ \`A["項目1 項目2"]\`（スペースで区切る）
+- **ノードラベル内に絵文字は使用禁止**（パースエラーの原因）:
+  - ❌ \`A["🟢 開放領域"]\`
+  - ✅ \`A["開放領域"]\`
+  - 絵文字はsubgraphラベルのみ使用OK
+- **図タイプは内容に応じて最適なものを選ぶこと**。すべてflowchartにしない
+
+#### 図タイプの選定ガイド
+
+| コンテンツの内容 | 推奨図タイプ |
+|---|---|
+| 手順・プロセス・因果関係 | flowchart |
+| 概念の全体像・要素整理 | mindmap |
+| 時系列・成長段階 | timeline |
+| 2軸での分類・比較 | quadrantChart |
+| 状態の変化・遷移 | stateDiagram-v2 |
+| 人同士のやり取り | sequenceDiagram |
+| 比率・構成 | pie |
+| 構造的なレイアウト | block-beta |
 
 ### コードブロックについて（技術コンテンツ向け）
 
@@ -99,13 +211,6 @@ SELECT user_id, COUNT(*) as quiz_count
 FROM quiz_sessions
 GROUP BY user_id
 HAVING COUNT(*) > 10;
-\`\`\`
-
-\`\`\`javascript
-const fetchData = async (url) => {
-  const response = await fetch(url);
-  return response.json();
-};
 \`\`\`
 
 **主な言語指定**:
