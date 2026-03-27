@@ -348,6 +348,7 @@ export default function AdminPage() {
                   <CardTitle className="flex items-center space-x-2">
                     <RefreshCw className="h-5 w-5 text-blue-600" />
                     <span>フォールバック同期</span>
+                    <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-300 rounded">開発環境限定</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

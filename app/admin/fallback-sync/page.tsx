@@ -315,11 +315,14 @@ export default function FallbackSyncPage() {
         <div className="bg-white rounded-lg shadow-sm p-6">
           {/* ヘッダー */}
           <div className="border-b border-gray-200 pb-4 mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">
-              フォールバックデータ同期管理
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-gray-900">
+                フォールバックデータ同期管理
+              </h1>
+              <span className="px-2 py-1 text-xs font-bold bg-orange-100 text-orange-700 border border-orange-300 rounded">開発環境限定</span>
+            </div>
             <p className="text-gray-600 mt-2">
-              データベースからフォールバック用ファイルを更新します
+              データベースからフォールバック用ファイルを更新します（本番環境ではファイルシステムが読み取り専用のため実行不可）
             </p>
             <p className="text-sm text-gray-500 mt-1">
               アクセス権限: システム管理者 | ユーザー: {user?.email}
