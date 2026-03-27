@@ -288,11 +288,29 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
 </time_setting_guide>
 
 <markdown_formatting>
-**技術系問題でのMarkdown/コードブロック使用について**：
+**図表・ダイアグラム（Mermaid形式）**：
+問題文や解説で図を使用する場合、Mermaid記法を使用してください。内容に最適な図タイプを選択すること。
+
+使用可能な図タイプと用途:
+- flowchart — プロセス・フロー・因果関係
+- mindmap — 概念の全体像・要素整理
+- sequenceDiagram — やり取り・コミュニケーション
+- quadrantChart — 2軸の分類・マトリクス
+- stateDiagram-v2 — 状態遷移・変化
+- pie — 比率・構成
+- timeline — 時系列・段階
+
+構文ルール:
+- subgraph名は英語ID + ラベル形式: subgraph sales ["営業部門"]
+- ノードラベル内の改行（\\n）禁止（スペースで区切る）
+- ノードラベル内の絵文字禁止（パースエラーの原因）
+- 配色で意味を表現: style A fill:#e8f5e9,stroke:#4CAF50（緑=正解）、fill:#ffebee,stroke:#F44336（赤=不正解）
+
+**コードブロック（技術系問題向け）**：
 - プログラムコード、SQL、コマンド等を含む問題では、必ずコードブロック（\`\`\`言語名）を使用
 - 変数名、関数名等の短いコードはインラインコード（\`バッククォート\`）で囲む
 
-コードブロック例（問題文内で使用可能）：
+コードブロック例：
 \`\`\`python
 def calculate(x, y):
     return x + y
@@ -388,7 +406,13 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
 - **追加時間**: 計算問題+10-15秒、コード読解+15-20秒、実装パターン+20-30秒
 - **最終調整**: 問題複雑度に応じて±5-10秒
 
-## Markdown/コードブロック使用（技術系問題向け）
+## 図表・Mermaid（問題文・解説で図を使う場合）
+- Mermaid記法を使用。内容に最適な図タイプを選択
+- 使用可能: flowchart, mindmap, sequenceDiagram, quadrantChart, stateDiagram-v2, pie, timeline
+- subgraph名は英語ID + ラベル形式、ノードラベル内の改行・絵文字は禁止
+- 配色で意味を表現（緑=正解、赤=不正解等）
+
+## コードブロック（技術系問題向け）
 - プログラムコード、SQL、コマンド等を含む問題では、コードブロック（\`\`\`言語名）を使用
 - 変数名、関数名等の短いコードはインラインコード（\`バッククォート\`）で囲む
 - 主な言語指定: python, javascript, java, sql, bash, json等
@@ -474,7 +498,9 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
 **制限時間ガイド**
 基本時間: ${getDifficultyDescription(data.difficultyName).match(/(\d+-\d+秒)/)?.[1] || '10-25秒'} + 追加時間（計算+10-15秒、コード読解+15-20秒、実装+20-30秒）
 
-**コードブロック使用（技術系問題）**
+**図表（Mermaid）** 図を使う場合はMermaid記法で最適な図タイプを選択（flowchart/mindmap/sequenceDiagram/quadrantChart/stateDiagram-v2/pie/timeline）。ノードラベル内の改行・絵文字は禁止。配色で意味表現。
+
+**コードブロック（技術系問題）**
 プログラムコード、SQL等を含む問題では\`\`\`言語名でコードブロック使用
 変数名等はインラインコード（\`name\`）で囲む
 

@@ -80,11 +80,27 @@ function sanitizeMermaidChart(text: string): string {
     const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1FA00}-\u{1FA9F}\u{1FB00}-\u{1FBFF}\u{200D}\u{20E3}]/gu
     result = result.replace(emojiRegex, '')
 
+    // mindmap: タブをスペースに統一（インデントが階層を決めるため重要）
+    if (result.includes('mindmap')) {
+      result = result.replace(/\t/g, '    ')
+    }
+
     // 余分なスペースを整理（改行は保持）
     result = result.replace(/\[" +/g, '["')
     result = result.replace(/ +"\]/g, '"]')
     // 連続する半角スペースのみ整理（改行は維持）
-    result = result.replace(/ {2,}/g, ' ')
+    // ただしmindmapはインデントが重要なので行頭スペースを保持
+    if (result.includes('mindmap')) {
+      // mindmap: 行頭以外の連続スペースのみ整理
+      result = result.split('\n').map(line => {
+        const match = line.match(/^(\s*)(.*)$/)
+        if (!match) return line
+        const [, indent, content] = match
+        return indent + content.replace(/ {2,}/g, ' ')
+      }).join('\n')
+    } else {
+      result = result.replace(/ {2,}/g, ' ')
+    }
 
     // 空ラベル [""] をスペースラベル [" "] に修正
     // （sanitize後に[" "]→[""]になるケースの救済。空文字ラベルはMermaidパースエラーの原因）

@@ -325,21 +325,117 @@ function buildDiagramGuidance(diagramStyle: DiagramStyle): string {
       return `
 【図表・ダイアグラム（Mermaid形式）】
 ケーステキストや選択肢で図を使用する場合、Mermaid記法を使用してください。
-- フローチャート、組織図、プロセス図などはMermaid記法で記述
 - ASCIIアートやテキストベースの図は使用禁止
+- 内容に応じて最適な図タイプを選択すること（すべてflowchartにしない）
 
-Mermaid記法の例:
+【図タイプの選び方】
+
+■ flowchart — プロセス・業務フロー・因果関係:
 \`\`\`mermaid
 graph TD
-    A["📥 現状分析"] --> B{"課題特定"}
-    B -->|重要| C["⚡ 優先対応"]
-    B -->|軽微| D["📋 改善計画"]
+    A["現状分析"] --> B{"課題特定"}
+    B -->|重要| C["優先対応"]
+    B -->|軽微| D["改善計画"]
+    style C fill:#ffebee,stroke:#F44336
 \`\`\`
 
-重要な構文ルール:
-- subgraph名は英語ID + ラベル形式: subgraph sales ["📊 営業部門"]
+■ sequenceDiagram — 関係者間のやり取り・交渉・報告:
+\`\`\`mermaid
+sequenceDiagram
+    participant PM as PM
+    participant C as 顧客
+    PM->>C: 要件ヒアリング
+    C->>PM: 追加要望
+    PM->>PM: 影響分析
+    PM->>C: スコープ調整提案
+\`\`\`
+
+■ quadrantChart — 2軸での分類・優先度判断:
+\`\`\`mermaid
+quadrantChart
+    title リスク評価マトリクス
+    x-axis "発生確率 低" --> "発生確率 高"
+    y-axis "影響度 低" --> "影響度 高"
+    quadrant-1 "即時対応"
+    quadrant-2 "予防措置"
+    quadrant-3 "監視"
+    quadrant-4 "許容"
+\`\`\`
+
+■ stateDiagram-v2 — プロジェクト・案件の状態遷移:
+\`\`\`mermaid
+stateDiagram-v2
+    [*] --> 提案 : 案件発生
+    提案 --> 受注 : 承認
+    提案 --> 失注 : 却下
+    受注 --> 進行中 : キックオフ
+    進行中 --> 完了 : 納品
+\`\`\`
+
+■ mindmap — 問題の全体像・要因分析:
+\`\`\`mermaid
+mindmap
+  root(("売上低下"))
+    外部要因
+      市場縮小
+      競合参入
+    内部要因
+      品質問題
+      営業力不足
+    構造要因
+      価格競争力
+\`\`\`
+
+■ pie — 比率・構成:
+\`\`\`mermaid
+pie title コスト構成
+    "人件費" : 45
+    "外注費" : 30
+    "設備費" : 15
+    "その他" : 10
+\`\`\`
+
+■ timeline — 時系列・フェーズ計画:
+\`\`\`mermaid
+timeline
+    title プロジェクト計画
+    Phase1 : 要件定義 : 2ヶ月
+    Phase2 : 設計・開発 : 4ヶ月
+    Phase3 : テスト・移行 : 2ヶ月
+\`\`\`
+
+【ノード形状バリエーション（flowchart内）】
+- A["四角"] — 標準  A("丸角") — ソフト  A(("円")) — キーワード
+- A{"ひし形"} — 判断  A{{"六角形"}} — 特別要素
+
+【矢印バリエーション】
+- A --> B 実線  A -.-> B 点線  A ==> B 太線  A <--> B 双方向
+- A -->|ラベル| B 説明付き
+
+【配色スタイリング】
+ノードの意味に応じて色を使い分けること:
+- style A fill:#e8f5e9,stroke:#4CAF50 — ポジティブ・成功
+- style B fill:#ffebee,stroke:#F44336 — 課題・リスク
+- style C fill:#fff3e0,stroke:#FF9800 — 注意・重要
+- style D fill:#e3f2fd,stroke:#2196F3 — 情報・プロセス
+- style E fill:#f3e5f5,stroke:#9C27B0 — 概念・戦略
+
+【図タイプ選定ガイド】
+| ケースの内容 | 推奨図タイプ |
+|---|---|
+| 業務プロセス・判断フロー | flowchart |
+| 関係者間の交渉・報告 | sequenceDiagram |
+| 優先度・リスク分類 | quadrantChart |
+| 案件・状態の変化 | stateDiagram-v2 |
+| 問題の要因分析 | mindmap |
+| コスト・構成比 | pie |
+| プロジェクト計画 | timeline |
+
+【重要な構文ルール】
+- subgraph名は英語ID + ラベル形式: subgraph sales ["営業部門"]
 - ノードラベル内での改行（\\n）は禁止（スペースで区切る）
-- 絵文字は使用OK（📊、⚙️、📋等で視覚的に分かりやすく）
+- ノードラベル内の絵文字は禁止（パースエラーの原因）
+- 絵文字はsubgraphラベルのみ使用OK
 
 【コードブロック（技術系ケーススタディ向け）】
 プログラムコード、SQL、設定ファイル等を含むケースの場合:
