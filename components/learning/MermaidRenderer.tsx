@@ -75,11 +75,20 @@ function sanitizeMermaidChart(text: string): string {
       }).join('\n')
     }
 
+    // ラベル内の絵文字を除去（Mermaidパーサーが絵文字のバイト列を
+    // ブラケット等の構文トークンと誤認するのを防止）
+    const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1FA00}-\u{1FA9F}\u{1FB00}-\u{1FBFF}\u{200D}\u{20E3}]/gu
+    result = result.replace(emojiRegex, '')
+
     // 余分なスペースを整理（改行は保持）
     result = result.replace(/\[" +/g, '["')
     result = result.replace(/ +"\]/g, '"]')
     // 連続する半角スペースのみ整理（改行は維持）
     result = result.replace(/ {2,}/g, ' ')
+
+    // 空ラベル [""] をスペースラベル [" "] に修正
+    // （sanitize後に[" "]→[""]になるケースの救済。空文字ラベルはMermaidパースエラーの原因）
+    result = result.replace(/\[""\]/g, '[" "]')
 
     return result
   } catch (e) {
@@ -153,10 +162,10 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
           flowchart: {
             useMaxWidth: true,
             htmlLabels: true,
-            padding: 15,
-            nodeSpacing: 60,
-            rankSpacing: 60,
-            wrappingWidth: 400,
+            padding: 20,
+            nodeSpacing: 80,
+            rankSpacing: 70,
+            wrappingWidth: 600,
           },
           sequence: {
             useMaxWidth: true,
@@ -265,9 +274,9 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
           }
           .mermaid-svg-wrapper .nodeLabel {
             white-space: normal !important;
-            word-break: break-word !important;
-            overflow-wrap: break-word !important;
-            line-height: 1.4 !important;
+            word-break: keep-all !important;
+            overflow-wrap: anywhere !important;
+            line-height: 1.5 !important;
           }
           .mermaid-svg-wrapper .label {
             overflow: visible !important;
