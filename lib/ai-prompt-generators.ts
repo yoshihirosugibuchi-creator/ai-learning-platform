@@ -302,7 +302,7 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
 
 構文ルール:
 - subgraph名は英語ID + ラベル形式: subgraph sales ["営業部門"]
-- ノードラベル内の改行（\\n）禁止（スペースで区切る）
+- ノードラベルは1行12文字以内（日本語）。超える場合は<br/>で改行。\\nは禁止
 - ノードラベル内の絵文字禁止（パースエラーの原因）
 - 配色で意味を表現: style A fill:#e8f5e9,stroke:#4CAF50（緑=正解）、fill:#ffebee,stroke:#F44336（赤=不正解）
 
@@ -409,7 +409,7 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
 ## 図表・Mermaid（問題文・解説で図を使う場合）
 - Mermaid記法を使用。内容に最適な図タイプを選択
 - 使用可能: flowchart, mindmap, sequenceDiagram, quadrantChart, stateDiagram-v2, pie, timeline
-- subgraph名は英語ID + ラベル形式、ノードラベル内の改行・絵文字は禁止
+- subgraph名は英語ID + ラベル形式、ラベル1行12文字以内（超えたら<br/>改行）、\\n・絵文字禁止
 - 配色で意味を表現（緑=正解、赤=不正解等）
 
 ## コードブロック（技術系問題向け）
@@ -498,7 +498,7 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
 **制限時間ガイド**
 基本時間: ${getDifficultyDescription(data.difficultyName).match(/(\d+-\d+秒)/)?.[1] || '10-25秒'} + 追加時間（計算+10-15秒、コード読解+15-20秒、実装+20-30秒）
 
-**図表（Mermaid）** 図を使う場合はMermaid記法で最適な図タイプを選択（flowchart/mindmap/sequenceDiagram/quadrantChart/stateDiagram-v2/pie/timeline）。ノードラベル内の改行・絵文字は禁止。配色で意味表現。
+**図表（Mermaid）** 図を使う場合はMermaid記法で最適な図タイプを選択（flowchart/mindmap/sequenceDiagram/quadrantChart/stateDiagram-v2/pie/timeline）。ラベル1行12文字以内、超えたら<br/>改行。\\n・絵文字禁止。配色で意味表現。
 
 **コードブロック（技術系問題）**
 プログラムコード、SQL等を含む問題では\`\`\`言語名でコードブロック使用

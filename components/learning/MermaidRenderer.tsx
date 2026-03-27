@@ -178,10 +178,10 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
           flowchart: {
             useMaxWidth: true,
             htmlLabels: true,
-            padding: 20,
-            nodeSpacing: 80,
-            rankSpacing: 70,
-            wrappingWidth: 600,
+            padding: 15,
+            nodeSpacing: 60,
+            rankSpacing: 60,
+            wrappingWidth: 400,
           },
           sequence: {
             useMaxWidth: true,
@@ -292,7 +292,7 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
             white-space: normal !important;
             word-break: keep-all !important;
             overflow-wrap: anywhere !important;
-            line-height: 1.5 !important;
+            line-height: 1.4 !important;
           }
           .mermaid-svg-wrapper .label {
             overflow: visible !important;
