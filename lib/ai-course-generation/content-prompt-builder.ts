@@ -81,6 +81,15 @@ timeline
 \`\`\`
 
 **quadrantChart** — 2軸の分類・マトリクス:
+
+⚠️ **象限番号の配置（重要・間違えやすい）**:
+- quadrant-1 = **右上**（x軸の右 × y軸の上）
+- quadrant-2 = **左上**（x軸の左 × y軸の上）
+- quadrant-3 = **左下**（x軸の左 × y軸の下）
+- quadrant-4 = **右下**（x軸の右 × y軸の下）
+
+各象限のラベルは、x軸・y軸の意味と照合して正しい位置に配置すること。
+
 \`\`\`mermaid
 quadrantChart
     title 時間管理マトリクス

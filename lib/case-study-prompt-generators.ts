@@ -351,6 +351,8 @@ sequenceDiagram
 \`\`\`
 
 ■ quadrantChart — 2軸での分類・優先度判断:
+⚠️ 象限番号の配置（重要）: 1=右上, 2=左上, 3=左下, 4=右下
+各象限ラベルはx軸・y軸の意味と照合して正しい位置に配置すること。
 \`\`\`mermaid
 quadrantChart
     title リスク評価マトリクス

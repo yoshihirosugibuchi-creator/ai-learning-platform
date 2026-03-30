@@ -70,7 +70,10 @@ export async function PATCH(
 
     // content_typeの検証
     if (validUpdateData.content_type) {
-      const validTypes = ['text', 'markdown', 'video', 'audio', 'image', 'interactive', 'key_points', 'example']
+      // Phase1: text, key_points, example（AI生成で使用中）
+      // Phase2予定: markdown（実質textと同等）, video, audio, image
+      // Phase3予定: interactive
+      const validTypes = ['text', 'key_points', 'example', 'markdown', 'video', 'audio', 'image', 'interactive']
       if (!validTypes.includes(validUpdateData.content_type)) {
         return NextResponse.json(
           { error: '無効なコンテンツタイプです' },
@@ -105,10 +108,10 @@ export async function PATCH(
           { status: 404 }
         )
       }
-      
+
       console.error('❌ [AdminContents] 更新エラー:', updateError)
       return NextResponse.json(
-        { error: 'コンテンツ情報の更新に失敗しました' },
+        { error: `コンテンツ情報の更新に失敗しました: ${updateError.message}`, code: updateError.code },
         { status: 500 }
       )
     }
