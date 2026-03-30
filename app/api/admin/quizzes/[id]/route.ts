@@ -118,7 +118,10 @@ export async function PATCH(
       )
     }
 
-    // データベース更新（session_quizzesテーブルにはupdated_atカラムがないため設定しない）
+    // updated_atを自動設定
+    validUpdateData.updated_at = new Date().toISOString()
+
+    // データベース更新
     const { data: updatedQuiz, error: updateError } = await supabaseAdmin
       .from('session_quizzes')
       .update(validUpdateData)

@@ -176,6 +176,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ success: false, error: '更新するデータがありません' }, { status: 400 })
     }
 
+    // updated_atを自動設定
+    updateData.updated_at = new Date().toISOString()
+
     // 更新実行
     const { data: updatedStep, error: updateError } = await supabaseAdmin
       .from('case_study_steps')

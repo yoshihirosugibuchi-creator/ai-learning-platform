@@ -133,6 +133,9 @@ export async function PUT(
       }
     }
 
+    // updated_atを自動設定
+    updateData.updated_at = new Date().toISOString()
+
     const { data: link, error } = await supabaseAdmin
       .from('case_study_course_links')
       .update(updateData)

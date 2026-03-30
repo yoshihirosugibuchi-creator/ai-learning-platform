@@ -171,6 +171,7 @@ export type Database = {
           display_after_session: number | null
           id: string
           problem_id: string
+          updated_at: string | null
         }
         Insert: {
           course_id: string
@@ -178,6 +179,7 @@ export type Database = {
           display_after_session?: number | null
           id?: string
           problem_id: string
+          updated_at?: string | null
         }
         Update: {
           course_id?: string
@@ -185,6 +187,7 @@ export type Database = {
           display_after_session?: number | null
           id?: string
           problem_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -619,6 +622,7 @@ export type Database = {
           step_number: number
           subcategory_id: string
           target_skills: Json
+          updated_at: string | null
         }
         Insert: {
           category_id: string
@@ -636,6 +640,7 @@ export type Database = {
           step_number: number
           subcategory_id: string
           target_skills: Json
+          updated_at?: string | null
         }
         Update: {
           category_id?: string
@@ -653,6 +658,7 @@ export type Database = {
           step_number?: number
           subcategory_id?: string
           target_skills?: Json
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -2104,6 +2110,7 @@ export type Database = {
           id: string
           session_id: string
           title: string | null
+          updated_at: string | null
         }
         Insert: {
           content: string
@@ -2114,6 +2121,7 @@ export type Database = {
           id: string
           session_id: string
           title?: string | null
+          updated_at?: string | null
         }
         Update: {
           content?: string
@@ -2124,6 +2132,7 @@ export type Database = {
           id?: string
           session_id?: string
           title?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -2146,6 +2155,7 @@ export type Database = {
           question: string
           quiz_type: string
           session_id: string
+          updated_at: string | null
         }
         Insert: {
           correct_answer: number
@@ -2157,6 +2167,7 @@ export type Database = {
           question: string
           quiz_type?: string
           session_id: string
+          updated_at?: string | null
         }
         Update: {
           correct_answer?: number
@@ -2168,6 +2179,7 @@ export type Database = {
           question?: string
           quiz_type?: string
           session_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -4004,7 +4016,6 @@ export const Constants = {
     },
   },
 } as const
-
 // ============= Complete Type Aliases (All 56 Types - Updated 2025.11.05) =============
 export type UserXPStatsV2 = Database['public']['Tables']['user_xp_stats_v2']['Row']
 export type SKPTransaction = Database['public']['Tables']['skp_transactions']['Row']
