@@ -75,6 +75,12 @@ function sanitizeMermaidChart(text: string): string {
       }).join('\n')
     }
 
+    // timeline: 時刻表記の半角コロン（6:00等）がMermaidの区切り文字と衝突するのを防止
+    // 例: "6:00-6:30 : 起床" → "6時00-6時30 : 起床"
+    if (result.includes('timeline')) {
+      result = result.replace(/(\d{1,2}):(\d{2})/g, '$1時$2')
+    }
+
     // ラベル内の絵文字を除去（Mermaidパーサーが絵文字のバイト列を
     // ブラケット等の構文トークンと誤認するのを防止）
     const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1FA00}-\u{1FA9F}\u{1FB00}-\u{1FBFF}\u{200D}\u{20E3}]/gu
