@@ -237,6 +237,17 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
       setSvg('')
     } finally {
       setIsLoading(false)
+      // Mermaidがレンダリング失敗時にDOMに残すエラー要素を除去
+      document.querySelectorAll('[id^="d"][id$="-mermaid-error"]').forEach(el => el.remove())
+      document.querySelectorAll('svg[id^="mermaid-"] + style').forEach(el => {
+        if (el.previousElementSibling?.getAttribute('aria-roledescription') === 'error') {
+          el.previousElementSibling?.remove()
+          el.remove()
+        }
+      })
+      // body直下に残されたMermaidエラーSVGを除去
+      document.querySelectorAll('body > svg[aria-roledescription="error"]').forEach(el => el.remove())
+      document.querySelectorAll('body > [id^="dmermaid"], body > [id^="d-mermaid"]').forEach(el => el.remove())
     }
   }, [chart])
 
