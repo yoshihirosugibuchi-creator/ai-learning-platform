@@ -168,11 +168,24 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
 
   // 手動同期
   const triggerSync = useCallback(async () => {
-    if (syncing || !dbRef.current) return
+    if (syncing) {
+      console.warn('⚠️ triggerSync skipped: already syncing')
+      return
+    }
+    if (!dbRef.current) {
+      console.warn('⚠️ triggerSync skipped: database not initialized (isNative:', isNative, ')')
+      setLastSyncError('データベースが初期化されていません。アプリを再起動してください。')
+      return
+    }
     const authenticated = await hasAuthSession()
-    if (!authenticated) return
+    if (!authenticated) {
+      console.warn('⚠️ triggerSync skipped: not authenticated')
+      setLastSyncError('認証されていません。再ログインしてください。')
+      return
+    }
 
     setSyncing(true)
+    setLastSyncError(null)
     try {
       const { syncDatabase } = await import('./sync')
       const result = await syncDatabase()
@@ -186,7 +199,7 @@ export function OfflineDBProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setSyncing(false)
     }
-  }, [syncing])
+  }, [syncing, isNative])
 
   return (
     <OfflineDBContext.Provider value={{ database, syncing, lastSyncError, triggerSync, isNative }}>
