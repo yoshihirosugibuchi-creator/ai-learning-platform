@@ -304,6 +304,7 @@ ${getQuestionGuidelines(data.categoryType, data.categoryName, data.difficultyNam
 - subgraph名は英語ID + ラベル形式: subgraph sales ["営業部門"]
 - ノードラベルは1行12文字以内（日本語）。超える場合は<br/>で改行。\\nは禁止
 - ノードラベル内の絵文字禁止（パースエラーの原因）
+- block-betaは使用禁止。表形式はflowchartのsubgraphで代替
 - 配色で意味を表現: style A fill:#e8f5e9,stroke:#4CAF50（緑=正解）、fill:#ffebee,stroke:#F44336（赤=不正解）
 
 **コードブロック（技術系問題向け）**：

@@ -171,6 +171,7 @@ style D fill:#e3f2fd,stroke:#2196F3
   - ✅ \`A["開放領域"]\`
   - 絵文字はsubgraphラベルのみ使用OK
 - **図タイプは内容に応じて最適なものを選ぶこと**。すべてflowchartにしない
+- **block-betaは使用禁止**（レンダリング不具合あり）。表形式レイアウトはflowchartのsubgraphで代替すること
 
 #### 図タイプの選定ガイド
 
