@@ -166,27 +166,32 @@ async function pullTable(
 
   console.log(`📥 ${table}: ${allData.length} rows fetched${allData.length > PAGE_SIZE ? ` (${Math.ceil(allData.length / PAGE_SIZE)} pages)` : ''}`)
 
+  const isMasterTable = (MASTER_TABLES as readonly string[]).includes(table)
+  const rows = allData.map((row) => transformRow(table, row))
+
   // 初回同期（lastPulledAt=null）は全てcreated
   if (!lastPulledAt) {
-    const rows = allData.map((row) => transformRow(table, row))
     return { created: rows, updated: [], deleted: [] }
   }
 
-  // 差分同期: created_atがlastPulledAt以降のレコードは新規(created)、
-  // それ以外は更新(updated)として振り分け
-  // WatermelonDBはupdatedに含まれるレコードがローカルに存在しない場合は無視するため、
-  // 新規レコードは必ずcreatedに入れる必要がある
-  // ※ transformRow前のraw dataでISO文字列比較を行う（transform後はミリ秒数値に変換されるため）
+  // マスタテーブル: 常にcreatedとして返す
+  // WatermelonDBは既存レコードがcreatedに含まれていてもエラーにせず更新する。
+  // これにより、過去の同期で取りこぼしたレコードも確実にローカルDBに挿入される。
+  if (isMasterTable) {
+    return { created: rows, updated: [], deleted: [] }
+  }
+
+  // ユーザーテーブル: created_atで振り分け
+  // ※ transformRow前のraw dataでISO文字列比較（transform後はミリ秒数値に変換されるため）
   const cutoffDate = new Date(lastPulledAt).toISOString()
   const created: Record<string, unknown>[] = []
   const updated: Record<string, unknown>[] = []
-  for (const rawRow of allData) {
-    const createdAt = rawRow.created_at as string | undefined
-    const transformed = transformRow(table, rawRow)
+  for (let i = 0; i < allData.length; i++) {
+    const createdAt = allData[i].created_at as string | undefined
     if (createdAt && createdAt > cutoffDate) {
-      created.push(transformed)
+      created.push(rows[i])
     } else {
-      updated.push(transformed)
+      updated.push(rows[i])
     }
   }
   return { created, updated, deleted: [] }
