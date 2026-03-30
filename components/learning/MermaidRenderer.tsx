@@ -232,6 +232,12 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
     } catch (err) {
       console.error('❌ Mermaid rendering error:', err)
       const errMsg = err instanceof Error ? err.message : String(err)
+
+      // DOM破壊系エラーの場合、Mermaidの内部状態をリセットして次回再初期化させる
+      if (errMsg.includes('firstChild') || errMsg.includes('circular structure') || errMsg.includes('Cannot read properties of null')) {
+        mermaidInitialized = false
+      }
+
       // block-beta等の未対応/不安定な図タイプでのクラッシュをわかりやすく表示
       if (errMsg.includes('circular structure') || errMsg.includes('block-beta')) {
         setError('この図タイプ（block-beta等）は現在のバージョンでは正しく表示できません。flowchartやmindmap等の別の図タイプで再生成してください。')
@@ -241,17 +247,11 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
       setSvg('')
     } finally {
       setIsLoading(false)
-      // Mermaidがレンダリング失敗時にDOMに残すエラー要素を除去
-      document.querySelectorAll('[id^="d"][id$="-mermaid-error"]').forEach(el => el.remove())
-      document.querySelectorAll('svg[id^="mermaid-"] + style').forEach(el => {
-        if (el.previousElementSibling?.getAttribute('aria-roledescription') === 'error') {
-          el.previousElementSibling?.remove()
-          el.remove()
-        }
-      })
-      // body直下に残されたMermaidエラーSVGを除去
-      document.querySelectorAll('body > svg[aria-roledescription="error"]').forEach(el => el.remove())
-      document.querySelectorAll('body > [id^="dmermaid"], body > [id^="d-mermaid"]').forEach(el => el.remove())
+      // Mermaidがレンダリング失敗時にDOMに残すエラーSVGのみ除去
+      // ※ 他のMermaidRendererの一時要素を壊さないよう、エラー属性を持つ要素に限定
+      setTimeout(() => {
+        document.querySelectorAll('body > svg[aria-roledescription="error"]').forEach(el => el.remove())
+      }, 200)
     }
   }, [chart])
 
