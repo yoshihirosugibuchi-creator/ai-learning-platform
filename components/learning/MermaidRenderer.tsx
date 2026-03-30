@@ -221,7 +221,13 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
       setError(null)
     } catch (err) {
       console.error('❌ Mermaid rendering error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to render diagram')
+      const errMsg = err instanceof Error ? err.message : String(err)
+      // block-beta等の未対応/不安定な図タイプでのクラッシュをわかりやすく表示
+      if (errMsg.includes('circular structure') || errMsg.includes('block-beta')) {
+        setError('この図タイプ（block-beta等）は現在のバージョンでは正しく表示できません。flowchartやmindmap等の別の図タイプで再生成してください。')
+      } else {
+        setError(errMsg)
+      }
       setSvg('')
     } finally {
       setIsLoading(false)
