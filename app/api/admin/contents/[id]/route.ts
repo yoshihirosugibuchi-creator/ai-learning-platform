@@ -70,7 +70,7 @@ export async function PATCH(
 
     // content_typeの検証
     if (validUpdateData.content_type) {
-      const validTypes = ['text', 'markdown', 'video', 'audio', 'image', 'interactive']
+      const validTypes = ['text', 'markdown', 'video', 'audio', 'image', 'interactive', 'key_points', 'example']
       if (!validTypes.includes(validUpdateData.content_type)) {
         return NextResponse.json(
           { error: '無効なコンテンツタイプです' },
