@@ -86,9 +86,13 @@ function sanitizeMermaidChart(text: string): string {
     const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1FA00}-\u{1FA9F}\u{1FB00}-\u{1FBFF}\u{200D}\u{20E3}]/gu
     result = result.replace(emojiRegex, '')
 
-    // mindmap: タブをスペースに統一（インデントが階層を決めるため重要）
+    // mindmap: タブをスペースに統一 + 全角コロンをハイフンに変換
+    // Mermaidのmindmapパーサーはコロン（半角・全角とも）を構文文字として解釈し、
+    // ノードの親子関係の解析を破壊するため
     if (result.includes('mindmap')) {
       result = result.replace(/\t/g, '    ')
+      result = result.replace(/：/g, ' - ')
+      result = result.replace(/(?<!^[\s]*(?:title|section)[\s].*): /gm, ' - ')
     }
 
     // 余分なスペースを整理（改行は保持）
