@@ -169,11 +169,26 @@ async function pullTable(
   const rows = allData.map((row) => transformRow(table, row))
 
   // 初回同期（lastPulledAt=null）は全てcreated
-  // 差分同期はupdatedとして扱う（WatermelonDBが重複を処理）
   if (!lastPulledAt) {
     return { created: rows, updated: [], deleted: [] }
   }
-  return { created: [], updated: rows, deleted: [] }
+
+  // 差分同期: created_atがlastPulledAt以降のレコードは新規(created)、
+  // それ以外は更新(updated)として振り分け
+  // WatermelonDBはupdatedに含まれるレコードがローカルに存在しない場合は無視するため、
+  // 新規レコードは必ずcreatedに入れる必要がある
+  const cutoffDate = new Date(lastPulledAt!).toISOString()
+  const created: Record<string, unknown>[] = []
+  const updated: Record<string, unknown>[] = []
+  for (const row of rows) {
+    const createdAt = row.created_at as string | undefined
+    if (createdAt && createdAt > cutoffDate) {
+      created.push(row)
+    } else {
+      updated.push(row)
+    }
+  }
+  return { created, updated, deleted: [] }
 }
 
 export async function GET(request: NextRequest) {
