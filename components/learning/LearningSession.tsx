@@ -261,10 +261,12 @@ export default function LearningSession({
   }
 
   const handleStartQuiz = async () => {
-    // 初回完了判定が完了するまで待機
+    // 初回完了判定が完了していない場合、デフォルト値で続行（モバイルで応答しない問題の防止）
     if (isFirstCompletion === null || isFirstThemeCompletion === null || isFirstCourseCompletion === null) {
-      console.log('⏳ Waiting for first completion determination...')
-      return
+      console.warn('⚠️ First completion checks not yet loaded, proceeding with defaults (isFirst=false)')
+      if (isFirstCompletion === null) setIsFirstCompletion(false)
+      if (isFirstThemeCompletion === null) setIsFirstThemeCompletion(false)
+      if (isFirstCourseCompletion === null) setIsFirstCourseCompletion(false)
     }
     
     // Prevent scroll jump by not changing focus
@@ -557,6 +559,30 @@ export default function LearningSession({
         } catch (error) {
           console.warn('⚠️ Client-side session XP calculation failed, will rely on API result:', error)
           predictedSessionXP = 0
+        }
+      }
+
+      // 📱 モバイル: WatermelonDBにセッション完了をローカル書き込み
+      // （API完了前にユーザーが画面遷移しても完了状態が保持される）
+      if (database && user?.id) {
+        try {
+          const { writeCourseSessionCompletion } = await import('@/lib/offline/write-helpers')
+          await writeCourseSessionCompletion(database, {
+            id: crypto.randomUUID(),
+            user_id: user.id,
+            course_id: courseId,
+            session_id: session.id,
+            theme_id: themeId,
+            genre_id: genreId,
+            is_first_completion: isFirstCompletion ?? true,
+            session_metadata: {
+              score: Object.values(quizResults).filter(r => r).length,
+              total: session.quiz?.length ?? 0,
+            },
+          })
+          console.log('📱 Local DB: session completion written')
+        } catch (e) {
+          console.warn('⚠️ Local DB write failed (will rely on API):', e)
         }
       }
 

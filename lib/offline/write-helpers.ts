@@ -53,6 +53,7 @@ export interface CourseSessionCompletionWrite {
   genre_id: string
   theme_id: string
   session_id: string
+  is_first_completion?: boolean
   session_metadata?: Record<string, unknown>
 }
 
@@ -199,8 +200,9 @@ export async function writeCourseSessionCompletion(
       raw.genre_id = data.genre_id
       raw.theme_id = data.theme_id
       raw.session_id = data.session_id
+      raw.is_first_completion = data.is_first_completion ?? true
       raw.session_metadata = data.session_metadata ? JSON.stringify(data.session_metadata) : null
-      raw.completed_at = Date.now()
+      raw.completion_time = Date.now()
       raw.created_at = Date.now()
     })
   })
