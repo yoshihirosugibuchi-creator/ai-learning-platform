@@ -261,12 +261,14 @@ export default function LearningSession({
   }
 
   const handleStartQuiz = async () => {
-    // 初回完了判定が完了していない場合、デフォルト値で続行（モバイルで応答しない問題の防止）
+    // 初回完了判定が完了していない場合、デフォルト値(true)で続行
+    // true にすることで WatermelonDB に is_first_completion=true で書き込まれ、
+    // コース一覧の復習表示が正しく反映される（API側で実際の初回判定を行う）
     if (isFirstCompletion === null || isFirstThemeCompletion === null || isFirstCourseCompletion === null) {
-      console.warn('⚠️ First completion checks not yet loaded, proceeding with defaults (isFirst=false)')
-      if (isFirstCompletion === null) setIsFirstCompletion(false)
-      if (isFirstThemeCompletion === null) setIsFirstThemeCompletion(false)
-      if (isFirstCourseCompletion === null) setIsFirstCourseCompletion(false)
+      console.warn('⚠️ First completion checks not yet loaded, proceeding with defaults (isFirst=true)')
+      if (isFirstCompletion === null) setIsFirstCompletion(true)
+      if (isFirstThemeCompletion === null) setIsFirstThemeCompletion(true)
+      if (isFirstCourseCompletion === null) setIsFirstCourseCompletion(true)
     }
     
     // Prevent scroll jump by not changing focus
@@ -821,14 +823,14 @@ export default function LearningSession({
                       {item.title}
                     </h3>
                   )}
-                  
+
                   {item.type === 'text' && item.content && (
                     <MarkdownContent
                       content={item.content}
                       className="space-y-3"
                     />
                   )}
-                  
+
                   {item.type === 'key_points' && item.content && (
                     <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
                       <div className="key-points-content text-blue-800">
@@ -839,7 +841,7 @@ export default function LearningSession({
                       </div>
                     </div>
                   )}
-                  
+
                   {item.type === 'example' && item.content && (
                     <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
                       <div className="example-content text-green-800">
@@ -859,36 +861,35 @@ export default function LearningSession({
               </div>
             )}
           </div>
-
-          {/* Action Button - Fixed at bottom with proper spacing */}
-          <div className="sticky bottom-0 bg-background pt-4 mt-6 border-t">
-            <div className="flex justify-center">
-              <Button 
-                onClick={handleStartQuiz}
-                size="lg"
-                className="flex items-center space-x-2"
-                disabled={isCompletingSession}
-              >
-                {isCompletingSession ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                    <span>処理中...</span>
-                  </>
-                ) : hasQuiz ? (
-                  <>
-                    <BookOpen className="h-4 w-4" />
-                    <span>理解度チェック</span>
-                  </>
-                ) : (
-                  <>
-                    <Check className="h-4 w-4" />
-                    <span>学習完了</span>
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
         </CardContent>
+        {/* Action Button - overflowコンテナの外に配置（モバイルタッチ問題対策） */}
+        <div className="border-t bg-background p-4">
+          <div className="flex justify-center">
+            <Button
+              onClick={handleStartQuiz}
+              size="lg"
+              className="flex items-center space-x-2"
+              disabled={isCompletingSession}
+            >
+              {isCompletingSession ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  <span>処理中...</span>
+                </>
+              ) : hasQuiz ? (
+                <>
+                  <BookOpen className="h-4 w-4" />
+                  <span>理解度チェック</span>
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  <span>学習完了</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       </Card>
     </div>
   )

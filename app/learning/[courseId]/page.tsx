@@ -63,38 +63,11 @@ export default function CourseDetailPage() {
     window.scrollTo(0, 0)
   }, [courseId])
 
-  // ローカルDB優先: course_session_completions テーブルから完了状態を取得
+  // ローカルDB + サーバーをマージ: course_session_completions テーブルから完了状態を取得
   const loadSessionCompletions = useCallback(async (userId: string) => {
     try {
-      // ローカルDB（WatermelonDB）から取得を試みる
-      if (database) {
-        try {
-          const { Q } = await import('@nozbe/watermelondb')
-          const collection = database.get('course_session_completions')
-          const localRecords = await collection.query(
-            Q.where('user_id', userId),
-            Q.where('course_id', courseId),
-            Q.where('is_first_completion', true)
-          ).fetch()
-
-          if (localRecords.length > 0) {
-            const completions: SessionCompletion[] = localRecords.map((r: { _raw: Record<string, unknown> }) => ({
-              session_id: r._raw.session_id as string,
-              theme_id: r._raw.theme_id as string,
-              genre_id: r._raw.genre_id as string,
-              is_first_completion: true,
-              created_at: r._raw.created_at ? new Date(r._raw.created_at as number).toISOString() : null,
-            }))
-            setSessionCompletions(completions)
-            return
-          }
-        } catch (e) {
-          console.warn('ローカルDB読み取り失敗、サーバーにフォールバック:', e)
-        }
-      }
-
-      // フォールバック: サーバーから取得
-      const { data: completions, error } = await supabase
+      // サーバーから取得（ベースデータ）
+      const { data: serverCompletions, error } = await supabase
         .from('course_session_completions')
         .select('session_id, theme_id, genre_id, is_first_completion, created_at')
         .eq('user_id', userId)
@@ -103,10 +76,45 @@ export default function CourseDetailPage() {
 
       if (error) {
         console.error('❌ Error loading session completions:', error)
-        return
       }
 
-      setSessionCompletions(completions || [])
+      // session_id をキーにマージ用Mapを作成
+      const completionMap = new Map<string, SessionCompletion>()
+
+      // サーバーデータをMapに追加
+      for (const c of (serverCompletions || [])) {
+        completionMap.set(c.session_id, c)
+      }
+
+      // ローカルDB（WatermelonDB）からも取得してマージ
+      if (database) {
+        try {
+          const { Q } = await import('@nozbe/watermelondb')
+          const collection = database.get('course_session_completions')
+          const localRecords = await collection.query(
+            Q.where('user_id', userId),
+            Q.where('course_id', courseId)
+          ).fetch()
+
+          for (const r of localRecords as Array<{ _raw: Record<string, unknown> }>) {
+            const sessionId = r._raw.session_id as string
+            // ローカルにしかないレコードをマージ（サーバー未反映分を補完）
+            if (!completionMap.has(sessionId)) {
+              completionMap.set(sessionId, {
+                session_id: sessionId,
+                theme_id: r._raw.theme_id as string,
+                genre_id: r._raw.genre_id as string,
+                is_first_completion: true,
+                created_at: r._raw.created_at ? new Date(r._raw.created_at as number).toISOString() : null,
+              })
+            }
+          }
+        } catch (e) {
+          console.warn('ローカルDB読み取り失敗:', e)
+        }
+      }
+
+      setSessionCompletions(Array.from(completionMap.values()))
     } catch (error) {
       console.error('❌ Error in loadSessionCompletions:', error)
     }
